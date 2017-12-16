@@ -1,0 +1,338 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/webrtc-adapter/5.0.4/adapter.min.js"></script>
+<script src="https://invisible.college:10/janus.js"></script>
+<script>
+var videos = {}
+
+function ensureVideo(stream, id, janus_plugin_handle) {
+    var x = videos[id]
+    if (!x) {
+        var x = document.createElement('div')
+        x.style.display = 'inline-block'
+        x.style.position = 'relative'
+        x.style.height = '100px'
+        
+        var v = document.createElement('video')
+        v.style.position = 'absolute'
+        v.style.left = '0px'
+        v.style.top = '0px'
+        v.style.height = '100px'
+        v.autoplay = 'true'
+        v.srcObject = stream
+        v.title = id
+        x.append(v)
+        
+        v.addEventListener('loadeddata', function() {
+            var w = v.videoWidth
+            var h = v.videoHeight
+            x.style.width = 100 / (h / w)
+            if (janus_plugin_handle) {
+                var video = true
+                var vv = document.createElement('div')
+                vv.style.position = 'absolute'
+                vv.style.right = '34px'
+                vv.style.bottom = '0px'
+                x.append(vv)
+                function update_vv() {
+                    if (vv.firstChild)
+                        vv.removeChild(vv.firstChild)
+                    vv.append(drawVideoButton(video))
+                }
+                update_vv()
+                vv.onclick = function () {
+                    video = !video
+                    if (video) {
+                        janus_plugin_handle.unmuteVideo()
+                    } else {
+                        janus_plugin_handle.muteVideo()
+                    }
+                    update_vv()
+                }
+                
+                var audio = true
+                var aa = document.createElement('div')
+                aa.style.position = 'absolute'
+                aa.style.right = '0px'
+                aa.style.bottom = '0px'
+                x.append(aa)
+                function update_aa() {
+                    if (aa.firstChild)
+                        aa.removeChild(aa.firstChild)
+                    aa.append(drawAudioButton(audio))
+                }
+                update_aa()
+                aa.onclick = function () {
+                    audio = !audio
+                    if (audio) {
+                        janus_plugin_handle.unmuteAudio()
+                    } else {
+                        janus_plugin_handle.muteAudio()
+                    }
+                    update_aa()
+                }
+            }
+        }, false);
+
+        document.body.append(x)
+        videos[id] = x
+    }
+}
+
+function unensureVideo(id) {
+    var x = videos[id]
+    if (x) {
+        x.remove()
+        videos[id] = null
+    }
+}
+
+var janus = null
+var my_janus_id = null
+var my_tawkspace_id = Math.random().toString(36).slice(2)
+
+Janus.init({
+    callback: function() {
+        janus = new Janus({
+            server: 'https://invisible.college:8089/janus',
+            success: function() {
+                on_janus()
+            },
+            error: function(cause) {
+                console.log('error', cause)
+            },
+            destroyed: function() {
+                console.log('destroyed')
+            }
+        })
+    }
+})
+
+function on_janus() {
+    var plugin_handle = null
+    janus.attach({
+        plugin : "janus.plugin.videoroom",
+        error : function () {
+            throw 'bad'
+        },
+        onlocalstream : function (stream) {
+            ensureVideo(stream, my_janus_id, plugin_handle)
+        },
+        success : function (ph) {
+            plugin_handle = ph
+            plugin_handle.send({
+                message : {
+                    request : "join",
+                    room : 1234,
+                    ptype : "publisher",
+                    display : JSON.stringify({
+                        id : my_tawkspace_id,
+                        space : 'hi2space'
+                    })
+                }
+            })
+        },
+        onmessage : function (msg, jsep) {
+            console.log('a message? hm..: ', msg)
+            
+            if (jsep) {
+                plugin_handle.handleRemoteJsep({ jsep : jsep })
+            }
+
+            each(msg.publishers || [], function (p) {
+                on_publisher(p)
+            })
+            
+            if (msg.videoroom == 'event') {
+                if (msg.unpublished) {
+                    unensureVideo(msg.unpublished)
+                }
+            }
+
+            if (msg.videoroom == 'joined') {
+                my_janus_id = msg.id
+                plugin_handle.createOffer({
+                    media : {
+                        audioRecv : false,
+                        videoRecv : false,
+                        audioSend : true,
+                        videoSend : true
+                    },
+                    success : function (jsep) {
+                        console.log('jsep: ', jsep)
+                        plugin_handle.send({
+                            message : {
+                                request : 'configure',
+                                audio : true,
+                                video : true
+                            },
+                            jsep : jsep
+                        })
+                    },
+                    error : function (e) {
+                        console.log(e)
+                        throw 'bad'
+                    }
+                })
+            }
+        }
+    })
+}
+
+function on_publisher(p) {
+    var remote_feed = null
+    janus.attach({
+        plugin : 'janus.plugin.videoroom',
+        onremotestream : function (stream) {
+            ensureVideo(stream, p.id)
+        },
+        error : function () {
+            throw 'bad'
+        },
+        success : function (ph) {
+            remote_feed = ph
+            remote_feed.send({
+                message : {
+                    request : 'join',
+                    room : 1234,
+                    ptype : 'listener',
+                    feed : p.id
+                }
+            })
+        },
+        onmessage : function (msg, jsep) {
+            if (jsep) {
+                remote_feed.createAnswer({
+                    jsep : jsep,
+                    error : function () {
+                        throw 'bad'
+                    },
+                    media : {
+                        audioRecv : true,
+                        videoRecv : true,
+                        audioSend : false,
+                        videoSend : false
+                    },
+                    success : function (jsep) {
+                        remote_feed.send({
+                            jsep : jsep,
+                            message : {
+                                request: "start",
+                                room: 1234
+                            }
+                        })
+                    }
+                })
+            }
+        }
+    })    
+}
+
+var svg_ns = 'http://www.w3.org/2000/svg'
+function make_svg(kind, props) {
+    var x = document.createElementNS(svg_ns, kind)
+    each(props, function (v, k) {
+        x.setAttribute(k, v)
+    })
+    return x
+}
+
+var danger_red = '#d43f3a'
+
+function drawVideoButton(on) {
+    var x = document.createElement('button')
+    x.style.border = '1px solid'
+    x.style.borderColor = !on ? danger_red : '#aaa'
+    x.style.backgroundImage = !on ? 'linear-gradient(to bottom,#d9534f 0,#c12e2a 100%)' : 'linear-gradient(to bottom,#fff 0,#e0e0e0 100%)'
+    x.style.textShadow = '0 1px 0 #fff'
+    x.style.backgroundColor = !on ? danger_red : 'white'
+    x.style.marginBottom = 0
+    x.style.padding = '4px 8px'
+    x.style.borderRadius = 4
+    
+    var s = make_svg('svg', {
+        viewBox : '0 0 54 54',
+        width : 16,
+        height : 16
+    })
+    if (!on) s.setAttribute('fill', 'white')
+    s.append(make_svg('rect', {
+        x : 4,
+        y : 11,
+        width : 36,
+        height : 32,
+        rx : 4,
+        ry : 4
+    }))
+    s.append(make_svg('polygon', {
+        points : '32,27 50,13 50,41',
+        strokeLinejoin : 'round'
+    }))
+    
+    if (!on) {
+        s.append(make_svg('line', {
+            x1 : 54,
+            y1 : 7,
+            x2 : 0,
+            y2 : 47,
+            stroke : 'white',
+            'stroke-width' : 5
+        }))
+        s.append(make_svg('line', {
+            x1 : 57,
+            y1 : 7,
+            x2 : 0,
+            y2 : 50,
+            stroke : danger_red,
+            'stroke-width' : 5
+        }))
+    }
+    
+    x.append(s)
+    return x
+}
+
+function drawAudioButton(on) {
+    var x = document.createElement('button')
+    x.style.border = '1px solid'
+    x.style.borderColor = !on ? danger_red : '#aaa'
+    x.style.backgroundImage = !on ? 'linear-gradient(to bottom,#d9534f 0,#c12e2a 100%)' : 'linear-gradient(to bottom,#fff 0,#e0e0e0 100%)'
+    x.style.textShadow = '0 1px 0 #fff'
+    x.style.backgroundColor = !on ? danger_red : 'white'
+    x.style.marginBottom = 0
+    x.style.padding = '4px 8px'
+    x.style.borderRadius = 4
+    
+    var s = make_svg('svg', {
+        viewBox : '-3 0 21 24',
+        width : 16,
+        height : 16
+    })
+    if (!on) s.setAttribute('fill', 'white')
+    s.append(make_svg('path', {
+        d : 'M12,10V4c0-2.209-1.791-4-4-4S4,1.791,4,4v6c0,2.209,1.791,4,4,4S12,12.209,12,10z'
+    }))
+    s.append(make_svg('path', {
+        d : 'M0,7v3c0,4.072,3.06,7.435,7,7.931V22h2v-4.069c3.939-0.495,7-3.858,7-7.931V7h-2v3c0,3.309-2.691,6-6,6s-6-2.691-6-6V7H0z'
+    }))    
+    if (!on) {
+        s.append(make_svg('line', {
+            x1 : 18,
+            y1 : 1,
+            x2 : 0,
+            y2 : 17.5,
+            stroke : 'white',
+            'stroke-width' : 3
+        }))
+        s.append(make_svg('line', {
+            x1 : 18,
+            y1 : 4,
+            x2 : 0,
+            y2 : 20.5,
+            stroke : danger_red,
+            'stroke-width' : 3
+        }))
+    }
+    
+    x.append(s)
+    return x
+}
+</script>
