@@ -33,7 +33,7 @@ function draw_get_url_and_direction() {
         window.parent.postMessage({
           cmd: 'set_url',
           url: url.val()
-        } , 'https://glittle.org'
+        }, 'https://glittle.org')
         load_cards_from_url(url.val(), (cards) => {
           play_flashcard_game(cards, front)
         })
