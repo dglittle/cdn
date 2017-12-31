@@ -270,13 +270,8 @@ function main() {
 	
 	var done_count = 0
 	function next235() {
-	    print('got here? ' + done_count + " == " + count)
-	    
 	    done_count++
 	    if (done_count == count) {
-	        
-	        print('got here???!')
-	        
             document.body.style.padding = 0
             document.body.style.margin = 0
             document.body.appendChild(drawChessGame(startingFen))
