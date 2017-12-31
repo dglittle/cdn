@@ -30,7 +30,7 @@ function draw_get_url_and_direction() {
     if (e.origin == 'https://glittle.org') {
       url.val(e.data)
       function blah(front) {
-        window.parent.postMessage('set_url', 'https://glittle.org', url.val())
+        window.parent.postMessage('set_url', 'https://glittle.org', [url.val()])
         load_cards_from_url(url.val(), (cards) => {
           play_flashcard_game(cards, front)
         })
