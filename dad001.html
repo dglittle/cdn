@@ -1,0 +1,150 @@
+
+<body>
+<script>
+
+require("https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js", function () {
+    draw_get_url_and_direction()
+})
+
+//document.styleSheets[0].insertRule("button { font-size: 100px }", 0)
+//document.styleSheets[0].insertRule("button { padding: 10px; }", 0)
+
+function ff() {
+    var s = document.createElement('style')
+    s.innerHTML = 'button { padding: 10px; } button { font-size: 150% }'
+    document.head.append(s)
+
+    var m = document.createElement('meta')
+    m.name = "viewport"
+    m.content = "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"
+    document.getElementsByTagName('head')[0].appendChild(m)
+}
+ff()
+
+console.log(localStorage)
+
+function draw_get_url_and_direction() {
+  $('body').empty()
+  var url = $('<input type="text"/>')
+  try {
+    url.val(localStorage.getItem('url'))
+  } catch (e) {}
+  function blah(front) {
+    try {
+      localStorage.setItem('url', url.val())
+    } catch (e) {}
+    load_cards_from_url(url.val(), (cards) => {
+      play_flashcard_game(cards, front)
+    })
+  }
+  $('body').append(url).append($('<button/>').text('A -> B').click(() => {
+    blah(true)
+  })).append($('<button/>').text('B -> A').click(() => {
+    blah(false)
+  }))
+}
+
+function load_cards_from_url(url, cb) {
+  var m = url.match(/spreadsheets\/d\/(.*?)\//)
+  if (!m) {
+    alert('please put a link to a google sheet that has been published')
+    return
+  }
+  var url = 'https://spreadsheets.google.com/feeds/cells/' + m[1] + '/1/public/full?alt=json'
+  
+  $.ajax({
+    url: url
+  }).done(function(x) {
+    var cards = {}
+    each(x.feed.entry, (x) => {
+      var x = x.gs$cell
+      if (!cards[x.row]) cards[x.row] = {}
+      cards[x.row][x.col == 1 ? true : x.col == 2 ? false : 'meta'] = x.inputValue
+    })
+    cb(to_array(cards))
+  })
+}
+
+function play_flashcard_game(cards, front) {
+  $('body').empty()
+  var game_div = $('<div/>')
+  $('body').append(game_div)
+  
+  var main_pile = []
+  var good_pile = []
+  var bad_pile = []
+  each(cards, (x) => { bad_pile.push(x) })
+
+  function draw_game() {
+    if (main_pile.length == 0) {
+      if (bad_pile.length == 0) {
+        bad_pile = good_pile
+        good_pile = []
+      }
+      main_pile = bad_pile
+      shuffle(main_pile)
+      bad_pile = []
+    }
+
+    game_div.empty()
+    game_div.append($('<div/>').text('left: ' + main_pile.length + ' good: ' + good_pile.length + ' bad: ' + bad_pile.length))
+    game_div.append($('<div style="padding:10px;font-size:150%"/>').text(main_pile[0][front]))
+    game_div.append($('<div style="background:black;padding:10px;font-size:150%"/>').text(main_pile[0][!front]).click(function () {
+      $(this).css('background', 'white')
+    }))
+    game_div.append($('<button/>').text('good').click(() => {
+      good_pile.push(main_pile.shift())
+      draw_game()
+    }))
+    game_div.append($('<span>').html('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'))
+    game_div.append($('<button/>').text('bad').click(() => {
+      bad_pile.push(main_pile.shift())
+      draw_game()
+    }))
+  }
+
+  draw_game()
+}
+
+function each(o, cb) {
+  if (o instanceof Array) {
+    for (var i = 0; i < o.length; i++) {
+      if (cb(o[i], i, o) == false)
+        return false
+    }
+  } else {
+    for (var k in o) {
+      if (o.hasOwnProperty(k)) {
+        if (cb(o[k], k, o) == false)
+          return false
+      }
+    }
+  }
+  return true
+}
+
+function shuffle(a) {
+    var j, x, i;
+    for (i = a.length; i; i--) {
+        j = Math.floor(Math.random() * i);
+        x = a[i - 1];
+        a[i - 1] = a[j];
+        a[j] = x;
+    }
+}
+
+function to_array(o) {
+  var a = [];
+  each(o, (x) => { a.push(x) });
+  return a
+}
+
+function require(me, cb) {
+    var s = document.createElement('script')
+    s.onload = cb
+    s.src = me
+    document.head.appendChild(s)
+}
+
+</script>
+</body>
