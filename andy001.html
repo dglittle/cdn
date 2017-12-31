@@ -1,0 +1,117 @@
+<body>
+<script>
+
+var print = function (x) {
+    var d = document.createElement('div')
+    d.innerHTML = x
+    document.body.appendChild(d)
+}
+
+print("Welcome to symmetry world! touch to draw and press reset to erace!")
+
+var tau = Math.PI*2
+function sin(x) { return Math.sin(x) }
+function cos(x) { return Math.cos(x) }
+
+var canvas = document.createElement('canvas');
+canvas.style.border = "5px solid black"
+canvas.width = 500
+canvas.height = 500
+document.body.append(canvas)
+var context = canvas.getContext('2d');
+
+var mouse_is_down = false
+var start_x = 250
+var start_y = 250
+
+canvas.onmousedown = function (e) {
+    start_x = e.clientX
+    start_y = e.clientY
+    mouse_is_down = true
+}
+
+canvas.onmtouchdown = function (e) {
+    start_x = e.touches[0].clientX
+    start_y = e.touches[0].clientY
+    mouse_is_down = true
+}
+
+canvas.onmousemove = function (e) {
+    if (mouse_is_down) {
+        context.beginPath()
+        
+        context.moveTo(start_x, start_y)
+        context.lineTo(e.clientX, e.clientY)
+
+        context.moveTo(start_y, start_x)
+        context.lineTo(e.clientY, e.clientX)
+        
+        context.moveTo(500 - start_x, 500 - start_y)
+        context.lineTo(500 - e.clientX,500 -  e.clientY)
+        
+        context.moveTo(500 - start_y, 500 - start_x)
+        context.lineTo(500 - e.clientY,500 - e.clientX)
+        
+        context.stroke()
+        
+        start_x = e.clientX
+        start_y = e.clientY
+    }
+}
+
+canvas.onmtouchmove = function (e) {
+    var x = e.touches[0].clientX
+    var y = e.touches[0].clientY
+    if (mouse_is_down) {
+        context.beginPath()
+        
+        context.moveTo(start_x, start_y)
+        context.lineTo(x, y)
+
+        context.moveTo(start_y, start_x)
+        context.lineTo(y, x)
+        
+        context.moveTo(500 - start_x, 500 - start_y)
+        context.lineTo(500 - x, 500 -  y)
+        
+        context.moveTo(500 - start_y, 500 - start_x)
+        context.lineTo(500 - y, 500 - x)
+        
+        context.stroke()
+        
+        start_x = x
+        start_y = y
+    }
+}
+
+canvas.onmouseup = function (e) {
+    mouse_is_down = false
+}
+
+document.onkeydown = function (e) {
+    if (e.keyCode == 32) {
+        context.clearRect(0, 0, 500, 500)
+    }
+}
+
+var b = document.createElement('button');
+b.innerHTML = "reset"
+document.body.append(b)
+
+b.onclick = function (e) {
+    context.clearRect(0, 0, 500, 500)
+}
+
+var a = document.createElement('button');
+a.innerHTML = "change color"
+document.body.append(a)
+
+a.onclick = function (e) {
+    context.strokeStyle = 'rgb(' + Math.floor(Math.random()*255) + ',' +  Math.floor(Math.random()*255) + ',' +   Math.floor(Math.random()*255) + ')';
+}
+
+ print('rgb(' + Math.floor(Math.random()*255) + ',' +  Math.floor(Math.random()*255) + ',' +   Math.floor(Math.random()*255) + ')'
+)
+
+</script>
+</body>
