@@ -1,0 +1,145 @@
+<body>
+<script>
+
+// make slider for adjusting how many times around it goes
+// make layers
+
+var tau = Math.PI*2
+function sin(x) { return Math.sin(x) }
+function cos(x) { return Math.cos(x) }
+
+var c = document.createElement('canvas')
+c.style.border = "5px solid black"
+c.width = 500
+c.height = 500
+document.body.append(c)
+var g = c.getContext('2d')
+
+var cx = c.width/2
+var cy = c.height/2
+var r1 = 450/2
+var r2 = 320/2
+var r3 = 200/2
+
+function update() {
+    g.clearRect(0, 0, 500, 500)
+    var first = true
+    var t = 0
+    g.beginPath()
+    while (t < tau * 100) {
+        var x = cx + (r1 - r2)*cos(t) + r3*cos(t*r1/r2)
+        var y = cy + (r1 - r2)*sin(t) + r3*sin(t*r1/r2)
+        if (first) {
+            g.moveTo(x, y)
+        } else {
+            g.lineTo(x, y)
+        }
+        first = false
+        t += 0.1
+    }
+    g.stroke()
+}
+update()
+
+document.body.append(create_slider(lerp(0, 0, 250, 1, r1), 500, function (a) {
+    r1 = lerp(0, 0, 1, 250, a)
+    update()
+}))
+document.body.append(create_slider(lerp(0, 0, 250, 1, r2), 500, function (a) {
+    r2 = lerp(0, 0, 1, 250, a)
+    update()
+}))
+document.body.append(create_slider(lerp(0, 0, 250, 1, r3), 500, function (a) {
+    r3 = lerp(0, 0, 1, 250, a)
+    update()
+}))
+
+var color_picker = document.createElement('input')
+color_picker.type = 'color'
+document.body.append(color_picker)
+color_picker.addEventListener('change', function (e) {
+    g.strokeStyle = color_picker.value
+    update()
+}, false)
+
+
+
+function lerp(t0, v0, t1, v1, t) {
+    return (t - t0) * (v1 - v0) / (t1 - t0) + v0
+}
+
+function create_slider(start_x, w, cb) {
+    var d = document.createElement('div')
+    d.style.width = w + 'px'
+    d.style.height = '20px'
+    d.style.background = 'grey'
+    d.style.position = 'relative'
+    
+    var dd = document.createElement('div')
+    d.append(dd)
+    dd.style.position = 'relative'
+    dd.style.width = '20px'
+    dd.style.height = '20px'
+    dd.style.background = 'red'
+    setTimeout(function () {
+        dd.style.left = (start_x * (d.offsetWidth - dd.offsetWidth)) + 'px'
+    }, 0)
+
+    var glass = document.createElement('div')
+    d.append(glass)
+    glass.style.position = 'absolute'
+    glass.style.left = '0px'
+    glass.style.top = '0px'
+    glass.style.width = w + 'px'
+    glass.style.height = '20px'
+    
+    glass.onmousedown = function (e) {
+        e.preventDefault()
+        var pos = getRelPos(e, glass)
+        var grabX = dd.offsetWidth / 2
+        if (pos[0] >= dd.offsetLeft && pos[0] < dd.offsetLeft + dd.offsetWidth) {
+            grabX = pos[0] - dd.offsetLeft
+        }
+        
+        dd.style.left = cap(pos[0] - grabX, 0, d.offsetWidth - dd.offsetWidth)
+
+        var oldMove = document.onmousemove
+        document.onmousemove = function (e) {
+            var pos = getRelPos(e, glass)
+            dd.style.left = cap(pos[0] - grabX, 0, d.offsetWidth - dd.offsetWidth)
+            cb(dd.offsetLeft / (d.offsetWidth - dd.offsetWidth))
+        }
+        
+        var oldUp = document.onmouseup
+        document.onmouseup = function (e) {
+            document.onmousemove = oldMove
+            document.onmouseup = oldUp
+            cb(dd.offsetLeft / (d.offsetWidth - dd.offsetWidth))
+        }        
+    }
+    return d
+}
+
+function getPos(a) {
+    var pos = [0, 0]
+    while (a != null) {
+        pos[0] += a.offsetLeft
+        pos[1] += a.offsetTop
+        a = a.offsetParent
+    }
+    return pos
+}
+
+function getRelPos(e, to) {
+    var pos = getPos(to)
+    return [e.pageX - pos[0], e.pageY - pos[1]]
+}
+
+function cap(t, mi, ma) {
+    if (t < mi) return mi
+    if (t > ma) return ma
+    return t
+}
+
+</script>
+</body>
