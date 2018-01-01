@@ -1,0 +1,15 @@
+<script src="https://dglittle.github.io/cdn/sha256_001.js"></script>
+<body>
+    <div style="display:grid;width:100%;height:100%;grid-template-columns: auto 1fr;grid-template-rows:auto 1fr">
+        <button style="width:100%;height:100%" onclick="go()">sha256&nbsp;&#x2192;</button>
+        <div id="output" style="width:100%;height:100%">ho</div>
+        <textarea id="input" style="width:100%;height:100%;grid-column-end:span 2">text to hash</textarea>
+    </div>
+<script>
+
+function go() {
+    output.textContent = sha256(input.value)
+}
+
+</script>
+</body>
