@@ -58,7 +58,8 @@ window.input_box.onkeydown = function (e) {
         var ref = db.child('/aa/chat').push()
         ref.set({
             uid : uid,
-            text : window.input_box.value
+            text : window.input_box.value,
+            time : firebase.database.ServerValue.TIMESTAMP
         })
     }
 }
