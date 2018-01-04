@@ -1,13 +1,11 @@
 <script src="https://www.gstatic.com/firebasejs/4.8.1/firebase.js"></script>
 <script src="https://dglittle.github.io/cdn/random001.js"></script>
 
-<body style="margin:0px;padding:0px">
-<div style="width:100%;height:100%;display:grid;grid-template-rows:1fr auto;background:rgb(5, 10, 20)">
-    <div id="chat_area" style="width:100%;height:100%;overflow:scroll"></div>
-    <div style="display:grid;grid-template-columns:1fr auto">
-        <input id="input_box" value="" placeholder="you can type a message here, ctrl-enter to send" style="width:100%;border:1px solid white;background:black"></input>
-        <button onclick="send()">send</button>
-    </div>
+<body style="margin:0px;padding:0px;background:rgb(5, 10, 20)">
+<div id="chat_area" style="width:100%;height:100%"></div>
+<div style="display:grid;grid-template-columns:1fr auto;display:fixed;left:0px;bottom:0px">
+    <input id="input_box" value="" placeholder="you can type a message here, ctrl-enter to send" style="width:100%;border:1px solid white;background:black"></input>
+    <button onclick="send()">send</button>
 </div>
 </body>
 
@@ -55,7 +53,7 @@ function main_update() {
     while (chat_area.firstChild)
         chat_area.firstChild.remove()
     chat_area.append(draw_chat_messages())
-    chat_area.scrollTop = chat_area.scrollHeight
+    document.body.scrollTop = document.body.scrollHeight
 }
 
 function send() {
