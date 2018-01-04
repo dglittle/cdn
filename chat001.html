@@ -55,7 +55,7 @@ function main_update() {
     while (chat_area.firstChild)
         chat_area.firstChild.remove()
     chat_area.append(draw_chat_messages())
-    window.chat_area.scrollTop = window.chat_area.scrollHeight
+    chat_area.scrollTop = chat_area.scrollHeight
 }
 
 function send() {
