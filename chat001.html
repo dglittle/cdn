@@ -21,13 +21,12 @@ var config = {
 }
 var db = firebase.initializeApp(config).database().ref()
 
+firebase.auth().onAuthStateChanged(function(user) {
+    console.log('BLHAH!')
+    console.log(user)
+})
 firebase.auth().signInAnonymously().catch(function(error) {
     console.log(error)
-})
-
-
-firebase.auth().onAuthStateChanged(function(user) {
-    console.log(user)
 })
 
 </script>
