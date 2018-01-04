@@ -40,7 +40,7 @@ function draw_chat_messages() {
         chats.push(c)
     })
     chats.sort(function (a, b) {
-        return b.time - a.time
+        return a.time - b.time
     })
     each(chats, function (c) {
         d.append(draw_chat_message(c))
