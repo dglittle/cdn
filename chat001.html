@@ -1,13 +1,26 @@
+<script src="https://www.gstatic.com/firebasejs/4.8.1/firebase.js"></script>
+
 <body style="margin:0px;padding:0px">
 <div style="width:100%;height:100%;display:grid;grid-template-rows:1fr auto">
-    <div style="width:100%;height:100%;background:red">
+    <div style="width:100%;height:100%;background:cyan">
         chat background.. where chat messages will appear
     </div>
     <input value="hi there" placeholder="your message"></input>
 </div>
+</body>
+
 <script>
 
-console.log('hi?2')
+var config = {
+    apiKey: "AIzaSyDVM0ekHwUqC_rGsqkT7fJ71FyRum9cxko",
+    authDomain: "glittle.firebaseapp.com",
+    databaseURL: "https://glittle.firebaseio.com",
+    projectId: "glittle",
+    storageBucket: "",
+    messagingSenderId: "1000468536093"
+}
+var db = firebase.initializeApp(config).database().ref()
+
+
 
 </script>
-</body>
