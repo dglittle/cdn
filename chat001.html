@@ -1,8 +1,9 @@
 <script src="https://www.gstatic.com/firebasejs/4.8.1/firebase.js"></script>
+<script src="https://dglittle.github.io/cdn/random001.js"></script>
 
 <body style="margin:0px;padding:0px">
-<div style="width:100%;height:100%;display:grid;grid-template-rows:1fr auto">
-    <div id="chat_messages" style="width:100%;height:100%;background:cyan"></div>
+<div style="width:100%;height:100%;display:grid;grid-template-rows:1fr auto;background:rgb(5, 10, 20)">
+    <div id="chat_messages" style="width:100%;height:100%"></div>
     <input id="input_box" value="hi there" placeholder="your message"></input>
 </div>
 </body>
@@ -20,10 +21,26 @@ var config = {
 var db = firebase.initializeApp(config).database().ref()
 var uid = null
 
+function shuffle(a) {
+    for (var i = 0; i < a.length; i++) {
+        var ri = Math.floor(a.length * Math.random())
+        var temp = a[i]
+        a[i] = a[ri]
+        a[ri] = temp
+    }
+    return a
+}
+
+function random_color(seed) {
+    Math.randomSeed(seed)
+    return 'rgb(' + shuffle([Math.floor(Math.random() * 256), 255, 0]).join(', ') + ')'
+}
+
 function run_chat() {
     function display_chat_message(x) {
         var d = document.createElement('div')
         d.textContent = x.uid + ' : ' + x.text
+        d.style.color = random_color(x.uid)
         window.chat_messages.append(d)
     }
     db.child('/aa/chat').on('child_added', function (x) {
