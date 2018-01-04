@@ -1,10 +1,8 @@
 <script src="https://www.gstatic.com/firebasejs/4.8.1/firebase.js"></script>
 
 <body style="margin:0px;padding:0px">
-<div id="chat_messages" style="width:100%;height:100%;display:grid;grid-template-rows:1fr auto">
-    <div style="width:100%;height:100%;background:cyan">
-        chat background.. where chat messages will appear
-    </div>
+<div style="width:100%;height:100%;display:grid;grid-template-rows:1fr auto">
+    <div id="chat_messages" style="width:100%;height:100%;background:cyan"></div>
     <input id="input_box" value="hi there" placeholder="your message"></input>
 </div>
 </body>
@@ -49,8 +47,10 @@ window.input_box.onkeydown = function (e) {
 }
 
 firebase.auth().onAuthStateChanged(function(user) {
-    uid = user.uid
-    run_chat()
+    if (user) {
+        uid = user.uid
+        run_chat()
+    }
 })
 firebase.auth().signInAnonymously().catch(function(error) {
     console.log(error)
