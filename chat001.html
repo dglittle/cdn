@@ -39,7 +39,8 @@ function random_color(seed) {
 function run_chat() {
     function display_chat_message(x) {
         var d = document.createElement('div')
-        d.textContent = x.uid + ' : ' + x.text
+        d.textContent = x.text
+        d.title = 'written by: ' + x.uid
         d.style.color = random_color(x.uid)
         window.chat_messages.append(d)
     }
