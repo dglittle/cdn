@@ -3,7 +3,7 @@
 
 <body style="margin:0px;padding:0px">
 <div style="width:100%;height:100%;display:grid;grid-template-rows:1fr auto;background:rgb(5, 10, 20)">
-    <div id="chat_messages" style="width:100%;height:100%"></div>
+    <div id="chat_area" style="width:100%;height:100%"></div>
     <input id="input_box" value="hi there" placeholder="your message"></input>
 </div>
 </body>
@@ -19,37 +19,38 @@ var config = {
     messagingSenderId: "1000468536093"
 }
 var db = firebase.initializeApp(config).database().ref()
-var uid = null
-
-function shuffle(a) {
-    for (var i = 0; i < a.length; i++) {
-        var ri = Math.floor(a.length * Math.random())
-        var temp = a[i]
-        a[i] = a[ri]
-        a[ri] = temp
-    }
-    return a
+var model = {
+    uid : null,
+    chat : []
 }
 
-function random_color(seed) {
-    Math.randomSeed(seed)
-    return 'rgb(' + shuffle([Math.floor(Math.random() * 256), 255, 0]).join(', ') + ')'
+function draw_chat_message(x) {
+    var d = document.createElement('div')
+    d.textContent = x.text
+    d.title = 'written by: ' + x.uid
+    d.style.color = random_color(x.uid)
+    return d
 }
 
-function run_chat() {
-    function display_chat_message(x) {
-        var d = document.createElement('div')
-        d.textContent = x.text
-        d.title = 'written by: ' + x.uid
-        d.style.color = random_color(x.uid)
-        window.chat_messages.append(d)
-    }
-    db.child('/aa/chat').on('child_added', function (x) {
-        x = x.val()
-        if (x) {
-            display_chat_message(x)
-        }
+function draw_chat_messages() {
+    var d = document.createElement('div')
+    var chats = []
+    each(model.chat, function (c) {
+        chats.push(c)
     })
+    chats.sort(function (a, b) {
+        return b.time - a.time
+    })
+    each(chats, function (c) {
+        d.append(draw_chat_message(c))
+    })
+    return d
+}
+
+function main_update() {
+    while (chat_area.firstChild)
+        chat_area.firstChild.remove()
+    chat_area.append(draw_chat_messages())
 }
 
 window.input_box.onkeydown = function (e) {
@@ -65,12 +66,50 @@ window.input_box.onkeydown = function (e) {
     }
 }
 
+function each(o, cb) {
+	if (o instanceof Array) {
+		for (var i = 0; i < o.length; i++) {
+			if (cb(o[i], i, o) == false)
+				return false
+		}
+	} else {
+		for (var k in o) {
+			if (o.hasOwnProperty(k)) {
+				if (cb(o[k], k, o) == false)
+					return false
+			}
+		}
+	}
+	return true
+}
+
+function shuffle(a) {
+    for (var i = 0; i < a.length; i++) {
+        var ri = Math.floor(a.length * Math.random())
+        var temp = a[i]
+        a[i] = a[ri]
+        a[ri] = temp
+    }
+    return a
+}
+
+function random_color() {
+    return 'rgb(' + shuffle([Math.floor(Math.random() * 256), 255, 0]).join(', ') + ')'
+}
+
 firebase.auth().onAuthStateChanged(function(user) {
     if (user) {
         uid = user.uid
-        run_chat()
+        db.child('/aa/chat').on('value', function (x) {
+            x = x.val()
+            if (x) {
+                model.chat = x
+                main_update()
+            }
+        })
     }
 })
+
 firebase.auth().signInAnonymously().catch(function(error) {
     console.log(error)
 })
