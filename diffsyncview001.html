@@ -3,13 +3,16 @@
 <script src="https://invisible-college.github.io/diffsync/diffsync.js"></script>
 <script>
 
+var channel = document.location.hash ? document.location.hash.slice(1) : 'goop4'
+document.location.hash = '#' + channel
+
 var t = document.createElement('textarea')
 t.style.width = '100%'
 t.style.height = '100%'
 document.body.append(t)
 var ds = diffsync.create_client({
 	ws_url : 'wss://invisible.college:' + diffsync.port,
-	channel : document.location.hash.slice(1) || 'goop4',
+	channel : channel,
 	get_text : function () {
 	    return t.value
 	},
