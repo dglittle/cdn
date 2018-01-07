@@ -1,15 +1,15 @@
 
-<body>
+<body style="margin:0px">
 <script src="https://dglittle.github.io/cdn/utils001.js"></script>
 <script>
 
 var c = document.createElement('canvas')
-c.width = 500
-c.height = 500
+c.width = 256
+c.height = 256
 var g = c.getContext('2d')
 
-var xd = 10
-var yd = 10
+var xd = 256 / 64
+var yd = 256 / 64
 var xn = c.width / xd
 var yn = c.height / yd
 
@@ -57,12 +57,9 @@ function update_it() {
     if (iteration < 1000) {
         for (var y = 0; y < yn; y++) {
             for (var x = 0; x < xn; x++) {
-                vels[y][x] *= 0.99
+                vels[y][x] *= 1 - 1/(iteration/3 + 1)
             }
         }
-        c.style.border = '1px solid red'
-    } else {
-        c.style.border = '1px solid black'
     }
     
     
