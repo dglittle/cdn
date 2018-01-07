@@ -35,11 +35,10 @@ $(function () {
         console.log('oh no, AJAX badness happened!')
     })
 
-    var m = window.location.href.match(/\/\/(.*?)\.github\.io\/(.*?)\/([^\?#]*)/)
-    db.user = (m && m[1]) || 'dglittle'
-    db.repo = (m && m[2]) || 'cdn'
-    db.path = (m && m[3]) || 'test.html'
-    
+    db.user = 'dglittle'
+    db.repo = 'cdn'
+    db.path = document.location.hash ? document.location.hash.slice(1) : 'test.html'
+
     openFile(main)
 })
 
@@ -47,10 +46,6 @@ function main() {
     $('body').empty()
     
     var input = $('<div id="input" style="width:100%;height:100%"/>')
-
-    var reload = function () {
-        bottomRight.empty().append($('<iframe style="width:100%;height:100%" frameBorder="0"/>').attr('src', 'data:text/html;base64,' + Base64.encode(db.text)))
-    }
     
     var useDataUrl = $('<label><input id="useDataUrl" type="checkbox" checked>use data url</label>')
 
@@ -74,13 +69,11 @@ function main() {
     })
 
     editor.getSession().setMode("ace/mode/html")
-    var onChange = function () {}
-    editor.on('input', function () {
-        onChange(editor.getSession().getValue())
-    })
-    
-    onChange = function (x) { db.text = x }
     editor.getSession().setValue(db.text)
+
+    var reload = function () {
+        bottomRight.empty().append($('<iframe style="width:100%;height:100%" frameBorder="0"/>').attr('src', 'data:text/html;base64,' + Base64.encode(editor.getSession().getValue())))
+    }
 
     document.body.onkeydown = function (e) {
         if ((e.shiftKey || e.ctrlKey || e.metaKey) && ((e.keyCode == 83 && !e.shiftKey) || e.keyCode == 13)) {
