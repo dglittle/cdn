@@ -1,0 +1,97 @@
+<html>
+<head>
+<meta charset='utf-8'>
+<title>viewer</title>
+<meta name="viewport" content="width=device-width, user-scalable=no">
+</head>
+<body>
+<script src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+<script src="https://dglittle.github.io/gl519/index.js"></script>
+<script src="https://dglittle.github.io/gl519/tab.js"></script>
+<script src="https://dglittle.github.io/gl519/aes.js"></script>
+<script src="https://dglittle.github.io/github-oauth/index.js"></script>
+<script src="https://cdn.jsdelivr.net/ace/1.1.8/min/ace.js"></script>
+<script src="https://cdn.jsdelivr.net/ace/1.1.8/min/ext-language_tools.js"></script>
+<script>
+    
+var db = {}
+
+function openFile(cb) {
+    $.get('https://api.github.com/repos/' + db.user + '/' + db.repo + '/contents/' + db.path, function (x) {
+        db.sha = x.sha
+        db.text = Base64.decode(x.content.replace(/\s/g, ''))
+        cb()
+    }).fail(function () {
+        db.text = 'there was no file called that, so you are seeing this..'
+        cb()
+    })
+    
+}
+
+$(function () {
+    $('head').append($('<style> html { box-sizing: border-box; } *, *:before, *:after { box-sizing: inherit; } body { margin: 0px } table { border-collapse: collapse; } th, td { padding: 0px; } </style>'))
+    
+    $(document).ajaxError(function () {
+        console.log('oh no, AJAX badness happened!')
+    })
+
+    var m = window.location.href.match(/\/\/(.*?)\.github\.io\/(.*?)\/([^\?#]*)/)
+    db.user = (m && m[1]) || 'dglittle'
+    db.repo = (m && m[2]) || 'cdn'
+    db.path = (m && m[3]) || 'test.html'
+    
+    openFile(main)
+})
+
+function main() {
+    $('body').empty()
+    
+    var input = $('<div id="input" style="width:100%;height:100%"/>')
+
+    var reload = function () {
+        bottomRight.empty().append($('<iframe style="width:100%;height:100%" frameBorder="0"/>').attr('src', 'data:text/html;base64,' + Base64.encode(db.text)))
+    }
+    
+    var useDataUrl = $('<label><input id="useDataUrl" type="checkbox" checked>use data url</label>')
+
+    var bottomLeft = $('<div style="width:100%;height:100%"/>').append(input)
+    var bottomRight = $('<div style="width:100%;height:100%"/>')
+
+    $('body').append(_.splitHorz(.5, .5, bottomLeft, bottomRight))
+
+    ace.require("ace/ext/language_tools")
+    var editor = ace.edit("input")
+    editor.setTheme("ace/theme/monokai")
+    // editor.renderer.setShowGutter(false)
+    editor.setShowPrintMargin(false)
+    editor.setShowFoldWidgets(false)
+    editor.setOptions({
+        fontFamily: 'Menlo,monospace',
+        fontSize: '9pt',
+        wrap: true,
+        enableBasicAutocompletion: true,
+        enableLiveAutocompletion: true
+    })
+
+    editor.getSession().setMode("ace/mode/html")
+    var onChange = function () {}
+    editor.on('input', function () {
+        onChange(editor.getSession().getValue())
+    })
+    
+    onChange = function (x) { db.text = x }
+    editor.getSession().setValue(db.text)
+
+    document.body.onkeydown = function (e) {
+        if ((e.shiftKey || e.ctrlKey || e.metaKey) && ((e.keyCode == 83 && !e.shiftKey) || e.keyCode == 13)) {
+            e.preventDefault()
+            reload()
+        }
+    }
+    
+    reload()
+}
+
+</script>
+</body>
+</html>
