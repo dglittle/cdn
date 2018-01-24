@@ -1,0 +1,113 @@
+
+<body style="margin:0px">
+<script src="https://dglittle.github.io/cdn/utils002.js"></script>
+<script>
+
+var c = document.createElement('canvas')
+c.width = 256
+c.height = 256
+var g = c.getContext('2d')
+
+var xd = 256 / 64
+var yd = 256 / 64
+var xn = c.width / xd
+var yn = c.height / yd
+
+var spins = []
+for (var y = 0; y < yn; y++) {
+    var row = []
+    for (var x = 0; x < xn; x++) {
+        row.push(Math.random() * Math.PI * 2)
+    }
+    spins.push(row)
+}
+
+function update_it() {
+    
+    function calc_energy(x, y, spin) {
+        var E = 0
+        E += -Math.cos(spins[fmod(y - 1, yn)][x] - spin)
+        E += -Math.cos(spins[fmod(y + 1, yn)][x] - spin)
+        E += -Math.cos(spins[y][fmod(x - 1, xn)] - spin)
+        E += -Math.cos(spins[y][fmod(x + 1, xn)] - spin)
+        return E
+    }
+
+    var epsilon = 0.01
+    var new_spins = []
+    for (var y = 0; y < yn; y++) {
+        var row = []
+        for (var x = 0; x < xn; x++) {
+            var best_spin = spins[y][x]
+            var best_E = calc_energy(x, y, best_spin)
+            
+            var test_E = calc_energy(x, y, spins[y][x] + epsilon)
+            if (test_E < best_E) {
+                best_E = test_E
+                best_spin = spins[y][x] + epsilon
+            }
+            
+            var test_E = calc_energy(x, y, spins[y][x] - epsilon)
+            if (test_E < best_E) {
+                best_E = test_E
+                best_spin = spins[y][x] - epsilon
+            }
+            
+            row.push(best_spin)
+        }
+        new_spins.push(row)
+    }
+    spins = new_spins
+}
+
+function paint_it() {
+    g.fillStyle = 'white'
+    g.fillRect(0, 0, c.width, c.height)
+    // g.beginPath()
+    for (var y = 0; y < yn; y++) {
+        for (var x = 0; x < xn; x++) {
+            var a = fmod(spins[y][x] + Math.PI/2, Math.PI*2)
+
+            var R = 0
+            var G = 0
+            var B = 0
+            if (a < Math.PI*2/3) {
+                R = lerp(0, 1, Math.PI*2/3, 0, a)
+                G = lerp(0, 0, Math.PI*2/3, 1, a)
+            } else if (a < Math.PI*2*2/3) {
+                G = lerp(Math.PI*2/3, 1, Math.PI*2*2/3, 0, a)
+                B = lerp(Math.PI*2/3, 0, Math.PI*2*2/3, 1, a)
+            } else {
+                B = lerp(Math.PI*2*2/3, 1, Math.PI*2, 0, a)
+                R = lerp(Math.PI*2*2/3, 0, Math.PI*2, 1, a)
+            }
+            g.fillStyle = 'rgb(' + Math.floor(255 * R) + ', ' + Math.floor(255 * G) + ', ' + Math.floor(255 * B) + ')'
+            g.fillRect(x * xd, y * yd, xd, yd)
+
+            // g.beginPath()
+            // g.moveTo(x * xd + xd/2 + xd/2*Math.cos(a), y * yd + yd/2 + yd/2*Math.sin(a))
+            // g.arc(x * xd + xd/2, y * yd + yd/2, xd/2, a, a + Math.PI)
+            // g.fill()
+        }
+    }
+    // g.fillStyle = 'red'
+    // g.fill()        
+}
+
+function loop() {
+    update_it()
+    paint_it()
+    setTimeout(loop, 15)
+}
+loop()
+
+document.body.append(c)
+
+function fmod(a, b) {
+    var m = a % b
+    if (m < 0) return m + b
+    return m
+}
+
+</script>
+</body>
