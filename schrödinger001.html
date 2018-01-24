@@ -1,0 +1,119 @@
+
+<body>
+<script>
+
+var tau = Math.PI * 2
+
+var c = document.createElement('canvas')
+c.width = 500
+c.height = 200
+c.style.border = '1px solid grey'
+document.body.append(c)
+
+var c2 = document.createElement('canvas')
+c2.width = 500
+c2.height = 200
+c2.style.border = '1px solid grey'
+document.body.append(c2)
+
+var g = c.getContext('2d')
+var g2 = c2.getContext('2d')
+
+var wave = []
+for (var i = 0; i < 500; i++) {
+    wave[i] = [Math.sin(lerp(0, 0, 500, Math.PI*2, i)) * 1, 0]
+}
+
+// wave[499] = [1, 0]
+// wave[0] = [0, 0]
+// wave[1] = [1, 0]
+
+function step_wave() {
+    var dt = [1/10, 0]
+    var factor = [0, 1]
+    var wave2 = []
+    for (var i = 0; i < 500; i++) {
+        var prev = wave[myMod(i - 1, 500)]
+        var me = wave[i]
+        var next = wave[myMod(i + 1, 500)]
+        var prev_d = img_sub(me, prev)
+        var next_d = img_sub(next, me)
+        var d2 = img_sub(next_d, prev_d)
+        wave2[i] = img_add(me, img_mul(img_mul(factor, d2), dt))
+        
+        // console.log(prev)
+        // console.log(me)
+        // console.log(next)
+        // console.log(prev_d)
+        // console.log(next_d)
+        // console.log(d2)
+        // console.log(img_mul(factor, d2))
+        // console.log(wave2[i])
+        // throw 'bloopp'
+    }
+    wave = wave2
+}
+
+function drawWave() {
+    g.fillStyle = 'rgba(255, 255, 255, 0.05)'
+    g.fillRect(0, 0, c.width, c.height)
+    
+    g.beginPath()
+    g.moveTo(0, c.height/2 * wave[0][0] + c.height/2)
+    for (var i = 1; i < 500; i++) {
+        g.lineTo(i, c.height/2 * wave[i][0]/2 + c.height/2)
+    }
+    g.lineWidth = 1
+    g.strokeStyle = 'red'
+    g.stroke()
+    
+    ///
+    
+    g2.fillStyle = 'rgba(255, 255, 255, 0.05)'
+    g2.fillRect(0, 0, c2.width, c2.height)
+    
+    g2.beginPath()
+    g2.moveTo(0, c.height/2 * wave[0][1] + c.height/2)
+    for (var i = 1; i < 500; i++) {
+        g2.lineTo(i, c.height/2 * wave[i][1]/2 + c.height/2)
+    }
+    g2.lineWidth = 1
+    g2.strokeStyle = 'red'
+    g2.stroke()
+}
+
+function loop() {
+    step_wave()
+    drawWave()
+    setTimeout(loop, 30)
+}
+loop()
+
+function myMod(a, b) {
+    var c = a % b
+    if (c < 0) return b + c
+    return c
+}
+
+function lerp(t0, v0, t1, v1, t) {
+    return (t - t0) * (v1 - v0) / (t1 - t0) + v0
+}
+
+function img_sub(a, b) {
+    return img_add(a, img_neg(b))
+}
+
+function img_add(a, b) {
+    return [a[0] + b[0], a[1] + b[1]]
+}
+
+function img_mul(a, b) {
+    return [a[0]*b[0] - a[1]*b[1], a[0]*b[1] + a[1]*b[0]]
+}
+
+function img_neg(a) {
+    return [-a[0], -a[1]]
+}
+
+</script>
+</body>
