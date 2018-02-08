@@ -1,0 +1,83 @@
+<body bgcolor="#011f01">
+</body>
+<script>
+
+var list_of_pieces = []
+function checkmate() {
+    var c = document.createElement('canvas')
+    var w = c.getContext('2d')
+    var y = 0
+    var r = 0
+    w.canvas.width = 401
+    w.canvas.height= 400
+
+    for (var y = 0; y < 8; y++) {
+        for (var x = 0; x < 8; x++) {
+            if((x + y)%2==0){
+                w.fillStyle="#000000"
+            }else{
+                w.fillStyle="#ff0000"
+            }
+            w.fillRect((x * 50), (y * 50), 50, 50)
+        }
+    }    
+    var r = 0
+    var p1 = {}
+    var p2 = {}
+    var a = 0
+    var b = 0
+    for (var y = 0; y < 8; y++) {
+        b = y
+        for (var x = 0; x < 8; x++) {
+            a = x
+            if(y<=5){
+                w.fillStyle='#707070'
+                p1.namex = [a, b]
+                p1.loc = [a,b]
+                p1.onclick = movr()
+                list_of_pieces.push(p1)
+                console.log(p1)
+            }else{
+                a = x
+                b = y
+                w.fillStyle='#ffffff'
+                p2.namex = [a,b]
+                p2.loc = [a,b]
+                p2.onclick = movr()
+                list_of_pieces.push(p2)
+                console.log(p2)
+            }
+            w.beginPath()
+            w.arc(25+(50*x), 25+(y*50), 25, 0,2* Math.PI)
+            w.fill()
+            r=r+1
+            
+            if(r==16) {
+                y = 5
+            }
+        }
+    }
+    
+    document.body.append(c)
+    console.log(list_of_pieces)
+}
+function movr(){
+    console.log("test test test Blarg  "+list_of_pieces)
+}
+checkmate()
+movr()
+
+// I'm going to attempt to make 2 objects to allow for each players peices to be moveable. I am going to create two arrays and the goal is to have each array have all of the peice psotiotion for each player.
+
+//         }
+//         }
+
+// var p1 = new Object();
+//  p1.yx = x(i)
+// var p2 = []
+
+
+</script>
+
+
+
