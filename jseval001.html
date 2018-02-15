@@ -1,0 +1,86 @@
+<body></body>
+<script src="https://cdn.jsdelivr.net/ace/1.2.6/min/ace.js"></script>
+<script src="https://cdn.jsdelivr.net/ace/1.2.6/min/ext-language_tools.js"></script>
+<script>
+
+function main() {
+    var input = document.createElement('div')
+    input.id = 'input'
+    input.style.position = 'absolute'
+    input.style.top = '0px'
+    input.style.left = '0px'
+    input.style.width = '50%'
+    input.style.height = '50%'
+    document.body.appendChild(input)
+
+    ace.require('ace/ext/language_tools')
+    var editor = ace.edit(input.id)
+    editor.setTheme('ace/theme/monokai')
+    editor.renderer.setShowGutter(false)
+    editor.setShowPrintMargin(false)
+    editor.setShowFoldWidgets(false)
+    editor.setOptions({
+        fontFamily: 'Menlo,monospace',
+        fontSize: '9pt',
+        wrap: true,
+        enableBasicAutocompletion: true
+    })
+    editor.getSession().setMode('ace/mode/javascript')
+    
+    var input_text = document.createElement('textarea')
+    input_text.style.position = 'absolute'
+    input_text.style.top = '50%'
+    input_text.style.left = '0px'
+    input_text.style.width = '50%'
+    input_text.style.height = '50%'
+    document.body.append(input_text)
+
+    var output = document.createElement('textarea')
+    output.style.position = 'absolute'
+    output.style.top = '0px'
+    output.style.left = '50%'
+    output.style.width = '50%'
+    output.style.height = '100%'
+    document.body.append(output)
+    
+    function go() {
+        var code = editor.getSession().getValue()
+        var input = input_text.value
+        try {
+            var __print = []
+            function printNoLn(a) {
+                if (typeof(a) == 'object') {
+                    a = JSON.stringify(a, null, '    ')
+                }
+                __print.push(a)
+            }
+            function print(a) {
+                printNoLn(a)
+                printNoLn('\n')
+            }
+            var result = eval(code)
+            if (__print.length > 0) {
+                result = __print.join("")
+            } else {
+                if (typeof result != "string") {
+                    result = JSON.stringify(result, null, '    ')
+                }
+            }
+            output.value = result
+        } catch (e) {
+            output.value = 'ERROR: ' + e
+        }
+    }
+
+    input.onkeydown = function (e) {
+        if ((e.shiftKey || e.ctrlKey || e.metaKey) && ((e.keyCode == 83 && !e.shiftKey) || e.keyCode == 13)) {
+            e.preventDefault()
+            go()
+        }
+    }
+    editor.focus()
+}
+
+main()
+
+</script>
