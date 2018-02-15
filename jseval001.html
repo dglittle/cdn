@@ -1,4 +1,4 @@
-<body></body>
+<body>
 <script src="https://cdn.jsdelivr.net/ace/1.2.6/min/ace.js"></script>
 <script src="https://cdn.jsdelivr.net/ace/1.2.6/min/ext-language_tools.js"></script>
 <script>
@@ -43,6 +43,9 @@ function main() {
     output.style.height = '100%'
     document.body.append(output)
     
+    editor.getSession().setValue('print(input)')
+    input_text.value = 'hello world'
+    
     function go() {
         var code = editor.getSession().getValue()
         var input = input_text.value
@@ -72,7 +75,7 @@ function main() {
         }
     }
 
-    input.onkeydown = function (e) {
+    document.body.onkeydown = function (e) {
         if ((e.shiftKey || e.ctrlKey || e.metaKey) && ((e.keyCode == 83 && !e.shiftKey) || e.keyCode == 13)) {
             e.preventDefault()
             go()
@@ -84,3 +87,4 @@ function main() {
 main()
 
 </script>
+</body>
