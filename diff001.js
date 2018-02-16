@@ -1,5 +1,20 @@
 
-
+function apply_diff(s, diff) {
+    var new_s = []
+    var offset = 0
+    for (var i = 0; i < diff.length; i++) {
+        var d = diff[i]
+        if (d[0] == 0) {
+            new_s.push(s.substr(offset, d[1]))
+            offset += d[1]
+        } else if (d[0] == -1) {
+            offset += d[1].length
+        } else if (d[0] == 1) {
+            new_s.push(d[1])
+        }
+    }
+    return new_s.join('')
+}
 
 /**
  * This library modifies the diff-patch-match library by Neil Fraser
