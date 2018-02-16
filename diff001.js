@@ -1,4 +1,162 @@
 
+diff = diff_main
+
+function parallel_merge(A, B) {
+    function init(X) {
+        return {
+            X : X,
+            i : 0,
+            off : 0,
+            _ : X[0]
+        }
+    }
+    var a = init(A)
+    var b = init(B)
+    
+    function inc(x) {
+        x.i++
+        x._ = x.X[x.i]
+        x.off = 0
+    }
+    function len(x) {
+        return ((x._[0] == 0) ? x._[1] : x._[1].length) - x.off
+    }
+
+    var c = []
+    function push(x) {
+        if (x[1] == 0 || x[1] == '') return;
+        var top = c[c.length - 1]
+        if (top && (top[0] == x[0])) {
+            top[1] += x[1]
+        } else {
+            c.push(x)
+        }
+    }
+
+    while (a._ && b._) {
+        if (a._[0] == 1) {
+            push([1, a._[1].substr(a.off)])
+            inc(a)
+        } else if (b._[0] == 1) {
+            push([1, b._[1].substr(b.off)])
+            inc(b)
+        } else {
+            if (len(a) < len(b)) {
+                var x = a
+                var y = b
+            } else {
+                var x = b
+                var y = a
+            }
+
+            if (a._[0] == 0 && b._[0] == 0) {
+                push([0, len(x)])
+            } else if (a._[0] == 0 && b._[0] == -1) {
+                push([-1, b._[1].substr(b.off, len(x))])
+            } else if (a._[0] == -1 && b._[0] == 0) {
+                push([-1, a._[1].substr(a.off, len(x))])
+            } else if (a._[0] == -1 && b._[0] == -1) {
+                push([-1, x._[1].substr(x.off, len(x))])
+            }
+
+            y.off += len(x)
+            inc(x)
+        }
+    }
+    if (a._ || b._) {
+        var x = a._ ? a : b
+        while (x._) {
+            if (x._[0] == 0) {
+                push([0, len(x)])
+            } else if (x._[0] == 1) {
+                push([1, x._[1].substr(x.off, len(x))])
+            } else {
+                push([-1, x._[1].substr(x.off, len(x))])
+            }
+            inc(x)
+        }
+    }
+    return c
+}
+
+function trans_merge(A, B) {
+    function init(X) {
+        return {
+            X : X,
+            i : 0,
+            off : 0,
+            _ : X[0]
+        }
+    }
+    var a = init(A)
+    var b = init(B)
+    
+    function inc(x) {
+        x.i++
+        x._ = x.X[x.i]
+        x.off = 0
+    }
+    function len(x) {
+        return ((x._[0] == 0) ? x._[1] : x._[1].length) - x.off
+    }
+
+    var c = []
+    function push(x) {
+        if (x[1] == 0 || x[1] == '') return;
+        var top = c[c.length - 1]
+        if (top && (top[0] == x[0])) {
+            top[1] += x[1]
+        } else {
+            c.push(x)
+        }
+    }
+
+    while (a._ && b._) {
+        if (b._[0] == 1) {
+            push([1, b._[1].substr(b.off)])
+            inc(b)
+        } else if (a._[0] == -1) {
+            push([-1, a._[1].substr(a.off)])
+            inc(a)
+        } else {
+            if (len(a) < len(b)) {
+                var x = a
+                var y = b
+            } else {
+                var x = b
+                var y = a
+            }
+
+            if (a._[0] == 0 && b._[0] == 0) {
+                push([0, len(x)])
+            } else if (a._[0] == 0 && b._[0] == -1) {
+                push([-1, b._[1].substr(b.off, len(x))])
+            } else if (a._[0] == 1 && b._[0] == 0) {
+                push([1, a._[1].substr(a.off, len(x))])
+            } else if (a._[0] == 1 && b._[0] == -1) {
+                // insert cancels delete
+            }
+
+            y.off += len(x)
+            inc(x)
+        }
+    }
+    if (a._ || b._) {
+        var x = a._ ? a : b
+        while (x._) {
+            if (x._[0] == 0) {
+                push([0, len(x)])
+            } else if (x._[0] == 1) {
+                push([1, x._[1].substr(x.off, len(x))])
+            } else {
+                push([-1, x._[1].substr(x.off, len(x))])
+            }
+            inc(x)
+        }
+    }
+    return c
+}
+
 function apply_diff(s, diff) {
     var new_s = []
     var offset = 0
