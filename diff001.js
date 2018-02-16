@@ -1,5 +1,12 @@
 
-diff = diff_main
+function diff(a, b) {
+    var x = diff_main(a, b)
+    for (var i = 0; i < x.length; i++) {
+        if (x[i][0] == 0)
+            x[i][1] = x[i][1].length
+    }
+    return x
+}
 
 function parallel_merge(A, B) {
     function init(X) {
