@@ -1,0 +1,1156 @@
+
+<script src="https://dglittle.github.io/cdn/utils001.js"></script>
+<script src="https://peterolson.github.io/BigInteger.js/BigInteger.min.js"></script>
+<body></body>
+<script>
+
+console.log('version 5')
+
+function create_textarea_3rd(x) {
+    var a = document.createElement('textarea')
+    a.style.position = 'absolute'
+    a.style.left = (1/3*x)*100 + '%'
+    a.style.top = '100px'
+    a.style.width = '33%'
+    a.style.bottom = '0px'
+    document.body.append(a)
+    return a
+}
+
+function create_button_3rd(x, cb) {
+    var a = document.createElement('buttton')
+    a.style.position = 'absolute'
+    a.style.left = (1/3*x)*100 + '%'
+    a.style.top = '50px'
+    a.style.width = '33%'
+    a.style.height = '50px'
+    a.style.background = 'lightgreen'
+    a.innerHTML = 'click me to compile'
+    a.onclick = cb
+    document.body.append(a)
+    return a
+}
+
+var t1 = create_textarea_3rd(0)
+var t2 = create_textarea_3rd(1)
+var t3 = create_textarea_3rd(2)
+
+t1.value = "\n$('64', push(64))\n$('0', push(0))\ncalldatacopy($('64'), $('0'), $('0'))\n$('kv', sha3($('64'), $('0')))\n\n$('new_amount', add(sload($('kv')), callvalue()))\nsstore($('new_amount'), $('kv'))\n\n$('k', sha3(push(32), $('0')))\n$('k+1', add($('k'), push(1)))\n\njumpi(gt(sload($('k+1')), $('new_amount')), pushdest('hello'))\nstop()\njumpdest('hello')\n\nsstore($('new_amount'), $('k+1'))\nsstore(calldataload(push(32)), $('k'))\n"
+
+
+var b = create_button_3rd(2, function () {
+    t2.value = compile(t1.value)
+    t3.value = decompile(t2.value)
+})
+
+function compile(asm) {
+    var code_size = 0
+    var stack_size = 0
+    var stack_vars = {}
+    
+    var bytecode = []
+    var mapy = {}
+    each(get_opcodes(), function (o) {
+        mapy[o.asm.toLowerCase()] = function () {
+            bytecode.push(o.hex)
+            stack_size += o.outputs - o.inputs
+            code_size++
+        }
+    })
+    
+    function $(key) {
+        if (arguments.length > 1)
+            stack_vars[key] = stack_size
+        else
+            mapy['dup' + (stack_size - stack_vars[key] + 1)]()
+    }
+    function push(x) {
+        if (typeof(x) == 'number') {
+            x = x.toString(16)
+            if (x.length % 2 == 1) {
+                x = '0' + x
+            }
+        }
+        mapy['push' + (x.length / 2)]()
+        bytecode.push(x)
+        code_size += x.length / 2
+    }
+    
+    var labels = {}
+    var label_refs = []
+    mapy.jumpdest0 = mapy.jumpdest
+    mapy.jumpdest = function (label) {
+        labels[bytecode.length] = label
+        mapy.jumpdest0()
+    }
+    function pushdest(label) {
+        label_refs.push([label, bytecode.length])
+        bytecode.push('XX')
+        stack_size++
+        code_size++
+    }
+    
+    with (mapy) {
+        eval(asm)
+    }
+    
+    var label_bytes = 1
+    var y = 256
+    while (code_size + label_bytes * label_refs.length >= y) {
+        label_bytes++
+        y *= 256
+    }
+    var place_holder = 'XX' + 'XX'.repeat(label_bytes)
+    for (var i = 0; i < label_refs.length; i++) {
+        bytecode[label_refs[i][1]] = place_holder
+    }
+
+    var label_locs = {}
+    code_size = 0
+    for (var i = 0; i < bytecode.length; i++) {
+        if (labels[i]) {
+            label_locs[labels[i]] = code_size
+        }
+        code_size += bytecode[i].length/2
+    }
+    
+    for (var i = 0; i < label_refs.length; i++) {
+        var x = label_locs[label_refs[i][0]]
+        x = x.toString(16)
+        while (x.length/2 < label_bytes) x = '0' + x
+        bytecode[label_refs[i][1]] = (0x60 - 1 + label_bytes).toString(16) + x
+    }
+
+    return bytecode.join('')
+}
+
+function decompile(bytecode) {
+    var mapy = {}
+    each(get_opcodes(), function (o) {
+        mapy[o.hex] = o.asm
+    })
+    
+    var s = []
+    for (var i = 0; i < bytecode.length; i += 2) {
+        var byte = bytecode.slice(i, i + 2)
+        var code = mapy[byte] || 'i have not seen THAT before..'
+        
+        s.push((i/2).toString(16) + ' - ' + byte + ' ' + code)
+        
+        var m = code.match(/PUSH(\d+)/)
+        if (m) {
+            s.push(' ' + bytecode.slice(i + 2, i + 2 + 2*m[1]))
+            i += 2*m[1]
+        }
+        
+        s.push('\n')
+    }
+    return s.join('')
+}
+
+var _2_256 = null
+
+function simulate(bytecode) {
+    var evm = {
+        bytecode : bytecode,
+        pp : 0,
+        stack : [],
+        memory : {},
+        storage : {}
+    }
+    
+}
+
+function get_opcodes() {
+    return [
+        {
+            "hex": "00",
+            "asm": "STOP",
+            "inputs": 0,
+            "outputs": 0,
+            "gas": 0,
+            "go": function (evm) {
+                evm.pp = -1
+            }
+        },
+        {
+            "hex": "01",
+            "asm": "ADD",
+            "inputs": 2,
+            "outputs": 1,
+            "gas": 3,
+            "go": function (evm) {
+                if (evm.stack.length < 2) throw 'bad'
+                evm.stack.push(evm.stack.pop().add(evm.stack.pop()).mod(_2_256))
+            }
+        },
+        {
+            "hex": "02",
+            "asm": "MUL",
+            "inputs": 2,
+            "outputs": 1,
+            "gas": 5,
+            "go": function (evm) {
+                if (evm.stack.length < 2) throw 'bad'
+                evm.stack.push(evm.stack.pop().multiply(evm.stack.pop()).mod(_2_256))
+            }
+        },
+        {
+            "hex": "03",
+            "asm": "SUB",
+            "inputs": 2,
+            "outputs": 1,
+            "gas": 3,
+            "go": function (evm) {
+                if (evm.stack.length < 2) throw 'bad'
+                evm.stack.push(evm.stack.pop().subtract(evm.stack.pop()).mod(_2_256))
+            }
+        },
+        {
+            "hex": "04",
+            "asm": "DIV",
+            "inputs": 2,
+            "outputs": 1,
+            "gas": 5,
+            "go": function (evm) {
+                if (evm.stack.length < 2) throw 'bad'
+                evm.stack.push(evm.stack.pop().divide(evm.stack.pop()).mod(_2_256))
+            }
+        },
+        {
+            "hex": "05",
+            "asm": "SDIV",
+            "inputs": 2,
+            "outputs": 1,
+            "gas": 5,
+            "go" : function () { throw 'bad : not implemented' }
+        },
+        {
+            "hex": "06",
+            "asm": "MOD",
+            "inputs": 2,
+            "outputs": 1,
+            "gas": 5,
+            "go": function (evm) {
+                if (evm.stack.length < 2) throw 'bad'
+                evm.stack.push(evm.stack.pop().mod(evm.stack.pop()))
+            }
+        },
+        {
+            "hex": "07",
+            "asm": "SMOD",
+            "inputs": 2,
+            "outputs": 1,
+            "gas": 5,
+            "go" : function () { throw 'bad : not implemented' }
+        },
+        {
+            "hex": "08",
+            "asm": "ADDMOD",
+            "inputs": 3,
+            "outputs": 1,
+            "gas": 8,
+            "go": function (evm) {
+                if (evm.stack.length < 3) throw 'bad'
+                evm.stack.push(evm.stack.pop().add(evm.stack.pop()).mod(evm.stack.pop()))
+            }
+        },
+        {
+            "hex": "09",
+            "asm": "MULMOD",
+            "inputs": 3,
+            "outputs": 1,
+            "gas": 8,
+            "go": function (evm) {
+                if (evm.stack.length < 3) throw 'bad'
+                evm.stack.push(evm.stack.pop().multiply(evm.stack.pop()).mod(evm.stack.pop()))
+            }
+        },
+        {
+            "hex": "0a",
+            "asm": "EXP",
+            "inputs": 2,
+            "outputs": 1,
+            "gas": 10,
+            "go": function (evm) {
+                if (evm.stack.length < 2) throw 'bad'
+                evm.stack.push(evm.stack.pop().modPow(evm.stack.pop(), _2_256))
+            }
+        },
+        {
+            "hex": "0b",
+            "asm": "SIGNEXTEND",
+            "inputs": 2,
+            "outputs": 1,
+            "gas": 5,
+            "go": function (evm) { throw 'bad : not implemented' }
+        },
+        {
+            "hex": "10",
+            "asm": "LT",
+            "inputs": 2,
+            "outputs": 1,
+            "gas": 3,
+            "go": function (evm) {
+                if (evm.stack.length < 2) throw 'bad'
+                evm.stack.push(evm.stack.pop().lt(evm.stack.pop()) ? bigInt.one : bigInt.zero)
+            }
+        },
+        {
+            "hex": "11",
+            "asm": "GT",
+            "inputs": 2,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "12",
+            "asm": "SLT",
+            "inputs": 2,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "13",
+            "asm": "SGT",
+            "inputs": 2,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "14",
+            "asm": "EQ",
+            "inputs": 2,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "15",
+            "asm": "ISZERO",
+            "inputs": 1,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "16",
+            "asm": "AND",
+            "inputs": 2,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "17",
+            "asm": "OR",
+            "inputs": 2,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "18",
+            "asm": "XOR",
+            "inputs": 2,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "19",
+            "asm": "NOT",
+            "inputs": 1,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "1a",
+            "asm": "BYTE",
+            "inputs": 2,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "20",
+            "asm": "SHA3",
+            "inputs": 2,
+            "outputs": 1,
+            "gas": 30
+        },
+        {
+            "hex": "30",
+            "asm": "ADDRESS",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 2
+        },
+        {
+            "hex": "31",
+            "asm": "BALANCE",
+            "inputs": 1,
+            "outputs": 1,
+            "gas": 20
+        },
+        {
+            "hex": "32",
+            "asm": "ORIGIN",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 2
+        },
+        {
+            "hex": "33",
+            "asm": "CALLER",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 2
+        },
+        {
+            "hex": "34",
+            "asm": "CALLVALUE",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 2
+        },
+        {
+            "hex": "35",
+            "asm": "CALLDATALOAD",
+            "inputs": 1,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "36",
+            "asm": "CALLDATASIZE",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 2
+        },
+        {
+            "hex": "37",
+            "asm": "CALLDATACOPY",
+            "inputs": 3,
+            "outputs": 0,
+            "gas": 3
+        },
+        {
+            "hex": "38",
+            "asm": "CODESIZE",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 2
+        },
+        {
+            "hex": "39",
+            "asm": "CODECOPY",
+            "inputs": 3,
+            "outputs": 0,
+            "gas": 3
+        },
+        {
+            "hex": "3a",
+            "asm": "GASPRICE",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 2
+        },
+        {
+            "hex": "3b",
+            "asm": "EXTCODESIZE",
+            "inputs": 1,
+            "outputs": 1,
+            "gas": 20
+        },
+        {
+            "hex": "3c",
+            "asm": "EXTCODECOPY",
+            "inputs": 4,
+            "outputs": 0,
+            "gas": 20
+        },
+        {
+            "hex": "40",
+            "asm": "BLOCKHASH",
+            "inputs": 1,
+            "outputs": 1,
+            "gas": 20
+        },
+        {
+            "hex": "41",
+            "asm": "COINBASE",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 2
+        },
+        {
+            "hex": "42",
+            "asm": "TIMESTAMP",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 2
+        },
+        {
+            "hex": "43",
+            "asm": "NUMBER",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 2
+        },
+        {
+            "hex": "44",
+            "asm": "DIFFICULTY",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 2
+        },
+        {
+            "hex": "45",
+            "asm": "GASLIMIT",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 2
+        },
+        {
+            "hex": "50",
+            "asm": "POP",
+            "inputs": 1,
+            "outputs": 0,
+            "gas": 2
+        },
+        {
+            "hex": "51",
+            "asm": "MLOAD",
+            "inputs": 1,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "52",
+            "asm": "MSTORE",
+            "inputs": 2,
+            "outputs": 0,
+            "gas": 3
+        },
+        {
+            "hex": "53",
+            "asm": "MSTORE8",
+            "inputs": 2,
+            "outputs": 0,
+            "gas": 3
+        },
+        {
+            "hex": "54",
+            "asm": "SLOAD",
+            "inputs": 1,
+            "outputs": 1,
+            "gas": 50
+        },
+        {
+            "hex": "55",
+            "asm": "SSTORE",
+            "inputs": 2,
+            "outputs": 0,
+            "gas": 0
+        },
+        {
+            "hex": "56",
+            "asm": "JUMP",
+            "inputs": 1,
+            "outputs": 0,
+            "gas": 8
+        },
+        {
+            "hex": "57",
+            "asm": "JUMPI",
+            "inputs": 2,
+            "outputs": 0,
+            "gas": 10
+        },
+        {
+            "hex": "58",
+            "asm": "PC",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 2
+        },
+        {
+            "hex": "59",
+            "asm": "MSIZE",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 2
+        },
+        {
+            "hex": "5a",
+            "asm": "GAS",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 2
+        },
+        {
+            "hex": "5b",
+            "asm": "JUMPDEST",
+            "inputs": 0,
+            "outputs": 0,
+            "gas": 1
+        },
+        {
+            "hex": "a0",
+            "asm": "LOG0",
+            "inputs": 2,
+            "outputs": 0,
+            "gas": 375
+        },
+        {
+            "hex": "a1",
+            "asm": "LOG1",
+            "inputs": 3,
+            "outputs": 0,
+            "gas": 750
+        },
+        {
+            "hex": "a2",
+            "asm": "LOG2",
+            "inputs": 4,
+            "outputs": 0,
+            "gas": 1125
+        },
+        {
+            "hex": "a3",
+            "asm": "LOG3",
+            "inputs": 5,
+            "outputs": 0,
+            "gas": 1500
+        },
+        {
+            "hex": "a4",
+            "asm": "LOG4",
+            "inputs": 6,
+            "outputs": 0,
+            "gas": 1875
+        },
+        {
+            "hex": "e1",
+            "asm": "SLOADBYTES",
+            "inputs": 3,
+            "outputs": 0,
+            "gas": 50
+        },
+        {
+            "hex": "e2",
+            "asm": "SSTOREBYTES",
+            "inputs": 3,
+            "outputs": 0,
+            "gas": 0
+        },
+        {
+            "hex": "e3",
+            "asm": "SSIZE",
+            "inputs": 1,
+            "outputs": 1,
+            "gas": 50
+        },
+        {
+            "hex": "f0",
+            "asm": "CREATE",
+            "inputs": 3,
+            "outputs": 1,
+            "gas": 32000
+        },
+        {
+            "hex": "f1",
+            "asm": "CALL",
+            "inputs": 7,
+            "outputs": 1,
+            "gas": 40
+        },
+        {
+            "hex": "f2",
+            "asm": "CALLCODE",
+            "inputs": 7,
+            "outputs": 1,
+            "gas": 40
+        },
+        {
+            "hex": "f3",
+            "asm": "RETURN",
+            "inputs": 2,
+            "outputs": 0,
+            "gas": 0
+        },
+        {
+            "hex": "f4",
+            "asm": "DELEGATECALL",
+            "inputs": 6,
+            "outputs": 0,
+            "gas": 40
+        },
+        {
+            "hex": "fd",
+            "asm": "REVERT",
+            "inputs": 0,
+            "outputs": 0,
+            "gas": 0
+        },
+        {
+            "hex": "fe",
+            "asm": "INVALID",
+            "inputs": 0,
+            "outputs": 0,
+            "gas": 0
+        },
+        {
+            "hex": "ff",
+            "asm": "SUICIDE",
+            "inputs": 1,
+            "outputs": 0,
+            "gas": 0
+        },
+        {
+            "hex": "60",
+            "asm": "PUSH1",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "61",
+            "asm": "PUSH2",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "62",
+            "asm": "PUSH3",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "63",
+            "asm": "PUSH4",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "64",
+            "asm": "PUSH5",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "65",
+            "asm": "PUSH6",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "66",
+            "asm": "PUSH7",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "67",
+            "asm": "PUSH8",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "68",
+            "asm": "PUSH9",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "69",
+            "asm": "PUSH10",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "6a",
+            "asm": "PUSH11",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "6b",
+            "asm": "PUSH12",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "6c",
+            "asm": "PUSH13",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "6d",
+            "asm": "PUSH14",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "6e",
+            "asm": "PUSH15",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "6f",
+            "asm": "PUSH16",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "70",
+            "asm": "PUSH17",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "71",
+            "asm": "PUSH18",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "72",
+            "asm": "PUSH19",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "73",
+            "asm": "PUSH20",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "74",
+            "asm": "PUSH21",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "75",
+            "asm": "PUSH22",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "76",
+            "asm": "PUSH23",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "77",
+            "asm": "PUSH24",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "78",
+            "asm": "PUSH25",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "79",
+            "asm": "PUSH26",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "7a",
+            "asm": "PUSH27",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "7b",
+            "asm": "PUSH28",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "7c",
+            "asm": "PUSH29",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "7d",
+            "asm": "PUSH30",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "7e",
+            "asm": "PUSH31",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "7f",
+            "asm": "PUSH32",
+            "inputs": 0,
+            "outputs": 1,
+            "gas": 3
+        },
+        {
+            "hex": "80",
+            "asm": "DUP1",
+            "inputs": 1,
+            "outputs": 2,
+            "gas": 3
+        },
+        {
+            "hex": "81",
+            "asm": "DUP2",
+            "inputs": 2,
+            "outputs": 3,
+            "gas": 3
+        },
+        {
+            "hex": "82",
+            "asm": "DUP3",
+            "inputs": 3,
+            "outputs": 4,
+            "gas": 3
+        },
+        {
+            "hex": "83",
+            "asm": "DUP4",
+            "inputs": 4,
+            "outputs": 5,
+            "gas": 3
+        },
+        {
+            "hex": "84",
+            "asm": "DUP5",
+            "inputs": 5,
+            "outputs": 6,
+            "gas": 3
+        },
+        {
+            "hex": "85",
+            "asm": "DUP6",
+            "inputs": 6,
+            "outputs": 7,
+            "gas": 3
+        },
+        {
+            "hex": "86",
+            "asm": "DUP7",
+            "inputs": 7,
+            "outputs": 8,
+            "gas": 3
+        },
+        {
+            "hex": "87",
+            "asm": "DUP8",
+            "inputs": 8,
+            "outputs": 9,
+            "gas": 3
+        },
+        {
+            "hex": "88",
+            "asm": "DUP9",
+            "inputs": 9,
+            "outputs": 10,
+            "gas": 3
+        },
+        {
+            "hex": "89",
+            "asm": "DUP10",
+            "inputs": 10,
+            "outputs": 11,
+            "gas": 3
+        },
+        {
+            "hex": "8a",
+            "asm": "DUP11",
+            "inputs": 11,
+            "outputs": 12,
+            "gas": 3
+        },
+        {
+            "hex": "8b",
+            "asm": "DUP12",
+            "inputs": 12,
+            "outputs": 13,
+            "gas": 3
+        },
+        {
+            "hex": "8c",
+            "asm": "DUP13",
+            "inputs": 13,
+            "outputs": 14,
+            "gas": 3
+        },
+        {
+            "hex": "8d",
+            "asm": "DUP14",
+            "inputs": 14,
+            "outputs": 15,
+            "gas": 3
+        },
+        {
+            "hex": "8e",
+            "asm": "DUP15",
+            "inputs": 15,
+            "outputs": 16,
+            "gas": 3
+        },
+        {
+            "hex": "8f",
+            "asm": "DUP16",
+            "inputs": 16,
+            "outputs": 17,
+            "gas": 3
+        },
+        {
+            "hex": "90",
+            "asm": "SWAP1",
+            "inputs": 2,
+            "outputs": 2,
+            "gas": 3
+        },
+        {
+            "hex": "91",
+            "asm": "SWAP2",
+            "inputs": 3,
+            "outputs": 3,
+            "gas": 3
+        },
+        {
+            "hex": "92",
+            "asm": "SWAP3",
+            "inputs": 4,
+            "outputs": 4,
+            "gas": 3
+        },
+        {
+            "hex": "93",
+            "asm": "SWAP4",
+            "inputs": 5,
+            "outputs": 5,
+            "gas": 3
+        },
+        {
+            "hex": "94",
+            "asm": "SWAP5",
+            "inputs": 6,
+            "outputs": 6,
+            "gas": 3
+        },
+        {
+            "hex": "95",
+            "asm": "SWAP6",
+            "inputs": 7,
+            "outputs": 7,
+            "gas": 3
+        },
+        {
+            "hex": "96",
+            "asm": "SWAP7",
+            "inputs": 8,
+            "outputs": 8,
+            "gas": 3
+        },
+        {
+            "hex": "97",
+            "asm": "SWAP8",
+            "inputs": 9,
+            "outputs": 9,
+            "gas": 3
+        },
+        {
+            "hex": "98",
+            "asm": "SWAP9",
+            "inputs": 10,
+            "outputs": 10,
+            "gas": 3
+        },
+        {
+            "hex": "99",
+            "asm": "SWAP10",
+            "inputs": 11,
+            "outputs": 11,
+            "gas": 3
+        },
+        {
+            "hex": "9a",
+            "asm": "SWAP11",
+            "inputs": 12,
+            "outputs": 12,
+            "gas": 3
+        },
+        {
+            "hex": "9b",
+            "asm": "SWAP12",
+            "inputs": 13,
+            "outputs": 13,
+            "gas": 3
+        },
+        {
+            "hex": "9c",
+            "asm": "SWAP13",
+            "inputs": 14,
+            "outputs": 14,
+            "gas": 3
+        },
+        {
+            "hex": "9d",
+            "asm": "SWAP14",
+            "inputs": 15,
+            "outputs": 15,
+            "gas": 3
+        },
+        {
+            "hex": "9e",
+            "asm": "SWAP15",
+            "inputs": 16,
+            "outputs": 16,
+            "gas": 3
+        },
+        {
+            "hex": "9f",
+            "asm": "SWAP16",
+            "inputs": 17,
+            "outputs": 17,
+            "gas": 3
+        }
+    ]
+}
+
+</script>
