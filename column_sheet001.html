@@ -3,8 +3,8 @@
 <body></body>
 <script>
 
-function create_column_sheet() {
-    var model = {
+function create_column_sheet(model) {
+    model = model || {
         headers : ['a', 'b'],
         rows : [
             [1, 2],
@@ -12,33 +12,72 @@ function create_column_sheet() {
         ]
     }
     
+    function calc() {
+        each(model.headers, function (h, h_i) {
+            if (h.startsWith('=')) {
+                var f = h.substr(1)
+                each(model.rows, function (r, r_i) {
+                    var o = {}
+                    o.row = r
+                    each(model.headers, function (h, h_i) {
+                        o[h] = r[h_i]
+                    })
+                    with (o) {
+                        model.rows[r_i][h_i] = eval(f)
+                    }
+                })
+            }
+        })
+    }
+    
     var d = document.createElement('div')
     d.style.display = 'grid'
     d.style.gridGap = '2px'
-    d.style['grid-template-columns'] = 'auto auto'
     
-    function make_inner(x) {
+    var cbs = []
+    function update() {
+        each(cbs, function (x) { x() })
+        cbs = []
+        
+        calc()
+        
+        d.style['grid-template-columns'] = ' auto'.repeat(model.headers.length).substr(1)
+        
+        while (d.firstChild) d.firstChild.remove()
+        each(model.headers, function (h, h_i) {
+            d.append(make_cell(h, function (x) {
+                model.headers[h_i] = x
+            }))
+        })
+        each(model.rows, function (r, r_i) {
+            each(r, function (c, c_i) {
+                d.append(make_cell(c, function (x) {
+                    model.rows[r_i][c_i] = x
+                }))
+            })
+        })
+        
+    }
+
+    function make_cell(val, cb) {
         var d = document.createElement('textarea')
-        d.value = x
+        d.value = val
+        cbs.push(function () {
+            cb(isNaN(d.value) ? d.value : parseFloat(d.value))
+        })
         d.onchange = function () {
-            console.log('XX!')
+            update()
         }
         d.onkeydown = function (e) {
             if ((e.shiftKey || e.ctrlKey || e.metaKey) && ((e.keyCode == 83 && !e.shiftKey) || e.keyCode == 13)) {
-                
                 e.preventDefault()
-                console.log('YY!')
-                
+                update()
             }
         }
         return d
-    }        
-
-    d.append(make_inner('a'))
-    d.append(make_inner('b'))
-    d.append(make_inner('1'))
-    d.append(make_inner('2'))
+    }
     
+    update()
     
     return d
 }
