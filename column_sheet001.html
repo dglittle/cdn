@@ -13,6 +13,10 @@ function create_column_sheet(model) {
     }
     
     function calc() {
+        each(model.rows, function (r, r_i) {
+            while (r.length < model.headers.length)
+                r.push('')
+        })
         each(model.headers, function (h, h_i) {
             if (h.startsWith('=')) {
                 var f = h.substr(1)
@@ -40,23 +44,34 @@ function create_column_sheet(model) {
         cbs = []
         
         calc()
-        
-        d.style['grid-template-columns'] = ' auto'.repeat(model.headers.length).substr(1)
+
+        d.style['grid-template-columns'] = ' auto'.repeat(model.headers.length + 1).substr(1)
         
         while (d.firstChild) d.firstChild.remove()
+        
+        var next_h = model.headers.length
         each(model.headers, function (h, h_i) {
             d.append(make_cell(h, function (x) {
                 model.headers[h_i] = x
             }))
         })
+        d.append(make_cell('', function (x) {
+            if (x) model.headers[next_h] = x
+        }))
+
         each(model.rows, function (r, r_i) {
             each(r, function (c, c_i) {
                 d.append(make_cell(c, function (x) {
                     model.rows[r_i][c_i] = x
                 }))
             })
+            d.append(make_cell('', function (x) {
+                if (!x) { return }
+                if (!model.headers[next_h])
+                    model.headers[next_h] = ''
+                model.rows[r_i][next_h] = x
+            }))
         })
-        
     }
 
     function make_cell(val, cb) {
