@@ -4,44 +4,110 @@
 <body></body>
 <script>
 
-console.log('version 6')
 
-function create_textarea_3rd(x) {
-    var a = document.createElement('textarea')
-    a.style.position = 'absolute'
-    a.style.left = (1/3*x)*100 + '%'
-    a.style.top = '100px'
-    a.style.width = '33%'
-    a.style.bottom = '0px'
-    document.body.append(a)
-    return a
+function create_column_sheet(model) {
+    model = model || {
+        headers : ['a', 'b'],
+        rows : [
+            [1, 2],
+            [3, 4]
+        ]
+    }
+    
+    function calc() {
+        each(model.rows, function (r, r_i) {
+            while (r.length < model.headers.length)
+                r.push('')
+        })
+        each(model.headers, function (h, h_i) {
+            if (h.startsWith('=')) {
+                var f = h.substr(1)
+                each(model.rows, function (r, r_i) {
+                    var o = {}
+                    o.row = r
+                    each(model.headers, function (h, h_i) {
+                        o[h] = r[h_i]
+                    })
+                    with (o) {
+                        model.rows[r_i][h_i] = eval(f)
+                    }
+                })
+            }
+        })
+    }
+    
+    var d = document.createElement('div')
+    d.style.display = 'grid'
+    d.style.gridGap = '2px'
+    
+    var cbs = []
+    function update() {
+        each(cbs, function (x) { x() })
+        cbs = []
+        
+        calc()
+
+        d.style['grid-template-columns'] = ' auto'.repeat(model.headers.length + 1).substr(1)
+        
+        while (d.firstChild) d.firstChild.remove()
+        
+        var next_h = model.headers.length
+        each(model.headers, function (h, h_i) {
+            d.append(make_cell(h, function (x) {
+                model.headers[h_i] = x
+            }))
+        })
+        d.append(make_cell('', function (x) {
+            if (x) model.headers[next_h] = x
+        }))
+
+        each(model.rows, function (r, r_i) {
+            each(r, function (c, c_i) {
+                d.append(make_cell(c, function (x) {
+                    model.rows[r_i][c_i] = x
+                }))
+            })
+            d.append(make_cell('', function (x) {
+                if (!x) { return }
+                if (!model.headers[next_h])
+                    model.headers[next_h] = ''
+                model.rows[r_i][next_h] = x
+            }))
+        })
+    }
+
+    function make_cell(val, cb) {
+        var d = document.createElement('textarea')
+        d.value = val
+        cbs.push(function () {
+            cb(isNaN(d.value) ? d.value : parseFloat(d.value))
+        })
+        d.onchange = function () {
+            update()
+        }
+        d.onkeydown = function (e) {
+            if ((e.shiftKey || e.ctrlKey || e.metaKey) && ((e.keyCode == 83 && !e.shiftKey) || e.keyCode == 13)) {
+                e.preventDefault()
+                update()
+            }
+        }
+        return d
+    }
+    
+    update()
+    
+    return d
 }
 
-function create_button_3rd(x, cb) {
-    var a = document.createElement('buttton')
-    a.style.position = 'absolute'
-    a.style.left = (1/3*x)*100 + '%'
-    a.style.top = '50px'
-    a.style.width = '33%'
-    a.style.height = '50px'
-    a.style.background = 'lightgreen'
-    a.innerHTML = 'click me to compile'
-    a.onclick = cb
-    document.body.append(a)
-    return a
-}
-
-var t1 = create_textarea_3rd(0)
-var t2 = create_textarea_3rd(1)
-var t3 = create_textarea_3rd(2)
-
-t1.value = "\n$('64', push(64))\n$('0', push(0))\ncalldatacopy($('64'), $('0'), $('0'))\n$('kv', sha3($('64'), $('0')))\n\n$('new_amount', add(sload($('kv')), callvalue()))\nsstore($('new_amount'), $('kv'))\n\n$('k', sha3(push(32), $('0')))\n$('k+1', add($('k'), push(1)))\n\njumpi(gt(sload($('k+1')), $('new_amount')), pushdest('hello'))\nstop()\njumpdest('hello')\n\nsstore($('new_amount'), $('k+1'))\nsstore(calldataload(push(32)), $('k'))\n"
+var default_code = "\n$('64', push(64))\n$('0', push(0))\ncalldatacopy($('64'), $('0'), $('0'))\n$('kv', sha3($('64'), $('0')))\n\n$('new_amount', add(sload($('kv')), callvalue()))\nsstore($('new_amount'), $('kv'))\n\n$('k', sha3(push(32), $('0')))\n$('k+1', add($('k'), push(1)))\n\njumpi(gt(sload($('k+1')), $('new_amount')), pushdest('hello'))\nstop()\njumpdest('hello')\n\nsstore($('new_amount'), $('k+1'))\nsstore(calldataload(push(32)), $('k'))\n"
 
 
-var b = create_button_3rd(2, function () {
-    t2.value = compile(t1.value)
-    t3.value = decompile(t2.value)
-})
+document.body.append(create_column_sheet({
+    headers : ['code', '=compile(left)', '=assemble(left)', '=dissassemble(left)'],
+    rows : [
+        [default_code, '', '', '']
+    ]
+}))
 
 function compile(asm) {
     var code_size = 0
