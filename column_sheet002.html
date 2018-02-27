@@ -1,0 +1,102 @@
+
+<script src="https://dglittle.github.io/cdn/utils001.js"></script>
+<body></body>
+<script>
+
+function create_column_sheet(model) {
+    model = model || {
+        headers : ['a', 'b'],
+        rows : [
+            [1, 2],
+            [3, 4]
+        ]
+    }
+    
+    function calc() {
+        each(model.rows, function (r, r_i) {
+            while (r.length < model.headers.length)
+                r.push('')
+        })
+        each(model.headers, function (h, h_i) {
+            if (h.startsWith('=')) {
+                var f = h.substr(1)
+                each(model.rows, function (r, r_i) {
+                    var o = {}
+                    o.row = r
+                    each(model.headers, function (h, h_i) {
+                        o[h] = r[h_i]
+                    })
+                    with (o) {
+                        model.rows[r_i][h_i] = eval(f)
+                    }
+                })
+            }
+        })
+    }
+    
+    var d = document.createElement('div')
+    d.style.display = 'grid'
+    d.style.gridGap = '2px'
+    
+    var cbs = []
+    function update() {
+        each(cbs, function (x) { x() })
+        cbs = []
+        
+        calc()
+
+        d.style['grid-template-columns'] = ' auto'.repeat(model.headers.length + 1).substr(1)
+        
+        while (d.firstChild) d.firstChild.remove()
+        
+        var next_h = model.headers.length
+        each(model.headers, function (h, h_i) {
+            d.append(make_cell(h, function (x) {
+                model.headers[h_i] = x
+            }))
+        })
+        d.append(make_cell('', function (x) {
+            if (x) model.headers[next_h] = x
+        }))
+
+        each(model.rows, function (r, r_i) {
+            each(r, function (c, c_i) {
+                d.append(make_cell(c, function (x) {
+                    model.rows[r_i][c_i] = x
+                }))
+            })
+            d.append(make_cell('', function (x) {
+                if (!x) { return }
+                if (!model.headers[next_h])
+                    model.headers[next_h] = ''
+                model.rows[r_i][next_h] = x
+            }))
+        })
+    }
+
+    function make_cell(val, cb) {
+        var d = document.createElement('textarea')
+        d.value = val
+        cbs.push(function () {
+            cb(isNaN(d.value) ? d.value : parseFloat(d.value))
+        })
+        d.onchange = function () {
+            update()
+        }
+        d.onkeydown = function (e) {
+            if ((e.shiftKey || e.ctrlKey || e.metaKey) && ((e.keyCode == 83 && !e.shiftKey) || e.keyCode == 13)) {
+                e.preventDefault()
+                update()
+            }
+        }
+        return d
+    }
+    
+    update()
+    
+    return d
+}
+
+document.body.append(create_column_sheet())
+
+</script>
