@@ -1,7 +1,7 @@
 
 <script src="https://dglittle.github.io/cdn/utils001.js"></script>
 <script src="https://peterolson.github.io/BigInteger.js/BigInteger.min.js"></script>
-<body></body>
+<body style="margin:0px;padding:0px"></body>
 <script>
 
 
@@ -19,26 +19,27 @@ function create_column_sheet(model) {
             while (r.length < model.headers.length)
                 r.push('')
         })
-        each(model.headers, function (h, h_i) {
-            if (h && h.startsWith('=')) {
-                var f = h.substr(1)
-                each(model.rows, function (r, r_i) {
-                    var o = {}
-                    o.row = r
+        each(model.rows, function (r, r_i) {
+            var o = {}
+            each(model.headers, function (h, h_i) {
+                if (h) o[h] = r[h_i]
+            })
+            o.row = r
+            each(model.headers, function (h, h_i) {
+                if (h && h.startsWith('=')) {
                     o.left = r[h_i - 1]
-                    each(model.headers, function (h, h_i) {
-                        o[h] = r[h_i]
-                    })
                     with (o) {
-                        model.rows[r_i][h_i] = eval(f)
+                        model.rows[r_i][h_i] = eval(h.substr(1))
                     }
-                })
-            }
+                }
+            })
         })
     }
     
     var d = document.createElement('div')
     d.style.display = 'grid'
+    d.style.width = '100%'
+    d.style.height = '100%'
     d.style.gridGap = '2px'
     
     var cbs = []
@@ -48,19 +49,19 @@ function create_column_sheet(model) {
         
         calc()
 
-        d.style['grid-template-columns'] = ' auto'.repeat(model.headers.length + 1).substr(1)
+        d.style['grid-template-columns'] = 'repeat(' + model.headers.length + ', 1fr)'
+        d.style['grid-template-rows'] = '50px repeat(' + model.rows.length + ', 1fr)'
         
         while (d.firstChild) d.firstChild.remove()
         
         var next_h = model.headers.length
         each(model.headers, function (h, h_i) {
-            d.append(make_cell(h, function (x) {
+            var c = make_cell(h, function (x) {
                 model.headers[h_i] = x
-            }))
+            })
+            c.style.background = 'pink'
+            d.append(c)
         })
-        d.append(make_cell('', function (x) {
-            if (x) model.headers[next_h] = x
-        }))
 
         each(model.rows, function (r, r_i) {
             each(r, function (c, c_i) {
@@ -68,17 +69,12 @@ function create_column_sheet(model) {
                     model.rows[r_i][c_i] = x
                 }))
             })
-            d.append(make_cell('', function (x) {
-                if (!x) { return }
-                if (!model.headers[next_h])
-                    model.headers[next_h] = ''
-                model.rows[r_i][next_h] = x
-            }))
         })
     }
 
     function make_cell(val, cb) {
         var d = document.createElement('textarea')
+        d.style.border = 'none'
         d.value = val
         cbs.push(function () {
             cb(isNaN(d.value) ? d.value : parseFloat(d.value))
@@ -102,18 +98,27 @@ function create_column_sheet(model) {
 
 var default_code = "\n$('64', push(64))\n$('0', push(0))\ncalldatacopy($('64'), $('0'), $('0'))\n$('kv', sha3($('64'), $('0')))\n\n$('new_amount', add(sload($('kv')), callvalue()))\nsstore($('new_amount'), $('kv'))\n\n$('k', sha3(push(32), $('0')))\n$('k+1', add($('k'), push(1)))\n\njumpi(gt(sload($('k+1')), $('new_amount')), pushdest('hello'))\nstop()\njumpdest('hello')\n\nsstore($('new_amount'), $('k+1'))\nsstore(calldataload(push(32)), $('k'))\n"
 
-function dodo(x) {
-    return x + 'hoho'
-}
-
 document.body.append(create_column_sheet({
-    headers : ['code', '=dodo(left)', '=dodo(left)', '=dodo(left)'],
+    headers : ['code', '=left', '=assemble(left)', '=disassemble(left)'],
     rows : [
         [default_code, '', '', '']
     ]
 }))
 
-function compile(asm) {
+function compile(code) {
+    var assembly = []
+    var api = {
+        add : function (x, y) {
+            assembly.push('add')
+        }
+    }
+    with (api) {
+        eval(code)
+    }
+    return assembly.join('')
+}
+
+function assemble(asm) {
     var code_size = 0
     var stack_size = 0
     var stack_vars = {}
@@ -194,7 +199,7 @@ function compile(asm) {
     return bytecode.join('')
 }
 
-function decompile(bytecode) {
+function disassemble(bytecode) {
     var mapy = {}
     each(get_opcodes(), function (o) {
         mapy[o.hex] = o.asm
