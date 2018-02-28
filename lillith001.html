@@ -6,6 +6,31 @@ function L_tokenize(s) {
     return s.match(/[a-zA-Z_][a-zA-Z_0-9]*|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?|\'(\\\'|[^\'])*\'|\"(\\\"|[^\"])*\"|\/\/.*|\/\*[\s\S]*?\*\/|[\{\}\[\]\(\)\,\+\-\*\/\=\:])/g)
 }
 
+function L_parse(s) {
+    var ts = L_tokenize(s)
+    var ti = 0
+    function helper() {
+        var accum = []
+        var delim = null
+        var t = null
+        while (t = ts[ti]) {
+            if (t.match(/[a-zA-Z_][a-zA-Z_0-9]*|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?|\'(\\\'|[^\'])*\'|\"(\\\"|[^\"])*\"/)) {
+                accum.push(t)
+                ti++
+            } else if (t == '[') {
+                ti++
+                accum.push([t, helper()])
+                if (!ts[ti] == ']') throw 'expecting ]'
+                ti++
+            } else if (t == ',') {
+                if (delim && (delim != t)) break
+                delim = t
+                ti++
+            } else break
+        }
+    }
+    return helper()
+}
     
     
     
