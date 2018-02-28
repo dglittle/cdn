@@ -2,7 +2,7 @@
 <body></body>
 <script>
 
-var input = 'print{[hello] + (hi) + [ho]}'
+var input = 'print{[hello] + (hi) + [ho] * 9}'
 
 function L_tokenize(s) {
     return s.match(/[a-zA-Z_][a-zA-Z_0-9]*|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?|\'(\\\'|[^\'])*\'|\"(\\\"|[^\"])*\"|\/\/.*|\/\*[\s\S]*?\*\/|[\{\}\[\]\(\)\,\+\-\*\/\=\:]/g)
@@ -11,9 +11,8 @@ function L_tokenize(s) {
 function L_parse(s) {
     var ts = L_tokenize(s)
     var ti = 0
-    function helper() {
-        var accum = []
-        var delim = null
+    function helper(accum, delim) {
+        if (!accum) accum = []
         var t = null
         while (t = ts[ti]) {
             if (t.match(/[a-zA-Z_][a-zA-Z_0-9]*|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?|\'(\\\'|[^\'])*\'|\"(\\\"|[^\"])*\"/)) {
@@ -21,11 +20,16 @@ function L_parse(s) {
                 ti++
             } else if (t.match(/[\{\(\[]/)) {
                 ti++
-                accum.push([t, helper()])
-                if (!ts[ti].match(/[\}\)\]]/)) throw 'expecting ]'
+                accum.push(helper([], t))
+                if (!ts[ti].match(/[\}\)\]]/)) throw 'expecting closing thing for ' + t
                 ti++
             } else if (t.match(/[\,\+\-\*\/]/)) {
-                if (delim && (delim != t)) break
+                if (delim && (delim != t)) {
+                    if going to higher precidence:
+                        accum.push(helper([accum.pop()], t))
+                    else
+                        break
+                }
                 delim = t
                 ti++
             } else break
