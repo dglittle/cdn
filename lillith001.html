@@ -3,14 +3,57 @@
 <script>
 
 var input = 'print{[hello] + (hi) + [ho] * 9}'
+var input = 'a + b * c + d'
+var input = 'd + a * b + c * d'
 
 function L_tokenize(s) {
     return s.match(/[a-zA-Z_][a-zA-Z_0-9]*|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?|\'(\\\'|[^\'])*\'|\"(\\\"|[^\"])*\"|\/\/.*|\/\*[\s\S]*?\*\/|[\{\}\[\]\(\)\,\+\-\*\/\=\:]/g)
 }
 
+var precedence = {
+    ',' : 0,
+    '+' : 1,
+    '-' : 1,
+    '*' : 2,
+    '/' : 2
+}
+
 function L_parse(s) {
     var ts = L_tokenize(s)
     var ti = 0
+    
+    aa = [[null, []]]
+    var t = null
+    while (t = ts[ti++]) {
+        if (t.match(/[a-zA-Z_][a-zA-Z_0-9]*|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?|\'(\\\'|[^\'])*\'|\"(\\\"|[^\"])*\"/)) {
+            aa[aa.length - 1][1].push(t)
+        } else if (t.match(/[\{\(\[]/)) {
+            aa.push([t, []])
+        } else if (t.match(/[\}\)\]]/)) {
+            var a = aa.pop()
+            if (!a[0].match(/[\{\(\[]/)) throw 'expecting closing thing for ' + a[0]
+            aa[aa.length - 1][1].push(a)
+        } else if (t.match(/[\,\+\-\*\/]/)) {
+            var delim = aa[aa.length - 1][0]
+            if (delim && (t != delim)) {
+                if (precedence[t] > precedence[delim]) {
+                    aa.push([t, [aa[aa.length - 1][1].pop()])
+                } else {
+                    var a = aa.pop()
+                    if (aa[aa.length - 1][0] == t) {
+                        aa[aa.length - 1][1].push(a)
+                    } else {
+                        aa.push([t, [a]])
+                    }
+                }
+            } else {
+                aa[aa.length - 1][0] = t
+            }
+        } else break
+    }
+    
+    
+    
     function helper(accum, delim) {
         if (!accum) accum = []
         var t = null
@@ -25,13 +68,14 @@ function L_parse(s) {
                 ti++
             } else if (t.match(/[\,\+\-\*\/]/)) {
                 if (delim && (delim != t)) {
-                    if going to higher precidence:
+                    if (precedence[t] > precedence[delim])
                         accum.push(helper([accum.pop()], t))
                     else
                         break
+                } else {
+                    delim = t
+                    ti++
                 }
-                delim = t
-                ti++
             } else break
         }
         return delim ? [delim, accum] : accum
