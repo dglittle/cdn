@@ -46,19 +46,26 @@ function trans_merge(a, b) {
                 if (abegin) {
                     accum.push(aa)
                 } else {
-                    
+                    next_op[2] += aa[2].substr(aii, aa_pos + aa[2].length - prev)
+                    accum.push(next_op)
+                    abegin = true
                 }
                 ai++
-                abegin = true
             } else {
-                var pos = 0
-                if (a.length > 0) {
-                    var aa = a[a.length - 1]
-                    pos = aa[0] + aa[1].length + (bb[0] - (aa_pos + aa[2].length))
+                if (bbegin) {
+                    var pos = 0
+                    if (a.length > 0) {
+                        var aa = a[a.length - 1]
+                        pos = aa[0] + aa[1].length + (bb[0] - (aa_pos + aa[2].length))
+                    } else {
+                        pos = bb[0]
+                    }
+                    accum.push([pos, bb[1], bb[2]])
                 } else {
-                    pos = bb[0]
+                    next_op[1] += bb[1].substr(bii, bb[0] + bb[1].length - prev)
+                    accum.push(next_op)
+                    bbegin = true
                 }
-                accum.push([pos, bb[1], bb[2]])
                 bi++
             }
         } else if ((abegin ? aa_pos : aa_pos + aa[2].length) <= (bbegin ? bb[0] : bb[0] + bb[1].length)) {
