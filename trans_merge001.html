@@ -1,7 +1,9 @@
 <body></body>
 <script>
 
-var m = trans_merge([[1, 'a', 'b']], [])
+var m = trans_merge(
+    [[1, 'a', 'b']],
+    [[1, 'bc', 'z']])
 console.log(JSON.stringify(m, null, '    '))
 
 function trans_merge(a, b) {
@@ -9,7 +11,8 @@ function trans_merge(a, b) {
     var next_op = null
     var ai = 0
     var bi = 0
-    var aa_pos = 0
+    if (a.length == 0) return b
+    var aa_pos = a[0][0]
     var abegin = true
     var bbegin = true
     var aii = 0
@@ -19,6 +22,24 @@ function trans_merge(a, b) {
     while (safety--) {
         var aa = a[ai]
         var bb = b[bi]
+        
+        
+        
+        console.log('-----------' + safety)
+        console.log('accum: ' + JSON.stringify(accum, null, '    '))
+        console.log('next_op: ' + JSON.stringify(next_op, null, '    '))
+        console.log('ai: ' + JSON.stringify(ai, null, '    ') + ' ' + abegin)
+        console.log('bi: ' + JSON.stringify(bi, null, '    ') + ' ' + bbegin)
+        console.log('aa: ' + JSON.stringify(aa, null, '    '))
+        console.log('bb: ' + JSON.stringify(bb, null, '    '))
+        console.log('aii: ' + JSON.stringify(aii, null, '    '))
+        console.log('bii: ' + JSON.stringify(bii, null, '    '))
+        console.log('prev: ' + JSON.stringify(prev, null, '    '))
+        console.log('aa_pos: ' + JSON.stringify(aa_pos, null, '    '))
+        
+        
+        
+        
         if (!aa && !bb) break
         if (!aa || !bb) {
             if (aa) {
@@ -26,7 +47,8 @@ function trans_merge(a, b) {
                 ai++
             } else {
                 var pos = 0
-                if (aa.length > 0) {
+                if (a.length > 0) {
+                    var aa = a[a.length - 1]
                     pos = aa[0] + aa[1].length + (bb[0] - (aa_pos + aa[2].length))
                 } else {
                     pos = bb[0]
@@ -35,11 +57,14 @@ function trans_merge(a, b) {
                 bi++
             }
         } else if ((abegin ? aa_pos : aa_pos + aa[2].length) <= (bbegin ? bb[0] : bb[0] + bb[1].length)) {
+            
+            console.log('AAAAAAA')
+            
             if (abegin) {
                 if (bbegin) {
                     next_op = [aa[0], aa[1], '']
                 } else {
-                    next_op[1] += bb[1].substr(bii, aa_pos - prev)
+                    next_op[1] += bb[1].substr(bii, aa_pos - prev) + aa[1]
                     bii += (aa_pos - prev) + aa[2].length
                 }
                 aii = 0
@@ -47,20 +72,25 @@ function trans_merge(a, b) {
             } else {
                 if (bbegin) {
                     accum.push(next_op)
-                    ai++
-                    if (ai < aa.length) {
-                        aa_pos += aa[2].length + (aa[ai][0] - aa[0] - aa[1].length)
-                    }
-                } else {}
+                } else {
+                    next_op[2] += aa[2].substr(aii, aa_pos + aa[2].length - prev)
+                }
+                ai++
+                if (ai < a.length) {
+                    aa_pos += aa[2].length + (a[ai][0] - aa[0] - aa[1].length)
+                }
                 prev = aa_pos + aa[2].length
             }
             abegin = !abegin
         } else {
+            
+            console.log('BBBBBBBB')
+            
             if (bbegin) {
                 if (abegin) {
                     next_op = [aa[0] - (aa_pos - bb[0]), '', bb[2]]
                 } else {
-                    next_op[2] += aa[2].substr(aii, bb[0] - prev)
+                    next_op[2] += aa[2].substr(aii, bb[0] - prev) + bb[2]
                     aii += (bb[0] - prev) + bb[1].length
                 }
                 bii = 0
@@ -68,8 +98,10 @@ function trans_merge(a, b) {
             } else {
                 if (abegin) {
                     accum.push(next_op)
-                    bi++
-                } else {}
+                } else {
+                    next_op[1] += bb[1].substr(bii, bb[0] + bb[1].length - prev)
+                }
+                bi++
                 prev = bb[0] + bb[1].length
             }
             bbegin = !bbegin
