@@ -77,7 +77,6 @@ function trans_merge(a, b) {
                     next_op = [aa[0], aa[1], '']
                 } else {
                     next_op[1] += bb[1].substr(bii, aa_pos - prev) + aa[1]
-                    bii += (aa_pos - prev) + aa[2].length
                 }
                 aii = 0
                 prev = aa_pos
@@ -85,6 +84,8 @@ function trans_merge(a, b) {
                 if (bbegin) {
                     next_op[2] += aa[2].substr(aii, aa_pos + aa[2].length - prev)
                     accum.push(next_op)
+                } else {
+                    bii = aa_pos + aa[2].length - bb[0]
                 }
                 ai++
                 if (ai < a.length) {
@@ -102,7 +103,6 @@ function trans_merge(a, b) {
                     next_op = [aa[0] - (aa_pos - bb[0]), '', bb[2]]
                 } else {
                     next_op[2] += aa[2].substr(aii, bb[0] - prev) + bb[2]
-                    aii += (bb[0] - prev) + bb[1].length
                 }
                 bii = 0
                 prev = bb[0]
@@ -110,6 +110,8 @@ function trans_merge(a, b) {
                 if (abegin) {
                     next_op[1] += bb[1].substr(bii, bb[0] + bb[1].length - prev)
                     accum.push(next_op)
+                } else {
+                    aii = bb[0] + bb[1].length - aa_pos
                 }
                 bi++
                 prev = bb[0] + bb[1].length
