@@ -1,6 +1,77 @@
 <body></body>
 <script>
 
-console.log('hello world!')
+var m = trans_merge([1, 'a', 'b'], [])
+console.log(JSON.stringify(m, null, '    '))
+
+function trans_merge(a, b) {
+    var accum = []
+    var next_op = null
+    var ai = 0
+    var bi = 0
+    var aa_pos = 0
+    var abegin = true
+    var bbegin = true
+    var aii = 0
+    var bii = 0
+    var prev = 0
+    while (true) {
+        var aa = a[ai]
+        var bb = b[bi]
+        if (!aa && !bb) break
+        if (!aa || !bb) {
+            if (aa) {
+                accum.push(aa)
+            } else {
+                var pos = 0
+                if (aa.length > 0) {
+                    pos = aa[0] + aa[1].length + (bb[0] - (aa_pos + aa[2].length))
+                } else {
+                    pos = bb[0]
+                }
+                accum.push([pos, bb[1], bb[2]])
+            }
+        } else if ((abegin ? aa_pos : aa_pos + aa[2].length) <= (bbegin ? bb[0] : bb[0] + bb[1].length)) {
+            if (abegin) {
+                if (bbegin) {
+                    next_op = [aa[0], aa[1], '']
+                } else {
+                    next_op[1] += bb[1].substr(bii, aa_pos - prev)
+                    bii += (aa_pos - prev) + aa[2].length
+                }
+                aii = 0
+                prev = aa_pos
+            } else {
+                if (bbegin) {
+                    accum.push(next_op)
+                    ai++
+                    if (ai < aa.length) {
+                        aa_pos += aa[2].length + (aa[ai][0] - aa[0] - aa[1].length)
+                    }
+                } else {}
+                prev = aa_pos + aa[2].length
+            }
+            abegin = !abegin
+        } else {
+            if (bbegin) {
+                if (abegin) {
+                    next_op = [aa[0] - (aa_pos - bb[0]), '', bb[2]]
+                } else {
+                    next_op[2] += aa[2].substr(aii, bb[0] - prev)
+                    aii += (bb[0] - prev) + bb[1].length
+                }
+                bii = 0
+                prev = bb[0]
+            } else {
+                if (abegin) {
+                    accum.push(next_op)
+                    bi++
+                } else {}
+                prev = bb[0] + bb[1].length
+            }
+            bbegin = !bbegin
+        }
+    }
+}
 
 </script>
