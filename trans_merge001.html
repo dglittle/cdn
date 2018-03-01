@@ -1,7 +1,7 @@
 <body></body>
 <script>
 
-var m = trans_merge([1, 'a', 'b'], [])
+var m = trans_merge([[1, 'a', 'b']], [])
 console.log(JSON.stringify(m, null, '    '))
 
 function trans_merge(a, b) {
@@ -15,13 +15,15 @@ function trans_merge(a, b) {
     var aii = 0
     var bii = 0
     var prev = 0
-    while (true) {
+    var safety = 10
+    while (safety--) {
         var aa = a[ai]
         var bb = b[bi]
         if (!aa && !bb) break
         if (!aa || !bb) {
             if (aa) {
                 accum.push(aa)
+                ai++
             } else {
                 var pos = 0
                 if (aa.length > 0) {
@@ -30,6 +32,7 @@ function trans_merge(a, b) {
                     pos = bb[0]
                 }
                 accum.push([pos, bb[1], bb[2]])
+                bi++
             }
         } else if ((abegin ? aa_pos : aa_pos + aa[2].length) <= (bbegin ? bb[0] : bb[0] + bb[1].length)) {
             if (abegin) {
@@ -72,6 +75,7 @@ function trans_merge(a, b) {
             bbegin = !bbegin
         }
     }
+    return accum
 }
 
 </script>
