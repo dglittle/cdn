@@ -58,42 +58,56 @@ function update_it() {
 
     var epsilon = 0.01
     var new_spins = []
+    var new_higgs = []
     for (var y = 0; y < yn; y++) {
         var row = []
+        var higgs_row = []
         for (var x = 0; x < xn; x++) {
+            var spin_to_higgs = 0
+            var higgs_to_spin = 0
+            
             var best_spin = spins[y][x]
-            var best_higg = higgs[y][x]
-            var best_E = calc_energy(x, y, best_spin, higg)
+            var best_E = calc_energy(x, y, best_spin, higgs[y][x])
             
             var test_E = calc_energy(x, y, spins[y][x] + epsilon, higgs[y][x])
             if (test_E < best_E) {
                 best_E = test_E
                 best_spin = spins[y][x] + epsilon
+                spin_to_higgs = epsilon/2
             }
             
             var test_E = calc_energy(x, y, spins[y][x] - epsilon, higgs[y][x])
             if (test_E < best_E) {
                 best_E = test_E
                 best_spin = spins[y][x] - epsilon
+                spin_to_higgs = -epsilon/2
             }
-            
+
+            var best_higg = higgs[y][x]
+            var best_E = calc_energy(x, y, spins[y][x], higgs[y][x])
+
             var test_E = calc_energy(x, y, spins[y][x], higgs[y][x] + epsilon)
             if (test_E < best_E) {
                 best_E = test_E
                 best_higg = higgs[y][x] + epsilon
+                higgs_to_spin = -epsilon/2
             }
             
             var test_E = calc_energy(x, y, spins[y][x], higgs[y][x] - epsilon)
             if (test_E < best_E) {
                 best_E = test_E
                 best_higg = higgs[y][x] - epsilon
+                higgs_to_spin = epsilon/2
             }
             
-            row.push(best_spin)
+            row.push(best_spin + higgs_to_spin)
+            higgs_row.push(best_higg + spin_to_higgs)
         }
         new_spins.push(row)
+        new_higgs.push(higgs_row)
     }
     spins = new_spins
+    higgs = new_higgs
 }
 
 function paint_it() {
@@ -137,8 +151,8 @@ function paint_it() {
             var R = a
             var G = a
             var B = a
-            g.fillStyle = 'rgb(' + Math.floor(255 * R) + ', ' + Math.floor(255 * G) + ', ' + Math.floor(255 * B) + ')'
-            g.fillRect(x * xd, y * yd, xd, yd)
+            dg.fillStyle = 'rgb(' + Math.floor(255 * R) + ', ' + Math.floor(255 * G) + ', ' + Math.floor(255 * B) + ')'
+            dg.fillRect(x * xd, y * yd, xd, yd)
 
             // g.beginPath()
             // g.moveTo(x * xd + xd/2 + xd/2*Math.cos(a), y * yd + yd/2 + yd/2*Math.sin(a))
