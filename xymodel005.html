@@ -1,0 +1,162 @@
+
+<body style="margin:0px">
+<script src="https://dglittle.github.io/cdn/utils001.js"></script>
+<script>
+
+var c = document.createElement('canvas')
+c.width = 256
+c.height = 256
+var g = c.getContext('2d')
+document.body.append(c)
+
+var d = document.createElement('canvas')
+d.width = 256
+d.height = 256
+var dg = d.getContext('2d')
+document.body.append(d)
+
+var xd = 256 / 64
+var yd = 256 / 64
+var xn = c.width / xd
+var yn = c.height / yd
+
+var spins = []
+var vels = []
+for (var y = 0; y < yn; y++) {
+    var row = []
+    var vrow = []
+    for (var x = 0; x < xn; x++) {
+        row.push(Math.random() * Math.PI * 2)
+        vrow.push(0)
+    }
+    spins.push(row)
+    vels.push(vrow)
+}
+
+var higgs = []
+var higgs_v = []
+for (var y = 0; y < yn; y++) {
+    var row = []
+    var vrow = []
+    for (var x = 0; x < xn; x++) {
+        row.push(Math.random())
+        vrow.push(0)
+    }
+    higgs.push(row)
+    higgs_v.push(vrow)
+}
+
+var iteration = 0
+function update_it() {
+    var dt = 1
+    
+    function update_pair_vel(x1, y1, x2, y2) {
+        var a = spins[y1][x1]
+        var b = spins[y2][x2]
+        var F = -Math.sin(a - b)
+        vels[y1][x1] += F * dt / 100
+        vels[y2][x2] += -F * dt / 100
+        
+        var a = higgs[y1][x1]
+        var b = higgs[y2][x2]
+        var F = Math.pow(a - b, 2)
+        higgs_v[y1][x1] += F * dt / 100
+        higgs_v[y2][x2] += -F * dt / 100
+    }
+    
+    for (var y = 0; y < yn; y++) {
+        for (var x = 0; x < xn; x++) {
+            update_pair_vel(x, y, (x + 1) % xn, y)
+            update_pair_vel(x, y, x, (y + 1) % yn)
+        }
+    }
+    
+    iteration++
+    if (iteration < 1000) {
+        for (var y = 0; y < yn; y++) {
+            for (var x = 0; x < xn; x++) {
+                vels[y][x] *= 1 - 1/(iteration/3 + 1)
+                higgs_v[y][x] *= 1 - 1/(iteration/3 + 1)
+            }
+        }
+    }
+    
+    
+    for (var y = 0; y < yn; y++) {
+        for (var x = 0; x < xn; x++) {
+            spins[y][x] += vels[y][x] * dt
+        }
+    }
+    
+    for (var y = 0; y < yn; y++) {
+        for (var x = 0; x < xn; x++) {
+            higgs[y][x] += higgs_v[y][x] * dt
+        }
+    }
+}
+
+function paint_it() {
+    g.fillStyle = 'white'
+    g.fillRect(0, 0, c.width, c.height)
+    // g.beginPath()
+    for (var y = 0; y < yn; y++) {
+        for (var x = 0; x < xn; x++) {
+            var a = fmod(spins[y][x] + Math.PI/2, Math.PI*2)
+
+            var R = 0
+            var G = 0
+            var B = 0
+            if (a < Math.PI*2/3) {
+                R = lerp(0, 1, Math.PI*2/3, 0, a)
+                G = lerp(0, 0, Math.PI*2/3, 1, a)
+            } else if (a < Math.PI*2*2/3) {
+                G = lerp(Math.PI*2/3, 1, Math.PI*2*2/3, 0, a)
+                B = lerp(Math.PI*2/3, 0, Math.PI*2*2/3, 1, a)
+            } else {
+                B = lerp(Math.PI*2*2/3, 1, Math.PI*2, 0, a)
+                R = lerp(Math.PI*2*2/3, 0, Math.PI*2, 1, a)
+            }
+            g.fillStyle = 'rgb(' + Math.floor(255 * R) + ', ' + Math.floor(255 * G) + ', ' + Math.floor(255 * B) + ')'
+            g.fillRect(x * xd, y * yd, xd, yd)
+
+            // g.beginPath()
+            // g.moveTo(x * xd + xd/2 + xd/2*Math.cos(a), y * yd + yd/2 + yd/2*Math.sin(a))
+            // g.arc(x * xd + xd/2, y * yd + yd/2, xd/2, a, a + Math.PI)
+            // g.fill()
+        }
+    }
+    // g.fillStyle = 'red'
+    // g.fill()        
+    
+    
+    dg.fillStyle = 'white'
+    dg.fillRect(0, 0, d.width, d.height)
+    for (var y = 0; y < yn; y++) {
+        for (var x = 0; x < xn; x++) {
+            var a = higgs[y][x]
+            if (a < 0) a = 0
+            if (a > 1) a = 1
+            var R = a
+            var G = a
+            var B = a
+            dg.fillStyle = 'rgb(' + Math.floor(255 * R) + ', ' + Math.floor(255 * G) + ', ' + Math.floor(255 * B) + ')'
+            dg.fillRect(x * xd, y * yd, xd, yd)
+        }
+    }
+}
+
+function loop() {
+    update_it()
+    paint_it()
+    setTimeout(loop, 15)
+}
+loop()
+
+function fmod(a, b) {
+    var m = a % b
+    if (m < 0) return m + b
+    return m
+}
+
+</script>
+</body>
