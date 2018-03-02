@@ -39,7 +39,9 @@ for (var y = 0; y < yn; y++) {
     var row = []
     var vrow = []
     for (var x = 0; x < xn; x++) {
-        row.push(Math.random())
+        // row.push(Math.random())
+        row.push(Math.random() * Math.PI * 2)
+
         vrow.push(0)
     }
     higgs.push(row)
@@ -58,8 +60,14 @@ function update_it() {
         
         var a = higgs[y1][x1]
         var b = higgs[y2][x2]
-        var F = b - a
+        var F = -Math.sin(a - b) // b - a
         var higg_F = F * dt / 100
+        
+        // vels[y1][x1] += spin_F + higg_F * 0.2
+        // vels[y2][x2] += -spin_F - higg_F * 0.2
+        
+        // higgs_v[y1][x1] += higg_F + spin_F * 0.2
+        // higgs_v[y2][x2] += -higg_F - spin_F * 0.2
         
         vels[y1][x1] += spin_F + higg_F * 0.2
         vels[y2][x2] += -spin_F - higg_F * 0.2
@@ -137,14 +145,36 @@ function paint_it() {
     dg.fillRect(0, 0, d.width, d.height)
     for (var y = 0; y < yn; y++) {
         for (var x = 0; x < xn; x++) {
-            var a = higgs[y][x]
-            if (a < 0) a = 0
-            if (a > 1) a = 1
-            var R = a
-            var G = a
-            var B = a
+            
+            
+            var a = fmod(higgs[y][x] + Math.PI/2, Math.PI*2)
+
+            var R = 0
+            var G = 0
+            var B = 0
+            if (a < Math.PI*2/3) {
+                R = lerp(0, 1, Math.PI*2/3, 0, a)
+                G = lerp(0, 0, Math.PI*2/3, 1, a)
+            } else if (a < Math.PI*2*2/3) {
+                G = lerp(Math.PI*2/3, 1, Math.PI*2*2/3, 0, a)
+                B = lerp(Math.PI*2/3, 0, Math.PI*2*2/3, 1, a)
+            } else {
+                B = lerp(Math.PI*2*2/3, 1, Math.PI*2, 0, a)
+                R = lerp(Math.PI*2*2/3, 0, Math.PI*2, 1, a)
+            }
             dg.fillStyle = 'rgb(' + Math.floor(255 * R) + ', ' + Math.floor(255 * G) + ', ' + Math.floor(255 * B) + ')'
             dg.fillRect(x * xd, y * yd, xd, yd)
+            
+            
+            
+            // var a = higgs[y][x]
+            // if (a < 0) a = 0
+            // if (a > 1) a = 1
+            // var R = a
+            // var G = a
+            // var B = a
+            // dg.fillStyle = 'rgb(' + Math.floor(255 * R) + ', ' + Math.floor(255 * G) + ', ' + Math.floor(255 * B) + ')'
+            // dg.fillRect(x * xd, y * yd, xd, yd)
         }
     }
 }
