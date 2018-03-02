@@ -54,14 +54,18 @@ function update_it() {
         var a = spins[y1][x1]
         var b = spins[y2][x2]
         var F = -Math.sin(a - b)
-        vels[y1][x1] += F * dt / 100
-        vels[y2][x2] += -F * dt / 100
+        var spin_F = F * dt / 100
         
         var a = higgs[y1][x1]
         var b = higgs[y2][x2]
-        var F = Math.pow(a - b, 2)
-        higgs_v[y1][x1] += F * dt / 100
-        higgs_v[y2][x2] += -F * dt / 100
+        var F = b - a
+        var higg_F = F * dt / 100
+        
+        vels[y1][x1] += spin_F + higg_F * 0.2
+        vels[y2][x2] += -spin_F - higg_F * 0.2
+        
+        higgs_v[y1][x1] += higg_F + spin_F * 0.2
+        higgs_v[y2][x2] += -higg_F - spin_F * 0.2
     }
     
     for (var y = 0; y < yn; y++) {
