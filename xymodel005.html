@@ -39,8 +39,8 @@ for (var y = 0; y < yn; y++) {
     var row = []
     var vrow = []
     for (var x = 0; x < xn; x++) {
-        // row.push(Math.random())
-        row.push(Math.random() * Math.PI * 2)
+        row.push(Math.random())
+        // row.push(Math.random() * Math.PI * 2)
 
         vrow.push(0)
     }
@@ -53,15 +53,17 @@ function update_it() {
     var dt = 1
     
     function update_pair_vel(x1, y1, x2, y2) {
-        var a = spins[y1][x1]
-        var b = spins[y2][x2]
-        var F = -Math.sin(a - b)
-        var spin_F = F * dt / 100
+        var sa = spins[y1][x1]
+        var sb = spins[y2][x2]
         
-        var a = higgs[y1][x1]
-        var b = higgs[y2][x2]
-        var F = -Math.sin(a - b) // b - a
-        var higg_F = F * dt / 100
+        var ha = higgs[y1][x1]
+        var hb = higgs[y2][x2]
+        
+        var sF = -Math.sin(sa - sb) + 0.05*(hb - ha)
+        var hF = (hb - ha) + 0.5*Math.pow(Math.abs(-Math.sin(sa - sb)), 0.5) // a - b
+        
+        var spin_F = sF * dt / 200
+        var higg_F = hF * dt / 200
         
         // vels[y1][x1] += spin_F + higg_F * 0.2
         // vels[y2][x2] += -spin_F - higg_F * 0.2
@@ -69,11 +71,11 @@ function update_it() {
         // higgs_v[y1][x1] += higg_F + spin_F * 0.2
         // higgs_v[y2][x2] += -higg_F - spin_F * 0.2
         
-        vels[y1][x1] += spin_F + higg_F * 0.2
-        vels[y2][x2] += -spin_F - higg_F * 0.2
+        vels[y1][x1] += spin_F
+        vels[y2][x2] += -spin_F
         
-        higgs_v[y1][x1] += higg_F + spin_F * 0.2
-        higgs_v[y2][x2] += -higg_F - spin_F * 0.2
+        higgs_v[y1][x1] += higg_F
+        higgs_v[y2][x2] += -higg_F
     }
     
     for (var y = 0; y < yn; y++) {
@@ -147,34 +149,34 @@ function paint_it() {
         for (var x = 0; x < xn; x++) {
             
             
-            var a = fmod(higgs[y][x] + Math.PI/2, Math.PI*2)
+            // var a = fmod(higgs[y][x] + Math.PI/2, Math.PI*2)
 
-            var R = 0
-            var G = 0
-            var B = 0
-            if (a < Math.PI*2/3) {
-                R = lerp(0, 1, Math.PI*2/3, 0, a)
-                G = lerp(0, 0, Math.PI*2/3, 1, a)
-            } else if (a < Math.PI*2*2/3) {
-                G = lerp(Math.PI*2/3, 1, Math.PI*2*2/3, 0, a)
-                B = lerp(Math.PI*2/3, 0, Math.PI*2*2/3, 1, a)
-            } else {
-                B = lerp(Math.PI*2*2/3, 1, Math.PI*2, 0, a)
-                R = lerp(Math.PI*2*2/3, 0, Math.PI*2, 1, a)
-            }
-            dg.fillStyle = 'rgb(' + Math.floor(255 * R) + ', ' + Math.floor(255 * G) + ', ' + Math.floor(255 * B) + ')'
-            dg.fillRect(x * xd, y * yd, xd, yd)
-            
-            
-            
-            // var a = higgs[y][x]
-            // if (a < 0) a = 0
-            // if (a > 1) a = 1
-            // var R = a
-            // var G = a
-            // var B = a
+            // var R = 0
+            // var G = 0
+            // var B = 0
+            // if (a < Math.PI*2/3) {
+            //     R = lerp(0, 1, Math.PI*2/3, 0, a)
+            //     G = lerp(0, 0, Math.PI*2/3, 1, a)
+            // } else if (a < Math.PI*2*2/3) {
+            //     G = lerp(Math.PI*2/3, 1, Math.PI*2*2/3, 0, a)
+            //     B = lerp(Math.PI*2/3, 0, Math.PI*2*2/3, 1, a)
+            // } else {
+            //     B = lerp(Math.PI*2*2/3, 1, Math.PI*2, 0, a)
+            //     R = lerp(Math.PI*2*2/3, 0, Math.PI*2, 1, a)
+            // }
             // dg.fillStyle = 'rgb(' + Math.floor(255 * R) + ', ' + Math.floor(255 * G) + ', ' + Math.floor(255 * B) + ')'
             // dg.fillRect(x * xd, y * yd, xd, yd)
+            
+            
+            
+            var a = higgs[y][x]
+            if (a < 0) a = 0
+            if (a > 1) a = 1
+            var R = a
+            var G = a
+            var B = a
+            dg.fillStyle = 'rgb(' + Math.floor(255 * R) + ', ' + Math.floor(255 * G) + ', ' + Math.floor(255 * B) + ')'
+            dg.fillRect(x * xd, y * yd, xd, yd)
         }
     }
 }
