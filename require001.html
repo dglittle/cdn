@@ -1,0 +1,24 @@
+
+<body></body>
+<script>
+
+;(function (x) { x('https://dglittle.github.io/cdn/require_test001.js', function () {
+    
+    console.log('require_test001 = ' + require_test001)
+
+}) })(function () {
+    var waiting_on = arguments.length - 1
+    var cb = arguments[arguments.length - 1]
+    function on_load() {
+        waiting_on--
+        if (waiting_on == 0) cb()
+    }
+    for (var i = 0; i < arguments.length; i++) {
+        var s = document.createElement('script')
+        s.onload = on_load
+        s.src = arguments[i]
+        document.head.appendChild(s)
+    }
+});
+
+</script>
