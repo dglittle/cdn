@@ -1,6 +1,6 @@
 <body>
 
-welcome to reverse_hash_pass_001.html
+<h3>welcome to reverse_hash_pass_001.html</h3>
 
 </body>
 
@@ -8,15 +8,30 @@ welcome to reverse_hash_pass_001.html
 
 <script>
 
-
-
 console.log(sha256("abcslkdjfkdjfkdjfkdjfkdjfkd") == 'd723ed7dd09ee7b3e74c59f4a1291b2f4f1de37e4294845030d6daf3d2e4a59');
 
 var entropy = document.createElement('textarea')
 document.body.append(entropy)
 
+var output = document.createElement('textarea')
+output.style.width = '100%'
+output.style.height = '50%'
+output.style.fontFamily = 'monospace'
+document.body.append(output)
 
+function update_output() {
+    var hashes = [sha256(entropy.value)]
+    while (hashes.length < 100) {
+        hashes.push(sha256(hashes[hashes.length - 1]))
+    }
+    hashes.reverse()
 
+    output.value = 'This is your password file. Your most sacred passwords are at the bottom, more hidden. Give passwords away starting from the top.\n\nseen:\n\nnot seen:\n' + hashes.join('\n')    
+}
 
+entropy.onkeydown = entropy.onkeyup = entropy.onchange = update_output
+
+entropy.value = 'put random text here!!'
+update_output()
 
 </script>
