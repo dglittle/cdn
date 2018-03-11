@@ -1,0 +1,51 @@
+
+<body></body>
+<script>
+    
+
+function create_uvsync() {
+    var self = {
+        op_set : {}, // {id, ins:text or del:num or collapse:[], aft, pos, (bef) }
+        op_arr : [] // {id, ins:text, off, len}
+    }
+    
+    self.add_op = function (op) {
+        if (op.ins) {
+            var new_op = {
+                id : op.id,
+                ins : op.ins,
+                off : 0,
+                len : op.ins.length
+            }
+            for (var i = 0; i < self.op_arr.length; i++) {
+                var o = self.op_arr[i]
+                if (o.id == op.aft) {
+                    if (op.pos <= o.off + o.len) {
+                        var rest = o.ins.substr(op.pos - o.off)
+                        o.ins = o.ins.substr(0, op.pos - o.off)
+                        o.len = o.ins.length
+                        var ii = i + 1
+                        if (rest != '') {
+                            self.op_arr.splice(ii, 0, new_op)
+                        } else {
+                            
+                            
+                        }
+                        self.op_arr.splice(ii + 1, 0, {
+                            id : o.id,
+                            ins : rest,
+                            off : o.off + o.len,
+                            len : rest.length
+                        })
+                        return
+                    }
+                }
+            }
+        }
+        
+    }
+    
+    return self
+}
+    
+</script>
