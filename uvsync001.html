@@ -23,8 +23,61 @@ function create_uvsync() {
     
     self.add_op = function (op) {
         self.op_set[op.id] = op
-        if (op.del) {
-            // find place to delete..
+        if (op.merge) {
+            var going_away = {}
+            var frontier = make_set(op.merge)
+            var next = null
+            while (next = get_any_key(frontier)) {
+                delete frontier[next]
+                if (!going_away[next]) {
+                    going_away[next] = true
+                    frontier[self.op_set[next].aft] = true
+                }
+            }
+            var offset = 0
+            for (var i = 0; i < self.op_arr.length; i++) {
+                var o = self.op_arr[i]
+                if (o.id == op.aft) {
+                    if (op.pos < o.off + o.len) {
+                        if (op.pos > o.off) {
+                            var len = op.pos - o.off
+                            self.op_arr.splice(i + 1, 0, {
+                                id : o.id,
+                                ins : o.ins.substr(len),
+                                off : o.off + len,
+                                len : o.len - len
+                            })
+                            o.ins = o.substr(0, len)
+                            o.len -= len
+                            o = self.op_arr[++i]
+                            
+                            op = extend({}, op)
+                            op.pos += len
+                            op.del -= len
+                            offset += len
+                        }
+                        if (op.pos == o.off && (op.pos + op.del <= o.off + o.len)) {
+                            if (op.pos + op.del < o.off + o.len) {
+                                self.op_arr.splice(i, 0, {
+                                    id : o.id,
+                                    ins : '',
+                                    off : o.off,
+                                    len : op.del
+                                })
+                            }
+                            o.off += op.del
+                            o.len -= op.del
+                            o.ins = o.ins.substr(op.del)
+                            self.text = self.text.slice(0, offset) +
+                                self.text.slice(offset + op.del)
+                            return
+                        }
+                    }
+                }
+                offset += o.ins.length
+            }
+            
+        } else if (op.del) {
             var offset = 0
             for (var i = 0; i < self.op_arr.length; i++) {
                 var o = self.op_arr[i]
@@ -110,5 +163,84 @@ function create_uvsync() {
     
     return self
 }
-    
+
+function guid() {
+    var x = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    var s = []
+    for (var i = 0; i < 15; i++) {
+        s.push(x[Math.floor(Math.random() * x.length)])
+    }
+    return s.join('')
+}
+
+function each(o, cb) {
+    if (o instanceof Array) {
+        for (var i = 0; i < o.length; i++) {
+            if (cb(o[i], i, o) == false)
+                return false
+        }
+    } else {
+        for (var k in o) {
+            if (o.hasOwnProperty(k)) {
+                if (cb(o[k], k, o) == false)
+                    return false
+            }
+        }
+    }
+    return true
+}
+
+function make_set(a) {
+    var s = {}
+    for (var i = 0; i < a.length; i++) {
+        s[a[i]] = true
+    }
+    return s
+}
+
+function keyvals() {
+    var o = {}
+    for (var i = 0; i < arguments.length; i += 2) {
+        o[arguments[i]] = arguments[i + 1]
+    }
+    return o
+}
+
+function get_any(o) {
+    for (var k in o) {
+        if (o.hasOwnProperty(k)) {
+            return o[k]
+        }
+    }
+}
+
+function get_any_key(o) {
+    for (var k in o) {
+        if (o.hasOwnProperty(k)) {
+            return k
+        }
+    }
+}
+
+function map_array(a, f) {
+    var b = []
+    each(a, function (v, k) { b[k] = f(v) })
+    return b
+}
+
+function extend(a, b) {
+    each(b, function (x, key) { a[key] = x })
+    return a
+}
+
+function intersection(a, b) {
+    var common = {}
+    each(a, function (_, x) {
+        if (b[x]) {
+            common[x] = a[x]
+        }
+    })
+    return common
+}
+
 </script>
