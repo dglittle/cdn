@@ -3,6 +3,313 @@
 <script>
 
 function create_uvsync() {
+    var root = {
+        id : 'root',
+        ins : '', // or del:num or merge:[]
+        aft : null,
+        pos : 0,
+        bef : null,
+        inserts : [],
+        deletes : []
+    }
+    var self = {
+        op_set : { 'root' : root },
+        tree : root,
+        op_queue : {}
+    }
+    
+    self.read = function (op, s) {
+        var s = s || []
+        var del = 0
+        for (var i = 0; i < op.ins.length; i++) {
+            each(op.inserts[i] || [], function (ii) {
+                self.read(ii, s)
+            })
+            each(op.deletes[i] || [], function (ii) {
+                del = Math.max(del, ii.pos + ii.del)
+            })
+            if (del <= i) {
+                s.push(op.ins[i])
+            }
+        }
+        return s.join('')
+    }
+
+    self.add_op = function (op) {
+        if (op.rebase) {
+            var oo = self.op_set[op.aft] || self.waiting_ops[op.aft]
+            if (oo) {
+                if (op.rebase_v > (oo.rebase_v || 0))) {
+                    oo.rebase_v = op.rebase_v
+                    oo.aft = op.rebase
+                    oo.pos = op.pos
+                    if (self.op_set[oo.id]) {
+                        delete self.op_set[oo.id]
+                        self.waiting_ops[oo.id] = oo 
+                    }
+                }
+            } else {
+                self.waiting_ops[op.id] = op
+            }
+            return
+        }
+        
+        if (!self.op_set[op.aft]) {
+            self.waiting_ops[op.id] = op
+            return
+        }
+        self.op_set[op.id] = op
+        if (op.del) {
+            var deletes = self.op_set[op.aft].deletes[op.pos]
+            if (!deletes) deletes = self.op_set[op.aft].deletes[op.pos] = []
+            deletes.push(op)
+        } else if (op.ins) {
+            var inserts = self.op_set[op.aft].inserts[op.pos]
+            if (!inserts) inserts = self.op_set[op.aft].inserts[op.pos] = []
+            var i = 0, o
+            while (o = inserts[i]) {
+                if (op.id < o.id || op.bef == o.id) break
+                i++
+            }
+            inserts.splice(i, 0, op)
+        } else if (op.merge) {
+            var in_group = {}
+            var frontier = make_set(op.merge)
+            var next = null
+            while (next = get_any_key(frontier)) {
+                delete frontier[next]
+                var o = self.op_set[next]
+                if (!o) {
+                    self.waiting_ops[op.id] = op
+                    delete self.op_set[op.id]
+                    return
+                }
+                if (!in_group[next] && (o.id != op.aft)) {
+                    in_group[next] = true
+                    frontier[o.aft] = true
+                }
+            }
+
+            var base = op.id
+            var s = []
+            var s_len = 0
+            function helper(op) {
+                var del = 0
+                var del_out_group = 0
+                for (var i = 0; i < op.ins.length; i++) {
+                    each(op.inserts[i] || [], function (ii) {
+                        if (in_group[ii.id]) {
+                            helper(ii)
+                        } else {
+                            var gid = guid()
+                            self.ops_to_send[gid] = {
+                                id : gid,
+                                aft : ii.id,
+                                rebase : base.id,
+                                pos : s_len
+                            }
+                        }
+                    })
+                    each(op.deletes[i] || [], function (ii) {
+                        if (in_group[ii.id]) {
+                            del = Math.max(del, ii.pos + ii.del)
+                        } else {
+                            del_out_group = Math.max(del_out_group, ii.pos + ii.del)
+                        }
+                    })
+                    if (del <= i) {
+                        s.push(op.ins[i])
+                        s_len++
+                        if (del_out_group > i) {
+                            var gid = guid()
+                            self.ops_to_send[gid] = {
+                                id : gid,
+                                del : 1,
+                                aft : base.id,
+                                pos : s_len
+                            }
+                        }
+                    }
+                }
+            }
+            helper(self.op_set[op.aft])
+            op.ins = s.join('')
+            self.op_set[op.aft].inserts[op.pos].splice(op.pos, 1, op)
+            
+            delete self.op_set[op.id]
+            each(in_group, function (o) { delete self.op_set[o.id] })
+            
+            
+            = {
+                
+            }
+            op.inserts
+            
+            
+            
+            
+            var cur = self.op_set[op.aft]
+            var merged_text = []
+            var merged_len = 0
+            while (cur) {
+                
+            }
+            
+            
+            
+            
+            
+
+            var insert_at = 0
+            var delete_this_many = 0
+            var op = extend({}, op)
+            op.ins = []
+            op.off = 0
+
+            function insert_thing() {
+                if (op.ins.length > 0) {
+                    op.ins = op.ins.join('')
+                    op.len = op.ins.length
+                    self.op_arr.splice(insert_at, delete_this_many, op)
+                    var op = extend({}, op)
+                    op.off += op.len
+                    op.ins = []
+                }
+            }
+
+            var offset = 0
+            var total_merge_len = 0
+            var deps = extend({}, going_away)
+            var started_inserting = false
+            for (var i = 0; i < self.op_arr.length; i++) {
+                var o = self.op_arr[i]
+                if (going_away[o.id]) {
+                    started_inserting = true
+                    op.ins.push(o.ins)
+                    total_merge_len += o.ins.length
+                    delete_this_many++
+                } else if (deps[o.aft]) {
+                    
+                    
+                    
+                    
+                    work here
+                    
+                    
+                    
+                    
+                    
+                    deps[o.id] = true
+                    insert_thing()
+                    insert_at = i
+                    if ((o.off == 0) && going_away[o.aft]) {
+                        var oo = self.op_set[o.id]
+                        oo.aft = op.id
+                        oo.pos = total_merge_len
+                        var gid = guid()
+                        ops_to_send[gid] = {
+                            id : gid,
+                            aft : oo.id,
+                            rebase : oo.aft,
+                            pos : oo.pos
+                        }
+                    }
+                } else if (started_inserting) {
+                    break
+                }
+                offset += o.ins.length
+            }
+            insert_thing()
+        }
+    }
+    
+    return self
+}
+
+function guid() {
+    var x = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    var s = []
+    for (var i = 0; i < 15; i++) {
+        s.push(x[Math.floor(Math.random() * x.length)])
+    }
+    return s.join('')
+}
+
+function each(o, cb) {
+    if (o instanceof Array) {
+        for (var i = 0; i < o.length; i++) {
+            if (cb(o[i], i, o) == false)
+                return false
+        }
+    } else {
+        for (var k in o) {
+            if (o.hasOwnProperty(k)) {
+                if (cb(o[k], k, o) == false)
+                    return false
+            }
+        }
+    }
+    return true
+}
+
+function make_set(a) {
+    var s = {}
+    for (var i = 0; i < a.length; i++) {
+        s[a[i]] = true
+    }
+    return s
+}
+
+function keyvals() {
+    var o = {}
+    for (var i = 0; i < arguments.length; i += 2) {
+        o[arguments[i]] = arguments[i + 1]
+    }
+    return o
+}
+
+function get_any(o) {
+    for (var k in o) {
+        if (o.hasOwnProperty(k)) {
+            return o[k]
+        }
+    }
+}
+
+function get_any_key(o) {
+    for (var k in o) {
+        if (o.hasOwnProperty(k)) {
+            return k
+        }
+    }
+}
+
+function map_array(a, f) {
+    var b = []
+    each(a, function (v, k) { b[k] = f(v) })
+    return b
+}
+
+function extend(a, b) {
+    each(b, function (x, key) { a[key] = x })
+    return a
+}
+
+function intersection(a, b) {
+    var common = {}
+    each(a, function (_, x) {
+        if (b[x]) {
+            common[x] = a[x]
+        }
+    })
+    return common
+}
+
+
+
+
+
+function create_uvsync() {
     var self = {
         op_set : {
             'root' : {
@@ -89,9 +396,11 @@ function create_uvsync() {
                     delete_this_many++
                 } else if (deps[o.aft]) {
                     
-                    if (o.ins.length == 0 && o.len > 0) {
-                        
-                    }
+                    
+                    
+                    
+                    work here
+                    
                     
                     
                     
