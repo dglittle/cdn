@@ -5,12 +5,24 @@
 
 function create_uvsync() {
     var self = {
-        op_set : {}, // {id, ins:text or del:num or collapse:[], aft, pos, (bef) }
-        op_arr : [] // {id, ins:text ..., off, len}
+        // {id, ins:text or del:num or collapse:[], aft, pos, (bef) }
+        op_set : {
+            'void' : true
+        },
+        
+        // {id, ins:text ..., off, len}
+        op_arr : [{
+            id : 'void',
+            ins : '',
+            off : 0,
+            len : 0
+        }]
     }
     
     self.add_op = function (op) {
-        if (op.ins) {
+        if (op.del) {
+            
+        } else if (op.ins) {
             op = extend({}, op)
             op.off = 0
             op.len = op.ins.length
@@ -23,9 +35,17 @@ function create_uvsync() {
                         o.len = o.ins.length
                         var ii = i + 1
                         if (rest == '') {
-                            if (self.op_arr[ii].)
+                            var oo = self.op_arr[ii]
+                            while (oo.aft == o.id) {
+                                if (op.id > oo.id && oo.id != op.bef) {
+                                    while (oo.id != o.id) {
+                                        oo = self.op_arr[++ii]
+                                    }
+                                    oo = self.op_arr[++ii]
+                                } else break
+                            }
                         }
-                        self.op_arr.splice(ii, 0, new_op)
+                        self.op_arr.splice(ii, 0, op)
                         self.op_arr.splice(ii + 1, 0, {
                             id : o.id,
                             ins : rest,
@@ -37,7 +57,6 @@ function create_uvsync() {
                 }
             }
         }
-        
     }
     
     return self
