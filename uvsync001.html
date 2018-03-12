@@ -24,9 +24,7 @@ function create_uvsync() {
     }
     
     self.add_op = function (op) {
-        
-        // CALL MOM!
-        
+
         self.op_set[op.id] = op
         if (op.merge) {
             var going_away = {}
@@ -66,20 +64,40 @@ function create_uvsync() {
 
             var offset = 0
             var deps = extend({}, going_away)
+            var started_inserting = false
             for (var i = 0; i < self.op_arr.length; i++) {
                 var o = self.op_arr[i]
                 if (going_away[o.id]) {
+                    started_inserting = true
                     op.ins.push(o.ins)
                     delete_this_many++
                 } else if (deps[o.aft]) {
                     deps[o.id] = true
                     insert_thing()
+                    
+                    
+                    
+                    work here
+                    delete self.op_set[o.id]
+                    var new_op = extend({}, o)
+                    self.op_set[o.id] = new_op
+                    new_op
+                    
+                    
+                    
+                    
+                    
+                    work here
+                    
+                    
+                    
                     insert_at = i
-                } else {
-                    insert_thing()
+                } else if (started_inserting) {
                     break
                 }
+                offset += o.ins.length
             }
+            insert_thing()
         } else if (op.del) {
             var offset = 0
             for (var i = 0; i < self.op_arr.length; i++) {
