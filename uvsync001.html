@@ -1,6 +1,9 @@
 
 <body></body>
+<script src="http://dglittle.github.io/cdn/random001.js"></script>
 <script>
+
+Math.randomSeed(6)
 
 function print(x) {
     console.log('blah!')
@@ -13,13 +16,28 @@ function main() {
     
     a.add('hi')
     a.process_queue()
-    // a.add('h')
-    // a.process_queue()
-    // a.text = a.read(a.tree)
+    a.text = a.read(a.tree)
+    a.add('ht')
+    a.process_queue()
+    a.text = a.read(a.tree)
+    a.add('htt')
+    a.process_queue()
+    a.text = a.read(a.tree)
+    a.add('Shtt')
+    a.process_queue()
+    a.text = a.read(a.tree)
+    
+    a.add_op({
+        id : guid(),
+        merge : ['ZUOtpGSNPs3FI9N', 'wktCPrKJowez9EI', 'IsZxfMFJBIINWSl'],
+        aft : 'TWkcO32m6ZA6wBp',
+        pos : 0
+    })
+    a.process_queue()
+    a.process_queue()
+    a.text = a.read(a.tree)
     
     print(a)
-    print(a.read(a.tree))
-    
 }
 
 function create_uvsync() {
@@ -29,8 +47,8 @@ function create_uvsync() {
         aft : null,
         pos : 0,
         bef : null,
-        inserts : [],
-        deletes : []
+        inserts : {},
+        deletes : {}
     }
     
     var self = {
@@ -63,18 +81,6 @@ function create_uvsync() {
         })
         
         var offset = 0
-        function check_insert(op, i) {
-            if (inserts[offset]) {
-                var gid = guid()
-                self.op_queue[gid] = {
-                    id : gid,
-                    ins : inserts[offset],
-                    aft : op.id,
-                    pos : i
-                }
-                delete inserts[offset]
-            }
-        }
         function helper(op) {
             var del = 0
             for (var i = 0; i <= op.ins.length; i++) {
@@ -85,7 +91,16 @@ function create_uvsync() {
                     del = Math.max(del, ii.pos + ii.del)
                 })
                 
-                check_insert(op, i)
+                if (inserts[offset]) {
+                    var gid = guid()
+                    self.op_queue[gid] = {
+                        id : gid,
+                        ins : inserts[offset],
+                        aft : op.id,
+                        pos : i
+                    }
+                    delete inserts[offset]
+                }
                 if (del <= i && i < op.ins.length) {
                     if (deletes[offset]) {
                         var gid = guid()
@@ -104,23 +119,22 @@ function create_uvsync() {
                     }
                 }
             }
-            check_insert(op, i)
         }
         helper(self.tree)
     }
     
-    self.read = function (op, s) {
+    self.read = function () {
         var s = []
         function helper(op) {
             var del = 0
-            for (var i = 0; i < op.ins.length; i++) {
+            for (var i = 0; i <= op.ins.length; i++) {
                 each(op.inserts[i] || [], function (ii) {
                     helper(ii)
                 })
                 each(op.deletes[i] || [], function (ii) {
                     del = Math.max(del, ii.pos + ii.del)
                 })
-                if (del <= i) {
+                if (del <= i && i < op.ins.length) {
                     s.push(op.ins[i])
                 }
             }
@@ -134,13 +148,13 @@ function create_uvsync() {
             var oo = self.op_set[op.aft] || self.op_queue[op.aft]
             if (oo) {
                 if (op.rebase_v > (oo.rebase_v || 0)) {
+                    if (self.op_set[oo.id]) {
+                        if (self.op_set[oo.aft]) self.op_set[oo.aft].inserts[oo.pos].splice(oo.pos, 1)
+                        delete self.op_set[oo.id]
+                    }
                     oo.rebase_v = op.rebase_v
                     oo.aft = op.rebase
                     oo.pos = op.pos
-                    if (self.op_set[oo.id]) {
-                        self.op_set[oo.aft].inserts[oo.pos].splice(oo.pos, 1)
-                        delete self.op_set[oo.id]
-                    }
                     self.op_queue[oo.id] = oo
                 }
             } else {
@@ -154,6 +168,8 @@ function create_uvsync() {
             return
         }
         self.op_set[op.id] = op
+        if (!op.inserts) op.inserts = {}
+        if (!op.deletes) op.deletes = {}
         if (op.del) {
             var deletes = self.op_set[op.aft].deletes[op.pos]
             if (!deletes) deletes = self.op_set[op.aft].deletes[op.pos] = []
@@ -191,16 +207,20 @@ function create_uvsync() {
             function helper(op) {
                 var del = 0
                 var del_out_group = 0
-                for (var i = 0; i < op.ins.length; i++) {
+                for (var i = 0; i <= op.ins.length; i++) {
                     each(op.inserts[i] || [], function (ii) {
                         if (in_group[ii.id]) {
                             helper(ii)
                         } else {
+                            
+                            console.log('got here!!??4:', ii.id)
+                            
                             var gid = guid()
                             self.op_queue[gid] = {
                                 id : gid,
                                 aft : ii.id,
                                 rebase : merge_id,
+                                rebase_v : (ii.rebase_v || 0) + 1,
                                 pos : s_len
                             }
                         }
@@ -212,9 +232,7 @@ function create_uvsync() {
                             del_out_group = Math.max(del_out_group, ii.pos + ii.del)
                         }
                     })
-                    if (del <= i) {
-                        s.push(op.ins[i])
-                        s_len++
+                    if (del <= i && i < op.ins.length) {
                         if (del_out_group > i) {
                             var gid = guid()
                             self.op_queue[gid] = {
@@ -224,6 +242,8 @@ function create_uvsync() {
                                 pos : s_len
                             }
                         }
+                        s.push(op.ins[i])
+                        s_len++
                     }
                 }
             }
