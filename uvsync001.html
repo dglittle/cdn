@@ -18,10 +18,15 @@ function create_uvsync() {
             len : 0
         }],
         
-        text : ''
+        text : '',
+        
+        waiting_ops : {}
     }
     
     self.add_op = function (op) {
+        
+        // CALL MOM!
+        
         self.op_set[op.id] = op
         if (op.merge) {
             var going_away = {}
@@ -29,54 +34,52 @@ function create_uvsync() {
             var next = null
             while (next = get_any_key(frontier)) {
                 delete frontier[next]
-                if (!going_away[next]) {
+                var o = self.op_set[next]
+                if (!o) {
+                    self.waiting_ops[op.id] = op
+                    delete self.op_set[op.id]
+                    return
+                }
+                if (!going_away[next] && (o.id != op.aft)) {
                     going_away[next] = true
-                    frontier[self.op_set[next].aft] = true
+                    frontier[o.aft] = true
+                    delete self.op_set[next]
                 }
             }
+
+            var insert_at = 0
+            var delete_this_many = 0
+            var op = extend({}, op)
+            op.ins = []
+            op.off = 0
+
+            function insert_thing() {
+                if (op.ins.length > 0) {
+                    op.ins = op.ins.join('')
+                    op.len = op.ins.length
+                    self.op_arr.splice(insert_at, delete_this_many, op)
+                    var op = extend({}, op)
+                    op.off += op.len
+                    op.ins = []
+                }
+            }
+
             var offset = 0
+            var deps = extend({}, going_away)
             for (var i = 0; i < self.op_arr.length; i++) {
                 var o = self.op_arr[i]
-                if (o.id == op.aft) {
-                    if (op.pos < o.off + o.len) {
-                        if (op.pos > o.off) {
-                            var len = op.pos - o.off
-                            self.op_arr.splice(i + 1, 0, {
-                                id : o.id,
-                                ins : o.ins.substr(len),
-                                off : o.off + len,
-                                len : o.len - len
-                            })
-                            o.ins = o.substr(0, len)
-                            o.len -= len
-                            o = self.op_arr[++i]
-                            
-                            op = extend({}, op)
-                            op.pos += len
-                            op.del -= len
-                            offset += len
-                        }
-                        if (op.pos == o.off && (op.pos + op.del <= o.off + o.len)) {
-                            if (op.pos + op.del < o.off + o.len) {
-                                self.op_arr.splice(i, 0, {
-                                    id : o.id,
-                                    ins : '',
-                                    off : o.off,
-                                    len : op.del
-                                })
-                            }
-                            o.off += op.del
-                            o.len -= op.del
-                            o.ins = o.ins.substr(op.del)
-                            self.text = self.text.slice(0, offset) +
-                                self.text.slice(offset + op.del)
-                            return
-                        }
-                    }
+                if (going_away[o.id]) {
+                    op.ins.push(o.ins)
+                    delete_this_many++
+                } else if (deps[o.aft]) {
+                    deps[o.id] = true
+                    insert_thing()
+                    insert_at = i
+                } else {
+                    insert_thing()
+                    break
                 }
-                offset += o.ins.length
             }
-            
         } else if (op.del) {
             var offset = 0
             for (var i = 0; i < self.op_arr.length; i++) {
@@ -120,6 +123,8 @@ function create_uvsync() {
                 }
                 offset += o.ins.length
             }
+            self.waiting_ops[op.id] = op
+            delete self.op_set[op.id]
         } else if (op.ins) {
             op = extend({}, op)
             op.off = 0
@@ -158,6 +163,8 @@ function create_uvsync() {
                 }
                 offset += o.ins.length
             }
+            self.waiting_ops[op.id] = op
+            delete self.op_set[op.id]
         }
     }
     
