@@ -7,16 +7,17 @@ function create_uvsync() {
     var self = {
         // {id, ins:text or del:num or collapse:[], aft, pos, (bef) }
         op_set : {
-            'void' : true
+            'root' : true
         },
         
         // {id, ins:text ..., off, len}
-        op_arr : [{
-            id : 'void',
+        root : {
+            id : 'root',
             ins : '',
             off : 0,
-            len : 0
-        }],
+            len : 0,
+            kids : []
+        },
         
         text : '',
         
