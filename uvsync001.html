@@ -12,7 +12,14 @@ function main() {
     print(a)
     
     a.add('hi')
+    a.process_queue()
+    // a.add('h')
+    // a.process_queue()
+    // a.text = a.read(a.tree)
+    
     print(a)
+    print(a.read(a.tree))
+    
 }
 
 function create_uvsync() {
@@ -33,6 +40,14 @@ function create_uvsync() {
         op_queue : {}
     }
     
+    self.process_queue = function () {
+        var q = self.op_queue
+        self.op_queue = {}
+        each(q, function (op) {
+            self.add_op(op)
+        })
+    }
+    
     self.add = function (s) {
         var inserts = {}
         var deletes = {}
@@ -47,12 +62,6 @@ function create_uvsync() {
             }
         })
         
-        console.log('diff')
-        print(inserts)
-        print(deletes)
-        console.log('wtf?')
-        print(diff_main(self.text, s))
-
         var offset = 0
         function check_insert(op, i) {
             if (inserts[offset]) {
@@ -68,7 +77,7 @@ function create_uvsync() {
         }
         function helper(op) {
             var del = 0
-            for (var i = 0; i < op.ins.length; i++) {
+            for (var i = 0; i <= op.ins.length; i++) {
                 each(op.inserts[i] || [], function (ii) {
                     helper(ii)
                 })
@@ -77,7 +86,7 @@ function create_uvsync() {
                 })
                 
                 check_insert(op, i)
-                if (del <= i) {
+                if (del <= i && i < op.ins.length) {
                     if (deletes[offset]) {
                         var gid = guid()
                         self.op_queue[gid] = {
@@ -96,34 +105,27 @@ function create_uvsync() {
                 }
             }
             check_insert(op, i)
-            if (inserts[offset]) {
-                var gid = guid()
-                self.op_queue[gid] = {
-                    id : gid,
-                    ins : inserts[offset],
-                    aft : op.id,
-                    pos : i
-                }
-                delete inserts[offset]
-            }
         }
         helper(self.tree)
     }
     
     self.read = function (op, s) {
-        var s = s || []
-        var del = 0
-        for (var i = 0; i < op.ins.length; i++) {
-            each(op.inserts[i] || [], function (ii) {
-                self.read(ii, s)
-            })
-            each(op.deletes[i] || [], function (ii) {
-                del = Math.max(del, ii.pos + ii.del)
-            })
-            if (del <= i) {
-                s.push(op.ins[i])
+        var s = []
+        function helper(op) {
+            var del = 0
+            for (var i = 0; i < op.ins.length; i++) {
+                each(op.inserts[i] || [], function (ii) {
+                    helper(ii)
+                })
+                each(op.deletes[i] || [], function (ii) {
+                    del = Math.max(del, ii.pos + ii.del)
+                })
+                if (del <= i) {
+                    s.push(op.ins[i])
+                }
             }
         }
+        helper(self.tree)
         return s.join('')
     }
 
