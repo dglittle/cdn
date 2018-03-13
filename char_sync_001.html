@@ -12,260 +12,124 @@ function print(x) {
 
 function main() {
     var a = create_char_sync_001()
+    var ops = calc_ops('x')
     print(a)
 }
 
 function create_char_sync_001() {
-    var root = {
-        id : 'root', // guid
-        p : null, // parent
-        kids : [], // children
-        a : null, // after (within parent kids)
-        b : null, // before (within parent kids)
-        c : '', // char
-        d : false, // deleted?
+    var start = {
+        id : 'start', // guid
+        a : null, // after
+        b : null, // before
+        c : '^', // char
+        d : true, // deleted?
+    }
+    var end = {
+        id : 'end', // guid
+        a : null, // after
+        b : null, // before
+        c : '$', // char
+        d : true, // deleted?
     }
     
     var self = {
-        op_set : { 'root' : root },
-        tree : root,
+        op_set : { start : start, end : end },
         text : '',
         op_queue : {}
     }
-    
-    self.calc_ops = function () {
-        
-    }
-    
-    function insert_into_kids(kids, op) {
-        var i = 0, o = null
-        while (o = kids[i]) {
-            if (op.a == o.id) break
-            i++
-        }
-        if (!o) i = 0
-        while (o = kids[i]) {
-            if (op.id < o.id || op.b == o.id) break
-            i++
-        }
-        kids.splice(i, 0, op)
-    }
-    
-    self.add_op = function (op) {
-        if (op.ins) {
-            insert_into_kids(self.op_set[op.a].kids, op)
-        } else if (op.del) {
-            op = self.op_set[op.del]
-            op.d = true
-            var a = self.op_set[op.a]
-            a.kids.splice(a.kids.indexOf(op), 1)
-            for (var i = op.kids.length - 1; i >= 0; i--) {
-                var k = op.kids[i]
-                k.a = a.id
-                insert_into_kids(a.kids, k)
-            }
-        }
-    }
-    
-    
-    
-    
-    self.process_queue = function () {
-        var q = self.op_queue
-        self.op_queue = {}
-        each(q, function (op) {
-            self.add_op(op)
-        })
-    }
-    
-    self.add = function (s) {
-        var inserts = {}
-        var deletes = {}
-        var offset = 0
+
+    self.calc_ops = function (s) {
+        var ops = []
+        var prev_op = start
         each(diff_main(self.text, s), function (o) {
             if (o[0] == 0) {
-                offset += o[1].length
+                var len = 0
+                while (len < o[1].length) {
+                    len += prev_op.d ? 0 : 1
+                    prev_op = prev_op.b
+                }
             } else if (o[0] == 1) {
-                inserts[offset] = o[1]
+                var a = prev_op.id
+                var b = (o[1].length == 1) ? prev_op.b : guid()
+                for (var i = 0; i < o[1].length; i++) {
+                    var gid = (i == 0) ? guid() : b
+                    ops[gid] = {
+                        id : gid,
+                        ins : true,
+                        a : a,
+                        b : b,
+                        c : o[1][i]
+                    }
+                    a = gid
+                    b = (i == o[1].length - 1) ? prev_op.b : guid()
+                }
             } else if (o[0] == -1) {
-                deletes[offset] = o[1].length
+                var len = 0
+                while (len < o[1].length) {
+                    if (!prev_op.d) {
+                        len++
+                        var gid = guid()
+                        ops[gid] = {
+                            id : gid,
+                            del : prev_op.id
+                        }
+                    }
+                    prev_op = prev_op.b
+                }
             }
         })
-        
-        var offset = 0
-        function helper(op) {
-            var del = 0
-            for (var i = 0; i <= op.ins.length; i++) {
-                each(op.inserts[i] || [], function (ii) {
-                    helper(ii)
-                })
-                each(op.deletes[i] || [], function (ii) {
-                    del = Math.max(del, ii.pos + ii.del)
-                })
-                
-                if (inserts[offset]) {
-                    var gid = guid()
-                    self.op_queue[gid] = {
-                        id : gid,
-                        ins : inserts[offset],
-                        aft : op.id,
-                        pos : i
-                    }
-                    delete inserts[offset]
-                }
-                if (del <= i && i < op.ins.length) {
-                    if (deletes[offset]) {
-                        var gid = guid()
-                        self.op_queue[gid] = {
-                            id : gid,
-                            del : 1,
-                            aft : op.id,
-                            pos : i
-                        }
-                        var count = deletes[offset]
-                        delete deletes[offset]
-                        if (count > 1)
-                            deletes[offset + 1] = count - 1
-                    } else {
-                        offset++
-                    }
-                }
-            }
-        }
-        helper(self.tree)
+        add_ops(ops)
+        return ops
     }
     
+    self.add_ops = function (ops) {
+        extend(self.op_queue, ops)
+        process_queue()
+        return self.read()
+    }
+    
+    self.process_queue = function () {
+        var progress = true
+        while (progress) {
+            var remaining = {}
+            var progress = false
+            each(self.op_queue, function (op) {
+                if (op.ins) {
+                    var a = self.op_set[op.a]
+                    var b = self.op_set[op.b]
+                    if (!a || !b) {
+                        remaining[op.id] = op
+                        return
+                    }
+                    a.b = op.id
+                    b.a = op.id
+                    op.a = a
+                    op.b = b
+                    self.op_set[op.id] = op
+                } else if (op.del) {
+                    o = self.op_set[op.del]
+                    if (!o) {
+                        remaining[op.id] = op
+                        return
+                    }
+                    o.d = true
+                }
+                progress = true
+            })
+            self.op_queue = remaining
+        }
+    }
+
     self.read = function () {
         var s = []
-        function helper(op) {
-            var del = 0
-            for (var i = 0; i <= op.ins.length; i++) {
-                each(op.inserts[i] || [], function (ii) {
-                    helper(ii)
-                })
-                each(op.deletes[i] || [], function (ii) {
-                    del = Math.max(del, ii.pos + ii.del)
-                })
-                if (del <= i && i < op.ins.length) {
-                    s.push(op.ins[i])
-                }
-            }
+        var cur = start
+        while (cur) {
+            if (!cur.d) s.push(cur.c)
+            cur = cur.b
         }
-        helper(self.tree)
-        return s.join('')
+        return self.text = s.join('')
     }
 
-    self.add_op = function (op) {
-        if (op.rebase) {
-            var oo = self.op_set[op.aft] || self.op_queue[op.aft]
-            if (oo) {
-                if (op.rebase_v > (oo.rebase_v || 0)) {
-                    if (self.op_set[oo.id]) {
-                        if (self.op_set[oo.aft]) self.op_set[oo.aft].inserts[oo.pos].splice(oo.pos, 1)
-                        delete self.op_set[oo.id]
-                    }
-                    oo.rebase_v = op.rebase_v
-                    oo.aft = op.rebase
-                    oo.pos = op.pos
-                    self.op_queue[oo.id] = oo
-                }
-            } else {
-                self.op_queue[op.id] = op
-            }
-            return
-        }
-        
-        if (!self.op_set[op.aft]) {
-            self.op_queue[op.id] = op
-            return
-        }
-        self.op_set[op.id] = op
-        if (!op.inserts) op.inserts = {}
-        if (!op.deletes) op.deletes = {}
-        if (op.del) {
-            var deletes = self.op_set[op.aft].deletes[op.pos]
-            if (!deletes) deletes = self.op_set[op.aft].deletes[op.pos] = []
-            deletes.push(op)
-        } else if (op.ins) {
-            var inserts = self.op_set[op.aft].inserts[op.pos]
-            if (!inserts) inserts = self.op_set[op.aft].inserts[op.pos] = []
-            var i = 0, o
-            while (o = inserts[i]) {
-                if (op.id < o.id || op.bef == o.id) break
-                i++
-            }
-            inserts.splice(i, 0, op)
-        } else if (op.merge) {
-            var in_group = {}
-            var frontier = make_set(op.merge)
-            var next = null
-            while (next = get_any_key(frontier)) {
-                delete frontier[next]
-                var o = self.op_set[next]
-                if (!o) {
-                    self.op_queue[op.id] = op
-                    delete self.op_set[op.id]
-                    return
-                }
-                if (!in_group[next] && (o.id != op.aft)) {
-                    in_group[next] = true
-                    frontier[o.aft] = true
-                }
-            }
-
-            var merge_id = op.id
-            var s = []
-            var s_len = 0
-            function helper(op) {
-                var del = 0
-                var del_out_group = 0
-                for (var i = 0; i <= op.ins.length; i++) {
-                    each(op.inserts[i] || [], function (ii) {
-                        if (in_group[ii.id]) {
-                            helper(ii)
-                        } else {
-                            
-                            console.log('got here!!??4:', ii.id)
-                            
-                            var gid = guid()
-                            self.op_queue[gid] = {
-                                id : gid,
-                                aft : ii.id,
-                                rebase : merge_id,
-                                rebase_v : (ii.rebase_v || 0) + 1,
-                                pos : s_len
-                            }
-                        }
-                    })
-                    each(op.deletes[i] || [], function (ii) {
-                        if (in_group[ii.id]) {
-                            del = Math.max(del, ii.pos + ii.del)
-                        } else {
-                            del_out_group = Math.max(del_out_group, ii.pos + ii.del)
-                        }
-                    })
-                    if (del <= i && i < op.ins.length) {
-                        if (del_out_group > i) {
-                            var gid = guid()
-                            self.op_queue[gid] = {
-                                id : gid,
-                                del : 1,
-                                aft : merge_id,
-                                pos : s_len
-                            }
-                        }
-                        s.push(op.ins[i])
-                        s_len++
-                    }
-                }
-            }
-            var aft = self.op_set[op.aft]
-            helper(aft)
-            op.ins = s.join('')
-            self.op_set[aft.aft].inserts[aft.pos].splice(aft.pos, 1, op)
-        }
-    }
-    
     return self
 }
 
@@ -295,57 +159,9 @@ function each(o, cb) {
     return true
 }
 
-function make_set(a) {
-    var s = {}
-    for (var i = 0; i < a.length; i++) {
-        s[a[i]] = true
-    }
-    return s
-}
-
-function keyvals() {
-    var o = {}
-    for (var i = 0; i < arguments.length; i += 2) {
-        o[arguments[i]] = arguments[i + 1]
-    }
-    return o
-}
-
-function get_any(o) {
-    for (var k in o) {
-        if (o.hasOwnProperty(k)) {
-            return o[k]
-        }
-    }
-}
-
-function get_any_key(o) {
-    for (var k in o) {
-        if (o.hasOwnProperty(k)) {
-            return k
-        }
-    }
-}
-
-function map_array(a, f) {
-    var b = []
-    each(a, function (v, k) { b[k] = f(v) })
-    return b
-}
-
 function extend(a, b) {
     each(b, function (x, key) { a[key] = x })
     return a
-}
-
-function intersection(a, b) {
-    var common = {}
-    each(a, function (_, x) {
-        if (b[x]) {
-            common[x] = a[x]
-        }
-    })
-    return common
 }
 
 /**
