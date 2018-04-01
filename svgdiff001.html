@@ -1,40 +1,29 @@
-<html>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/svg.js/2.6.4/svg.min.js" integrity="sha256-c41axQEd+/UIEXHKMkvkD0bDuKHCdlBd+13pZLCvsro=" crossorigin="anonymous"></script>
-<body>
+<script type="statebus">
 
-<h1>My first SVG</h1>
+text = ->
+  args = for x in arguments
+    if typeof x == 'string'
+      {dangerouslySetInnerHTML: {__html: x}}
+    else
+      x
+  TEXT.apply(null, args)      
 
-<!--<svg width="100" height="100">-->
-<!--  <circle cx="50" cy="50" r="40" stroke="green" stroke-width="4" fill="yellow" />-->
-<!--</svg>-->
+dom.BODY = ->
+    SVG width: 40, height: 600,
+        RECT width: 20, height: 30, fill: "#008d00"
+        TEXT x: 10, y: 10, "font-family": "Verdana",
+            "blah"
+        RECT width: 20, height: 30, x:20, y:30, fill: "#008d00"
 
-</body>
-<script>
+###
 
-function draw_line() {
-    var svg = document.createElement('svg')
-    svg.setAttribute('width', '100px')
-    svg.height = '100px'
-    
-    
-    //.setAttribute("fill", "#333");
-    
-    var cir = document.createElement('circle')
-    cir.cx = 50
-    cir.cy = 60
-    cir.r = 40
-    cir.stroke = 'green'
-    cir["stroke-width"] = 4
-    cir.fill = 'yellow'
-    
-    svg.append(cir)
-    
-    console.log('got here?')
+dom.BODY = ->
+    SVG width: 40, height: 60,
+        for i in [0..4]
+            RECT width: 1, height: 2, x: i*2, fill: "#008d#{i*30}"
 
-    document.body.append(svg)
-}
+###
 
-draw_line()
+console.log(React.version)
 
-</script>
-</html>
+</script><script src="https://stateb.us/client6.js" server="none"></script>
