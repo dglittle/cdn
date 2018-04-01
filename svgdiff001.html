@@ -1,5 +1,7 @@
 <script type="statebus">
 
+console.log('hello world!')
+
 text = ->
   args = for x in arguments
     if typeof x == 'string'
@@ -8,14 +10,96 @@ text = ->
       x
   TEXT.apply(null, args)      
 
+char_width = 20
+line_height = 40
+marg = 1.5
+control_point_height = 0.3
+
+blue_light = 'rgba(197, 231, 253, 1)'
+blue_dark = 'rgba(5, 101, 251, 1)'
+
+red_light = 'rgba(252, 239, 234, 1)'
+red_dark = 'rgba(194, 51, 55, 1)'
+
+draw_line_of_text = (s, line) ->
+    y = ((line+1) * line_height)
+    A = for c, i in s
+        text x: (char_width * i) + (char_width/2), y: y - 3,
+            fontFamily: 'Verdana',
+            textAnchor: 'middle',
+            'alignment-baseline' : 'baseline',
+            c
+    [A, LINE x1: 0, y1: y - 0.5, x2: s.length * char_width, y2: y - 0.5, stroke: 'black', strokeDasharray: '3 2']
+
+draw_ribbon = (line, top1, top2, bottom1, bottom2, color) ->
+    y = line * line_height
+    PATH d:"M #{top1 * char_width + marg} #{y} H #{top2 * char_width - marg} Q #{bottom2 * char_width - marg} #{lerp(0, y, 1, y + line_height - 1, control_point_height)}, #{bottom2 * char_width - marg} #{y + line_height - 1} H #{bottom1 * char_width + marg} Q #{bottom1 * char_width + marg} #{lerp(0, y, 1, y + line_height - 1, control_point_height)}, #{top1 * char_width + marg} #{y}", fill: color
+
+draw_ribbon_lines = (line, top1, top2, bottom1, bottom2, color) ->
+    y = line * line_height
+    [PATH(d:"M #{top2 * char_width - marg} #{y} Q #{bottom2 * char_width - marg} #{lerp(0, y, 1, y + line_height - 1, control_point_height)}, #{bottom2 * char_width - marg} #{y + line_height - 1}", fill: 'transparent', stroke: color), PATH(d:"M #{bottom1 * char_width + marg} #{y + line_height - 1} Q #{bottom1 * char_width + marg} #{lerp(0, y, 1, y + line_height - 1, control_point_height)}, #{top1 * char_width + marg} #{y}", fill: 'transparent', stroke: color)]
+    
+
 dom.BODY = ->
-    SVG width: 40, height: 600,
-        RECT width: 20, height: 30, fill: "#008d00"
-        TEXT x: 10, y: 10, "font-family": "Verdana",
-            "blah"
-        RECT width: 20, height: 30, x:20, y:30, fill: "#008d00"
+    SVG width: 600, height: 600,
+    
+        draw_ribbon(1, 2, 3, 1, 2, red_light)
+        
+        draw_ribbon(1, 2, 3, 2, 4, blue_light)
+        draw_ribbon_lines(1, 2, 3, 2, 4, blue_dark)
+        
+        draw_ribbon_lines(1, 2, 3, 1, 2, red_dark)
+        
+        draw_line_of_text('hello', 0)
+        draw_line_of_text('hello world', 1)
+        
 
 ###
+        
+        text x: 10, y: 37,
+            fontFamily: 'Verdana',
+            textAnchor: 'middle',
+            'alignment-baseline' : 'baseline',
+            'a'
+        text x: 30, y: 37,
+            fontFamily: 'Verdana',
+            textAnchor: 'middle',
+            'alignment-baseline' : 'baseline',
+            'b'
+        LINE x1: 0, y1:40.5, x2:40, y2:40.5, stroke: 'black', strokeDasharray: '3 2'
+        LINE x1: 0, y1:80.5, x2:40, y2:80.5, stroke: 'black', strokeDasharray: '3 2'
+        
+        PATH d:'M 20 41 H 40 Q 20 41, 16 80 H 0 Q 0 41, 20 41', fill: 'rgba(252, 239, 234, 1)'
+        
+        
+        PATH d:'M 20 41 H 40 V 80 H 20 V 41', fill: 'rgba(197, 231, 253, 1)'
+        PATH d:'M 20.5 41 V 80', stroke: 'rgba(5, 101, 251, 1)', fill:'transparent'
+        PATH d:'M 39.5 41 V 80', stroke: 'rgba(5, 101, 251, 1)', fill:'transparent'
+        
+        
+        PATH d:'M 40 41 Q 18.5 41, 16.5 80', stroke: 'rgba(194, 51, 55, 1)', fill:'transparent'
+        PATH d:'M 0.5 80 Q 0.5 41, 19.5 41', stroke: 'rgba(194, 51, 55, 1)', fill:'transparent'
+
+        text x: 9, y: 77,
+            fontFamily: 'Verdana',
+            textAnchor: 'middle',
+            'alignment-baseline' : 'baseline',
+            'x'
+        text x: 30, y: 77,
+            fontFamily: 'Verdana',
+            textAnchor: 'middle',
+            'alignment-baseline' : 'baseline',
+            'y'
+
+
+
+
+        PATH d:'M 21 31 H 40 Q 40 40, 30 40 T 19 50 V 60 H 0 V 50 Q 0 40, 10 40 T 21 30 L 21 30', fill: 'rgba(255, 0, 0, 0.5)'
+
+
+
+
+        PATH d:'M 0 200 V 100 Q 0 50, 50 50 T 100 0 H 200 Q 200 50, 150 50 T 100 100 V 200 L 0 200'
 
 dom.BODY = ->
     SVG width: 40, height: 60,
@@ -24,6 +108,8 @@ dom.BODY = ->
 
 ###
 
-console.log(React.version)
+</script>
+<script src="https://dglittle.github.io/cdn/utils001.js"></script>
+<script src="https://stateb.us/client6.js" server="none"></script>
 
-</script><script src="https://stateb.us/client6.js" server="none"></script>
+<style> body { padding : 0; margin : 0 } </style>
