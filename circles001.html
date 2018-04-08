@@ -1,0 +1,32 @@
+<body style="padding:0px;margin:0px"></body>
+<script>
+
+function create_circle(x, y) {
+    var d = document.createElement('div')
+    d.style.position = 'absolute'
+    d.style.left = x + 'px'
+    d.style.top = y + 'px'
+    d.style.width = '128px'
+    d.style.height = '128px'
+    d.style['border-radius'] = '64px'
+    d.style.background = 'red'
+    return d
+}
+
+
+function create_dark_corner() {
+    var d = document.createElement('div')
+    d.style.width = '128px'
+    d.style.height = '128px'
+    d.style['border-radius'] = '128px 0px 0px 0px'
+    d.style.background = 'red'
+    return d
+}
+
+var w = window.innerWidth
+var h = window.innerHeight
+for (var i = -1; i < 1; i += 1) {
+    document.body.append(create_circle(w/2 - (i * 128), h/2))
+}
+
+</script>
