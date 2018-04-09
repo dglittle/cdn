@@ -6,14 +6,15 @@ window.addEventListener('load', function() {
 
   // Checking if Web3 has been injected by the browser (Mist/MetaMask)
   if (typeof web3 !== 'undefined') {
-      console.log('got here!11')
+      console.log('got here!1111')
     // Use Mist/MetaMask's provider
     var provider = web3.currentProvider
+    var myWeb3 = new Web3(provider)
 
-    web3.eth.getCompilers(function (x) {
+    myWeb3.eth.getCompilers(function (x) {
         console.log('bloooooop!')
         
-    console.log(x)
+        console.log(x)
         
     })
     
@@ -22,7 +23,7 @@ window.addEventListener('load', function() {
     // fallback - use your fallback strategy (local node / hosted node + in-dapp id mgmt / fail)
     web3js = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
   }
-      console.log('got here!12')
+      console.log('got here!1222')
 
   // Now you can start your app & access web3 freely:
 //  startApp()
