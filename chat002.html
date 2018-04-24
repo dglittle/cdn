@@ -30,7 +30,7 @@ var model = {
 
 function draw_chat_message(x) {
     var d = document.createElement('div')
-    d.textContent = x.text
+    d.textContent = x.text + x.time + location.search // == '?edit'
     d.title = 'written by: ' + x.uid
     Math.randomSeed(x.uid)
     d.style.color = random_color()
