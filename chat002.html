@@ -6,7 +6,7 @@
     <div style="color:blue">blah, bloop, not loaded yet</div>
 </div>
 <div>&nbsp;</div>
-<div style="position:fixed;left:0px;bottom:0px;width:100%">
+<div id="sending_panel" style="position:fixed;left:0px;bottom:0px;width:100%;display:none">
     <div style="display:grid;grid-template-columns:1fr auto">
         <input id="input_box" value="" placeholder="you can type a message here, ctrl-enter to send" style="width:100%;border:1px solid white;background:black"></input>
         <button onclick="send()">send</button>
@@ -15,6 +15,10 @@
 </body>
 
 <script>
+
+var m = location.search.match(/\?(\d+)(\,(\d+))?/)
+var min_time = m ? 1*m[1] : 0
+var max_time = (m && m[3]) ? 1*m[3] : Infinity
 
 var config = {
     apiKey: "AIzaSyDVM0ekHwUqC_rGsqkT7fJ71FyRum9cxko",
@@ -40,10 +44,6 @@ function draw_chat_message(x) {
 }
 
 function draw_chat_messages() {
-    var m = location.search.match(/\?(\d+)(\,(\d+))?/)
-    var min_time = m ? 1*m[1] : 0
-    var max_time = (m && m[3]) ? 1*m[3] : Infinity
-    
     var d = document.createElement('div')
     var chats = []
     each(model.chat, function (c) {
@@ -62,6 +62,8 @@ function draw_chat_messages() {
 }
 
 function main_update() {
+    if (max_time == Infinity)
+        sending_panel.style.display = 'block'
     chat_area.innerHTML = ''
     chat_area.append(draw_chat_messages())
     document.body.scrollTop = document.body.scrollHeight
