@@ -5,11 +5,14 @@
 <div id="chat_area">
     <div style="color:blue">blah, bloop, not loaded yet</div>
 </div>
-<div>&nbsp;</div>
-<div id="sending_panel" style="position:fixed;left:0px;bottom:0px;width:100%;display:none">
-    <div style="display:grid;grid-template-columns:1fr auto">
-        <input id="input_box" value="" placeholder="you can type a message here, ctrl-enter to send" style="width:100%;border:1px solid white;background:black"></input>
-        <button onclick="send()">send</button>
+
+<div id="sending_panel" style="display:none">
+    <div>&nbsp;</div>
+    <div style="position:fixed;left:0px;bottom:0px;width:100%">
+        <div style="display:grid;grid-template-columns:1fr auto">
+            <input id="input_box" value="" placeholder="you can type a message here, ctrl-enter to send" style="width:100%;border:1px solid white;background:black"></input>
+            <button onclick="send()">send</button>
+        </div>
     </div>
 </div>
 </body>
