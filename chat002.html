@@ -32,10 +32,7 @@ var model = {
 
 function draw_chat_message(x) {
     var d = document.createElement('div')
-    
-    // work here
-    d.textContent = x.text + x.time + location.search // == '?edit'
-    
+    d.textContent = x.text
     d.title = 'written by: ' + x.uid
     Math.randomSeed(x.uid)
     d.style.color = random_color()
@@ -50,7 +47,6 @@ function draw_chat_messages() {
     var d = document.createElement('div')
     var chats = []
     each(model.chat, function (c) {
-        // work here
         if (c.time >= min_time &&
             c.time <= max_time) {
             chats.push(c)
