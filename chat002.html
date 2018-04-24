@@ -2,7 +2,9 @@
 <script src="https://dglittle.github.io/cdn/random001.js"></script>
 
 <body style="margin:0px;padding:0px;background:rgb(5, 10, 20)">
-<div id="chat_area"></div>
+<div id="chat_area">
+    <div style="color:blue">blah, bloop, not loaded yet</div>
+</div>
 <div>&nbsp;</div>
 <div style="position:fixed;left:0px;bottom:0px;width:100%">
     <div style="display:grid;grid-template-columns:1fr auto">
@@ -30,7 +32,10 @@ var model = {
 
 function draw_chat_message(x) {
     var d = document.createElement('div')
+    
+    // work here
     d.textContent = x.text + x.time + location.search // == '?edit'
+    
     d.title = 'written by: ' + x.uid
     Math.randomSeed(x.uid)
     d.style.color = random_color()
@@ -38,10 +43,18 @@ function draw_chat_message(x) {
 }
 
 function draw_chat_messages() {
+    var m = location.search.match(/\?(\d+)(\,(\d+))?/)
+    var min_time = m ? 1*m[1] : 0
+    var max_time = (m && m[3]) ? 1*m[3] : Infinity
+    
     var d = document.createElement('div')
     var chats = []
     each(model.chat, function (c) {
-        chats.push(c)
+        // work here
+        if (c.time >= min_time &&
+            c.time <= max_time) {
+            chats.push(c)
+        }
     })
     chats.sort(function (a, b) {
         return a.time - b.time
@@ -53,8 +66,7 @@ function draw_chat_messages() {
 }
 
 function main_update() {
-    while (chat_area.firstChild)
-        chat_area.firstChild.remove()
+    chat_area.innerHTML = ''
     chat_area.append(draw_chat_messages())
     document.body.scrollTop = document.body.scrollHeight
 }
