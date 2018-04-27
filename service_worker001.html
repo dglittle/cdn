@@ -10,12 +10,14 @@ function notifyMe() {
   // Let's check if the browser supports notifications
   if (!("Notification" in window)) {
     alert("This browser does not support system notifications");
+    return
   }
 
   // Let's check whether notification permissions have already been granted
   else if (Notification.permission === "granted") {
     // If it's okay let's create a notification
     var notification = new Notification("Hi there!");
+    return
   }
 
   // Otherwise, we need to ask the user for permission
@@ -29,10 +31,13 @@ function notifyMe() {
         var notification = new Notification("Hi there!");
       }
     });
+    return
   }
 
   // Finally, if the user has denied notifications and you 
   // want to be respectful there is no need to bother them any more.
+  
+  console.log('got here :(')
 }
 
 notifyMe()
