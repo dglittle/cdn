@@ -1,5 +1,5 @@
 
-hi there!!
+hi there!!!
 
 
 <script>
@@ -17,6 +17,13 @@ function notifyMe() {
   else if (Notification.permission === "granted") {
     // If it's okay let's create a notification
     var notification = new Notification("Hi there!");
+      
+    console.log('booo!')
+      
+\        var notification = new Notification("Hi there!");
+        notification.onerror = function () {
+            alert('it erred!!')
+        }
     return
   }
 
