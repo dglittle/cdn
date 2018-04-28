@@ -1,0 +1,11 @@
+<script type="statebus">
+dom.BODY = ->
+  size = if state.big then 300 else 50
+  DIV
+    width: size
+    height: size
+    padding: 20
+    backgroundColor: 'lightgrey'
+    onClick: => state.big = !state.big
+    'Click me!'
+</script><script src="https://stateb.us/client6.js"></script>
