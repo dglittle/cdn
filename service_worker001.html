@@ -1,57 +1,77 @@
 
-hi there!!!7
+hi there!!!8
 
 
 <script>
 
-    alert('booo!0')
 
+if ('serviceWorker' in navigator && 'PushManager' in window) {
+  console.log('Service Worker and Push is supported');
 
-function notifyMe() {
-  // Let's check if the browser supports notifications
-  if (!("Notification" in window)) {
-    alert("This browser does not support system notifications");
-    return
-  }
+  navigator.serviceWorker.register('service_worker001.js')
+  .then(function(swReg) {
+    console.log('Service Worker is registered', swReg);
 
-  // Let's check whether notification permissions have already been granted
-  else if (Notification.permission === "granted") {
-    // If it's okay let's create a notification
-    var notification = new Notification("Hi there!");
-      
-    alert('booo!1')
-      
-        var notification = new Notification("Hi there!");
-        notification.onerror = function () {
-            alert('it erred!!')
-        }
-    return
-  }
-
-  // Otherwise, we need to ask the user for permission
-  else if (Notification.permission !== 'denied') {
-    Notification.requestPermission(function (permission) {
-      // If the user accepts, let's create a notification
-      
-    alert('booo!2')
-      
-      if (permission === "granted") {
-        var notification = new Notification("Hi there!");
-        notification.onerror = function () {
-            alert('it erred!')
-        }
-      }
-    });
-    return
-  }
-
-  // Finally, if the user has denied notifications and you 
-  // want to be respectful there is no need to bother them any more.
-  
-  alert('got here :(')
+    swRegistration = swReg;
+  })
+  .catch(function(error) {
+    console.error('Service Worker Error', error);
+  });
+} else {
+  console.warn('Push messaging is not supported');
+  pushButton.textContent = 'Push Not Supported';
 }
 
-notifyMe()
+
+
+//     alert('booo!0')
+
+
+// function notifyMe() {
+//   // Let's check if the browser supports notifications
+//   if (!("Notification" in window)) {
+//     alert("This browser does not support system notifications");
+//     return
+//   }
+
+//   // Let's check whether notification permissions have already been granted
+//   else if (Notification.permission === "granted") {
+//     // If it's okay let's create a notification
+//     var notification = new Notification("Hi there!");
+      
+//     alert('booo!1')
+      
+//         var notification = new Notification("Hi there!");
+//         notification.onerror = function () {
+//             alert('it erred!!')
+//         }
+//     return
+//   }
+
+//   // Otherwise, we need to ask the user for permission
+//   else if (Notification.permission !== 'denied') {
+//     Notification.requestPermission(function (permission) {
+//       // If the user accepts, let's create a notification
+      
+//     alert('booo!2')
+      
+//       if (permission === "granted") {
+//         var notification = new Notification("Hi there!");
+//         notification.onerror = function () {
+//             alert('it erred!')
+//         }
+//       }
+//     });
+//     return
+//   }
+
+//   // Finally, if the user has denied notifications and you 
+//   // want to be respectful there is no need to bother them any more.
+  
+//   alert('got here :(')
+// }
+
+// notifyMe()
 
 
 // Notification.requestPermission().then(function(result) {
