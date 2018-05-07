@@ -1,0 +1,50 @@
+
+<body style="padding:0px;margin:0px"></body>
+<script src="http://dglittle.github.io/cdn/random001.js"></script>
+<script>
+
+var w = window.innerWidth
+var h = window.innerHeight
+
+var c = document.createElement('canvas')
+c.width = w
+c.height = h
+document.body.append(c)
+var g = c.getContext('2d')
+
+var img_data = g.getImageData(0, 0, w, h)
+
+Math.randomSeed('hi')
+
+
+var start_time = Date.now()
+
+for (var y = 0; y < h; y++) {
+    for (var x = 0; x < w; x++) {
+        var offset = y*(w*4) + x*4
+        var height = calc_terrain_height(x, y)
+        
+        img_data.data[offset + 0] = Math.floor(Math.random() * 256)
+        img_data.data[offset + 1] = Math.floor(Math.random() * 256)
+        img_data.data[offset + 2] = Math.floor(Math.random() * 256)
+        img_data.data[offset + 3] = Math.floor(Math.random() * 256)
+    }
+}
+
+console.log('hi??')
+
+g.putImageData(img_data, 0, 0)
+
+var end_time = Date.now()
+
+console.log(end_time - start_time)
+
+function render_terrain() {
+    
+}
+
+function lerp(t0, v0, t1, v1, t) {
+    return (t - t0) * (v1 - v0) / (t1 - t0) + v0
+}
+
+</script>
