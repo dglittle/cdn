@@ -33,6 +33,23 @@ function waitForUid(cb) {
     helper()
 }
 
+function each(o, cb) {
+	if (o instanceof Array) {
+		for (var i = 0; i < o.length; i++) {
+			if (cb(o[i], i, o) == false)
+				return false
+		}
+	} else {
+		for (var k in o) {
+			if (o.hasOwnProperty(k)) {
+				if (cb(o[k], k, o) == false)
+					return false
+			}
+		}
+	}
+	return true
+}
+
 function randomString(len, re) {
     re = re || /[a-zA-Z0-9]/
     var chars = []
@@ -496,17 +513,27 @@ waitForUid(function (uid) {
 </div>
 <script>
 waitForUid(function (uid) {
-    
-    console.log('hi!!!!')
-    
     db.child('owl004/job').on('value', function (x) {
-        // console.log('x = ', x)
-        console.log('wtf??')
-        // x = x.val()
-        // owl_find_view.innerHTML = ''
+        console.log('x = ', x)
+        x = x.val()
+        owl_find_view.innerHTML = ''
+        each(x, function (x) {
+            var y = document.createElement('div')
+            y.textContent = 'hihi'
+            owl_find_view.append(y)
+        })
+        
         // for (var k in x) { if (x.hasOwnProperty(k)) {
         //     var v = x[k]
+            
+            
+        //     for (var blah in owl_job_template) {
+        //         console.log(blah)
+        //     }
+            
+        //     console.log('hi1')
         //     var job = owl_job_template.cloneNode(true)
+        //     console.log('hi2')
             
         //     owl_find_view.append(job)
         // }}
