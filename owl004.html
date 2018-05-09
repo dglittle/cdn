@@ -499,16 +499,17 @@ waitForUid(function (uid) {
     
     console.log('hi!!!!')
     
-    db.child('job').orderByChild('time').limitToLast(1000).on('value', function (x) {
-        console.log('x = ', x)
-        x = x.val()
-        owl_find_view.innerHTML = ''
-        for (var k in x) { if (x.hasOwnProperty(k)) {
-            var v = x[k]
-            var job = owl_job_template.cloneNode(true)
+    db.child('owl004/job').on('value', function (x) {
+        // console.log('x = ', x)
+        console.log('wtf??')
+        // x = x.val()
+        // owl_find_view.innerHTML = ''
+        // for (var k in x) { if (x.hasOwnProperty(k)) {
+        //     var v = x[k]
+        //     var job = owl_job_template.cloneNode(true)
             
-            owl_find_view.append(job)
-        }}
+        //     owl_find_view.append(job)
+        // }}
     })
 })
 </script>
