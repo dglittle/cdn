@@ -5,6 +5,50 @@
 	    initial-scale=1">
 </head>
 
+<script src="https://www.gstatic.com/firebasejs/5.0.1/firebase.js"></script>
+<script>
+
+var config = {
+    apiKey: "AIzaSyDVM0ekHwUqC_rGsqkT7fJ71FyRum9cxko",
+    authDomain: "glittle.firebaseapp.com",
+    databaseURL: "https://glittle.firebaseio.com",
+    projectId: "glittle",
+    storageBucket: "",
+    messagingSenderId: "1000468536093"
+}
+var db = firebase.initializeApp(config).database().ref()
+
+var uid = null
+firebase.auth().onAuthStateChanged(function(user) {
+    uid = user && user.uid
+})
+firebase.auth().signInAnonymously().catch(function(error) {
+    console.log(error)
+})
+function waitForUid(cb) {
+    function helper() {
+        if (uid) cb(uid)
+        else setTimeout(helper, 250)
+    }
+    helper()
+}
+
+function randomString(len, re) {
+    re = re || /[a-zA-Z0-9]/
+    var chars = []
+    for (var i = 0; i < 256; i++) {
+        var c = String.fromCharCode(i)
+        if (c.match(re)) chars.push(c)
+    }
+    var ret = []
+    for (var i = 0; i < len; i++) {
+        ret.push(chars[Math.floor(Math.random() * chars.length)])
+    }
+    return ret.join('')
+}
+
+</script>
+
 <body style="
     margin:0px">
     
@@ -61,14 +105,14 @@
     <div style="clear:both"></div>
 </div>
 
-<div id="owl_header" style="
+<div id="owl_post_form" style="
     background:#ddd;
     width:720px;
     margin-left:auto;
     margin-right:auto">
     <div style="
         padding:10px">
-        <textarea style="
+        <textarea id="owl_post_form_text" style="
             background:blue;
             border:10px solid black;
             border-radius:20px;
@@ -94,7 +138,7 @@
         max
     </button>
     <div style="clear:both"></div>
-    <input style="
+    <input id="owl_post_form_min_people" style="
         background:blue;
         border:10px solid black;
         border-radius:20px;
@@ -103,7 +147,7 @@
         font-size:40px;
         margin:10px">
     </input>
-    <input style="
+    <input id="owl_post_form_max_peole" style="
         background:blue;
         border:10px solid black;
         border-radius:20px;
@@ -122,7 +166,7 @@
         people
     </button>
     <div style="clear:both"></div>
-    <input style="
+    <input id="owl_post_form_min_hours" style="
         background:blue;
         border:10px solid black;
         border-radius:20px;
@@ -131,7 +175,7 @@
         font-size:40px;
         margin:10px">
     </input>
-    <input style="
+    <input id="owl_post_form_max_hours" style="
         background:blue;
         border:10px solid black;
         border-radius:20px;
@@ -150,7 +194,7 @@
         hours per person
     </button>
     <div style="clear:both"></div>
-    <input style="
+    <input id="owl_post_form_min_pay" style="
         background:blue;
         border:10px solid black;
         border-radius:20px;
@@ -159,7 +203,7 @@
         font-size:40px;
         margin:10px">
     </input>
-    <input style="
+    <input id="owl_post_form_max_pay" style="
         background:blue;
         border:10px solid black;
         border-radius:20px;
@@ -192,7 +236,20 @@
         height:160px;
         float:left;
         font-size:80px;
-        margin:10px">
+        margin:10px"
+        onclick="waitForUid(function (uid) {
+            db.child('owl004/job/' + randomString(20)).set({
+                uid : uid,
+                time : firebase.database.ServerValue.TIMESTAMP,
+                text : owl_post_form_text.value,
+                min_people : owl_post_form_min_people.value,
+                max_people : owl_post_form_max_people.value,
+                min_hours : owl_post_form_min_hours.value,
+                max_hours : owl_post_form_max_hours.value,
+                min_pay : owl_post_form_min_pay.value,
+                max_pay : owl_post_form_max_pay.value
+            })
+        })">
         +<br/>
         <span style="font-size:20px">POST</span>
     </button>
