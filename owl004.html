@@ -97,6 +97,33 @@ function create_header_button(html, cb) {
     d.onclick = cb
     return d
 }
+    
+function create_input() {
+    var d = document.createElement('input')
+    d.style.background = 'blue'
+    d.style.border = '10px solid black'
+    d.style.borderRadius = '20px'
+    d.style.float = 'left'
+    d.style.width = '160px'
+    d.style.fontSize = '40px'
+    d.style.margin = '10px'
+    return d
+}
+
+function create_label(width, html) {
+    var d = document.createElement('button')
+    d.style.background = 'transparent'
+    d.style.border = '0px'
+    if (width) d.style.width = width + 'px'
+    else {
+        d.style.border = '10px solid transparent'
+        d.style.borderRadius = '20px'
+    }
+    d.style.float = 'left'
+    d.style.fontSize = '40px'
+    d.innerHTML = html
+    return d
+}
 
 function create_post_form() {
     var d = document.createElement('div')
@@ -106,21 +133,6 @@ function create_post_form() {
     d.style.top = '0px'
     d.style.marginLeft = 'auto'
     d.style.marginRight = 'auto'
-
-    function create_label(width, html) {
-        var d = document.createElement('button')
-        d.style.background = 'transparent'
-        d.style.border = '0px'
-        if (width) d.style.width = width + 'px'
-        else {
-            d.style.border = '10px solid transparent'
-            d.style.borderRadius = '20px'
-        }
-        d.style.float = 'left'
-        d.style.fontSize = '40px'
-        d.innerHTML = html
-        return d
-    }
     
     var text
     
@@ -140,19 +152,7 @@ function create_post_form() {
         D.append(d)
         return D
     }
-    
-    function create_input() {
-        var d = document.createElement('input')
-        d.style.background = 'blue'
-        d.style.border = '10px solid black'
-        d.style.borderRadius = '20px'
-        d.style.float = 'left'
-        d.style.width = '160px'
-        d.style.fontSize = '40px'
-        d.style.margin = '10px'
-        return d
-    }
-    
+
     d.append(create_label(360, 'job description'))
     d.append(create_textarea())
     
@@ -200,34 +200,267 @@ function create_post_form() {
     d.append(create_clear())
     
     return d
+}
+
+function create_find_form() {
+    var d = document.createElement('div')
+    d.style.background = '#ddd'
+    d.style.width = '720px'
+    d.style.marginLeft = 'auto'
+    d.style.marginRight = 'auto'
+
+    var words
     
-    /*
-        onclick="">
-        +<br/>
-        <span style="font-size:20px">POST</span>
+    function create_textarea() {
+        var d = document.createElement('input')
+        d.style.background = 'blue'
+        d.style.border = '10px solid black'
+        d.style.borderRadius = '20px'
+        d.style.width = '100%'
+        d.style.fontSize = '40px'
+        
+        words = d
+        
+        var D = document.createElement('div')
+        D.style.padding = '10px'
+        D.append(d)
+        return D
+    }
+
+    d.append(create_label(360, 'contains words'))
+    d.append(create_textarea())
+
+    d.append(create_label(180, 'min'))
+    d.append(create_label(180, 'max'))
+    d.append(create_clear())
+
+    var min_people, max_people    
+    d.append(min_people = create_input())
+    d.append(max_people = create_input())
+    d.append(create_label(null, 'people'))
+    d.append(create_clear())
+    
+    var min_hours, max_hours
+    d.append(min_hours = create_input())
+    d.append(max_hours = create_input())
+    d.append(create_label(null, 'hours per person'))
+    d.append(create_clear())
+    
+    var min_pay, max_pay
+    d.append(min_pay = create_input())
+    d.append(max_pay = create_input())
+    d.append(create_label(null, 'pay per hour'))
+    d.append(create_clear())
+        
+    waitForUid(function (uid) {
+        words.oninput = function () {
+            db.child('owl004/user_public/' + uid + '/find_words').set(this.value)
+        }    
+        min_people.oninput = function () {
+            db.child('owl004/user_public/' + uid + '/find_min_people').set(this.value)
+        }    
+        max_people.oninput = function () {
+            db.child('owl004/user_public/' + uid + '/find_max_people').set(this.value)
+        }    
+        min_hours.oninput = function () {
+            db.child('owl004/user_public/' + uid + '/find_min_hours').set(this.value)
+        }    
+        max_hours.oninput = function () {
+            db.child('owl004/user_public/' + uid + '/find_max_hours').set(this.value)
+        }    
+        min_pay.oninput = function () {
+            db.child('owl004/user_public/' + uid + '/find_min_pay').set(this.value)
+        }    
+        max_pay.oninput = function () {
+            db.child('owl004/user_public/' + uid + '/find_max_pay').set(this.value)
+        }    
+        db.child('owl004/user_public/' + uid).on('value', function (x) {
+            x = x.val() || {}
+            words.value = x.find_words || ''
+            min_people.value = x.find_min_people || 0
+            max_people.value = x.find_max_people || '\u221E'
+            min_hours.value = x.find_min_hours || 0
+            max_hours.value = x.find_max_hours || '\u221E'
+            min_pay.value = x.find_min_pay || 0
+            max_pay.value = x.find_max_pay || '\u221E'
+        })
+    })    
+
+    return d
+}
+
+
+/*
+
+    <div style="
+        padding:10px">
+        <input id="owl_find_form_words" style="
+            background:blue;
+            border:10px solid black;
+            border-radius:20px;
+            width:100%;
+            font-size:40px;"
+            onload="console.log('hi?')">
+        </input>
+    </div>
+    <button style="
+        background:transparent;
+        border:0px;
+        width:180px;
+        float:left;
+        font-size:40px">
+        min
     </button>
     <button style="
+        background:transparent;
+        border:0px;
+        width:180px;
+        float:left;
+        font-size:40px">
+        max
+    </button>
+    <div style="clear:both"></div>
+    <input id="owl_find_form_min_people" style="
         background:blue;
         border:10px solid black;
         border-radius:20px;
         width:160px;
-        height:160px;
         float:left;
-        font-size:80px;
-        margin:10px"
-        onclick="
-            owl_post_form.style.display = 'none'
-            owl_header_post.style.display = 'block'
-            owl_header_cancel_post.style.display = 'none'">
-        -<br/>
-        <span style="font-size:20px">CANCEL</span>
+        font-size:40px;
+        margin:10px">
+    </input>
+    <input id="owl_find_form_max_people" style="
+        background:blue;
+        border:10px solid black;
+        border-radius:20px;
+        width:160px;
+        float:left;
+        font-size:40px;
+        margin:10px">
+    </input>
+    <button style="
+        background:transparent;
+        border:10px solid transparent;
+        border-radius:20px;
+        float:left;
+        font-size:40px;
+        margin:10px">
+        people
+    </button>
+    <div style="clear:both"></div>
+    <input id="owl_find_form_min_hours" style="
+        background:blue;
+        border:10px solid black;
+        border-radius:20px;
+        width:160px;
+        float:left;
+        font-size:40px;
+        margin:10px">
+    </input>
+    <input id="owl_find_form_max_hours" style="
+        background:blue;
+        border:10px solid black;
+        border-radius:20px;
+        width:160px;
+        float:left;
+        font-size:40px;
+        margin:10px">
+    </input>
+    <button style="
+        background:transparent;
+        border:10px solid transparent;
+        border-radius:20px;
+        float:left;
+        font-size:40px;
+        margin:10px">
+        hours per person
+    </button>
+    <div style="clear:both"></div>
+    <input id="owl_find_form_min_pay" style="
+        background:blue;
+        border:10px solid black;
+        border-radius:20px;
+        width:160px;
+        float:left;
+        font-size:40px;
+        margin:10px">
+    </input>
+    <input id="owl_find_form_max_pay" style="
+        background:blue;
+        border:10px solid black;
+        border-radius:20px;
+        width:160px;
+        float:left;
+        font-size:40px;
+        margin:10px">
+    </input>
+    <button style="
+        background:transparent;
+        border:10px solid transparent;
+        border-radius:20px;
+        float:left;
+        font-size:40px;
+        margin:10px">
+        pay per hour
+    </button>
+    <div style="clear:both"></div>
+    <button style="
+        background:transparent;
+        border:0px;
+        width:360px;
+        float:left;">
     </button>
     <div style="clear:both"></div>
 </div>
+<script>
+waitForUid(function (uid) {
+    owl_find_form_words.oninput = function () {
+        db.child('owl004/user_public/' + uid + '/find_words').set(this.value)
+    }    
+    owl_find_form_min_people.oninput = function () {
+        db.child('owl004/user_public/' + uid + '/find_min_people').set(this.value)
+    }    
+    owl_find_form_max_people.oninput = function () {
+        db.child('owl004/user_public/' + uid + '/find_max_people').set(this.value)
+    }    
+    owl_find_form_min_hours.oninput = function () {
+        db.child('owl004/user_public/' + uid + '/find_min_hours').set(this.value)
+    }    
+    owl_find_form_max_hours.oninput = function () {
+        db.child('owl004/user_public/' + uid + '/find_max_hours').set(this.value)
+    }    
+    owl_find_form_min_pay.oninput = function () {
+        db.child('owl004/user_public/' + uid + '/find_min_pay').set(this.value)
+    }    
+    owl_find_form_max_pay.oninput = function () {
+        db.child('owl004/user_public/' + uid + '/find_max_pay').set(this.value)
+    }    
+    db.child('owl004/user_public/' + uid).on('value', function (x) {
+        x = x.val()
+        if (!x) return;
+        owl_find_form_words.value = x.find_words || ''
+        owl_find_form_min_people.value = x.find_min_people || 0
+        owl_find_form_max_people.value = x.find_max_people || '\u221E'
+        owl_find_form_min_hours.value = x.find_min_hours || 0
+        owl_find_form_max_hours.value = x.find_max_hours || '\u221E'
+        owl_find_form_min_pay.value = x.find_min_pay || 0
+        owl_find_form_max_pay.value = x.find_max_pay || '\u221E'
+    })
+})
+<script>
+
 
 */
-    
-}
+
+
+
+
+
+
+
+
+
+
 
 function create_header() {
     var d = document.createElement('div')
@@ -238,9 +471,7 @@ function create_header() {
 
     d.append(create_header_button('OWL'))
     d.append(create_header_button('&#128269;', function () {
-        console.log('blar?')
-        owl_find_form.style.display = owl_find_form.style.display == 'block' ? 'none' : 'block'
-        owl_find_view.style.display = owl_find_view.style.display == 'block' ? 'none' : 'block'        
+        d.append(create_find_form())
     }))
     d.append(create_header_button('<span style="font-size:80px">+</span><br/><span style="font-size:20px">POST</span>', function () {
         document.body.append(create_post_form())
