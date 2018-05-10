@@ -5,22 +5,24 @@
 	    initial-scale=1">
 </head>
 
-<script src="https://www.gstatic.com/firebasejs/5.0.1/firebase.js"></script>
+<script src="https://www.gstatic.com/firebasejs/5.0.2/firebase.js"></script>
 
 <body style="
     margin:0px">
 
 <script>
 
+
+
 var config = {
-    apiKey: "AIzaSyDVM0ekHwUqC_rGsqkT7fJ71FyRum9cxko",
-    authDomain: "glittle.firebaseapp.com",
-    databaseURL: "https://glittle.firebaseio.com",
-    projectId: "glittle",
-    storageBucket: "",
-    messagingSenderId: "1000468536093"
+    apiKey: "AIzaSyBLV5t8a-gGxnr5ZoS0znAZLNCemTCBAWo",
+    authDomain: "openworklist.firebaseapp.com",
+    databaseURL: "https://openworklist.firebaseio.com",
+    projectId: "openworklist",
+    storageBucket: "openworklist.appspot.com",
+    messagingSenderId: "275344271563"
 }
-var db = firebase.initializeApp(config).database().ref()
+var db = firebase.initializeApp(config).firestore()
 
 var uid = null
 firebase.auth().onAuthStateChanged(function(user) {
@@ -180,10 +182,12 @@ function create_post_form() {
     
     d.append(create_spacer(360))
     d.append(create_header_button('<span style="font-size:80px">+</span><br/><span style="font-size:20px">POST</span>', function () {
+            console.log('got here!!??')
         waitForUid(function (uid) {
-            db.child('owl004/job/' + randomString(20)).set({
+            console.log('got here!!')
+            db.collection('job').add({
                 uid : uid,
-                time : firebase.database.ServerValue.TIMESTAMP,
+                time : firebase.FieldValue.serverTimestamp(),
                 text : text.value,
                 min_people : min_people.value,
                 max_people : max_people.value,
@@ -191,6 +195,10 @@ function create_post_form() {
                 max_hours : max_hours.value,
                 min_pay : min_pay.value,
                 max_pay : max_pay.value
+            }).then(function () {
+                console.log('got here!?')
+            }).catch(function () {
+                console.log('got here!!!!????')
             })
         })        
     }))
@@ -277,190 +285,75 @@ function create_find_form() {
         db.child('owl004/user_public/' + uid).on('value', function (x) {
             x = x.val() || {}
             words.value = x.find_words || ''
-            min_people.value = x.find_min_people || 0
-            max_people.value = x.find_max_people || '\u221E'
-            min_hours.value = x.find_min_hours || 0
-            max_hours.value = x.find_max_hours || '\u221E'
-            min_pay.value = x.find_min_pay || 0
-            max_pay.value = x.find_max_pay || '\u221E'
+            min_people.value = x.find_min_people || ''
+            max_people.value = x.find_max_people || ''
+            min_hours.value = x.find_min_hours || ''
+            max_hours.value = x.find_max_hours || ''
+            min_pay.value = x.find_min_pay || ''
+            max_pay.value = x.find_max_pay || ''
         })
     })    
 
     return d
 }
 
+function create_find_view() {
+    var d = document.createElement('div')
+    d.style.background = '#ddd'
+    d.style.width = '720px'
+    d.style.marginLeft = 'auto'
+    d.style.marginRight = 'auto'
 
-/*
+    d.append(create_label(180, 'results'))
+    var results = document.createElement('div')
+    d.append(results)
+    d.append(create_clear())
 
-    <div style="
-        padding:10px">
-        <input id="owl_find_form_words" style="
-            background:blue;
-            border:10px solid black;
-            border-radius:20px;
-            width:100%;
-            font-size:40px;"
-            onload="console.log('hi?')">
-        </input>
-    </div>
-    <button style="
-        background:transparent;
-        border:0px;
-        width:180px;
-        float:left;
-        font-size:40px">
-        min
-    </button>
-    <button style="
-        background:transparent;
-        border:0px;
-        width:180px;
-        float:left;
-        font-size:40px">
-        max
-    </button>
-    <div style="clear:both"></div>
-    <input id="owl_find_form_min_people" style="
-        background:blue;
-        border:10px solid black;
-        border-radius:20px;
-        width:160px;
-        float:left;
-        font-size:40px;
-        margin:10px">
-    </input>
-    <input id="owl_find_form_max_people" style="
-        background:blue;
-        border:10px solid black;
-        border-radius:20px;
-        width:160px;
-        float:left;
-        font-size:40px;
-        margin:10px">
-    </input>
-    <button style="
-        background:transparent;
-        border:10px solid transparent;
-        border-radius:20px;
-        float:left;
-        font-size:40px;
-        margin:10px">
-        people
-    </button>
-    <div style="clear:both"></div>
-    <input id="owl_find_form_min_hours" style="
-        background:blue;
-        border:10px solid black;
-        border-radius:20px;
-        width:160px;
-        float:left;
-        font-size:40px;
-        margin:10px">
-    </input>
-    <input id="owl_find_form_max_hours" style="
-        background:blue;
-        border:10px solid black;
-        border-radius:20px;
-        width:160px;
-        float:left;
-        font-size:40px;
-        margin:10px">
-    </input>
-    <button style="
-        background:transparent;
-        border:10px solid transparent;
-        border-radius:20px;
-        float:left;
-        font-size:40px;
-        margin:10px">
-        hours per person
-    </button>
-    <div style="clear:both"></div>
-    <input id="owl_find_form_min_pay" style="
-        background:blue;
-        border:10px solid black;
-        border-radius:20px;
-        width:160px;
-        float:left;
-        font-size:40px;
-        margin:10px">
-    </input>
-    <input id="owl_find_form_max_pay" style="
-        background:blue;
-        border:10px solid black;
-        border-radius:20px;
-        width:160px;
-        float:left;
-        font-size:40px;
-        margin:10px">
-    </input>
-    <button style="
-        background:transparent;
-        border:10px solid transparent;
-        border-radius:20px;
-        float:left;
-        font-size:40px;
-        margin:10px">
-        pay per hour
-    </button>
-    <div style="clear:both"></div>
-    <button style="
-        background:transparent;
-        border:0px;
-        width:360px;
-        float:left;">
-    </button>
-    <div style="clear:both"></div>
-</div>
-<script>
-waitForUid(function (uid) {
-    owl_find_form_words.oninput = function () {
-        db.child('owl004/user_public/' + uid + '/find_words').set(this.value)
-    }    
-    owl_find_form_min_people.oninput = function () {
-        db.child('owl004/user_public/' + uid + '/find_min_people').set(this.value)
-    }    
-    owl_find_form_max_people.oninput = function () {
-        db.child('owl004/user_public/' + uid + '/find_max_people').set(this.value)
-    }    
-    owl_find_form_min_hours.oninput = function () {
-        db.child('owl004/user_public/' + uid + '/find_min_hours').set(this.value)
-    }    
-    owl_find_form_max_hours.oninput = function () {
-        db.child('owl004/user_public/' + uid + '/find_max_hours').set(this.value)
-    }    
-    owl_find_form_min_pay.oninput = function () {
-        db.child('owl004/user_public/' + uid + '/find_min_pay').set(this.value)
-    }    
-    owl_find_form_max_pay.oninput = function () {
-        db.child('owl004/user_public/' + uid + '/find_max_pay').set(this.value)
-    }    
-    db.child('owl004/user_public/' + uid).on('value', function (x) {
-        x = x.val()
-        if (!x) return;
-        owl_find_form_words.value = x.find_words || ''
-        owl_find_form_min_people.value = x.find_min_people || 0
-        owl_find_form_max_people.value = x.find_max_people || '\u221E'
-        owl_find_form_min_hours.value = x.find_min_hours || 0
-        owl_find_form_max_hours.value = x.find_max_hours || '\u221E'
-        owl_find_form_min_pay.value = x.find_min_pay || 0
-        owl_find_form_max_pay.value = x.find_max_pay || '\u221E'
+    waitForUid(function (uid) {
+        db.child('owl004/job').on('value', function (x) {
+            
+            console.log('hihi?')
+            
+            x = x.val() || {}
+            var a = []
+            each(x, function (v, k) { v.key = k; a.push(v) })
+            a.reverse()
+            results.innerHTML = ''
+            each(a, function (x) {
+                var d = document.createElement('div')
+                d.style.padding = '10px'
+                var dd = document.createElement('textarea')
+                dd.style.background = 'blue'
+                dd.style.border = '10px solid black'
+                dd.style.borderRadius = '20px'
+                dd.style.width = '100%'
+                dd.style.height = '160px'
+                dd.style.fontSize = '20px'
+                dd.value = x.text || ''
+                d.append(dd)
+                
+                var dd = document.createElement('textarea')
+                dd.style.background = 'transparent'
+                dd.style.textAlign = 'right'
+                dd.style.border = '10px solid transparent'
+                dd.style.borderRadius = '20px'
+                dd.style.color = 'white'
+                dd.style.width = '100%'
+                dd.style.height = '160px'
+                dd.style.fontSize = '12px'
+                dd.style.marginTop = '-160px'
+                dd.value = `${x.min_people || 0}-${x.max_people || '\u221E'} people, ` +
+                    `${x.min_hours || 0}-${x.max_hours || '\u221E'} hours, ` +
+                    `$${x.min_pay || 0}-${x.max_pay || '\u221E'}`
+                d.append(dd)
+    
+                results.append(d)
+            })
+        })
     })
-})
-<script>
 
-
-*/
-
-
-
-
-
-
-
-
-
-
+    return d
+}
 
 function create_header() {
     var d = document.createElement('div')
@@ -483,6 +376,7 @@ function create_header() {
 }
 
 document.body.append(create_header())
+document.body.append(create_find_view())
 
 </script>
 
