@@ -6,6 +6,10 @@
 </head>
 
 <script src="https://www.gstatic.com/firebasejs/5.0.1/firebase.js"></script>
+
+<body style="
+    margin:0px">
+
 <script>
 
 var config = {
@@ -64,487 +68,46 @@ function randomString(len, re) {
     return ret.join('')
 }
 
-</script>
+function create_post_form() {
+    work here
+}
 
-<body style="
-    margin:0px">
+function create_header() {
+    var d = document.createElement('div')
+    d.style.background = '#ddd'
+    d.style.width = '720px'
+    d.style.marginLeft = 'auto'
+    d.style.marginRight = 'auto'
     
-<div id="owl_header" style="
-    background:#ddd;
-    width:720px;
-    margin-left:auto;
-    margin-right:auto">
-    <button style="
-        background:blue;
-        border:10px solid black;
-        border-radius:20px;
-        width:160px;
-        height:160px;
-        float:left;
-        font-size:40px;
-        margin:10px">
-        OWL
-    </button>
-    <button style="
-        background:blue;
-        border:10px solid black;
-        border-radius:20px;
-        width:160px;
-        height:160px;
-        float:left;
-        font-size:40px;
-        margin:10px"
-        onclick="
-            owl_find_form.style.display = owl_find_form.style.display == 'block' ? 'none' : 'block'
-            owl_find_view.style.display = owl_find_view.style.display == 'block' ? 'none' : 'block'">
-        &#128269;
-    </button>
-    <button id="owl_header_post" style="
-        background:blue;
-        border:10px solid black;
-        border-radius:20px;
-        width:160px;
-        height:160px;
-        float:left;
-        font-size:80px;
-        margin:10px"
-        onclick="
-            owl_post_form.style.display = 'block'
-            owl_header_post.style.display = 'none'
-            owl_header_cancel_post.style.display = 'block'">
-        +<br/>
-        <span style="font-size:20px">POST</span>
-    </button>
-    <button id="owl_header_cancel_post" style="
-        display:none;
-        background:blue;
-        border:10px solid black;
-        border-radius:20px;
-        width:160px;
-        height:160px;
-        float:left;
-        font-size:80px;
-        margin:10px"
-        onclick="
-            owl_post_form.style.display = 'none'
-            owl_header_post.style.display = 'block'
-            owl_header_cancel_post.style.display = 'none'">
-        -<br/>
-        <span style="font-size:20px">CANCEL</span>
-    </button>
-    <button style="
-        background:blue;
-        border:10px solid black;
-        border-radius:20px;
-        width:160px;
-        height:160px;
-        float:left;
-        font-size:20px;
-        margin:10px">
-        beatiful statistics
-    </button>
-    <div style="clear:both"></div>
-</div>
+    function create_button(html, cb) {
+        var d = document.createElement('button')
+        d.style.background = 'blue'
+        d.style.border = '10px solid black'
+        d.style.borderRadius = '20px'
+        d.style.width = '160px'
+        d.style.height = '160px'
+        d.style.float = 'left'
+        d.style.fontSize = '40px'
+        d.style.margin = '10px'
+        d.innerHTML = html
+        d.onclick = cb
+        return d
+    }
+    
+    d.append(create_button('OWL'))
+    d.append(create_button('&#128269;', function () {
+        console.log('blar?')
+        owl_find_form.style.display = owl_find_form.style.display == 'block' ? 'none' : 'block'
+        owl_find_view.style.display = owl_find_view.style.display == 'block' ? 'none' : 'block'        
+    }))
+    d.append(create_button('<span style="font-size:80px">+</span><br/><span style="font-size:20px">POST</span>'))
+    d.append(create_button('<span style="font-size:20px">beautiful statistics</span>'))
 
-<div id="owl_post_form" style="
-    display:none;
-    background:#ddd;
-    width:720px;
-    margin-left:auto;
-    margin-right:auto">
-    <button style="
-        background:transparent;
-        border:0px;
-        width:360px;
-        float:left;
-        font-size:40px">
-        job description:
-    </button>
-    <div style="
-        padding:10px">
-        <textarea id="owl_post_form_text" style="
-            background:blue;
-            border:10px solid black;
-            border-radius:20px;
-            width:100%;
-            height:160px;
-            font-size:20px;">
-        </textarea>
-    </div>
-    <button style="
-        background:transparent;
-        border:0px;
-        width:180px;
-        float:left;
-        font-size:40px">
-        min
-    </button>
-    <button style="
-        background:transparent;
-        border:0px;
-        width:180px;
-        float:left;
-        font-size:40px">
-        max
-    </button>
-    <div style="clear:both"></div>
-    <input id="owl_post_form_min_people" style="
-        background:blue;
-        border:10px solid black;
-        border-radius:20px;
-        width:160px;
-        float:left;
-        font-size:40px;
-        margin:10px">
-    </input>
-    <input id="owl_post_form_max_people" style="
-        background:blue;
-        border:10px solid black;
-        border-radius:20px;
-        width:160px;
-        float:left;
-        font-size:40px;
-        margin:10px">
-    </input>
-    <button style="
-        background:transparent;
-        border:10px solid transparent;
-        border-radius:20px;
-        float:left;
-        font-size:40px;
-        margin:10px">
-        people
-    </button>
-    <div style="clear:both"></div>
-    <input id="owl_post_form_min_hours" style="
-        background:blue;
-        border:10px solid black;
-        border-radius:20px;
-        width:160px;
-        float:left;
-        font-size:40px;
-        margin:10px">
-    </input>
-    <input id="owl_post_form_max_hours" style="
-        background:blue;
-        border:10px solid black;
-        border-radius:20px;
-        width:160px;
-        float:left;
-        font-size:40px;
-        margin:10px">
-    </input>
-    <button style="
-        background:transparent;
-        border:10px solid transparent;
-        border-radius:20px;
-        float:left;
-        font-size:40px;
-        margin:10px">
-        hours per person
-    </button>
-    <div style="clear:both"></div>
-    <input id="owl_post_form_min_pay" style="
-        background:blue;
-        border:10px solid black;
-        border-radius:20px;
-        width:160px;
-        float:left;
-        font-size:40px;
-        margin:10px">
-    </input>
-    <input id="owl_post_form_max_pay" style="
-        background:blue;
-        border:10px solid black;
-        border-radius:20px;
-        width:160px;
-        float:left;
-        font-size:40px;
-        margin:10px">
-    </input>
-    <button style="
-        background:transparent;
-        border:10px solid transparent;
-        border-radius:20px;
-        float:left;
-        font-size:40px;
-        margin:10px">
-        pay per hour
-    </button>
-    <div style="clear:both"></div>
-    <button style="
-        background:transparent;
-        border:0px;
-        width:360px;
-        float:left;">
-    </button>
-    <button style="
-        background:blue;
-        border:10px solid black;
-        border-radius:20px;
-        width:160px;
-        height:160px;
-        float:left;
-        font-size:80px;
-        margin:10px"
-        onclick="waitForUid(function (uid) {
-            db.child('owl004/job/' + randomString(20)).set({
-                uid : uid,
-                time : firebase.database.ServerValue.TIMESTAMP,
-                text : owl_post_form_text.value,
-                min_people : owl_post_form_min_people.value,
-                max_people : owl_post_form_max_people.value,
-                min_hours : owl_post_form_min_hours.value,
-                max_hours : owl_post_form_max_hours.value,
-                min_pay : owl_post_form_min_pay.value,
-                max_pay : owl_post_form_max_pay.value
-            })
-        })">
-        +<br/>
-        <span style="font-size:20px">POST</span>
-    </button>
-    <button style="
-        background:blue;
-        border:10px solid black;
-        border-radius:20px;
-        width:160px;
-        height:160px;
-        float:left;
-        font-size:80px;
-        margin:10px"
-        onclick="
-            owl_post_form.style.display = 'none'
-            owl_header_post.style.display = 'block'
-            owl_header_cancel_post.style.display = 'none'">
-        -<br/>
-        <span style="font-size:20px">CANCEL</span>
-    </button>
-    <div style="clear:both"></div>
-</div>
+    return d
+}
 
-<div id="owl_find_form" style="
-    display:none;
-    background:#ddd;
-    width:720px;
-    margin-left:auto;
-    margin-right:auto">
-    <button style="
-        background:transparent;
-        border:0px;
-        width:360px;
-        float:left;
-        font-size:40px">
-        contains words:
-    </button>
-    <div style="
-        padding:10px">
-        <input id="owl_find_form_words" style="
-            background:blue;
-            border:10px solid black;
-            border-radius:20px;
-            width:100%;
-            font-size:40px;"
-            onload="console.log('hi?')">
-        </input>
-    </div>
-    <button style="
-        background:transparent;
-        border:0px;
-        width:180px;
-        float:left;
-        font-size:40px">
-        min
-    </button>
-    <button style="
-        background:transparent;
-        border:0px;
-        width:180px;
-        float:left;
-        font-size:40px">
-        max
-    </button>
-    <div style="clear:both"></div>
-    <input id="owl_find_form_min_people" style="
-        background:blue;
-        border:10px solid black;
-        border-radius:20px;
-        width:160px;
-        float:left;
-        font-size:40px;
-        margin:10px">
-    </input>
-    <input id="owl_find_form_max_people" style="
-        background:blue;
-        border:10px solid black;
-        border-radius:20px;
-        width:160px;
-        float:left;
-        font-size:40px;
-        margin:10px">
-    </input>
-    <button style="
-        background:transparent;
-        border:10px solid transparent;
-        border-radius:20px;
-        float:left;
-        font-size:40px;
-        margin:10px">
-        people
-    </button>
-    <div style="clear:both"></div>
-    <input id="owl_find_form_min_hours" style="
-        background:blue;
-        border:10px solid black;
-        border-radius:20px;
-        width:160px;
-        float:left;
-        font-size:40px;
-        margin:10px">
-    </input>
-    <input id="owl_find_form_max_hours" style="
-        background:blue;
-        border:10px solid black;
-        border-radius:20px;
-        width:160px;
-        float:left;
-        font-size:40px;
-        margin:10px">
-    </input>
-    <button style="
-        background:transparent;
-        border:10px solid transparent;
-        border-radius:20px;
-        float:left;
-        font-size:40px;
-        margin:10px">
-        hours per person
-    </button>
-    <div style="clear:both"></div>
-    <input id="owl_find_form_min_pay" style="
-        background:blue;
-        border:10px solid black;
-        border-radius:20px;
-        width:160px;
-        float:left;
-        font-size:40px;
-        margin:10px">
-    </input>
-    <input id="owl_find_form_max_pay" style="
-        background:blue;
-        border:10px solid black;
-        border-radius:20px;
-        width:160px;
-        float:left;
-        font-size:40px;
-        margin:10px">
-    </input>
-    <button style="
-        background:transparent;
-        border:10px solid transparent;
-        border-radius:20px;
-        float:left;
-        font-size:40px;
-        margin:10px">
-        pay per hour
-    </button>
-    <div style="clear:both"></div>
-    <button style="
-        background:transparent;
-        border:0px;
-        width:360px;
-        float:left;">
-    </button>
-    <div style="clear:both"></div>
-</div>
-<script>
-waitForUid(function (uid) {
-    owl_find_form_words.oninput = function () {
-        db.child('owl004/user_public/' + uid + '/find_words').set(this.value)
-    }    
-    owl_find_form_min_people.oninput = function () {
-        db.child('owl004/user_public/' + uid + '/find_min_people').set(this.value)
-    }    
-    owl_find_form_max_people.oninput = function () {
-        db.child('owl004/user_public/' + uid + '/find_max_people').set(this.value)
-    }    
-    owl_find_form_min_hours.oninput = function () {
-        db.child('owl004/user_public/' + uid + '/find_min_hours').set(this.value)
-    }    
-    owl_find_form_max_hours.oninput = function () {
-        db.child('owl004/user_public/' + uid + '/find_max_hours').set(this.value)
-    }    
-    owl_find_form_min_pay.oninput = function () {
-        db.child('owl004/user_public/' + uid + '/find_min_pay').set(this.value)
-    }    
-    owl_find_form_max_pay.oninput = function () {
-        db.child('owl004/user_public/' + uid + '/find_max_pay').set(this.value)
-    }    
-    db.child('owl004/user_public/' + uid).on('value', function (x) {
-        x = x.val()
-        if (!x) return;
-        owl_find_form_words.value = x.find_words || ''
-        owl_find_form_min_people.value = x.find_min_people || ''
-        owl_find_form_max_people.value = x.find_max_people || ''
-        owl_find_form_min_hours.value = x.find_min_hours || ''
-        owl_find_form_max_hours.value = x.find_max_hours || ''
-        owl_find_form_min_pay.value = x.find_min_pay || ''
-        owl_find_form_max_pay.value = x.find_max_pay || ''
-    })
-})
-</script>
+document.body.append(create_header())
 
-<div id="owl_find_view" style="
-    display:none;
-    background:#ddd;
-    width:720px;
-    margin-left:auto;
-    margin-right:auto">
-    <button style="
-        background:transparent;fin
-        border:0px;
-        width:180px;
-        float:left;
-        font-size:40px">
-        hello!
-    </button>
-</div>
-<script>
-waitForUid(function (uid) {
-    db.child('owl004/job').on('value', function (x) {
-        console.log('x = ', x)
-        x = x.val()
-        owl_find_view.innerHTML = ''
-        each(x, function (x) {
-            var d = document.createElement('div')
-            d.style.padding = '10px'
-            var dd = document.createElement('textarea')
-            dd.style.background = 'blue'
-            dd.style.border = '10px solid black'
-            dd.style.borderRadius = '20px'
-            dd.style.width = '100%'
-            dd.style.height = '160px'
-            dd.style.fontSize = '20px'
-            dd.value = x.text || ''
-            d.append(dd)
-            owl_find_view.append(d)
-        })
-        
-        // for (var k in x) { if (x.hasOwnProperty(k)) {
-        //     var v = x[k]
-            
-            
-        //     for (var blah in owl_job_template) {
-        //         console.log(blah)
-        //     }
-            
-        //     console.log('hi1')
-        //     var job = owl_job_template.cloneNode(true)
-        //     console.log('hi2')
-            
-        //     owl_find_view.append(job)
-        // }}
-    })
-})
 </script>
 
 </body>
