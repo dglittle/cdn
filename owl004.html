@@ -67,9 +67,166 @@ function randomString(len, re) {
     }
     return ret.join('')
 }
+    
+function create_clear() {
+    var d = document.createElement('div')
+    d.style.clear = 'both'
+    return d
+}
+    
+function create_spacer(width) {
+    var d = document.createElement('button')
+    d.style.background = 'transparent'
+    d.style.border = '0px'
+    d.style.width = width + 'px'
+    d.style.float = 'left'
+    return d
+}
+
+function create_header_button(html, cb) {
+    var d = document.createElement('button')
+    d.style.background = 'blue'
+    d.style.border = '10px solid black'
+    d.style.borderRadius = '20px'
+    d.style.width = '160px'
+    d.style.height = '160px'
+    d.style.float = 'left'
+    d.style.fontSize = '40px'
+    d.style.margin = '10px'
+    d.innerHTML = html
+    d.onclick = cb
+    return d
+}
 
 function create_post_form() {
-    work here
+    var d = document.createElement('div')
+    d.style.position = 'absolute'
+    d.style.background = '#ddd'
+    d.style.width = '720px'
+    d.style.top = '0px'
+    d.style.marginLeft = 'auto'
+    d.style.marginRight = 'auto'
+
+    function create_label(width, html) {
+        var d = document.createElement('button')
+        d.style.background = 'transparent'
+        d.style.border = '0px'
+        if (width) d.style.width = width + 'px'
+        else {
+            d.style.border = '10px solid transparent'
+            d.style.borderRadius = '20px'
+        }
+        d.style.float = 'left'
+        d.style.fontSize = '40px'
+        d.innerHTML = html
+        return d
+    }
+    
+    var text
+    
+    function create_textarea() {
+        var d = document.createElement('textarea')
+        d.style.background = 'blue'
+        d.style.border = '10px solid black'
+        d.style.borderRadius = '20px'
+        d.style.width = '100%'
+        d.style.height = '160px'
+        d.style.fontSize = '20px'
+        
+        text = d
+        
+        var D = document.createElement('div')
+        D.style.padding = '10px'
+        D.append(d)
+        return D
+    }
+    
+    function create_input() {
+        var d = document.createElement('input')
+        d.style.background = 'blue'
+        d.style.border = '10px solid black'
+        d.style.borderRadius = '20px'
+        d.style.float = 'left'
+        d.style.width = '160px'
+        d.style.fontSize = '40px'
+        d.style.margin = '10px'
+        return d
+    }
+    
+    d.append(create_label(360, 'job description'))
+    d.append(create_textarea())
+    
+    d.append(create_label(180, 'min'))
+    d.append(create_label(180, 'max'))
+    d.append(create_clear())
+
+    var min_people, max_people    
+    d.append(min_people = create_input())
+    d.append(max_people = create_input())
+    d.append(create_label(null, 'people'))
+    d.append(create_clear())
+    
+    var min_hours, max_hours
+    d.append(min_hours = create_input())
+    d.append(max_hours = create_input())
+    d.append(create_label(null, 'hours per person'))
+    d.append(create_clear())
+    
+    var min_pay, max_pay
+    d.append(min_pay = create_input())
+    d.append(max_pay = create_input())
+    d.append(create_label(null, 'pay per hour'))
+    d.append(create_clear())
+    
+    d.append(create_spacer(360))
+    d.append(create_header_button('<span style="font-size:80px">+</span><br/><span style="font-size:20px">POST</span>', function () {
+        waitForUid(function (uid) {
+            db.child('owl004/job/' + randomString(20)).set({
+                uid : uid,
+                time : firebase.database.ServerValue.TIMESTAMP,
+                text : text.value,
+                min_people : min_people.value,
+                max_people : max_people.value,
+                min_hours : min_hours.value,
+                max_hours : max_hours.value,
+                min_pay : min_pay.value,
+                max_pay : max_pay.value
+            })
+        })        
+    }))
+    d.append(create_header_button('<span style="font-size:80px">-</span><br/><span style="font-size:20px">CANCEL</span>', function () {
+        d.remove()
+    }))
+    d.append(create_clear())
+    
+    return d
+    
+    /*
+        onclick="">
+        +<br/>
+        <span style="font-size:20px">POST</span>
+    </button>
+    <button style="
+        background:blue;
+        border:10px solid black;
+        border-radius:20px;
+        width:160px;
+        height:160px;
+        float:left;
+        font-size:80px;
+        margin:10px"
+        onclick="
+            owl_post_form.style.display = 'none'
+            owl_header_post.style.display = 'block'
+            owl_header_cancel_post.style.display = 'none'">
+        -<br/>
+        <span style="font-size:20px">CANCEL</span>
+    </button>
+    <div style="clear:both"></div>
+</div>
+
+*/
+    
 }
 
 function create_header() {
@@ -78,30 +235,18 @@ function create_header() {
     d.style.width = '720px'
     d.style.marginLeft = 'auto'
     d.style.marginRight = 'auto'
-    
-    function create_button(html, cb) {
-        var d = document.createElement('button')
-        d.style.background = 'blue'
-        d.style.border = '10px solid black'
-        d.style.borderRadius = '20px'
-        d.style.width = '160px'
-        d.style.height = '160px'
-        d.style.float = 'left'
-        d.style.fontSize = '40px'
-        d.style.margin = '10px'
-        d.innerHTML = html
-        d.onclick = cb
-        return d
-    }
-    
-    d.append(create_button('OWL'))
-    d.append(create_button('&#128269;', function () {
+
+    d.append(create_header_button('OWL'))
+    d.append(create_header_button('&#128269;', function () {
         console.log('blar?')
         owl_find_form.style.display = owl_find_form.style.display == 'block' ? 'none' : 'block'
         owl_find_view.style.display = owl_find_view.style.display == 'block' ? 'none' : 'block'        
     }))
-    d.append(create_button('<span style="font-size:80px">+</span><br/><span style="font-size:20px">POST</span>'))
-    d.append(create_button('<span style="font-size:20px">beautiful statistics</span>'))
+    d.append(create_header_button('<span style="font-size:80px">+</span><br/><span style="font-size:20px">POST</span>', function () {
+        document.body.append(create_post_form())
+    }))
+    d.append(create_header_button('<span style="font-size:20px">beautiful statistics</span>'))
+    d.append(create_clear())
 
     return d
 }
