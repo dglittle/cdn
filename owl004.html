@@ -12,8 +12,6 @@
 
 <script>
 
-
-
 var config = {
     apiKey: "AIzaSyBLV5t8a-gGxnr5ZoS0znAZLNCemTCBAWo",
     authDomain: "openworklist.firebaseapp.com",
@@ -23,6 +21,9 @@ var config = {
     messagingSenderId: "275344271563"
 }
 var db = firebase.initializeApp(config).firestore()
+db.settings({
+    timestampsInSnapshots: true
+})
 
 var uid = null
 firebase.auth().onAuthStateChanged(function(user) {
@@ -182,12 +183,10 @@ function create_post_form() {
     
     d.append(create_spacer(360))
     d.append(create_header_button('<span style="font-size:80px">+</span><br/><span style="font-size:20px">POST</span>', function () {
-            console.log('got here!!??')
         waitForUid(function (uid) {
-            console.log('got here!!')
             db.collection('job').add({
                 uid : uid,
-                time : firebase.FieldValue.serverTimestamp(),
+                time : firebase.firestore.FieldValue.serverTimestamp(),
                 text : text.value,
                 min_people : min_people.value,
                 max_people : max_people.value,
@@ -196,9 +195,9 @@ function create_post_form() {
                 min_pay : min_pay.value,
                 max_pay : max_pay.value
             }).then(function () {
-                console.log('got here!?')
-            }).catch(function () {
-                console.log('got here!!!!????')
+                console.log('alsdkjfl')
+            }).catch(function (e) {
+                console.log('got here!!!!????, ', e)
             })
         })        
     }))
