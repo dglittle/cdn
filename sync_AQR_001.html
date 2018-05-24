@@ -27,6 +27,16 @@ var dag = {
     }
 }
 
-
+// '[-0:-0] = "z"' --> [1, 0, 'z']
+function parse_Mpatch(s) {
+    var m = s.match(/\s*\[\s*(\-?\d+)\s*:\s*(\-?\d+)\s*\]\s*=\s*(.*)/)
+    var text = JSON.parse(m[3])
+    function f(x) {
+        return x.startsWith('-') ? text.length - 1*x.substr(1) : 1*x
+    }
+    var begin = f(m[1])
+    var delete_length = f(m[2]) - begin
+    return [begin, delete_length, text]
+}
 
 </script>
