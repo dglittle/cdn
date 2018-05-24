@@ -1,0 +1,32 @@
+
+<body></body>
+<script>
+
+document.write('hi!')
+
+var dag = {
+    'v1' : {
+        version : 'v1',
+        parents : [],
+        patches : ['[0:0] = "x"']
+    },
+    'vX' : {
+        version : 'vX',
+        parents : ['v1'],
+        patches : ['[-0:-0] = "z"']
+    },
+    'vY' : {
+        version : 'vY',
+        parents : ['v1'],
+        patches : ['[0:1] = "y"']
+    },
+    'vM' : {
+        version : 'vM',
+        parents : ['vX', 'vY'],
+        patches : []
+    }
+}
+
+
+
+</script>
