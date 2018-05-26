@@ -21,8 +21,8 @@
 
 var m = location.search.match(/\?([^:]+):(\d+)(\,(\d+))?/)
 var fb_path = m ? m[1] : '/aa/chat'
-var min_time = m ? 1*m[1] : 0
-var max_time = (m && m[3]) ? 1*m[3] : Infinity
+var min_time = m ? 1*m[2] : 0
+var max_time = (m && m[4]) ? 1*m[4] : Infinity
 
 var config = {
     apiKey: "AIzaSyDVM0ekHwUqC_rGsqkT7fJ71FyRum9cxko",
