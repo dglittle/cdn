@@ -20,7 +20,7 @@
 <script>
 
 var m = location.search.match(/\?([^:]+):(\d+)(\,(\d+))?/)
-var fb_path = m ? m[1] : '/aa/chat'
+var fb_path = m ? m[1] : '/aa/chat_business'
 var min_time = m ? 1*m[2] : 0
 var max_time = (m && m[4]) ? 1*m[4] : Infinity
 
@@ -74,7 +74,7 @@ function main_update() {
 }
 
 function send() {
-    var ref = db.child('/aa/chat').push()
+    var ref = db.child(fb_path).push()
     ref.set({
         uid : uid,
         text : window.input_box.value,
