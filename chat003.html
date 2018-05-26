@@ -19,7 +19,8 @@
 
 <script>
 
-var m = location.search.match(/\?(\d+)(\,(\d+))?/)
+var m = location.search.match(/\?([^:]+):(\d+)(\,(\d+))?/)
+var fb_path = m ? m[1] : '/aa/chat'
 var min_time = m ? 1*m[1] : 0
 var max_time = (m && m[3]) ? 1*m[3] : Infinity
 
@@ -127,7 +128,7 @@ firebase.auth().onAuthStateChanged(function(user) {
         uid = user.uid
         Math.randomSeed(uid)
         input_box.style.color = random_color()
-        db.child('/aa/chat').on('value', function (x) {
+        db.child(fb_path).on('value', function (x) {
             x = x.val()
             if (x) {
                 model.chat = x
