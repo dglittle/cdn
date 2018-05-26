@@ -129,11 +129,8 @@ firebase.auth().onAuthStateChanged(function(user) {
         Math.randomSeed(uid)
         input_box.style.color = random_color()
         db.child(fb_path).on('value', function (x) {
-            x = x.val()
-            if (x) {
-                model.chat = x
-                main_update()
-            }
+            model.chat = x.val() || {}
+            main_update()
         })
     }
 })
