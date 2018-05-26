@@ -1,0 +1,144 @@
+<script src="https://www.gstatic.com/firebasejs/4.8.1/firebase.js"></script>
+<script src="https://dglittle.github.io/cdn/random001.js"></script>
+
+<body style="margin:0px;padding:0px;background:rgb(5, 10, 20)">
+<div id="chat_area">
+    <div style="color:blue">blah, bloop, not loaded yet</div>
+</div>
+
+<div id="sending_panel" style="display:none">
+    <div>&nbsp;</div>
+    <div style="position:fixed;left:0px;bottom:0px;width:100%">
+        <div style="display:grid;grid-template-columns:1fr auto">
+            <input id="input_box" value="" placeholder="you can type a message here, ctrl-enter to send" style="width:100%;border:1px solid white;background:black"></input>
+            <button onclick="send()">send</button>
+        </div>
+    </div>
+</div>
+</body>
+
+<script>
+
+var m = location.search.match(/\?(\d+)(\,(\d+))?/)
+var min_time = m ? 1*m[1] : 0
+var max_time = (m && m[3]) ? 1*m[3] : Infinity
+
+var config = {
+    apiKey: "AIzaSyDVM0ekHwUqC_rGsqkT7fJ71FyRum9cxko",
+    authDomain: "glittle.firebaseapp.com",
+    databaseURL: "https://glittle.firebaseio.com",
+    projectId: "glittle",
+    storageBucket: "",
+    messagingSenderId: "1000468536093"
+}
+var db = firebase.initializeApp(config).database().ref()
+var model = {
+    uid : null,
+    chat : []
+}
+
+function draw_chat_message(x) {
+    var d = document.createElement('div')
+    d.textContent = x.text
+    d.title = 'written by: ' + x.uid
+    Math.randomSeed(x.uid)
+    d.style.color = random_color()
+    return d
+}
+
+function draw_chat_messages() {
+    var d = document.createElement('div')
+    var chats = []
+    each(model.chat, function (c) {
+        if (c.time >= min_time &&
+            c.time <= max_time) {
+            chats.push(c)
+        }
+    })
+    chats.sort(function (a, b) {
+        return a.time - b.time
+    })
+    each(chats, function (c) {
+        d.append(draw_chat_message(c))
+    })
+    return d
+}
+
+function main_update() {
+    if (max_time == Infinity)
+        sending_panel.style.display = 'block'
+    chat_area.innerHTML = ''
+    chat_area.append(draw_chat_messages())
+    document.body.scrollTop = document.body.scrollHeight
+}
+
+function send() {
+    var ref = db.child('/aa/chat').push()
+    ref.set({
+        uid : uid,
+        text : window.input_box.value,
+        time : firebase.database.ServerValue.TIMESTAMP
+    })
+    window.input_box.value = ''
+    window.input_box.placeholder = 'that message has been sent, but you can type another!'
+}
+
+window.input_box.onkeydown = function (e) {
+    if (!uid) return;
+    if ((e.shiftKey || e.ctrlKey || e.metaKey) && ((e.keyCode == 83 && !e.shiftKey) || e.keyCode == 13)) {
+        e.preventDefault()
+        send()
+    }
+}
+
+function each(o, cb) {
+	if (o instanceof Array) {
+		for (var i = 0; i < o.length; i++) {
+			if (cb(o[i], i, o) == false)
+				return false
+		}
+	} else {
+		for (var k in o) {
+			if (o.hasOwnProperty(k)) {
+				if (cb(o[k], k, o) == false)
+					return false
+			}
+		}
+	}
+	return true
+}
+
+function shuffle(a) {
+    for (var i = 0; i < a.length; i++) {
+        var ri = Math.floor(a.length * Math.random())
+        var temp = a[i]
+        a[i] = a[ri]
+        a[ri] = temp
+    }
+    return a
+}
+
+function random_color() {
+    return 'rgb(' + shuffle([Math.floor(Math.random() * 256), 255, 0]).join(', ') + ')'
+}
+
+firebase.auth().onAuthStateChanged(function(user) {
+    if (user) {
+        uid = user.uid
+        Math.randomSeed(uid)
+        input_box.style.color = random_color()
+        db.child('/aa/chat').on('value', function (x) {
+            x = x.val()
+            if (x) {
+                model.chat = x
+                main_update()
+            }
+        })
+    }
+})
+
+firebase.auth().signInAnonymously().catch(function(error) {
+    console.log(error)
+})
+
+</script>
