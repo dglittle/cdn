@@ -1,0 +1,195 @@
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><title>logic land!</title></head>
+<body style="margin:0px"></body>
+<script>
+    
+var viewport_center = { x : 5, y : 5 }
+var viewport_scale = 20
+
+var things = {}
+var palette_type = 'wire' // and_gate, or_gate, not_gate, input
+
+function draw_palette() {
+    var d = document.createElement('div')
+    d.style.width = '100%'
+    d.style.height = '90px'
+    
+    d.textContent = 'hi there!'
+    
+    var b = document.createElement('button')
+    b.style.width = '90px'
+    b.style.height = '90px'
+    b.textContent = '+'
+    b.onclick = function () {
+        viewport_scale *= 2
+        render()
+    }
+    d.append(b)
+    
+    var b = document.createElement('button')
+    b.style.width = '90px'
+    b.style.height = '90px'
+    b.textContent = '-'
+    b.onclick = function () {
+        viewport_scale /= 2
+        render()
+    }
+    d.append(b)
+    
+    // radio buttons
+    var radio_buttons = []
+
+    var b = document.createElement('button')
+    b.style.width = '90px'
+    b.style.height = '90px'
+    b.textContent = 'WIRE'
+    b.onclick = function () {
+        palette_type = 'wire'
+        each(radio_buttons, function (x) { x.style.background = 'grey' })
+        this.style.background = 'gold'
+    }
+    radio_buttons.push(b)
+    d.append(b)
+    b.onclick()
+
+    var b = document.createElement('button')
+    b.style.width = '90px'
+    b.style.height = '90px'
+    b.textContent = 'AND'
+    b.onclick = function () {
+        palette_type = 'and_gate'
+        each(radio_buttons, function (x) { x.style.background = 'grey' })
+        this.style.background = 'gold'
+    }
+    radio_buttons.push(b)
+    d.append(b)
+    b.onclick()
+
+    return d
+}
+document.body.append(draw_palette())
+
+
+var c = document.createElement('canvas')
+c.width = window.innerWidth
+c.height = window.innerHeight - 90
+var g = c.getContext('2d')
+document.body.append(c)
+
+function render() {
+    g.setTransform(1, 0, 0, 1, 0, 0)
+    g.fillStyle = 'rgba(255, 255, 255, 0.1)'
+    g.fillRect(0, 0, c.width, c.height)
+
+    g.setTransform(viewport_scale, 0, 0, viewport_scale,
+        c.width/2 - viewport_center.x*viewport_scale,
+        c.height/2 - viewport_center.y*viewport_scale)
+
+    var x_tiles = c.width / viewport_scale + 1
+    var y_tiles = c.height / viewport_scale + 1
+    
+    var x_first_tile = Math.floor(viewport_center.x - c.width/2/viewport_scale)
+    var y_first_tile = Math.floor(viewport_center.y - c.height/2/viewport_scale)
+    
+    for (var yi = 0; yi < y_tiles; yi++) {
+        for (var xi = 0; xi < x_tiles; xi++) {
+            var x = xi + x_first_tile
+            var y = yi + y_first_tile
+            if (things[x + ',' + y]) {
+                
+                g.fillStyle = 'red'
+                g.fillRect(x, y, 1, 1)
+                
+                // var gr = g.createLinearGradient(x, y, x + 1, y + 1)
+                // gr.addColorStop(0, 'red')
+                // gr.addColorStop(1, 'white')
+                // g.fillStyle = gr
+            } else {
+                
+                // g.fillStyle = 'blue'
+                // g.fillRect(x, y, 1, 1)
+                
+                // var gr = g.createLinearGradient(x, y, x + 1, y + 1)
+                // gr.addColorStop(0, 'blue')
+                // gr.addColorStop(1, 'white')
+                // g.fillStyle = gr
+            }
+            // g.fillRect(x, y, 1, 1)
+        }
+    }
+    
+}
+render()
+
+c.onmousedown = function (e) {
+    e.preventDefault()
+    var old_pos = getRelPos(c, e)
+    var moved = false
+
+    var oldMove = document.onmousemove
+    document.onmousemove = function (e) {
+        var new_pos = getRelPos(c, e)
+        moved = true
+        
+        viewport_center.x -= (new_pos.x - old_pos.x) / viewport_scale
+        viewport_center.y -= (new_pos.y - old_pos.y) / viewport_scale
+        
+        render()
+        
+        old_pos = new_pos
+    }
+    
+    var oldUp = document.onmouseup
+    document.onmouseup = function (e) {
+        document.onmousemove = oldMove
+        document.onmouseup = oldUp
+        
+        if (!moved) {
+            var new_pos = getRelPos(c, e)
+
+            var click_pos = {}
+            click_pos.x = Math.floor((new_pos.x - c.width/2) / viewport_scale + viewport_center.x)
+            click_pos.y = Math.floor((new_pos.y - c.height/2) / viewport_scale + viewport_center.y)
+
+            things[click_pos.x + ',' + click_pos.y] = true
+            render()
+        }
+    }
+}
+
+function getPos(e) {
+    var x = 0, y = 0
+    while (e != null) {
+        x += e.offsetLeft
+        y += e.offsetTop
+        e = e.offsetParent
+    }
+    return {x : x, y : y}
+}
+
+function getRelPos(to, positionedObject) {
+    var pos = getPos(to)
+    return {
+        x : positionedObject.pageX - pos.x,
+        y : positionedObject.pageY - pos.y
+    }
+}
+
+
+function each(o, cb) {
+	if (o instanceof Array) {
+		for (var i = 0; i < o.length; i++) {
+			if (cb(o[i], i, o) == false)
+				return false
+		}
+	} else {
+		for (var k in o) {
+			if (o.hasOwnProperty(k)) {
+				if (cb(o[k], k, o) == false)
+					return false
+			}
+		}
+	}
+	return true
+}
+
+</script>
