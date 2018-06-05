@@ -1,4 +1,6 @@
+
 <body></body>
+<script src="https://dglittle.github.io/cdn/diff001.js"></script>
 <script>
 
 // charsync_obj
@@ -7,6 +9,15 @@
 // edit_ops
 // [ { op: 'ins', id: , after: , before: , height: , chars: },
 //   { op: 'del', id: , n: } ]
+
+function charsync_linearize(charsync_obj) {
+    var s = []
+    each(charsync_obj, function (cs) {
+        if (!cs.del)
+            s.push(cs.char)
+    })
+    return s.join('')
+}
 
 function charsync_merge(charsync_obj, edit_ops) {
     each(edit_ops, function (op) {
@@ -21,9 +32,9 @@ function charsync_merge(charsync_obj, edit_ops) {
                             }
                         }
                     }
-                    
+
                     each(op.chars, function (c, ii) {
-                        charsync_obj.splice(i, 0, {
+                        charsync_obj.splice(i + ii, 0, {
                             id : op.id + ii,
                             char: c,
                             height : op.height + ii
@@ -41,15 +52,18 @@ function charsync_merge(charsync_obj, edit_ops) {
             })
         }
     })
+    return charsync_linearize(charsync_obj)
 }
 
-function charsync_calc_ops(charsync_obj) {
+function charsync_calc_ops(charsync_obj, new_str) {
+    var s = charsync_linearize(charsync_obj)
+    var diff = diff_main(s, new_str)
     
-    
+    console.log('diff = ', diff)
 }
 
 function each(o, cb) {
-	if (o instanceof Array) {
+	if (o instanceof Array || typeof(o) == 'string') {
 		for (var i = 0; i < o.length; i++) {
 			if (cb(o[i], i, o) == false)
 				return false
@@ -65,50 +79,20 @@ function each(o, cb) {
 	return true
 }
 
-///////////////
 
-var DIFF_DELETE = -1;
-var DIFF_INSERT = 1;
-var DIFF_EQUAL = 0;
 
-// function diff_convert_to_my_format(d) {
-//     var x = []
-//     var ii = 0
-//     for (var i = 0; i < d.length; i++) {
-//         var dd = d[i]
-//         if (dd[0] == DIFF_EQUAL) {
-//             ii += dd[1].length
-//             continue
-//         }
-//         var xx = [ii, 0, '']
-//         if (dd[0] == DIFF_INSERT) {
-//             xx[2] = dd[1]
-//         } else if (dd[0] == DIFF_DELETE) {
-//             xx[1] = dd[1].length
-//             ii += xx[1]
-//         }
-//         if (i + 1 < d.length) {
-//             dd = d[i + 1]
-//             if (dd[0] != DIFF_EQUAL) {
-//                 if (dd[0] == DIFF_INSERT) {
-//                     xx[2] = dd[1]
-//                 } else if (dd[0] == DIFF_DELETE) {
-//                     xx[1] = dd[1].length
-//                     ii += xx[1]
-//                 }
-//                 i++
-//             }
-//         }
-//         x.push(xx)
-//     }
-//     return x
-// }
 
-// function get_diff_patch(a, b) {
-//     return diff_convert_to_my_format(diff_main(a, b))
-// }
+var C = [{id:0, char:'A', height:0}, {id:1, char:'Z', height:0}]
+charsync_merge(C, [{op:'ins', id:5, chars:'ho', after:0, before:1, height:1}])
 
-// diffsync.get_diff_patch = get_diff_patch
+console.log(charsync_linearize(C))
+console.log(JSON.stringify(C))
+
+charsync_calc_ops(C, 'Ah@o%Z')
+
+
+
+
 
 /**
  * This library modifies the diff-patch-match library by Neil Fraser
