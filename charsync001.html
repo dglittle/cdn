@@ -1,0 +1,58 @@
+<body></body>
+<script>
+
+// charsync_obj
+// [ { id: , char: , height: , del: true}, {}, {} ]
+
+// edit_ops
+// [ { op: 'ins', id: , after: , before: , height: , chars: },
+//   { op: 'del', id: , n: } ]
+
+function charsync_merge(charsync_obj, edit_ops) {
+    each(edit_ops, function (op) {
+        if (op.op == 'ins') {
+            var found = false
+            for (var i = 0; i < charsync_obj.length; i++) {
+                if (op.after == charsync_obj[i].id) {
+                    found = true
+                    i++
+                    break
+                }
+            }
+            if (!found) return
+            
+            while (op.height == charsync_obj[i].height && op.id > charsync_obj[i].id) {
+                for (i = i + 1; i < charsync_obj.length; i++) {
+                    if (op.height == charsync_obj[i].height || op.before == charsync_obj[i].id) {
+                        break
+                    }
+                }
+            }
+            
+            each(op.chars, function (c, ii) {
+                charsync_obj.splice(i, 0, {
+                    id : op.id + ii,
+                    char: c,
+                    height : op.height + ii
+                })
+            })
+        } else if (op.op == 'del') {
+            each(charsync_obj, function (cs) {
+                if (cs.id >= op.id && cs.id < (op.id + op.n)) {
+                    cs.del = true
+                }
+            })
+            for (var i = 0; i < charsync_obj.length; i++) {
+                var o = charsync_obj
+                if (charsync_obj[i].id >= op.id && charsync_obj)
+                if (op.after == charsync_obj[i].id) {
+                    found = true
+                    i++
+                    break
+                }
+            }
+        }
+    })
+}
+
+</script>
