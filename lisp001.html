@@ -5,10 +5,10 @@
 
 console.log('hi!')
 
-function bless_with_ace(id, init_text) {
+function bless_with_ace(id, init_text, i) {
     ace.require('ace/ext/language_tools')
     var editor = ace.edit(id)
-    editor.setTheme('ace/theme/monokai')
+    editor.setTheme(i == 0 ? 'ace/theme/monokai' : 'ace/theme/solarized_light')
     editor.renderer.setShowGutter(false)
     editor.setShowPrintMargin(false)
     editor.setShowFoldWidgets(false)
@@ -28,7 +28,9 @@ function bless_with_ace(id, init_text) {
     }
 }
 
-function createTriple() {
+function createTriple(x, y, height) {
+    height = height || '100px'
+    
     var d = document.createElement('div')
     document.body.append(d)
     
@@ -51,24 +53,36 @@ function createTriple() {
     gr.style.display = 'grid'
     gr.style.gridTemplateColumns = '1fr 1fr 1fr'
     gr.style.width = '100%'
-    gr.style.height = '100px'
+    gr.style.height = height
     d.append(gr)
     
     var js = document.createElement('div')
     js.id = 'js_id_' + ('' + Math.random()).slice(2)
     gr.append(js)
-    var get_js_text = bless_with_ace(js.id)
+    var get_js_text = bless_with_ace(js.id, x, 0)
     
     var lisp = document.createElement('div')
     lisp.id = 'lisp_id_' + ('' + Math.random()).slice(2)
     gr.append(lisp)
-    var get_lisp_text = bless_with_ace(lisp.id)
+    var get_lisp_text = bless_with_ace(lisp.id, y, 1)
     
     var output = document.createElement('div')
     gr.append(output)
+    
+    b.onclick()
 }
 
-createTriple()
+createTriple('print(x)', 'hello')
+
+createTriple("if (x == '(+ 1 1)')\n\tprint(2)\nelse\n\tprint('hm..')", '(+ 1 1)')
+
+createTriple("var m = x.match(/\\(\\+ (\\d+) (\\d+)\\)/)\nif (m) {\n    print(1*m[1] + 1*m[2])\n} else print('hm..')\n", '(+ 1 2)')
+
+createTriple("var m = x.match(/\\(([^ ]+) (\\d+) (\\d+)\\)/)\nif (m) {\n    if (m[1] == '+') {\n        print(1*m[2] + 1*m[3])\n    } else if (m[1] == '*') {\n        print(1*m[2] * 1*m[3])\n    }\n} else print('hm..')\n", '(* 2 3)', 200)
+
+
+
+createTriple("var tokens = x.match(/\\(|\\)|[^ \\(\\)]+/g)\nif (tokens[1] == '+') {\n    var sum = 0\n    for (var i = 2; i < tokens.length - 1; i++) {\n        sum += 1 * tokens[i]\n    }\n    print(sum)\n} else if (tokens[1] == '*') {\n    var prod = 1\n    for (var i = 2; i < tokens.length - 1; i++) {\n        prod *= 1 * tokens[i]\n    }\n    print(prod)\n} else print('hm..')\n", '(+ 1 2 3)', 300)
 
 
 </script>
