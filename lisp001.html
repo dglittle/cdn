@@ -1,6 +1,74 @@
-<body></body>
+<body style="margin:0px"></body>
+<script src="https://cdn.jsdelivr.net/ace/1.2.6/min/ace.js"></script>
+<script src="https://cdn.jsdelivr.net/ace/1.2.6/min/ext-language_tools.js"></script>
 <script>
 
 console.log('hi!')
+
+function bless_with_ace(id, init_text) {
+    ace.require('ace/ext/language_tools')
+    var editor = ace.edit(id)
+    editor.setTheme('ace/theme/monokai')
+    editor.renderer.setShowGutter(false)
+    editor.setShowPrintMargin(false)
+    editor.setShowFoldWidgets(false)
+    editor.setOptions({
+        fontFamily: 'Menlo,monospace',
+        fontSize: '9pt',
+        wrap: true,
+        enableBasicAutocompletion: true,
+        enableLiveAutocompletion: true
+    })
+    editor.getSession().setMode('ace/mode/javascript')
+    
+    editor.getSession().setValue(init_text || '')
+    
+    return function () {
+        return editor.getSession().getValue()
+    }
+}
+
+function createTriple() {
+    var d = document.createElement('div')
+    document.body.append(d)
+    
+    var b = document.createElement('button')
+    b.style.width = '100%'
+    b.textContent = 'MAKE IT GO AGAIN'
+    b.onclick = function () {
+        output.innerHTML = ''
+        function print(x) {
+            var d = document.createElement('div')
+            d.innerHTML = x
+            output.append(d)
+        }
+        var x = get_lisp_text()
+        eval(get_js_text())
+    }
+    d.append(b)
+    
+    var gr = document.createElement('div')
+    gr.style.display = 'grid'
+    gr.style.gridTemplateColumns = '1fr 1fr 1fr'
+    gr.style.width = '100%'
+    gr.style.height = '100px'
+    d.append(gr)
+    
+    var js = document.createElement('div')
+    js.id = 'js_id_' + ('' + Math.random()).slice(2)
+    gr.append(js)
+    var get_js_text = bless_with_ace(js.id)
+    
+    var lisp = document.createElement('div')
+    lisp.id = 'lisp_id_' + ('' + Math.random()).slice(2)
+    gr.append(lisp)
+    var get_lisp_text = bless_with_ace(lisp.id)
+    
+    var output = document.createElement('div')
+    gr.append(output)
+}
+
+createTriple()
+
 
 </script>
