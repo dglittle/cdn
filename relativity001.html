@@ -27,10 +27,29 @@ slider.oninput = (e) => {
 }
 document.body.append(slider)
 
+var br = document.createElement('br')
+document.body.append(br)
+
+var check = document.createElement('input')
+check.id = 'check'
+check.type = 'checkbox'
+check.oninput = (e) => {
+    g.fillStyle = 'rgba(255, 255, 255, 1)'
+    g.fillRect(-10, -10, 20, 20)
+    drawDots()
+}
+document.body.append(check)
+
+var label = document.createElement('label')
+label.setAttribute('for', 'check')
+label.textContent = 'special relativity'
+document.body.append(label)
+
 function drawDots() {
+    var special = check.checked
     var v = lerp(0, -1, 1000, 1, slider.value)
     
-    g.fillStyle = 'rgba(255, 255, 255, 0.1)'
+    g.fillStyle = 'rgba(255, 255, 255, .2)'
     g.fillRect(-10, -10, 20, 20)
     
     g.beginPath()
@@ -46,9 +65,14 @@ function drawDots() {
     var r = 0.15
     for (var y = -10; y <= 10; y++) {
         for (var x = -10; x <= 10; x++) {
-            var gamma = 1 / Math.sqrt(1 - v*v)
-            var yy = gamma * (y - v*x)
-            var xx = gamma * (x - v*y)
+            if (special) {
+                var gamma = 1 / Math.sqrt(1 - v*v)
+                var yy = gamma * (y - v*x)
+                var xx = gamma * (x - v*y)
+            } else {
+                var yy = y
+                var xx = (x - v*y)
+            }
             
             g.moveTo(xx + r, yy)
             g.arc(xx, yy, r, 0, tau)
