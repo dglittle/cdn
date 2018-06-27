@@ -1,0 +1,63 @@
+
+<script src="https://dglittle.github.io/cdn/utils004.js"></script>
+<body style="margin:0px"></body>
+<script>
+
+var W = 500
+var H = 500
+var tau = 2*Math.PI
+
+var c = document.createElement('canvas')
+c.style.border = "1px solid green"
+c.width = W
+c.height = H
+document.body.append(c)
+
+var g = c.getContext('2d')
+g.setTransform(W/20, 0, 0, -H/20, W/2, H/2)
+
+var slider = document.createElement('input')
+slider.style.width = 500
+slider.type = 'range'
+slider.min = '0'
+slider.max = '1000'
+slider.value = '500'
+slider.oninput = (e) => {
+    drawDots()
+}
+document.body.append(slider)
+
+function drawDots() {
+    var v = lerp(0, -1, 1000, 1, slider.value)
+    
+    g.fillStyle = 'rgba(255, 255, 255, 0.1)'
+    g.fillRect(-10, -10, 20, 20)
+    
+    g.beginPath()
+    g.moveTo(-10, 0)
+    g.lineTo(10, 0)
+    g.moveTo(0, 10)
+    g.lineTo(0, -10)
+    g.lineWidth = 20/W
+    g.strokeStyle = 'black'
+    g.stroke()
+
+    g.beginPath()    
+    var r = 0.15
+    for (var y = -10; y <= 10; y++) {
+        for (var x = -10; x <= 10; x++) {
+            var gamma = 1 / Math.sqrt(1 - v*v)
+            var yy = gamma * (y - v*x)
+            var xx = gamma * (x - v*y)
+            
+            g.moveTo(xx + r, yy)
+            g.arc(xx, yy, r, 0, tau)
+        }
+    }
+    g.fillStyle = 'magenta'
+    g.fill()
+}
+
+drawDots()
+
+</script>
