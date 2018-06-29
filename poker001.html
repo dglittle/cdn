@@ -1,6 +1,54 @@
 
+<script src="https://dglittle.github.io/cdn/utils004.js"></script>
 <script>
 
-document.write('calc poker odds')
+// 'Th 3c 6d' -> [[10, 'h'], [3, 'c'], [6, 'd']]
+function parseHand(s) {
+    var a = []
+    each(s.match(/\S\S/g), function (card) {
+        var val
+        if (card[0].match(/\d/)) val = 1*card[0]
+        if (card[0].match(/t/i)) val = 10
+        if (card[0].match(/j/i)) val = 11
+        if (card[0].match(/q/i)) val = 12
+        if (card[0].match(/k/i)) val = 13
+        if (card[0].match(/a/i)) val = 14
+        a.push([val, card[1]])
+    })
+    return a
+}
+
+function evalHand(hand) {
+    hand.sort((a, b) => {
+        return a[0] - b[0]
+    })
+    
+    var best_straight = -2
+    var run_so_far = 1
+    for (var i = 1; i < hand.length; i++) {
+        if (hand[i][0] == hand[i - 1][0] + 1) run_so_far++
+        else run_so_far = 1
+        // if (run_so_far)
+        if (run_so_far >= 5) best_straight = i - 4
+    }
+    
+    
+    console.log(JSON.stringify(hand))
+    console.log('best_straight => ' + best_straight)
+    
+    // high card      0.0000000000
+    // pair           1.0000000000
+    // 2-pair         2.0000000000
+    // 3-of-a-kind    3.0000000000
+    // straight       4.0000000000
+    // flush          5.0000000000
+    // full-house     6.0000000000
+    // quads          7.0000000000
+    // straight-flush 8.0000000000
+    
+    
+}
+
+evalHand(parseHand('7h 3c 6d 8d 2c 4d 5h'))
 
 </script>
