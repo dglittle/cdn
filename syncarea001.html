@@ -1,5 +1,5 @@
 
-<script src="https://invisible-college.github.io/diffsync/diffsync.js"></script>
+<script src="https://invisible-college.github.io/universal-sync/diffsync.js"></script>
 
 <script type="statebus">
 
@@ -65,15 +65,8 @@ dom.BODY = ->
   size = if state.big then 300 else 50
   DIV
     backgroundColor: 'green'
-    DIV
-      width: size
-      height: size
-      padding: 20
-      backgroundColor: 'lightgrey'
-      onClick: => state.big = !state.big
-      'Click me!'
     SYNCAREA
-      key_: 'some-test-7644995'
+      key_: 'some-test-7644996'
       placeholder: 'Blah'
       style:
         width: '100%'
