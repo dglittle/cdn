@@ -1,0 +1,107 @@
+
+<script src="http://localhost:8080/diffsync.js"></script>
+<script src="https://dglittle.github.io/cdn/getCaretCoordinates001.js"></script>
+
+<script type="statebus">
+
+
+cursor_positions = {}
+cursor_divs = {}
+draw_cursor_divs = (textarea) ->
+  for own k, v of cursor_divs
+    v.remove()
+  cursor_divs = {}
+  fontHeight = parseFloat(window.getComputedStyle(textarea).getPropertyValue('font-size')) + 2 + 'px'
+  for own k, v of cursor_positions
+    xy = getCaretCoordinates(textarea, v[0])
+    div = document.createElement('div')
+    div.style.position = 'absolute'
+    div.style.height = fontHeight
+    div.style.width = '1px'
+    div.style.backgroundColor = 'red'
+    div.style.left = textarea.offsetLeft - textarea.scrollLeft + xy.left + 'px'
+    div.style.top = textarea.offsetTop - textarea.scrollTop + xy.top + 'px'
+    document.body.append(div)
+    cursor_divs[k] = div
+
+
+resizebox = (target) ->
+  target.style.height = null
+  while(target.rows > 1 && target.scrollHeight < target.offsetHeight)
+    target.rows--
+  while(target.scrollHeight > target.offsetHeight)
+    target.rows++
+    
+
+diffsyncs = {}
+
+addDiffSyncToTextArea = (t, channel) ->
+  ds = diffsyncs[channel]
+  if !ds
+    ds = diffsyncs[channel] = `{ options : {} }`
+  else
+    t.value = ds.prev_t.value
+    t.setSelectionRange(ds.prev_t.selectionStart, ds.prev_t.selectionEnd)
+  ds.prev_t = t
+  ds.options.ws_url = 'wss://invisible.college:' + diffsync.port
+  ds.options.channel = channel
+  ds.options.get_text = -> t.value
+  ds.options.get_range = -> [t.selectionStart, t.selectionEnd]
+  ds.options.on_text = (text, range) ->
+    t.value = text
+    console.log('CURSOR POS: ' + range[0] + ',' + range[1])
+    t.setSelectionRange(range[0], range[1])
+    resizebox(t)
+  ds.options.on_ranges = (x) ->
+    cursor_positions = x
+    draw_cursor_divs(t)
+  if !ds.client
+    ds.client = diffsync.create_client(ds.options)
+
+  t.onkeyup = ->
+    ds.client.on_change()
+    resizebox(t)
+    
+  t.onmousedown = ->
+    ds.client.on_change()
+
+  t.onpaste = ->
+    setTimeout(->
+      ds.client.on_change()
+      resizebox(t)
+    , 0)
+
+dom.SYNCAREA = ->
+  @props.style.resize = if @props.style.width or @props.cols then 'none' else 'horizontal'
+  TEXTAREA
+    ref: 'textbox'
+    rows: 1
+    cols: @props.cols
+    placeholder: @props.placeholder
+    className: @props.className
+    style: @props.style
+
+dom.SYNCAREA.up = ->
+  addDiffSyncToTextArea(@refs.textbox.getDOMNode(), @props.key_)
+  resizebox(@refs.textbox.getDOMNode())
+
+dom.SYNCAREA.refresh = ->
+  addDiffSyncToTextArea(@refs.textbox.getDOMNode(), @props.key_)
+  resizebox(@refs.textbox.getDOMNode())
+
+dom.BODY = ->
+  size = if state.big then 300 else 50
+  DIV
+    backgroundColor: 'green'
+    SYNCAREA
+      key_: 'some-test-7644996'
+      placeholder: 'Blah'
+      style:
+        width: '100%'
+        backgroundColor: 'lightgreen'
+        outline: 'none'
+        padding: '0.5em'
+        borderRadius: '4px 4px 4px 4px'  
+</script>
+
+<script src="https://stateb.us/client6.js" server="https://stateb.us:3006"></script>
