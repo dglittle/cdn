@@ -43,7 +43,7 @@ addDiffSyncToTextArea = (t, channel) ->
     t.value = ds.prev_t.value
     t.setSelectionRange(ds.prev_t.selectionStart, ds.prev_t.selectionEnd)
   ds.prev_t = t
-  ds.options.ws_url = 'wss://invisible.college:' + diffsync.port
+  ds.options.ws_url = 'ws://localhost:' + diffsync.port
   ds.options.channel = channel
   ds.options.get_text = -> t.value
   ds.options.get_range = -> [t.selectionStart, t.selectionEnd]
