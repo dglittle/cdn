@@ -1,7 +1,29 @@
 
 <script src="https://invisible-college.github.io/universal-sync/diffsync.js"></script>
+<script src="https://dglittle.github.io/cdn/getCaretCoordinates001.js"></script>
 
 <script type="statebus">
+
+
+cursor_positions = {}
+cursor_divs = {}
+draw_cursor_divs = (textarea) ->
+  for own k, v of cursor_divs
+    v.remove()
+  cursor_divs = {}
+  fontHeight = parseFloat(window.getComputedStyle(textarea).getPropertyValue('font-size')) + 2 + 'px'
+  for own k, v of cursor_positions
+    xy = getCaretCoordinates(textarea, v[0])
+    div = document.createElement('div')
+    div.style.position = 'absolute'
+    div.style.height = fontHeight
+    div.style.width = '1px'
+    div.style.backgroundColor = 'red'
+    div.style.left = textarea.offsetLeft - textarea.scrollLeft + xy.left + 'px'
+    div.style.top = textarea.offsetTop - textarea.scrollTop + xy.top + 'px'
+    document.body.append(div)
+    cursor_divs[k] = div
+
 
 resizebox = (target) ->
   target.style.height = null
@@ -30,15 +52,24 @@ addDiffSyncToTextArea = (t, channel) ->
     console.log('CURSOR POS: ' + range[0] + ',' + range[1])
     t.setSelectionRange(range[0], range[1])
     resizebox(t)
+  ds.options.on_range = (x) ->
+    cursor_positions[x.uid] = x.range
+    draw_cursor_divs(t)
   if !ds.client
     ds.client = diffsync.create_client(ds.options)
 
   t.onkeyup = ->
     ds.client.on_change()
+    ds.client.update_range()
     resizebox(t)
+    
+  t.onmousedown = ->
+    ds.client.update_range()
+
   t.onpaste = ->
     setTimeout(->
       ds.client.on_change()
+      ds.client.update_range()
       resizebox(t)
     , 0)
 
@@ -59,8 +90,6 @@ dom.SYNCAREA.up = ->
 dom.SYNCAREA.refresh = ->
   addDiffSyncToTextArea(@refs.textbox.getDOMNode(), @props.key_)
   resizebox(@refs.textbox.getDOMNode())
-
-
 
 dom.BODY = ->
   size = if state.big then 300 else 50
