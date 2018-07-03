@@ -58,17 +58,18 @@ addDiffSyncToTextArea = (t, channel) ->
   if !ds.client
     ds.client = diffsync.create_client(ds.options)
 
-  t.onkeyup = ->
+  t.oninput = ->
     ds.client.on_change()
     resizebox(t)
-    
-  t.onmousedown = ->
-    ds.client.on_change()
 
-  t.onpaste = ->
+  t.onkeydown = ->
     setTimeout(->
       ds.client.on_change()
-      resizebox(t)
+    , 0)  
+    
+  t.onmousedown = ->
+    setTimeout(->
+      ds.client.on_change()
     , 0)
 
 dom.SYNCAREA = ->
