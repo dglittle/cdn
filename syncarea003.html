@@ -1,0 +1,104 @@
+
+<script src="https://invisible-college.github.io/universal-sync/diffsync.js"></script>
+<script src="https://dglittle.github.io/cdn/getCaretCoordinates001.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.7/react-with-addons.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.7/react-dom.js"></script>
+<div id="root"></div>
+<script>
+
+function resizebox(target) {
+    target.style.height = null
+    while (target.rows > 1 && target.scrollHeight < target.offsetHeight) target.rows--
+    while (target.scrollHeight > target.offsetHeight) target.rows++
+}
+
+class SYNCAREA extends React.Component {
+    constructor(props) {
+        super(props)
+        this.state = {
+            cursor_positions : {}
+        }
+    }
+    
+    componentDidMount() {
+        this.ds = diffsync.create_client({
+            ws_url : 'wss://invisible.college:' + diffsync.port,
+            channel : this.props.channel,
+            get_text : () => {
+                var a = this.textarea_ref
+                return a.value
+            },
+            get_range : () => {
+                var t = this.textarea_ref
+                return [t.selectionStart, t.selectionEnd]
+            },
+            on_text : (s, range) => {
+                this.textarea_ref.value = s
+                this.textarea_ref.setSelectionRange(range[0], range[1])
+            },
+            on_ranges : (ranges) => {
+                var cursor_positions = []
+                Object.entries(ranges).forEach(e => {
+                    var xy = getCaretCoordinates(this.textarea_ref, e[1][0])
+                    var x = this.textarea_ref.offsetLeft - this.textarea_ref.scrollLeft + xy.left + 'px'
+                    var y = this.textarea_ref.offsetTop - this.textarea_ref.scrollTop + xy.top + 'px'
+                    cursor_positions[e[0]] = [x, y]
+                })
+                this.setState({ cursor_positions : cursor_positions })
+            }
+        })
+    }
+
+    render() {
+        var cursors = []
+        Object.entries(this.state.cursor_positions).forEach(e => {
+            var style = {
+                position : 'absolute',
+                left : e[1][0],
+                top : e[1][1]
+            }
+            Object.entries(this.props.peer_cursor_style).forEach(e => {
+                style[e[0]] = e[1]
+            })
+            cursors.push(React.createElement('div', {
+                key : e[0],
+                style : style
+            }))
+        })
+        return React.createElement('div', {
+            style : {
+                width : '200px',
+                height : '200px',
+                backgroundColor : this.state.mybackgroundColor
+            },
+        }, React.createElement('textarea', {
+            ref : t => this.textarea_ref = t,
+            style : this.props.textarea_style,
+            onChange : (e) => {
+                this.ds.on_change()
+            },
+            onMouseDown : () => {
+                setTimeout(() => this.ds.on_change(), 0)
+            },
+            onKeyDown : () => {
+                setTimeout(() => this.ds.on_change(), 0)
+            }
+        }), cursors)
+    }
+}
+
+ReactDOM.render(React.createElement(SYNCAREA, {
+    channel : 'some-test-7644996',
+    textarea_style : {
+        width : '200px',
+        height : '100px',
+        backgroundColor : 'lightgreen'
+    },
+    peer_cursor_style : {
+        width : '1px',
+        height : '10px',
+        backgroundColor : 'red'
+    }
+}), root)
+
+</script>
