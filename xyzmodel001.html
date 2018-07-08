@@ -20,7 +20,7 @@ var xd = 256 / 64
 var yd = 256 / 64
 var xn = c.width / xd
 var yn = c.height / yd
-var zn = 64
+var zn = 1
 
 var spins = []
 var vels = []
@@ -77,7 +77,6 @@ function update_it() {
     for (var y = 0; y < yn; y++) {
         for (var x = 0; x < xn; x++) {
             for (var z = 0; z < zn; z++) {
-                vec3.scaleAndAdd(spins[y][x][z], spins[y][x][z], )
                 var length = vec3.length(vels[y][x][z])
                 if (length > 0) {
                     var unit = vec3.divide(vec3.create(), vels[y][x][z], length)
@@ -125,36 +124,29 @@ function paint_it() {
     
     var z_mid = Math.floor(zn / 2)
     
-    gg.fillStyle = 'white'
-    gg.fillRect(0, 0, c.width, c.height)
-    for (var y = 0; y < yn; y++) {
-        for (var x = 0; x < xn; x++) {
-            var a = fmod(spins[y][x][z_mid] + Math.PI/2, Math.PI*2)
+    // gg.fillStyle = 'white'
+    // gg.fillRect(0, 0, c.width, c.height)
+    // for (var y = 0; y < yn; y++) {
+    //     for (var x = 0; x < xn; x++) {
+    //         var a = fmod(spins[y][x][z_mid] + Math.PI/2, Math.PI*2)
 
-            var R = 0
-            var G = 0
-            var B = 0
-            if (a < Math.PI*2/3) {
-                R = lerp(0, 1, Math.PI*2/3, 0, a)
-                G = lerp(0, 0, Math.PI*2/3, 1, a)
-            } else if (a < Math.PI*2*2/3) {
-                G = lerp(Math.PI*2/3, 1, Math.PI*2*2/3, 0, a)
-                B = lerp(Math.PI*2/3, 0, Math.PI*2*2/3, 1, a)
-            } else {
-                B = lerp(Math.PI*2*2/3, 1, Math.PI*2, 0, a)
-                R = lerp(Math.PI*2*2/3, 0, Math.PI*2, 1, a)
-            }
-            gg.fillStyle = 'rgb(' + Math.floor(255 * R) + ', ' + Math.floor(255 * G) + ', ' + Math.floor(255 * B) + ')'
-            gg.fillRect(x * xd, y * yd, xd, yd)
-
-            // g.beginPath()
-            // g.moveTo(x * xd + xd/2 + xd/2*Math.cos(a), y * yd + yd/2 + yd/2*Math.sin(a))
-            // g.arc(x * xd + xd/2, y * yd + yd/2, xd/2, a, a + Math.PI)
-            // g.fill()
-        }
-    }
-    // g.fillStyle = 'red'
-    // g.fill()        
+    //         var R = 0
+    //         var G = 0
+    //         var B = 0
+    //         if (a < Math.PI*2/3) {
+    //             R = lerp(0, 1, Math.PI*2/3, 0, a)
+    //             G = lerp(0, 0, Math.PI*2/3, 1, a)
+    //         } else if (a < Math.PI*2*2/3) {
+    //             G = lerp(Math.PI*2/3, 1, Math.PI*2*2/3, 0, a)
+    //             B = lerp(Math.PI*2/3, 0, Math.PI*2*2/3, 1, a)
+    //         } else {
+    //             B = lerp(Math.PI*2*2/3, 1, Math.PI*2, 0, a)
+    //             R = lerp(Math.PI*2*2/3, 0, Math.PI*2, 1, a)
+    //         }
+    //         gg.fillStyle = 'rgb(' + Math.floor(255 * R) + ', ' + Math.floor(255 * G) + ', ' + Math.floor(255 * B) + ')'
+    //         gg.fillRect(x * xd, y * yd, xd, yd)
+    //     }
+    // }
 }
 
 function loop() {
