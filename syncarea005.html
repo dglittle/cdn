@@ -18,9 +18,7 @@
 
 SYNCAREA = React.createClass({
     getInitialState : function () {
-        return {
-            cursor_positions : {}
-        }
+        return { cursor_positions : {} }
     },
     on_text_changed : function () {
         if (this.props.autosize) {
