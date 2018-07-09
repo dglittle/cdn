@@ -28,6 +28,11 @@ SYNCAREA = React.createClass({
             cursor_positions : {}
         }
     },
+    on_text_changed : function () {
+        if (this.props.autosize) {
+            resizebox(this.textarea_ref)
+        }
+    },
     componentDidMount : function () {
         var self = this
         self.on_ranges = function (ranges) {
@@ -56,6 +61,7 @@ SYNCAREA = React.createClass({
             on_text : function (s, range) {
                 self.textarea_ref.value = s
                 self.textarea_ref.setSelectionRange(range[0], range[1])
+                self.on_text_changed()
             },
             on_ranges : this.on_ranges
         })
@@ -87,6 +93,7 @@ SYNCAREA = React.createClass({
             style : this.props.textarea_style,
             onChange : function (e) {
                 self.ds.on_change()
+                self.on_text_changed()
             },
             onMouseDown : function () {
                 setTimeout(function () { self.ds.on_change() }, 0)
@@ -103,6 +110,7 @@ SYNCAREA = React.createClass({
 })
 
 ReactDOM.render(React.createElement(SYNCAREA, {
+    autosize : true,
     channel : 'some-test-7644996',
     textarea_style : {
         width : '200px',
