@@ -16,12 +16,6 @@
 
 <script>
 
-function resizebox(target) {
-    target.style.height = null
-    while (target.rows > 1 && target.scrollHeight < target.offsetHeight) target.rows--
-    while (target.scrollHeight > target.offsetHeight) target.rows++
-}
-
 SYNCAREA = React.createClass({
     getInitialState : function () {
         return {
@@ -30,7 +24,10 @@ SYNCAREA = React.createClass({
     },
     on_text_changed : function () {
         if (this.props.autosize) {
-            resizebox(this.textarea_ref)
+            var t = this.textarea_ref
+            t.style.height = null
+            while (t.rows > 1 && t.scrollHeight < t.offsetHeight) t.rows--
+            while (t.scrollHeight > t.offsetHeight) t.rows++
         }
     },
     componentDidMount : function () {
