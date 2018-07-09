@@ -3,7 +3,17 @@
 <script src="https://dglittle.github.io/cdn/getCaretCoordinates001.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.7/react-with-addons.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.7/react-dom.js"></script>
-<div id="root"></div>
+
+<div style="
+    position:absolute;
+    left:100px;
+    top:100px;
+"><div style="
+    position:absolute;
+    left:100px;
+    top:100px;
+" id="root"></div></div>
+
 <script>
 
 function resizebox(target) {
@@ -20,6 +30,19 @@ SYNCAREA = React.createClass({
     },
     componentDidMount : function () {
         var self = this
+        self.on_ranges = function (ranges) {
+            self.ranges = ranges
+            var cursor_positions = {}
+            Object.keys(ranges).forEach(function (k) {
+                var r = ranges[k]
+                var xy = getCaretCoordinates(self.textarea_ref, r[0])
+                var x = self.textarea_ref.offsetLeft - self.textarea_ref.scrollLeft + xy.left + 'px'
+                var y = self.textarea_ref.offsetTop - self.textarea_ref.scrollTop + xy.top + 'px'
+                cursor_positions[k] = [x, y]
+            })
+            self.setState({ cursor_positions : cursor_positions })
+        }
+            
         this.ds = diffsync.create_client({
             ws_url : 'wss://invisible.college:' + diffsync.port,
             channel : this.props.channel,
@@ -34,17 +57,7 @@ SYNCAREA = React.createClass({
                 self.textarea_ref.value = s
                 self.textarea_ref.setSelectionRange(range[0], range[1])
             },
-            on_ranges : function (ranges) {
-                var cursor_positions = []
-                Object.keys(ranges).forEach(function (k) {
-                    var r = ranges[k]
-                    var xy = getCaretCoordinates(self.textarea_ref, r[0])
-                    var x = self.textarea_ref.offsetLeft - self.textarea_ref.scrollLeft + xy.left + 'px'
-                    var y = self.textarea_ref.offsetTop - self.textarea_ref.scrollTop + xy.top + 'px'
-                    cursor_positions[k] = [x, y]
-                })
-                self.setState({ cursor_positions : cursor_positions })
-            }
+            on_ranges : this.on_ranges
         })
     },
     render : function () {
@@ -67,9 +80,7 @@ SYNCAREA = React.createClass({
         })
         return React.createElement('div', {
             style : {
-                width : '200px',
-                height : '200px',
-                backgroundColor : this.state.mybackgroundColor
+                clipPath : 'inset(0px 0px 0px 0px)'
             },
         }, React.createElement('textarea', {
             ref : function (t) { self.textarea_ref = t },
@@ -82,6 +93,10 @@ SYNCAREA = React.createClass({
             },
             onKeyDown : function () {
                 setTimeout(function () { self.ds.on_change() }, 0)
+            },
+            onScroll : function () {
+                self.on_ranges(self.ranges)
+                console.log('SCROLLED!')
             }
         }), cursors)
     }
