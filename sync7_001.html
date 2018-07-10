@@ -5,6 +5,16 @@
 
 console.log('hi 3!')
 
+function intersection(a, b) {
+    var common = {}
+    each(a, function (_, x) {
+        if (b[x]) {
+            common[x] = a[x]
+        }
+    })
+    return common
+}
+
 function create_sync7_repo() {
     var self = {
         commits : {},
@@ -41,6 +51,16 @@ function create_sync7_repo() {
             self.commits[id] = c
         })
         self.leaves = self.get_leaves()
+        var leaves = Object.keys(self.leaves)
+        if (leaves.length > 1) {
+            var ancestors = self.get_ancestors(leaves[0])
+            for (var i = 1; i < leaves.length; i++) {
+                var i_ancestors = self.get_ancestors(leaves[i])
+                var LCAs = self.get_leaves(intersection(ancestors, i_ancestors))
+                
+                
+            }
+        }
         
         
         // get least common ancestors of the leaves
@@ -49,6 +69,16 @@ function create_sync7_repo() {
         
         
         return self.text
+    }
+    
+        var r_ancestors = self.get_ancestors(these[0])
+        for (var i = 1; i < these.length; i++) {
+            var i_ancestors = self.get_ancestors(these[i])
+            var o = self.rec_merge(self.get_leaves(intersection(r_ancestors, i_ancestors)))
+            r = apply_diff_patch(o, get_merged_diff_patch(r, self.get_text(these[i]), o))
+            extend(r_ancestors, i_ancestors)
+        }
+        return r
     }
     
     self.get_leaves = function (commits) {
@@ -63,6 +93,21 @@ function create_sync7_repo() {
         return leaves
     }
     
+    self.get_ancestors = function (id) {
+        var frontier = [id]
+        var ancestors = {}
+        while (frontier.length > 0) {
+            var next = frontier.shift()
+            each(self.commits[next].to_parents, function (_, p) {
+                if (!ancestors[p]) {
+                    ancestors[p] = self.commits[p]
+                    frontier.push(p)
+                }
+            })
+        }
+        return ancestors
+    }
+
     return self
 }
 
