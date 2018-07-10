@@ -1,24 +1,23 @@
 
+<script src="https://dglittle.github.io/cdn/random001.js"></script>
 <script src="https://dglittle.github.io/cdn/utils004.js"></script>
 <script src="https://invisible-college.github.io/universal-sync/diffsync.js"></script>
 <script>
 
-console.log('hi 3!')
-
-function intersection(a, b) {
-    var common = {}
-    each(a, function (_, x) {
-        if (b[x]) {
-            common[x] = a[x]
-        }
-    })
-    return common
-}
+Math.randomSeed(7)
 
 function create_sync7_repo() {
     var self = {
-        commits : {},
-        leaves : {},
+        commits : {
+            'root' : {
+                to_parents : {},
+                from_parents : {},
+                text : ''
+            }
+        },
+        leaves : {
+            'root' : true
+        },
         text : ''
     }
 
@@ -31,8 +30,10 @@ function create_sync7_repo() {
             text : s
         }
         each(self.leaves, function (_, leaf) {
-            c.from_parents[leaf] = get_diff_patch(self.commits[leaf].text, s)
-            c.to_parents[leaf] = true
+            var p_text = self.commits[leaf].text
+            var diff = get_diff_patch(p_text, s)
+            c.from_parents[leaf] = diff
+            c.to_parents[leaf] = calc_char_mapping(p_text, diff)
         })
 
         var id = guid()
@@ -50,38 +51,64 @@ function create_sync7_repo() {
         each(cs, function (c, id) {
             self.commits[id] = c
         })
-        self.leaves = self.get_leaves()
+        self.leaves = get_leaves()
         var leaves = Object.keys(self.leaves)
         if (leaves.length > 1) {
-            var ancestors = self.get_ancestors(leaves[0])
+            var ancestors = get_ancestors(leaves[0])
             for (var i = 1; i < leaves.length; i++) {
-                var i_ancestors = self.get_ancestors(leaves[i])
-                var LCAs = self.get_leaves(intersection(ancestors, i_ancestors))
+                var i_ancestors = get_ancestors(leaves[i])
+                var LCAs = get_leaves(intersection(ancestors, i_ancestors))
+                
+                console.log("merging: ", leaves[0], leaves[i])
+                console.log("LCAs: ", LCAs)
                 
                 
             }
         }
-        
-        
+
         // get least common ancestors of the leaves
         
         self.text = 'MERGE: ' + Object.keys(self.leaves)
         
         
-        return self.text
+        // return self.text
+
+        //     var r_ancestors = self.get_ancestors(these[0])
+        //     for (var i = 1; i < these.length; i++) {
+        //         var i_ancestors = self.get_ancestors(these[i])
+        //         var o = self.rec_merge(self.get_leaves(intersection(r_ancestors, i_ancestors)))
+        //         r = apply_diff_patch(o, get_merged_diff_patch(r, self.get_text(these[i]), o))
+        //         extend(r_ancestors, i_ancestors)
+        //     }
+        //     return r
     }
     
-        var r_ancestors = self.get_ancestors(these[0])
-        for (var i = 1; i < these.length; i++) {
-            var i_ancestors = self.get_ancestors(these[i])
-            var o = self.rec_merge(self.get_leaves(intersection(r_ancestors, i_ancestors)))
-            r = apply_diff_patch(o, get_merged_diff_patch(r, self.get_text(these[i]), o))
-            extend(r_ancestors, i_ancestors)
+    function calc_char_mapping(s, diff) {
+        var s_i = 0
+        var char_mapping = []
+        char_mapping.push(0)
+        for (var i = 0; i < diff.length; i++) {
+            var d = diff[i]
+            while (d[0] > s_i) {
+                char_mapping.push(s_i * 2 + 1)
+                char_mapping.push(s_i * 2 + 2)
+                s_i++
+            }
+            for (var ii = 0; ii < d[2].length; ii++) {
+                char_mapping.push(s_i * 2)
+                char_mapping.push(s_i * 2)
+            }
+            s_i += d[1]
         }
-        return r
+        while (s.length > s_i) {
+            char_mapping.push(s_i * 2 + 1)
+            char_mapping.push(s_i * 2 + 2)
+            s_i++
+        }
+        return char_mapping
     }
     
-    self.get_leaves = function (commits) {
+    function get_leaves(commits) {
         if (!commits) commits = self.commits
         var leaves = {}
         each(commits, function (_, id) { leaves[id] = true })
@@ -93,7 +120,7 @@ function create_sync7_repo() {
         return leaves
     }
     
-    self.get_ancestors = function (id) {
+    function get_ancestors(id) {
         var frontier = [id]
         var ancestors = {}
         while (frontier.length > 0) {
@@ -107,6 +134,43 @@ function create_sync7_repo() {
         }
         return ancestors
     }
+    
+    function get_path_to_ancestor(a, b) {
+        var frontier = [a]
+        var backs = {}
+        while (frontier.length > 0) {
+            var next = frontier.shift()
+            if (next == b) {
+                var path = []
+                while (next && (next != a)) {
+                    path.unshift(next)
+                    next = backs[next]
+                }
+                return path
+            }
+            each(self.commits[next].to_parents, function (_, p) {
+                if (!backs[p]) {
+                    backs[p] = next
+                    frontier.push(p)
+                }
+            })
+        }
+        return ancestors
+    }
+    
+    self.test = function (id, id2) {
+        console.log(get_path_to_ancestor(id, id2))
+    }
+
+    function intersection(a, b) {
+        var common = {}
+        each(a, function (_, x) {
+            if (b[x]) {
+                common[x] = a[x]
+            }
+        })
+        return common
+    }
 
     return self
 }
@@ -114,9 +178,55 @@ function create_sync7_repo() {
 var repoA = create_sync7_repo()
 var repoB = create_sync7_repo()
 
-repoA.commit('hiA')
-repoA.merge(repoB.commit('hiB'))
+repoA.commits['a0'] = {
+    to_parents : {
+        'root' : [0, 0, 0]
+    },
+    text : 'x'
+}
+repoA.commits['a1'] = {
+    to_parents : {
+        'a0' : [0, 1, 2, 2, 2]
+    },
+    text : 'xz'
+}
+repoA.commits['b1'] = {
+    to_parents : {
+        'a0' : [0, 1, 2]
+    },
+    text : 'y'
+}
+repoA.commits['a2'] = {
+    to_parents : {
+        'a1' : [0, 1, 2, 3, 4],
+        'b1' : [0, 1, 2, 2, 2]
+    },
+    text : 'yz'
+}
+repoA.commits['b2'] = {
+    to_parents : {
+        'b1' : [0, 1, 2]
+    },
+    text : 'x'
+}
+repoA.commits['b3'] = {
+    to_parents : {
+        'a1' : [0, 1, 2, 3, 4],
+        'b2' : [0, 1, 2, 2, 2]
+    },
+    text : 'xz'
+}
 
-console.log(JSON.stringify(repoA))
+// repoB.merge(repoA.commit('x'))
+// repoA.commit('xz')
+// repoB.commit('y')
+// repoA.merge(repoB.commit('hiB'))
+
+console.log('------------------------')
+console.log(JSON.stringify(repoA, null, '    '))
+
+repoA.merge({})
+
+// repoA.test('b3', 'root')
 
 </script>
