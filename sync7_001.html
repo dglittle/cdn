@@ -1,4 +1,77 @@
 
+<script src="https://dglittle.github.io/cdn/utils004.js"></script>
+<script src="https://invisible-college.github.io/universal-sync/diffsync.js"></script>
 <script>
-console.log('hi2!')
+
+console.log('hi 3!')
+
+function create_sync7_repo() {
+    var self = {
+        commits : {},
+        leaves : {},
+        text : ''
+    }
+
+    self.commit = function (s) {
+        if (s == self.text) { return }
+
+        var c = {
+            to_parents : {},
+            from_parents : {},
+            text : s
+        }
+        each(self.leaves, function (_, leaf) {
+            c.from_parents[leaf] = get_diff_patch(self.commits[leaf].text, s)
+            c.to_parents[leaf] = true
+        })
+
+        var id = guid()
+        self.commits[id] = c
+        self.leaves = {}
+        self.leaves[id] = true
+        self.text = s
+
+        var cs = {}
+        cs[id] = c
+        return cs
+    }
+
+    self.merge = function (cs) {
+        each(cs, function (c, id) {
+            self.commits[id] = c
+        })
+        self.leaves = self.get_leaves()
+        
+        
+        // get least common ancestors of the leaves
+        
+        self.text = 'MERGE: ' + Object.keys(self.leaves)
+        
+        
+        return self.text
+    }
+    
+    self.get_leaves = function (commits) {
+        if (!commits) commits = self.commits
+        var leaves = {}
+        each(commits, function (_, id) { leaves[id] = true })
+        each(commits, function (c) {
+            each(c.to_parents, function (_, p) {
+                delete leaves[p]
+            })
+        })
+        return leaves
+    }
+    
+    return self
+}
+
+var repoA = create_sync7_repo()
+var repoB = create_sync7_repo()
+
+repoA.commit('hiA')
+repoA.merge(repoB.commit('hiB'))
+
+console.log(JSON.stringify(repoA))
+
 </script>
