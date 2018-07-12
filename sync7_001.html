@@ -62,6 +62,11 @@ function create_sync7_repo() {
                 console.log("merging: ", leaves[0], leaves[i])
                 console.log("LCAs: ", LCAs)
                 
+                var bloop = project_char_mapping(leaves[0], Object.keys(LCAs)[0])
+                console.log('a = ' + self.commits[leaves[0]].text)
+                console.log('b = ' + self.commits[leaves[i]].text)
+                console.log(projection_merge(leaves[0], leaves[i], LCAs))
+                
                 
             }
         }
@@ -81,6 +86,69 @@ function create_sync7_repo() {
         //         extend(r_ancestors, i_ancestors)
         //     }
         //     return r
+    }
+    
+    function projection_merge(a, b, LCAs) {
+        var a_text = self.commits[a].text
+        var b_text = self.commits[b].text
+        var a_projections = {}
+        var b_projections = {}
+        var LCA_count = 0
+        each(LCAs, function (_, LCA) {
+            a_projections[LCA] = project_char_mapping(a, LCA)
+            b_projections[LCA] = project_char_mapping(b, LCA)
+            LCA_count++
+        })
+        var partial_order_info = []
+        var prev_offset = 0
+        for (var i = 0; i < a_text.length; i++) {
+            var po = []
+            var capture_ap = -1
+            for (var ii = prev_offset; ii < b_text.length; ii++) {
+                var befores = 0
+                var afters = 0
+                each(LCAs, function (_, LCA) {
+                    var ap = a_projections[LCA][i]
+                    capture_ap = ap
+                    var bp = b_projections[LCA][ii]
+                    if (ap < bp) befores++
+                    else if (ap > bp) afters++
+                    else return false
+                })
+                if (afters == LCA_count) {
+                    continue
+                } else if (po.length == 0) {
+                    po.push(ii)
+                }
+                if (befores == LCA_count) {
+                    po.push(ii)
+                    break
+                }
+            }
+            while (po.length < 2) po.push(ii)
+            if ((capture_ap > 0) && (capture_ap % 2 == 1))
+                po.push(true)
+            prev_offset = po[0]
+            partial_order_info.push(po)
+        }
+        return partial_order_info
+    }
+    
+    function project_char_mapping(a, b) {
+        var chars = []
+        for (var i = 0; i < self.commits[a].text.length; i++)
+            chars.push((i + 1) * 2 - 1)
+
+        var path = get_path_to_ancestor(a, b)
+        var prev = a
+        for (var i = 0; i < path.length; i++) {
+            var cur = path[i]
+            for (var ii = 0; ii < chars.length; ii++) {
+                chars[ii] = self.commits[prev].to_parents[cur][chars[ii]]
+            }
+            prev = cur
+        }
+        return chars
     }
     
     function calc_char_mapping(s, diff) {
@@ -136,6 +204,7 @@ function create_sync7_repo() {
     }
     
     function get_path_to_ancestor(a, b) {
+        if (a == b) { return [] }
         var frontier = [a]
         var backs = {}
         while (frontier.length > 0) {
@@ -155,11 +224,7 @@ function create_sync7_repo() {
                 }
             })
         }
-        return ancestors
-    }
-    
-    self.test = function (id, id2) {
-        console.log(get_path_to_ancestor(id, id2))
+        throw 'no path found from ' + a + ' to ' + b
     }
 
     function intersection(a, b) {
