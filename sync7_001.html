@@ -6,7 +6,11 @@
 
 Math.randomSeed(7)
 
-function create_sync7_repo() {
+function my_custom_merge_func(a, b, partial_order) {
+    work here
+}
+
+function create_sync7_repo(custom_merge_func) {
     var self = {
         commits : {
             'root' : {
@@ -52,12 +56,20 @@ function create_sync7_repo() {
             self.commits[id] = c
         })
         self.leaves = get_leaves()
-        var leaves = Object.keys(self.leaves)
+        var leaves = Object.keys(self.leaves).sort()
         if (leaves.length > 1) {
+            var prev_merge_node = leaves[0]
             var ancestors = get_ancestors(leaves[0])
             for (var i = 1; i < leaves.length; i++) {
                 var i_ancestors = get_ancestors(leaves[i])
                 var LCAs = get_leaves(intersection(ancestors, i_ancestors))
+                each(i_ancestors, function (v, k) {
+                    ancestors[k] = v
+                })
+                custom_merge_func(self.commits[prev_merge_node].text, self.commits[leaves[i]].text, calc_partial_order(prev_merge_node, leaves[i], LCAs))
+
+                
+                
                 
                 console.log("merging: ", leaves[0], leaves[i])
                 console.log("LCAs: ", LCAs)
@@ -65,8 +77,9 @@ function create_sync7_repo() {
                 var bloop = project_char_mapping(leaves[0], Object.keys(LCAs)[0])
                 console.log('a = ' + self.commits[leaves[0]].text)
                 console.log('b = ' + self.commits[leaves[i]].text)
-                console.log(projection_merge(leaves[0], leaves[i], LCAs))
-                
+                console.log(calc_partial_order(leaves[0], leaves[i], LCAs))
+
+
                 
             }
         }
@@ -88,7 +101,7 @@ function create_sync7_repo() {
         //     return r
     }
     
-    function projection_merge(a, b, LCAs) {
+    function calc_partial_order(a, b, LCAs) {
         var a_text = self.commits[a].text
         var b_text = self.commits[b].text
         var a_projections = {}
@@ -103,7 +116,7 @@ function create_sync7_repo() {
         var prev_offset = 0
         for (var i = 0; i < a_text.length; i++) {
             var po = []
-            var capture_ap = -1
+            var same = false
             for (var ii = prev_offset; ii < b_text.length; ii++) {
                 var befores = 0
                 var afters = 0
@@ -113,7 +126,10 @@ function create_sync7_repo() {
                     var bp = b_projections[LCA][ii]
                     if (ap < bp) befores++
                     else if (ap > bp) afters++
-                    else return false
+                    else {
+                        if (ap % 2 == 1) same = true
+                        return false
+                    }
                 })
                 if (afters == LCA_count) {
                     continue
@@ -126,8 +142,7 @@ function create_sync7_repo() {
                 }
             }
             while (po.length < 2) po.push(ii)
-            if ((capture_ap > 0) && (capture_ap % 2 == 1))
-                po.push(true)
+            if (same) po.push(true)
             prev_offset = po[0]
             partial_order_info.push(po)
         }
