@@ -141,17 +141,13 @@ function create_sync7_repo(custom_merge_func) {
                 console.log('a = ' + self.commits[leaves[0]].text)
                 console.log('b = ' + self.commits[leaves[i]].text)
                 console.log(JSON.stringify(self.commits[prev_merge_node]))
-
-
-                
             }
+            self.leaves = {}
+            self.leaves[prev_merge_node] = true
         }
+        
 
         // get least common ancestors of the leaves
-        
-        self.text = 'MERGE: ' + Object.keys(self.leaves)
-        
-        
         // return self.text
 
         //     var r_ancestors = self.get_ancestors(these[0])
@@ -319,7 +315,6 @@ function create_sync7_repo(custom_merge_func) {
 }
 
 var repoA = create_sync7_repo(my_custom_merge_func)
-var repoB = create_sync7_repo(my_custom_merge_func)
 
 repoA.commits['a0'] = {
     to_parents : {
@@ -365,11 +360,32 @@ repoA.commits['b3'] = {
 // repoB.commit('y')
 // repoA.merge(repoB.commit('hiB'))
 
-console.log('------------------------')
-console.log(JSON.stringify(repoA, null, '    '))
+// console.log('------------------------')
+// console.log(JSON.stringify(repoA, null, '    '))
 
-repoA.merge({})
+// repoA.merge({})
 
 // repoA.test('b3', 'root')
+
+var repoA = create_sync7_repo(my_custom_merge_func)
+var repoB = create_sync7_repo(my_custom_merge_func)
+
+repoA.commit('x')
+repoA.commit('xz')
+repoA.merge({
+    'b1' : {
+        to_parents : {
+            '4eMjrYIsYjxgv54' : [0, 1, 2]
+        },
+        text : 'y'
+    }
+})
+
+
+console.log('-------------')
+console.log(JSON.stringify(repoA, null, '    '))
+
+
+
 
 </script>
