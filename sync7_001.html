@@ -7,7 +7,63 @@
 Math.randomSeed(7)
 
 function my_custom_merge_func(a, b, partial_order) {
-    work here
+    
+    console.log('my_custom_merge_func')
+    console.log('a = ' + a)
+    console.log('b = ' + b)
+    console.log('partial_order = ' + JSON.stringify(partial_order))
+    
+    var i = 0
+    var ii = 0
+    var to_a = [0]
+    var to_b = [0]
+    var output = []
+    while (i < a.length) {
+        var po = partial_order[i]
+        if (po[0] > ii) {
+            output.push(b[ii])
+            to_b.push((ii * 2) + 1)
+            to_b.push((ii * 2) + 2)
+            ii++
+            to_a.push(to_a[to_a.length - 1])
+            to_a.push(to_a[to_a.length - 1])
+        } else if (po[1] <= ii) {
+            output.push(a[i])
+            to_a.push((i * 2) + 1)
+            to_a.push((i * 2) + 2)
+            i++
+            to_b.push(to_b[to_b.length - 1])
+            to_b.push(to_b[to_b.length - 1])
+        } else if (po[2]) {
+            output.push(a[i])
+            to_a.push((i * 2) + 1)
+            to_a.push((i * 2) + 2)
+            i++
+            to_b.push(po[0] * 2 + 1)
+            to_b.push(po[0] * 2 + 2)
+            if (po[1] > ii) ii = po[1]
+        } else {
+            output.push(a[i])
+            to_a.push((i * 2) + 1)
+            to_a.push((i * 2) + 2)
+            i++
+            to_b.push(to_b[to_b.length - 1])
+            to_b.push(to_b[to_b.length - 1])
+        }
+    }
+    while (ii < b.length) {
+        output.push(b[ii])
+        to_b.push((ii * 2) + 1)
+        to_b.push((ii * 2) + 2)
+        ii++
+        to_a.push(to_a[to_a.length - 1])
+        to_a.push(to_a[to_a.length - 1])
+    }
+    return {
+        to_a : to_a,
+        to_b : to_b,
+        text : output.join('')
+    }
 }
 
 function create_sync7_repo(custom_merge_func) {
@@ -66,18 +122,25 @@ function create_sync7_repo(custom_merge_func) {
                 each(i_ancestors, function (v, k) {
                     ancestors[k] = v
                 })
-                custom_merge_func(self.commits[prev_merge_node].text, self.commits[leaves[i]].text, calc_partial_order(prev_merge_node, leaves[i], LCAs))
+                var node = custom_merge_func(self.commits[prev_merge_node].text, self.commits[leaves[i]].text, calc_partial_order(prev_merge_node, leaves[i], LCAs))
+                var id = guid()
+                self.commits[id] = {
+                    to_parents : {},
+                    text : node.text
+                }
+                self.commits[id].to_parents[prev_merge_node] = node.to_a
+                self.commits[id].to_parents[leaves[i]] = node.to_b
+                
+                prev_merge_node = id
+                
 
-                
-                
-                
                 console.log("merging: ", leaves[0], leaves[i])
                 console.log("LCAs: ", LCAs)
                 
                 var bloop = project_char_mapping(leaves[0], Object.keys(LCAs)[0])
                 console.log('a = ' + self.commits[leaves[0]].text)
                 console.log('b = ' + self.commits[leaves[i]].text)
-                console.log(calc_partial_order(leaves[0], leaves[i], LCAs))
+                console.log(JSON.stringify(self.commits[prev_merge_node]))
 
 
                 
@@ -255,8 +318,8 @@ function create_sync7_repo(custom_merge_func) {
     return self
 }
 
-var repoA = create_sync7_repo()
-var repoB = create_sync7_repo()
+var repoA = create_sync7_repo(my_custom_merge_func)
+var repoB = create_sync7_repo(my_custom_merge_func)
 
 repoA.commits['a0'] = {
     to_parents : {
