@@ -18,54 +18,74 @@ function my_custom_merge_func(a, b, x) {
     console.log('a_flags = ', a_flags)
     console.log('b_flags = ', b_flags)
     console.log('partial_order = ' + JSON.stringify(partial_order))
-    
-    throw 'bloop'
-    
+
+
     var i = 0
     var ii = 0
-    var to_a = [0]
-    var to_b = [0]
+    var to_a = []
+    var to_b = []
+    var next_a = 0
+    var next_b = 0
     var output = []
-    while (i < a.length) {
-        var po = partial_order[i]
-        if (po[0] > ii) {
-            output.push(b[ii])
-            to_b.push((ii * 2) + 1)
-            to_b.push((ii * 2) + 2)
-            ii++
-            to_a.push(to_a[to_a.length - 1])
-            to_a.push(to_a[to_a.length - 1])
-        } else if (po[1] <= ii) {
-            output.push(a[i])
-            to_a.push((i * 2) + 1)
-            to_a.push((i * 2) + 2)
+    while (i < a.length && ii < b.length) {
+        if (a_flags[i] == 3) {
             i++
-            to_b.push(to_b[to_b.length - 1])
-            to_b.push(to_b[to_b.length - 1])
-        } else if (po[2]) {
-            output.push(a[i])
-            to_a.push((i * 2) + 1)
-            to_a.push((i * 2) + 2)
-            i++
-            to_b.push(po[0] * 2 + 1)
-            to_b.push(po[0] * 2 + 2)
-            if (po[1] > ii) ii = po[1]
-        } else {
-            output.push(a[i])
-            to_a.push((i * 2) + 1)
-            to_a.push((i * 2) + 2)
-            i++
-            to_b.push(to_b[to_b.length - 1])
-            to_b.push(to_b[to_b.length - 1])
+            continue
         }
-    }
-    while (ii < b.length) {
-        output.push(b[ii])
-        to_b.push((ii * 2) + 1)
-        to_b.push((ii * 2) + 2)
-        ii++
-        to_a.push(to_a[to_a.length - 1])
-        to_a.push(to_a[to_a.length - 1])
+        if (b_flags[ii] == 3) {
+            ii++
+            continue
+        }
+        
+        var po = partial_order[i]
+        if (!po || (po[0] > ii)) {
+            output.push(b[ii])
+            to_b.push(ii + 0.5)
+            next_b = ++ii
+            to_a.push(next_a)
+            continue
+        }
+        if (po[1] <= ii) {
+            output.push(a[i])
+            to_a.push(i + 0.5)
+            next_a = ++i
+            to_b.push(next_b)
+            continue
+        }
+        
+        if (a_flags[i] == 1 && b_flags[ii] == 1) {
+            output.push(a[i])
+            to_a.push(i + 0.5)
+            to_b.push(ii + 0.5)
+            next_a = ++i
+            next_b = ++ii
+            continue
+        }
+        if (a_flags[i] == 1 && b_flags[ii] == 2) {
+            output.push(b[ii])
+            to_b.push(ii + 0.5)
+            next_b = ++ii
+            to_a.push(next_a)
+            i++
+            continue
+        }
+        if (a_flags[i] == 2 && b_flags[ii] == 1) {
+            output.push(a[i])
+            to_a.push(i + 0.5)
+            next_a = ++i
+            to_b.push(next_b)
+            ii++
+            continue
+        }
+        if (a_flags[i] == 2 && b_flags[ii] == 2) {
+            output.push(a[i])
+            to_a.push(i + 0.5)
+            next_a = ++i
+            to_b.push(next_b)
+            continue
+        }
+        
+        throw 'oh no! this is unexpected..'
     }
     return {
         to_a : to_a,
@@ -143,7 +163,6 @@ function create_sync7_repo(custom_merge_func) {
 
                 console.log("merging: ", leaves[0], leaves[i])
                 console.log("LCAs: ", LCAs)
-                console.log("bloop: ", JSON.stringify(calc_partial_order(prev_merge_node, leaves[i], LCAs)))
             }
             self.leaves = {}
             self.leaves[prev_merge_node] = true
@@ -164,6 +183,7 @@ function create_sync7_repo(custom_merge_func) {
         
         var a_flags = new Array(a_text.length)
         var b_flags = new Array(b_text.length)
+        
         each(LCAs, function (_, LCA) {
             var possible_deletes = {}
             for (var i = 0; i < a_text.length; i++) {
@@ -188,7 +208,42 @@ function create_sync7_repo(custom_merge_func) {
                     if (!b_flags[i]) b_flags[i] = 2
                 }
             }
-            each(possible_deletes, function (_, x) {
+            each(possible_deletes, function (x, _) {
+                if (x[0] == 'a') {
+                    a_flags[x[1]] = 3
+                } else {
+                    b_flags[x[1]] = 3
+                }
+            })
+        })
+        
+        work here
+        
+        each(LCAs, function (_, LCA) {
+            var possible_deletes = {}
+            for (var i = 0; i < a_text.length; i++) {
+                var p = a_projections[LCA][i]
+                if ((p > 0) && (p % 1 == 0.5)) {
+                    if (a_flags[i] != 3) a_flags[i] = 1
+                    possible_deletes[p] = ['a', i]
+                } else if ((p < 0) && (-p % 1 == 0.5)) {
+                    if (!a_flags[i]) a_flags[i] = 2
+                }
+            }
+            for (var i = 0; i < b_text.length; i++) {
+                var p = b_projections[LCA][i]
+                if ((p > 0) && (p % 1 == 0.5)) {
+                    if (b_flags[i] != 3) b_flags[i] = 1
+                    if (possible_deletes[p]) {
+                        delete possible_deletes[p]
+                    } else {
+                        possible_deletes[p] = ['b', i]
+                    }
+                } else if ((p < 0) && (-p % 1 == 0.5)) {
+                    if (!b_flags[i]) b_flags[i] = 2
+                }
+            }
+            each(possible_deletes, function (x, _) {
                 if (x[0] == 'a') {
                     a_flags[x[1]] = 3
                 } else {
@@ -205,12 +260,13 @@ function create_sync7_repo(custom_merge_func) {
                 var befores = 0
                 var afters = 0
                 each(LCAs, function (_, LCA) {
-                    var ap = a_projections[LCA][i]
-                    var bp = b_projections[LCA][ii]
+                    var ap = Math.abs(a_projections[LCA][i])
+                    var bp = Math.abs(b_projections[LCA][ii])
                     if (ap < bp) befores++
                     else if (ap > bp) afters++
                     else return false
                 })
+
                 if (afters == LCA_count) {
                     continue
                 } else if (po.length == 0) {
@@ -244,8 +300,8 @@ function create_sync7_repo(custom_merge_func) {
                     chars[ii] = 0
                 } else if (chars[ii] % 1 == 0) {
                     chars[ii] = map[chars[ii] - 1]
-                    if (chars[ii] % 1 == 0.5)
-                        chars[ii] += 0.5
+                    if (Math.abs(chars[ii]) % 1 == 0.5)
+                        chars[ii] = Math.abs(chars[ii]) + 0.5
                 } else if (chars[ii] > 0) {
                     chars[ii] = map[chars[ii] - 0.5]
                 } else {
