@@ -7,6 +7,10 @@
 Math.randomSeed(7)
 
 function my_custom_merge_func(a, b, diffs_to_ancestors) {
+    
+    console.log('a = ', a)
+    console.log('b = ', b)
+    console.log('diffs_to_ancestors = ', JSON.stringify(diffs_to_ancestors, null, '    '))
 
 }
 
@@ -107,12 +111,22 @@ function sync7_diff_merge_trans(a, b, a_factor, b_factor) {
         }
     }
     while (a_i < a.length) {
-        push_rep(a_offset == 0 ? da[a_idx(0)] : '', da[a_idx(1)].substr(a_offset))
+        var da = a[a_i]
+        if (typeof(da) == 'number') {
+            push_eq(da)
+        } else {
+            push_rep(a_offset == 0 ? da[a_idx(0)] : '', da[a_idx(1)].substr(a_offset))
+        }
         a_i++
         a_offset = 0
     }
     while (b_i < b.length) {
-        push_rep(db[b_idx(0)].substr(b_offset), b_offset == 0 ? db[b_idx(1)] : '')
+        var db = b[b_i]
+        if (typeof(db) == 'number') {
+            push_eq(db)
+        } else {
+            push_rep(db[b_idx(0)].substr(b_offset), b_offset == 0 ? db[b_idx(1)] : '')
+        }
         b_i++
         b_offset = 0
     }
@@ -209,7 +223,7 @@ function create_sync7_repo(custom_merge_func) {
     }
     
     function get_text(id) {
-        var ls = get_leaves(intersection(get_ancestors(self.leaf), get_ancestors(id)))
+        var ls = get_leaves(intersection(get_ancestors(self.leaf, true), get_ancestors(id, true)))
         var lca = Object.keys(ls)[0]
         var leaf_to_lca = get_path_to_ancestor(self.leaf, lca)
         var lca_to_id = get_path_to_ancestor(id, lca).reverse()
@@ -219,7 +233,7 @@ function create_sync7_repo(custom_merge_func) {
         }
         
         var diff = []
-        var prev = leaf
+        var prev = self.leaf
         each(leaf_to_lca, function (next) {
             diff = sync7_diff_merge_trans(diff, self.commits[prev].to_parents[next])
             prev = next
@@ -245,9 +259,11 @@ function create_sync7_repo(custom_merge_func) {
         return leaves
     }
     
-    function get_ancestors(id) {
+    function get_ancestors(id, include_self) {
         var frontier = [id]
         var ancestors = {}
+        if (include_self)
+            ancestors[id] = self.commits[id]
         while (frontier.length > 0) {
             var next = frontier.shift()
             each(self.commits[next].to_parents, function (_, p) {
@@ -298,47 +314,13 @@ function create_sync7_repo(custom_merge_func) {
 }
 
 var repoA = create_sync7_repo(my_custom_merge_func)
-
-repoA.commits['a0'] = {
-    to_parents : {
-        'root' : [0]
-    },
-    text : 'x'
-}
-repoA.commits['a1'] = {
-    to_parents : {
-        'a0' : [0.5, 1]
-    },
-    text : 'xz'
-}
-repoA.commits['b1'] = {
-    to_parents : {
-        'a0' : [-0.5]
-    },
-    text : 'y'
-}
-repoA.commits['a2'] = {
-    to_parents : {
-        'a1' : [-0.5, 1.5],
-        'b1' : [0.5, 1]
-    },
-    text : 'yz'
-}
-repoA.commits['b2'] = {
-    to_parents : {
-        'b1' : [-0.5]
-    },
-    text : 'q'
-}
-repoA.commits['b3'] = {
-    to_parents : {
-        'a1' : [-0.5, 1.5],
-        'b2' : [0.5, 1]
-    },
-    text : 'qz'
-}
-
-repoA.merge({})
+var repoB = create_sync7_repo(my_custom_merge_func)
+var cs = repoA.commit('x')
+repoB.merge(cs)
+repoA.commit('xz')
+var cs = repoB.commit('y')
+repoA.merge(cs)
 console.log(JSON.stringify(repoA, null, '    '))
+console.log(JSON.stringify(repoB, null, '    '))
 
 </script>
