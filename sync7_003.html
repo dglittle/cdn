@@ -25,6 +25,22 @@ function sync7_diff(a, b) {
     return ret
 }
 
+function sync7_diff_apply(s, diff) {
+    var offset = 0
+    var texts = []
+    each(diff, function (d) {
+        if (typeof(d) == 'number') {
+            texts.push(s.substr(offset, d))
+            offset += d
+        } else {
+            texts.push(d[1])
+            offset += d[0].length
+        }
+    })
+    texts.push(s.substr(offset))
+    return texts.join('')
+}
+
 function sync7_diff_merge_trans(a, b, a_factor, b_factor) {
     var ret = []
     var a_i = 0
