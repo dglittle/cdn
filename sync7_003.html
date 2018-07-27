@@ -7,11 +7,129 @@
 Math.randomSeed(7)
 
 function my_custom_merge_func(a, b, diffs_to_ancestors) {
+
     
     console.log('a = ', a)
     console.log('b = ', b)
     console.log('diffs_to_ancestors = ', JSON.stringify(diffs_to_ancestors, null, '    '))
 
+    
+    var texts = []
+    var a_i = 0
+    var b_i = 0
+    while (a_i < a.length || b_i < b.length) {
+        var a_first = b_i >= b.length
+        var b_first = a_i >= a.length
+        var both_equal = false
+        var a_replaced = false
+        var b_replaced = false
+        each(diffs_to_ancestors, function (anc) {
+            if (!anc.extra) {
+                anc.extra = {
+                    adi : 0, // a's diff index
+                    bdi : 0,
+                    adco : 0, // a's diff's child-offset
+                    bdco : 0,
+                    adao : 0, // a's diff's anc-offset
+                    bdao : 0
+                }
+            }
+            
+            var ad = anc[0][anc.extra.adi]
+            while (ad && typeof(ad) != 'number' && ad[0] == '') {
+                anc.extra.adao += ad[1].length
+                anc.extra.adi++
+                ad = anc[0][anc.extra.adi]
+            }
+            
+            var bd = anc[1][anc.extra.bdi]
+            while (bd && typeof(bd) != 'number' && bd[0] == '') {
+                anc.extra.bdao += bd[1].length
+                anc.extra.bdi++
+                bd = anc[1][anc.extra.bdi]
+            }
+            
+            if ((ad && typeof(ad) == 'number') &&
+                (bd && typeof(bd) == 'number'))
+                both_equal = true
+            if ((ad && typeof(ad) == 'number') &&
+                !(bd && typeof(bd) == 'number'))
+                a_replaced = true
+            if (!(ad && typeof(ad) == 'number') &&
+                (bd && typeof(bd) == 'number'))
+                b_replaced = true
+
+            if (!ad) {
+                b_first = true
+            } else if (!bd) {
+                a_first = true
+            } else if (anc.extra.adao < anc.extra.bdao) {
+                a_first = true
+            } else if (anc.extra.adao > anc.extra.bdao) {
+                b_first = true
+            } else {
+                if ((typeof(ad) != 'number' && ad[1] == '') &&
+                    (typeof(bd) == 'number' || bd[1] != '')) {
+                    a_first = true
+                } else if ((typeof(ad) == 'number' || ad[1] != '') &&
+                    (typeof(bd) != 'number' && bd[1] == '')) {
+                    b_first = true
+                }
+            }
+        })
+
+        var inc_a = false
+        var inc_b = false
+        
+        if (both_equal && !(a_first || b_first)) {
+            texts.push(a[a_i])
+            inc_a = true
+            inc_b = true
+        } else if (a_first || !b_first) {
+            if (!a_replaced)
+                texts.push(a[a_i])
+            inc_a = true
+        } else {
+            if (!b_replaced)
+                texts.push(b[b_i])
+            inc_b = true
+        }
+
+        if (inc_a) {
+            a_i++
+            each(diffs_to_ancestors, function (anc) {
+                var ad = anc[0][anc.extra.adi]
+                anc.extra.adco++
+                if (typeof(ad) == 'number')
+                    anc.extra.adao++
+                if (anc.extra.adco >= (typeof(ad) == 'number' ? ad : ad[0].length)) {
+                    if (typeof(ad) != 'number')
+                        anc.extra.adao += ad[1].length
+                    anc.extra.adi++
+                    anc.extra.adco = 0
+                }
+            })
+        }
+        if (inc_b) {
+            b_i++
+            each(diffs_to_ancestors, function (anc) {
+                var bd = anc[1][anc.extra.bdi]
+                anc.extra.bdco++
+                if (typeof(bd) == 'number')
+                    anc.extra.bdao++
+                if (anc.extra.bdco >= (typeof(bd) == 'number' ? bd : bd[0].length)) {
+                    if (typeof(bd) != 'number')
+                        anc.extra.bdao += bd[1].length
+                    anc.extra.bdi++
+                    anc.extra.bdco = 0
+                }
+            })
+        }
+    }
+    
+    console.log('texts: ', JSON.stringify(texts))
+    
+    throw 'ok..'
 }
 
 function sync7_diff(a, b) {
