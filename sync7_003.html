@@ -8,12 +8,9 @@ Math.randomSeed(7)
 
 function my_custom_merge_func(a, b, diffs_to_ancestors) {
 
-    
     console.log('a = ', a)
     console.log('b = ', b)
     console.log('diffs_to_ancestors = ', JSON.stringify(diffs_to_ancestors, null, '    '))
-
-
 
     var texts = []
     var to_a = []
@@ -143,8 +140,14 @@ function my_custom_merge_func(a, b, diffs_to_ancestors) {
     }
     
     console.log('texts: ', JSON.stringify(texts))
+    console.log('to_a: ', JSON.stringify(to_a))
+    console.log('to_b: ', JSON.stringify(to_b))
     
-    throw 'ok..'
+    return {
+        text : texts.join(''),
+        to_a : to_a,
+        to_b : to_b
+    }
 }
 
 function sync7_diff(a, b) {
@@ -281,13 +284,11 @@ function create_sync7_repo(custom_merge_func) {
         if (s == self.text) { return }
         var cs = {}
         
-        if (Object.keys(self.temp_commits).length > 1) {
-            each(self.temp_commits, function (v, k) {
-                cs[k] = v
-            })
-            self.temp_commits = {}
-        }
-        
+        each(self.temp_commits, function (_, k) {
+            cs[k] = self.commits[k]
+        })
+        self.temp_commits = {}
+
         var id = guid()
         var to_parents = {}
         to_parents[self.leaf] = sync7_diff(s, self.text)
@@ -449,12 +450,18 @@ function create_sync7_repo(custom_merge_func) {
 
 var repoA = create_sync7_repo(my_custom_merge_func)
 var repoB = create_sync7_repo(my_custom_merge_func)
-var cs = repoA.commit('x')
-repoB.merge(cs)
-repoA.commit('xz')
-var cs = repoB.commit('y')
-repoA.merge(cs)
+var c_x = repoA.commit('x')
+repoB.merge(c_x)
+var c_xz = repoA.commit('xz')
+var c_y = repoB.commit('y')
+repoA.merge(c_y)
+var c_q = repoB.commit('q')
+repoB.merge(c_xz)
+var c_yzA = repoA.commit('yzA')
+var c_qzB = repoB.commit('qzB')
+repoA.merge(c_q)
+repoA.merge(c_qzB)
 console.log(JSON.stringify(repoA, null, '    '))
-console.log(JSON.stringify(repoB, null, '    '))
+//console.log(JSON.stringify(repoB, null, '    '))
 
 </script>
