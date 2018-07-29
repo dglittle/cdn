@@ -303,12 +303,21 @@ function create_sync7_repo(custom_merge_func) {
         each(cs, function (c, id) {
             self.commits[id] = c
         })
-        var new_temp_commits = {}
-        var leaves = get_leaves()
+        var leaves = get_leaves(self.commits, self.temp_commits)
         var leaves = Object.keys(leaves).sort()
-        
+
+        var texts = {}
+        each(leaves, function (leaf) {
+            texts[leaf] = get_text(leaf)
+        })
+
+        each(self.temp_commits, function (_, k) {
+            delete self.commits[k]
+        })
+        self.temp_commits = {}
+
         var prev_merge_node = leaves[0]
-        var prev_merge_node_text = get_text(prev_merge_node)
+        var prev_merge_node_text = texts[prev_merge_node]
         var ancestors = get_ancestors(prev_merge_node)
         for (var i = 1; i < leaves.length; i++) {
             var i_ancestors = get_ancestors(leaves[i])
@@ -317,9 +326,9 @@ function create_sync7_repo(custom_merge_func) {
                 ancestors[k] = v
             })
             
-            var m = custom_merge_func(prev_merge_node_text, get_text(leaves[i]), calc_diffs_to_ancestors(prev_merge_node, leaves[i], LCAs))
+            var m = custom_merge_func(prev_merge_node_text, texts[leaves[i]], calc_diffs_to_ancestors(prev_merge_node, leaves[i], LCAs))
             var id = guid()
-            new_temp_commits[id] = true
+            self.temp_commits[id] = true
             self.commits[id] = { to_parents : {} }
             self.commits[id].to_parents[prev_merge_node] = m.to_a
             self.commits[id].to_parents[leaves[i]] = m.to_b
@@ -329,11 +338,6 @@ function create_sync7_repo(custom_merge_func) {
         }
         self.leaf = prev_merge_node
         self.text = prev_merge_node_text
-        
-        each(self.temp_commits, function (_, k) {
-            delete self.commits[k]
-        })
-        self.temp_commits = new_temp_commits
     }
     
     function calc_diffs_to_ancestors(a, b, LCAs) {
@@ -382,11 +386,15 @@ function create_sync7_repo(custom_merge_func) {
     }
 
     
-    function get_leaves(commits) {
-        if (!commits) commits = self.commits
+    function get_leaves(commits, ignore) {
+        if (!ignore) ignore = {}
         var leaves = {}
-        each(commits, function (_, id) { leaves[id] = true })
-        each(commits, function (c) {
+        each(commits, function (_, id) {
+            if (ignore[id]) { return }
+            leaves[id] = true
+        })
+        each(commits, function (c, id) {
+            if (ignore[id]) { return }
             each(c.to_parents, function (_, p) {
                 delete leaves[p]
             })
@@ -462,6 +470,7 @@ var c_qzB = repoB.commit('qzB')
 repoA.merge(c_q)
 repoA.merge(c_qzB)
 console.log(JSON.stringify(repoA, null, '    '))
+//console.log(JSON.stringify(repoB, null, '    '))
 //console.log(JSON.stringify(repoB, null, '    '))
 
 </script>
