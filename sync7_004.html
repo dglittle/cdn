@@ -1,0 +1,337 @@
+
+<script src="https://dglittle.github.io/cdn/random001.js"></script>
+<script src="https://dglittle.github.io/cdn/utils004.js"></script>
+<script src="https://invisible-college.github.io/universal-sync/diffsync.js"></script>
+<body style="margin:0px"></body>
+<script>
+
+document.body.append(sync7_create_visualization(get_example_sync7()))
+
+function sync7_create_visualization(s7) {
+    var CHAR_BOX_SIZE = 20
+    
+    var commit_extras = {
+        "root": {
+            text : '',
+            x : CHAR_BOX_SIZE * 3.5,
+            y : CHAR_BOX_SIZE * 0.5
+        },
+        "4eMjrYIsYjxgv54": {
+            text : 'x',
+            x : CHAR_BOX_SIZE * 3,
+            y : CHAR_BOX_SIZE * 2
+        },
+        "qg0uwGRNkno4FhF": {
+            text : 'xz',
+            x : CHAR_BOX_SIZE * 1,
+            y : CHAR_BOX_SIZE * 4
+        },
+        "UHdlsVVg1KBfWQe": {
+            text : 'y',
+            x : CHAR_BOX_SIZE * 4.5,
+            y : CHAR_BOX_SIZE * 4
+        },
+        "ayNUW8rwnKmFbt6": {
+            text : 'yz',
+            x : CHAR_BOX_SIZE * 1,
+            y : CHAR_BOX_SIZE * 7
+        },
+        "IppZUNblJiqvqCD": {
+            text : 'yzA',
+            x : CHAR_BOX_SIZE * 1,
+            y : CHAR_BOX_SIZE * 11
+        },
+        "ctuCnWtlmhPrLXj": {
+            text : 'q',
+            x : CHAR_BOX_SIZE * 6,
+            y : CHAR_BOX_SIZE * 6.5
+        },
+        "bz8h5sxljEhmVsq": {
+            text : 'qz',
+            x : CHAR_BOX_SIZE * 5,
+            y : CHAR_BOX_SIZE * 9
+        },
+        "Ewgpp0F5rHMwGHJ": {
+            text : 'qzB',
+            x : CHAR_BOX_SIZE * 5,
+            y : CHAR_BOX_SIZE * 12
+        },
+        "rQEtFQP8xj2s5JN": {
+            text : 'qzBA',
+            x : CHAR_BOX_SIZE * 2,
+            y : CHAR_BOX_SIZE * 14
+        }
+    }
+    
+    var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+    svg.setAttribute('width', '500')
+    svg.setAttribute('height', '500')
+    
+    function create_line(x1, y1, x2, y2, stroke) {
+        var line = document.createElementNS('http://www.w3.org/2000/svg', 'line')
+        line.setAttribute('x1', x1)
+        line.setAttribute('y1', y1)
+        line.setAttribute('x2', x2)
+        line.setAttribute('y2', y2)
+        line.setAttribute('stroke', stroke)
+        return line
+    }
+    
+    function create_char_boxes(x, y, size, text) {
+        var stroke = 'black'
+        var g = document.createElementNS('http://www.w3.org/2000/svg', 'g')
+        g.append(create_line(x, y + 0.5, x + size * text.length, y + 0.5, stroke))
+        g.append(create_line(x, y + size - 0.5, x + size * text.length, y + size - 0.5, stroke))
+        for (var i = 0; i <= text.length; i++) {
+            g.append(create_line(x + i * size + 0.5, y + 0.5, x + i * size + 0.5, y + size - 0.5, stroke))
+        }
+        for (var i = 0; i < text.length; i++) {
+            var char = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+            char.style.fill = stroke
+            char.style.fontSize = size
+            char.setAttribute('x', x + i*size + size/2)
+            char.setAttribute('y', y + size*0.9)
+            char.setAttribute('text-anchor', 'middle')
+            char.setAttribute('alignment-baseline', 'baseline')
+            
+            var textNode = document.createTextNode(text[i])
+            char.appendChild(textNode)
+            
+            g.append(char)
+        }
+        return g
+    }
+    
+    function create_polygon(points, fill) {
+        var poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
+        poly.style.fill = fill
+        
+        var points_text = []
+        for (var i = 0; i < points.length; i++) {
+            points_text.push((i == 0 ? '' : ' ') + points[i][0])
+            points_text.push(',' + points[i][1])
+        }
+        poly.setAttribute('points', points_text.join(''))
+        
+        return poly
+    }
+    
+    function create_diff_lines(x1, y1, x2, y2, size, diff) {
+        var stroke = 'black'
+        var g = document.createElementNS('http://www.w3.org/2000/svg', 'g')
+
+        var child_offset = 0
+        var parent_offset = 0
+        each(diff, function (d) {
+            var points = []
+            points.push([x1 + child_offset, y1])
+            points.push([x2 + parent_offset, y2 + size])
+            if (typeof(d) == 'number') {
+                child_offset += d * size
+                parent_offset += d * size
+            } else {
+                child_offset += d[0].length * size
+                parent_offset += d[1].length * size
+            }
+            points.push([x2 + parent_offset, y2 + size])
+            points.push([x1 + child_offset, y1])
+
+            if (typeof(d) != 'number') {
+                g.append(create_polygon(points, 'rgba(100, 255, 30, 0.5)'))
+            }
+        })
+
+        var child_offset = 0
+        var parent_offset = 0
+        g.append(create_line(x1 + child_offset, y1, x2 + parent_offset, y2 + size, stroke))
+        each(diff, function (d) {
+            if (typeof(d) == 'number') {
+                child_offset += d * size
+                parent_offset += d * size
+            } else {
+                child_offset += d[0].length * size
+                parent_offset += d[1].length * size
+            }
+            g.append(create_line(x1 + child_offset, y1, x2 + parent_offset, y2 + size, stroke))
+        })
+
+        return g
+    }
+    
+    //svg.append(create_char_boxes(10, 10, CHAR_BOX_SIZE, s7.text))
+    
+    each(s7.commits, function (c, id) {
+        each(c.to_parents, function (d, pid) {
+            svg.append(create_diff_lines(commit_extras[id].x, commit_extras[id].y, commit_extras[pid].x, commit_extras[pid].y, CHAR_BOX_SIZE, d))
+        })
+    })
+
+    each(s7.commits, function (c, id) {
+        svg.append(create_char_boxes(commit_extras[id].x, commit_extras[id].y, CHAR_BOX_SIZE, commit_extras[id].text))
+    })
+    
+    // svg.append(create_line(10, 10, CHAR_BOX_SIZE, s7.text.length, 'black'))
+    
+
+    // for (var i = 0; i < s7.text.length; i++) {
+    //     console.log('got here!!')
+        
+        
+    //     var c = s7.text[i]
+        
+    //     var rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
+    //     rect.setAttribute('x', CHAR_BOX_SIZE * i)
+    //     rect.setAttribute('y', CHAR_BOX_SIZE * 1)
+    //     rect.setAttribute('width', CHAR_BOX_SIZE)
+    //     rect.setAttribute('height', CHAR_BOX_SIZE)
+    //     rect.style.fill = 'rgb(0,255,255)'
+        
+    //     var char = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+    //     char.style.fill = 'rgb(255,0,0)'
+    //     char.style.fontSize = CHAR_BOX_SIZE
+    //     char.setAttribute('y', CHAR_BOX_SIZE * 1)
+
+    //     var textNode = document.createTextNode('H')
+    //     char.appendChild(textNode)
+
+        
+    //     //rect.append(char)
+    //     svg.append(char)
+    // }
+
+    return svg
+}
+
+function get_example_sync7() {
+    return {
+        "commits": {
+            "root": {
+                "to_parents": {}
+            },
+            "4eMjrYIsYjxgv54": {
+                "to_parents": {
+                    "root": [
+                        [
+                            "x",
+                            ""
+                        ]
+                    ]
+                }
+            },
+            "qg0uwGRNkno4FhF": {
+                "to_parents": {
+                    "4eMjrYIsYjxgv54": [
+                        1,
+                        [
+                            "z",
+                            ""
+                        ]
+                    ]
+                }
+            },
+            "UHdlsVVg1KBfWQe": {
+                "to_parents": {
+                    "4eMjrYIsYjxgv54": [
+                        [
+                            "y",
+                            "x"
+                        ]
+                    ]
+                }
+            },
+            "ayNUW8rwnKmFbt6": {
+                "to_parents": {
+                    "UHdlsVVg1KBfWQe": [
+                        1,
+                        [
+                            "z",
+                            ""
+                        ]
+                    ],
+                    "qg0uwGRNkno4FhF": [
+                        [
+                            "y",
+                            "x"
+                        ],
+                        1
+                    ]
+                }
+            },
+            "IppZUNblJiqvqCD": {
+                "to_parents": {
+                    "ayNUW8rwnKmFbt6": [
+                        2,
+                        [
+                            "A",
+                            ""
+                        ]
+                    ]
+                }
+            },
+            "ctuCnWtlmhPrLXj": {
+                "to_parents": {
+                    "UHdlsVVg1KBfWQe": [
+                        [
+                            "q",
+                            "y"
+                        ]
+                    ]
+                }
+            },
+            "bz8h5sxljEhmVsq": {
+                "to_parents": {
+                    "ctuCnWtlmhPrLXj": [
+                        1,
+                        [
+                            "z",
+                            ""
+                        ]
+                    ],
+                    "qg0uwGRNkno4FhF": [
+                        [
+                            "q",
+                            "x"
+                        ],
+                        1
+                    ]
+                }
+            },
+            "Ewgpp0F5rHMwGHJ": {
+                "to_parents": {
+                    "bz8h5sxljEhmVsq": [
+                        2,
+                        [
+                            "B",
+                            ""
+                        ]
+                    ]
+                }
+            },
+            "rQEtFQP8xj2s5JN": {
+                "to_parents": {
+                    "Ewgpp0F5rHMwGHJ": [
+                        3,
+                        [
+                            "A",
+                            ""
+                        ]
+                    ],
+                    "IppZUNblJiqvqCD": [
+                        [
+                            "qzB",
+                            "yz"
+                        ],
+                        1
+                    ]
+                }
+            }
+        },
+        "temp_commits": {
+            "rQEtFQP8xj2s5JN": true
+        },
+        "leaf": "rQEtFQP8xj2s5JN",
+        "text": "qzBA"
+    }
+}
+
+</script>
