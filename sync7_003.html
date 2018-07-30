@@ -7,16 +7,22 @@
 Math.randomSeed(7)
 
 function my_custom_merge_func(a, b, diffs_to_ancestors) {
-
-    console.log('a = ', a)
-    console.log('b = ', b)
-    console.log('diffs_to_ancestors = ', JSON.stringify(diffs_to_ancestors, null, '    '))
-
+    
+    console.log('BLAR')
+    console.log(a)
+    console.log(b)
+    console.log(JSON.stringify(diffs_to_ancestors, null, '    '))
+    
     var texts = []
     var to_a = []
     var to_b = []
     var a_i = 0
     var b_i = 0
+    
+    if (a == 'qzB' && b == 'yzA') {
+        debugger
+    }
+    
     while (a_i < a.length || b_i < b.length) {
         var a_first = b_i >= b.length
         var b_first = a_i >= a.length
@@ -50,7 +56,8 @@ function my_custom_merge_func(a, b, diffs_to_ancestors) {
             }
             
             if ((ad && typeof(ad) == 'number') &&
-                (bd && typeof(bd) == 'number'))
+                (bd && typeof(bd) == 'number') &&
+                (anc.extra.adao == anc.extra.bdao))
                 both_equal = true
             if ((ad && typeof(ad) == 'number') &&
                 (!bd || typeof(bd) != 'number' || anc.extra.adao != anc.extra.bdao))
@@ -81,7 +88,7 @@ function my_custom_merge_func(a, b, diffs_to_ancestors) {
         var inc_a = false
         var inc_b = false
         
-        if (both_equal && !(a_first || b_first)) {
+        if (both_equal) {
             texts.push(a[a_i])
             sync7_push_eq(to_a, 1)
             sync7_push_eq(to_b, 1)
@@ -138,11 +145,7 @@ function my_custom_merge_func(a, b, diffs_to_ancestors) {
             })
         }
     }
-    
-    console.log('texts: ', JSON.stringify(texts))
-    console.log('to_a: ', JSON.stringify(to_a))
-    console.log('to_b: ', JSON.stringify(to_b))
-    
+
     return {
         text : texts.join(''),
         to_a : to_a,
@@ -270,8 +273,8 @@ function sync7_diff_merge_trans(a, b, a_factor, b_factor) {
     return ret
 }
 
-function create_sync7_repo(custom_merge_func) {
-    var self = {
+function create_sync7_repo() {
+    return {
         commits : {
             'root' : { to_parents : {} }
         },
@@ -279,196 +282,197 @@ function create_sync7_repo(custom_merge_func) {
         leaf : 'root',
         text : ''
     }
-
-    self.commit = function (s) {
-        if (s == self.text) { return }
-        var cs = {}
-        
-        each(self.temp_commits, function (_, k) {
-            cs[k] = self.commits[k]
-        })
-        self.temp_commits = {}
-
-        var id = guid()
-        var to_parents = {}
-        to_parents[self.leaf] = sync7_diff(s, self.text)
-        self.commits[id] = cs[id] = { to_parents : to_parents }
-        self.leaf = id
-        
-        self.text = s
-        return cs
-    }
-
-    self.merge = function (cs) {
-        each(cs, function (c, id) {
-            self.commits[id] = c
-        })
-        var leaves = get_leaves(self.commits, self.temp_commits)
-        var leaves = Object.keys(leaves).sort()
-
-        var texts = {}
-        each(leaves, function (leaf) {
-            texts[leaf] = get_text(leaf)
-        })
-
-        each(self.temp_commits, function (_, k) {
-            delete self.commits[k]
-        })
-        self.temp_commits = {}
-
-        var prev_merge_node = leaves[0]
-        var prev_merge_node_text = texts[prev_merge_node]
-        var ancestors = get_ancestors(prev_merge_node)
-        for (var i = 1; i < leaves.length; i++) {
-            var i_ancestors = get_ancestors(leaves[i])
-            var LCAs = get_leaves(intersection(ancestors, i_ancestors))
-            each(i_ancestors, function (v, k) {
-                ancestors[k] = v
-            })
-            
-            var m = custom_merge_func(prev_merge_node_text, texts[leaves[i]], calc_diffs_to_ancestors(prev_merge_node, leaves[i], LCAs))
-            var id = guid()
-            self.temp_commits[id] = true
-            self.commits[id] = { to_parents : {} }
-            self.commits[id].to_parents[prev_merge_node] = m.to_a
-            self.commits[id].to_parents[leaves[i]] = m.to_b
-            
-            prev_merge_node = id
-            prev_merge_node_text = m.text
-        }
-        self.leaf = prev_merge_node
-        self.text = prev_merge_node_text
-    }
-    
-    function calc_diffs_to_ancestors(a, b, LCAs) {
-        var diffs = []
-        each(LCAs, function (_, lca) {
-            diffs.push([
-                calc_diff_to_ancestor(a, lca),
-                calc_diff_to_ancestor(b, lca)
-            ])
-        })
-        return diffs
-    }
-    
-    function calc_diff_to_ancestor(x, ancestor) {
-        var diff = []
-        var prev = x
-        each(get_path_to_ancestor(x, ancestor), function (next) {
-            diff = sync7_diff_merge_trans(diff, self.commits[prev].to_parents[next])
-            prev = next
-        })
-        return diff
-    }
-    
-    function get_text(id) {
-        var ls = get_leaves(intersection(get_ancestors(self.leaf, true), get_ancestors(id, true)))
-        var lca = Object.keys(ls)[0]
-        var leaf_to_lca = get_path_to_ancestor(self.leaf, lca)
-        var lca_to_id = get_path_to_ancestor(id, lca).reverse()
-        if (lca_to_id.length > 0) {
-            lca_to_id.shift()
-            lca_to_id.push(id)
-        }
-        
-        var diff = []
-        var prev = self.leaf
-        each(leaf_to_lca, function (next) {
-            diff = sync7_diff_merge_trans(diff, self.commits[prev].to_parents[next])
-            prev = next
-        })
-        each(lca_to_id, function (next) {
-            diff = sync7_diff_merge_trans(diff, self.commits[next].to_parents[prev], 1, -1)
-            prev = next
-        })
-        
-        return sync7_diff_apply(self.text, diff)
-    }
-
-    
-    function get_leaves(commits, ignore) {
-        if (!ignore) ignore = {}
-        var leaves = {}
-        each(commits, function (_, id) {
-            if (ignore[id]) { return }
-            leaves[id] = true
-        })
-        each(commits, function (c, id) {
-            if (ignore[id]) { return }
-            each(c.to_parents, function (_, p) {
-                delete leaves[p]
-            })
-        })
-        return leaves
-    }
-    
-    function get_ancestors(id, include_self) {
-        var frontier = [id]
-        var ancestors = {}
-        if (include_self)
-            ancestors[id] = self.commits[id]
-        while (frontier.length > 0) {
-            var next = frontier.shift()
-            each(self.commits[next].to_parents, function (_, p) {
-                if (!ancestors[p]) {
-                    ancestors[p] = self.commits[p]
-                    frontier.push(p)
-                }
-            })
-        }
-        return ancestors
-    }
-    
-    function get_path_to_ancestor(a, b) {
-        if (a == b) { return [] }
-        var frontier = [a]
-        var backs = {}
-        while (frontier.length > 0) {
-            var next = frontier.shift()
-            if (next == b) {
-                var path = []
-                while (next && (next != a)) {
-                    path.unshift(next)
-                    next = backs[next]
-                }
-                return path
-            }
-            each(self.commits[next].to_parents, function (_, p) {
-                if (!backs[p]) {
-                    backs[p] = next
-                    frontier.push(p)
-                }
-            })
-        }
-        throw 'no path found from ' + a + ' to ' + b
-    }
-
-    function intersection(a, b) {
-        var common = {}
-        each(a, function (_, x) {
-            if (b[x]) {
-                common[x] = a[x]
-            }
-        })
-        return common
-    }
-
-    return self
 }
 
-var repoA = create_sync7_repo(my_custom_merge_func)
-var repoB = create_sync7_repo(my_custom_merge_func)
-var c_x = repoA.commit('x')
-repoB.merge(c_x)
-var c_xz = repoA.commit('xz')
-var c_y = repoB.commit('y')
-repoA.merge(c_y)
-var c_q = repoB.commit('q')
-repoB.merge(c_xz)
-var c_yzA = repoA.commit('yzA')
-var c_qzB = repoB.commit('qzB')
-repoA.merge(c_q)
-repoA.merge(c_qzB)
+function sync7_commit(self, s) {
+    if (s == self.text) { return }
+    var cs = {}
+    
+    each(self.temp_commits, function (_, k) {
+        cs[k] = self.commits[k]
+    })
+    self.temp_commits = {}
+
+    var id = guid()
+    var to_parents = {}
+    to_parents[self.leaf] = sync7_diff(s, self.text)
+    self.commits[id] = cs[id] = { to_parents : to_parents }
+    self.leaf = id
+    
+    self.text = s
+    return cs
+}
+
+function sync7_merge(self, cs, custom_merge_func) {
+    each(cs, function (c, id) {
+        self.commits[id] = c
+    })
+    var leaves = sync7_get_leaves(self.commits, self.temp_commits)
+    var leaves = Object.keys(leaves).sort()
+
+    var texts = {}
+    each(leaves, function (leaf) {
+        texts[leaf] = sync7_get_text(self, leaf)
+    })
+
+    each(self.temp_commits, function (_, k) {
+        delete self.commits[k]
+    })
+    self.temp_commits = {}
+
+    var prev_merge_node = leaves[0]
+    var prev_merge_node_text = texts[prev_merge_node]
+    var ancestors = sync7_get_ancestors(self, prev_merge_node)
+    for (var i = 1; i < leaves.length; i++) {
+        var i_ancestors = sync7_get_ancestors(self, leaves[i])
+        var LCAs = sync7_get_leaves(intersection(ancestors, i_ancestors))
+        each(i_ancestors, function (v, k) {
+            ancestors[k] = v
+        })
+        
+        var m = custom_merge_func(prev_merge_node_text, texts[leaves[i]], sync7_calc_diffs_to_ancestors(self, prev_merge_node, leaves[i], LCAs))
+        var id = guid()
+        self.temp_commits[id] = true
+        self.commits[id] = { to_parents : {} }
+        self.commits[id].to_parents[prev_merge_node] = m.to_a
+        self.commits[id].to_parents[leaves[i]] = m.to_b
+        
+        prev_merge_node = id
+        prev_merge_node_text = m.text
+    }
+    self.leaf = prev_merge_node
+    self.text = prev_merge_node_text
+}
+    
+function sync7_calc_diffs_to_ancestors(self, a, b, LCAs) {
+    var diffs = []
+    each(LCAs, function (_, lca) {
+        diffs.push([
+            sync7_calc_diff_to_ancestor(self, a, lca),
+            sync7_calc_diff_to_ancestor(self, b, lca)
+        ])
+    })
+    return diffs
+}
+
+function sync7_calc_diff_to_ancestor(self, x, ancestor) {
+    var diff = []
+    var prev = x
+    each(sync7_get_path_to_ancestor(self, x, ancestor), function (next) {
+        diff = sync7_diff_merge_trans(diff, self.commits[prev].to_parents[next])
+        prev = next
+    })
+    return diff
+}
+    
+function sync7_get_text(self, id) {
+    var ls = sync7_get_leaves(sync7_intersection(sync7_get_ancestors(self, self.leaf, true), sync7_get_ancestors(self, id, true)))
+    var lca = Object.keys(ls)[0]
+    var leaf_to_lca = sync7_get_path_to_ancestor(self, self.leaf, lca)
+    var lca_to_id = sync7_get_path_to_ancestor(self, id, lca).reverse()
+    if (lca_to_id.length > 0) {
+        lca_to_id.shift()
+        lca_to_id.push(id)
+    }
+    
+    var diff = []
+    var prev = self.leaf
+    each(leaf_to_lca, function (next) {
+        diff = sync7_diff_merge_trans(diff, self.commits[prev].to_parents[next])
+        prev = next
+    })
+    each(lca_to_id, function (next) {
+        diff = sync7_diff_merge_trans(diff, self.commits[next].to_parents[prev], 1, -1)
+        prev = next
+    })
+    
+    return sync7_diff_apply(self.text, diff)
+}
+
+    
+function sync7_get_leaves(commits, ignore) {
+    if (!ignore) ignore = {}
+    var leaves = {}
+    each(commits, function (_, id) {
+        if (ignore[id]) { return }
+        leaves[id] = true
+    })
+    each(commits, function (c, id) {
+        if (ignore[id]) { return }
+        each(c.to_parents, function (_, p) {
+            delete leaves[p]
+        })
+    })
+    return leaves
+}
+    
+function sync7_get_ancestors(self, id, include_self) {
+    var frontier = [id]
+    var ancestors = {}
+    if (include_self)
+        ancestors[id] = self.commits[id]
+    while (frontier.length > 0) {
+        var next = frontier.shift()
+        each(self.commits[next].to_parents, function (_, p) {
+            if (!ancestors[p]) {
+                ancestors[p] = self.commits[p]
+                frontier.push(p)
+            }
+        })
+    }
+    return ancestors
+}
+    
+function sync7_get_path_to_ancestor(self, a, b) {
+    if (a == b) { return [] }
+    var frontier = [a]
+    var backs = {}
+    while (frontier.length > 0) {
+        var next = frontier.shift()
+        if (next == b) {
+            var path = []
+            while (next && (next != a)) {
+                path.unshift(next)
+                next = backs[next]
+            }
+            return path
+        }
+        each(self.commits[next].to_parents, function (_, p) {
+            if (!backs[p]) {
+                backs[p] = next
+                frontier.push(p)
+            }
+        })
+    }
+    throw 'no path found from ' + a + ' to ' + b
+}
+
+function sync7_intersection(a, b) {
+    var common = {}
+    each(a, function (_, x) {
+        if (b[x]) {
+            common[x] = a[x]
+        }
+    })
+    return common
+}
+
+
+
+
+var repoA = create_sync7_repo()
+var repoB = create_sync7_repo()
+var c_x = sync7_commit(repoA, 'x')
+sync7_merge(repoB, c_x, my_custom_merge_func)
+var c_xz = sync7_commit(repoA, 'xz')
+var c_y = sync7_commit(repoB, 'y')
+sync7_merge(repoA, c_y, my_custom_merge_func)
+var c_q = sync7_commit(repoB, 'q')
+sync7_merge(repoB, c_xz, my_custom_merge_func)
+var c_yzA = sync7_commit(repoA, 'yzA')
+var c_qzB = sync7_commit(repoB, 'qzB')
+sync7_merge(repoA, c_q, my_custom_merge_func)
+sync7_merge(repoA, c_qzB, my_custom_merge_func)
 console.log(JSON.stringify(repoA, null, '    '))
 //console.log(JSON.stringify(repoB, null, '    '))
 //console.log(JSON.stringify(repoB, null, '    '))
