@@ -273,134 +273,139 @@ function sync7_create_visualization(s7) {
 
 function get_example_sync7() {
     return {
-        "commits": {
-            "root": {
-                "to_parents": {}
-            },
-            "4eMjrYIsYjxgv54": {
-                "to_parents": {
-                    "root": [
-                        [
-                            "x",
-                            ""
-                        ]
+    "commits": {
+        "root": {
+            "to_parents": {}
+        },
+        "4eMjrYIsYjxgv54": {
+            "to_parents": {
+                "root": [
+                    [
+                        "x",
+                        ""
                     ]
-                }
-            },
-            "qg0uwGRNkno4FhF": {
-                "to_parents": {
-                    "4eMjrYIsYjxgv54": [
-                        1,
-                        [
-                            "z",
-                            ""
-                        ]
-                    ]
-                }
-            },
-            "UHdlsVVg1KBfWQe": {
-                "to_parents": {
-                    "4eMjrYIsYjxgv54": [
-                        [
-                            "y",
-                            "x"
-                        ]
-                    ]
-                }
-            },
-            "ayNUW8rwnKmFbt6": {
-                "to_parents": {
-                    "UHdlsVVg1KBfWQe": [
-                        1,
-                        [
-                            "z",
-                            ""
-                        ]
-                    ],
-                    "qg0uwGRNkno4FhF": [
-                        [
-                            "y",
-                            "x"
-                        ],
-                        1
-                    ]
-                }
-            },
-            "IppZUNblJiqvqCD": {
-                "to_parents": {
-                    "ayNUW8rwnKmFbt6": [
-                        2,
-                        [
-                            "A",
-                            ""
-                        ]
-                    ]
-                }
-            },
-            "ctuCnWtlmhPrLXj": {
-                "to_parents": {
-                    "UHdlsVVg1KBfWQe": [
-                        [
-                            "q",
-                            "y"
-                        ]
-                    ]
-                }
-            },
-            "bz8h5sxljEhmVsq": {
-                "to_parents": {
-                    "ctuCnWtlmhPrLXj": [
-                        1,
-                        [
-                            "z",
-                            ""
-                        ]
-                    ],
-                    "qg0uwGRNkno4FhF": [
-                        [
-                            "q",
-                            "x"
-                        ],
-                        1
-                    ]
-                }
-            },
-            "Ewgpp0F5rHMwGHJ": {
-                "to_parents": {
-                    "bz8h5sxljEhmVsq": [
-                        2,
-                        [
-                            "B",
-                            ""
-                        ]
-                    ]
-                }
-            },
-            "rQEtFQP8xj2s5JN": {
-                "to_parents": {
-                    "Ewgpp0F5rHMwGHJ": [
-                        3,
-                        [
-                            "A",
-                            ""
-                        ]
-                    ],
-                    "IppZUNblJiqvqCD": [
-                        [
-                            "qzB",
-                            "yz"
-                        ],
-                        1
-                    ]
-                }
+                ]
             }
         },
-        "temp_commits": {
-            "rQEtFQP8xj2s5JN": true
+        "qg0uwGRNkno4FhF": {
+            "to_parents": {
+                "4eMjrYIsYjxgv54": [
+                    1,
+                    [
+                        "z",
+                        ""
+                    ]
+                ]
+            }
         },
-        "leaf": "rQEtFQP8xj2s5JN",
-        "text": "qzBA"
-    }
+        "UHdlsVVg1KBfWQe": {
+            "to_parents": {
+                "4eMjrYIsYjxgv54": [
+                    [
+                        "y",
+                        "x"
+                    ]
+                ]
+            }
+        },
+        "ayNUW8rwnKmFbt6": {
+            "to_parents": {
+                "UHdlsVVg1KBfWQe": [
+                    1,
+                    [
+                        "z",
+                        ""
+                    ]
+                ],
+                "qg0uwGRNkno4FhF": [
+                    [
+                        "y",
+                        "x"
+                    ],
+                    1
+                ]
+            }
+        },
+        "IppZUNblJiqvqCD": {
+            "to_parents": {
+                "ayNUW8rwnKmFbt6": [
+                    2,
+                    [
+                        "A",
+                        ""
+                    ]
+                ]
+            }
+        },
+        "ctuCnWtlmhPrLXj": {
+            "to_parents": {
+                "UHdlsVVg1KBfWQe": [
+                    [
+                        "q",
+                        "y"
+                    ]
+                ]
+            }
+        },
+        "bz8h5sxljEhmVsq": {
+            "to_parents": {
+                "ctuCnWtlmhPrLXj": [
+                    1,
+                    [
+                        "z",
+                        ""
+                    ]
+                ],
+                "qg0uwGRNkno4FhF": [
+                    [
+                        "q",
+                        "x"
+                    ],
+                    1
+                ]
+            }
+        },
+        "Ewgpp0F5rHMwGHJ": {
+            "to_parents": {
+                "bz8h5sxljEhmVsq": [
+                    2,
+                    [
+                        "B",
+                        ""
+                    ]
+                ]
+            }
+        },
+        "rQEtFQP8xj2s5JN": {
+            "to_parents": {
+                "Ewgpp0F5rHMwGHJ": [
+                    3,
+                    [
+                        "A",
+                        ""
+                    ]
+                ],
+                "IppZUNblJiqvqCD": [
+                    [
+                        "q",
+                        "y"
+                    ],
+                    1,
+                    [
+                        "B",
+                        ""
+                    ],
+                    1
+                ]
+            }
+        }
+    },
+    "temp_commits": {
+        "rQEtFQP8xj2s5JN": true
+    },
+    "leaf": "rQEtFQP8xj2s5JN",
+    "text": "qzBA"
+}
 }
 
 ////////////////////
@@ -444,7 +449,8 @@ function my_custom_merge_func(a, b, diffs_to_ancestors) {
             }
             
             if ((ad && typeof(ad) == 'number') &&
-                (bd && typeof(bd) == 'number'))
+                (bd && typeof(bd) == 'number') &&
+                (anc.extra.adao == anc.extra.bdao))
                 both_equal = true
             if ((ad && typeof(ad) == 'number') &&
                 (!bd || typeof(bd) != 'number' || anc.extra.adao != anc.extra.bdao))
@@ -475,7 +481,7 @@ function my_custom_merge_func(a, b, diffs_to_ancestors) {
         var inc_a = false
         var inc_b = false
         
-        if (both_equal && !(a_first || b_first)) {
+        if (both_equal) {
             texts.push(a[a_i])
             sync7_push_eq(to_a, 1)
             sync7_push_eq(to_b, 1)
