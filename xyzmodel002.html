@@ -3,18 +3,20 @@
 <script src="https://dglittle.github.io/cdn/utils004.js"></script>
 <script>
 
+var SIZE = 360
+
 var c = document.createElement('canvas')
-c.width = 128
-c.height = 64
-c.style.width = 128 * 4
-c.style.height = 64 * 4
+c.width = SIZE
+c.height = SIZE
+c.style.width = SIZE
+c.style.height = SIZE
 c.style.imageRendering = 'pixelated'
 document.body.append(c)
 var g = c.getContext('2d')
-var img = g.createImageData(64, 64)
+var img = g.createImageData(SIZE, SIZE)
 
 function show_frames(array, offset) {
-    for (var i = 0; i < 64 * 64; i++) {
+    for (var i = 0; i < SIZE * SIZE; i++) {
         img.data[i*4+0] = array[offset + i*3 + 0]
         img.data[i*4+1] = array[offset + i*3 + 1]
         img.data[i*4+2] = array[offset + i*3 + 2]
@@ -22,14 +24,14 @@ function show_frames(array, offset) {
     }
     g.putImageData(img, 0, 0)
     
-    offset += (64 * 64 * 3)
-    for (var i = 0; i < 64 * 64; i++) {
-        img.data[i*4+0] = array[offset + i*3 + 0]
-        img.data[i*4+1] = array[offset + i*3 + 1]
-        img.data[i*4+2] = array[offset + i*3 + 2]
-        img.data[i*4+3] = 255
-    }
-    g.putImageData(img, 64, 0)
+    // offset += (SIZE * SIZE * 3)
+    // for (var i = 0; i < SIZE * SIZE; i++) {
+    //     img.data[i*4+0] = array[offset + i*3 + 0]
+    //     img.data[i*4+1] = array[offset + i*3 + 1]
+    //     img.data[i*4+2] = array[offset + i*3 + 2]
+    //     img.data[i*4+3] = 255
+    // }
+    // g.putImageData(img, SIZE, 0)
 }
 
 document.body.addEventListener('dragover', function (e) {
@@ -41,15 +43,15 @@ document.body.addEventListener('drop', function (e) {
     var reader = new FileReader()
     reader.onload = function(e) {
         var a = new Uint8Array(reader.result)
-        var frames = a.length / (64 * 64 * 3 * 2)
+        var frames = a.length / (SIZE * SIZE * 3)
         
         var f = 0
         function loop() {
             console.log('BLOOP! f=' + f)
             if (f < frames) {
-                show_frames(a, f * (64 * 64 * 3 * 2))
+                show_frames(a, f * (SIZE * SIZE * 3))
                 f++
-                setTimeout(loop, 30)
+                setTimeout(loop, 15)
             }
         }
         loop()
