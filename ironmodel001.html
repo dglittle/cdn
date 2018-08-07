@@ -1,0 +1,187 @@
+
+<body style="margin:0px">
+<script src="https://dglittle.github.io/cdn/utils001.js"></script>
+<script>
+
+var SIZE = 64
+var CELL_SIZE = 8
+
+var c = document.createElement('canvas')
+c.width = SIZE * CELL_SIZE
+c.height = SIZE * CELL_SIZE
+var g = c.getContext('2d')
+
+var spins = []
+for (var y = 0; y < SIZE; y++) {
+    for (var x = 0; x < SIZE; x++) {
+        spins.push(Math.random() > 0.5 ? 1 : -1)
+        spins.push(Math.random() > 0.5 ? 1 : -1)
+        spins.push(Math.random() > 0.5 ? 1 : -1)
+        spins.push(Math.random() > 0.5 ? 1 : -1)
+        
+        // spins.push(1)
+        // spins.push(-1)
+        // spins.push(-1)
+        // spins.push(1)
+    }
+}
+
+spins[1 * SIZE * 4 + 1 * 4 + 0] = -1
+spins[1 * SIZE * 4 + 1 * 4 + 1] = -1
+spins[1 * SIZE * 4 + 1 * 4 + 2] = -1
+spins[1 * SIZE * 4 + 1 * 4 + 3] = -1
+
+var R1 = 0.5
+
+function update_it() {
+    var new_spins = []
+    
+    for (var y = 0; y < SIZE; y++) {
+        for (var x = 0; x < SIZE; x++) {
+
+            if (Math.random() < R1) {
+                new_spins.push(spins[y * SIZE * 4 + x * 4 + 0])
+            } else if (Math.random () < 0.333) {
+                new_spins.push(spins[y * SIZE * 4 + x * 4 + 0] * (spins[y * SIZE * 4 + x * 4 + 0] * spins[fmod(y - 1, SIZE) * SIZE * 4 + x * 4 + 2] > 0 ? -1 : 1))
+            } else if (Math.random () < 0.5) {
+                new_spins.push(spins[y * SIZE * 4 + x * 4 + 0] * (spins[y * SIZE * 4 + x * 4 + 0] * spins[y * SIZE * 4 + x * 4 + 1] > 0 ? -1 : 1))
+            } else {
+                new_spins.push(spins[y * SIZE * 4 + x * 4 + 0] * (spins[y * SIZE * 4 + x * 4 + 0] * spins[y * SIZE * 4 + x * 4 + 3] > 0 ? -1 : 1))
+            }
+            
+            if (Math.random() < R1) {
+                new_spins.push(spins[y * SIZE * 4 + x * 4 + 1])
+            } else if (Math.random () < 0.333) {
+                new_spins.push(spins[y * SIZE * 4 + x * 4 + 1] * (spins[y * SIZE * 4 + x * 4 + 1] * spins[y * SIZE * 4 + fmod(x + 1, SIZE) * 4 + 3] > 0 ? -1 : 1))
+            } else if (Math.random () < 0.5) {
+                new_spins.push(spins[y * SIZE * 4 + x * 4 + 1] * (spins[y * SIZE * 4 + x * 4 + 1] * spins[y * SIZE * 4 + x * 4 + 0] > 0 ? -1 : 1))
+            } else {
+                new_spins.push(spins[y * SIZE * 4 + x * 4 + 1] * (spins[y * SIZE * 4 + x * 4 + 1] * spins[y * SIZE * 4 + x * 4 + 2] > 0 ? -1 : 1))
+            }
+            
+            if (Math.random() < R1) {
+                new_spins.push(spins[y * SIZE * 4 + x * 4 + 2])
+            } else if (Math.random () < 0.333) {
+                new_spins.push(spins[y * SIZE * 4 + x * 4 + 2] * (spins[y * SIZE * 4 + x * 4 + 2] * spins[fmod(y + 1, SIZE) * SIZE * 4 + x * 4 + 0] > 0 ? -1 : 1))
+            } else if (Math.random () < 0.5) {
+                new_spins.push(spins[y * SIZE * 4 + x * 4 + 2] * (spins[y * SIZE * 4 + x * 4 + 2] * spins[y * SIZE * 4 + x * 4 + 1] > 0 ? -1 : 1))
+            } else {
+                new_spins.push(spins[y * SIZE * 4 + x * 4 + 2] * (spins[y * SIZE * 4 + x * 4 + 2] * spins[y * SIZE * 4 + x * 4 + 3] > 0 ? -1 : 1))
+            }
+
+            if (Math.random() < R1) {
+                new_spins.push(spins[y * SIZE * 4 + x * 4 + 3])
+            } else if (Math.random () < 0.333) {
+                new_spins.push(spins[y * SIZE * 4 + x * 4 + 3] * (spins[y * SIZE * 4 + x * 4 + 3] * spins[y * SIZE * 4 + fmod(x - 1, SIZE) * 4 + 1] > 0 ? -1 : 1))
+            } else if (Math.random () < 0.5) {
+                new_spins.push(spins[y * SIZE * 4 + x * 4 + 3] * (spins[y * SIZE * 4 + x * 4 + 3] * spins[y * SIZE * 4 + x * 4 + 0] > 0 ? -1 : 1))
+            } else {
+                new_spins.push(spins[y * SIZE * 4 + x * 4 + 3] * (spins[y * SIZE * 4 + x * 4 + 3] * spins[y * SIZE * 4 + x * 4 + 2] > 0 ? -1 : 1))
+            }
+
+
+
+            // if (Math.random() < 0.3) {
+            //     new_spins.push(
+            //         (spins[fmod(y - 1, SIZE) * SIZE * 4 + x * 4 + 2] > 0 ? -1 : 1) +
+            //         (spins[y * SIZE * 4 + x * 4 + 1] > 0 ? -1 : 1) +
+            //         (spins[y * SIZE * 4 + x * 4 + 3] > 0 ? -1 : 1)
+            //     )
+            // } else {
+            //     new_spins.push(spins[y * SIZE * 4 + x * 4 + 0])
+            // }
+            
+            // if (Math.random() < 0.3) {
+            //     new_spins.push(
+            //         (spins[y * SIZE * 4 + fmod(x + 1, SIZE) * 4 + 3] > 0 ? -1 : 1) +
+            //         (spins[y * SIZE * 4 + x * 4 + 0] > 0 ? -1 : 1) +
+            //         (spins[y * SIZE * 4 + x * 4 + 2] > 0 ? -1 : 1)
+            //     )
+            // } else {
+            //     new_spins.push(spins[y * SIZE * 4 + x * 4 + 1])
+            // }
+            
+            // if (Math.random() < 0.3) {
+            //     new_spins.push(
+            //         (spins[fmod(y + 1, SIZE) * SIZE * 4 + x * 4 + 0] > 0 ? -1 : 1) +
+            //         (spins[y * SIZE * 4 + x * 4 + 1] > 0 ? -1 : 1) +
+            //         (spins[y * SIZE * 4 + x * 4 + 3] > 0 ? -1 : 1)
+            //     )
+            // } else {
+            //     new_spins.push(spins[y * SIZE * 4 + x * 4 + 2])
+            // }
+            
+            // if (Math.random() < 0.3) {
+            //     new_spins.push(
+            //         (spins[y * SIZE * 4 + fmod(x - 1, SIZE) * 4 + 1] > 0 ? -1 : 1) +
+            //         (spins[y * SIZE * 4 + x * 4 + 0] > 0 ? -1 : 1) +
+            //         (spins[y * SIZE * 4 + x * 4 + 2] > 0 ? -1 : 1)
+            //     )
+            // } else {
+            //     new_spins.push(spins[y * SIZE * 4 + x * 4 + 3])
+            // }
+        }
+    }
+    
+    spins = new_spins
+}
+
+function paint_it() {
+    g.fillStyle = 'black'
+    g.fillRect(0, 0, c.width, c.height)
+    g.beginPath()
+    for (var y = 0; y < SIZE; y++) {
+        for (var x = 0; x < SIZE; x++) {
+            if (spins[y * SIZE * 4 + x * 4 + 0] < 0) {
+                g.moveTo(x * CELL_SIZE, y * CELL_SIZE)
+                g.lineTo((x + 1) * CELL_SIZE, y * CELL_SIZE)
+                g.lineTo(x * CELL_SIZE + CELL_SIZE/2, y * CELL_SIZE + CELL_SIZE/2)
+                g.lineTo(x * CELL_SIZE, y * CELL_SIZE)
+            }
+            if (spins[y * SIZE * 4 + x * 4 + 1] < 0) {
+                g.moveTo((x + 1) * CELL_SIZE, y * CELL_SIZE)
+                g.lineTo((x + 1) * CELL_SIZE, (y + 1) * CELL_SIZE)
+                g.lineTo(x * CELL_SIZE + CELL_SIZE/2, y * CELL_SIZE + CELL_SIZE/2)
+                g.lineTo((x + 1) * CELL_SIZE, y * CELL_SIZE)
+            }
+            if (spins[y * SIZE * 4 + x * 4 + 2] < 0) {
+                g.moveTo((x + 1) * CELL_SIZE, (y + 1) * CELL_SIZE)
+                g.lineTo(x * CELL_SIZE, (y + 1) * CELL_SIZE)
+                g.lineTo(x * CELL_SIZE + CELL_SIZE/2, y * CELL_SIZE + CELL_SIZE/2)
+                g.lineTo((x + 1) * CELL_SIZE, (y + 1) * CELL_SIZE)
+            }
+            if (spins[y * SIZE * 4 + x * 4 + 3] < 0) {
+                g.moveTo(x * CELL_SIZE, (y + 1) * CELL_SIZE)
+                g.lineTo(x * CELL_SIZE, y * CELL_SIZE)
+                g.lineTo(x * CELL_SIZE + CELL_SIZE/2, y * CELL_SIZE + CELL_SIZE/2)
+                g.lineTo(x * CELL_SIZE, (y + 1) * CELL_SIZE)
+            }
+        }
+    }
+    // g.fillStyle = 'rgb(200, 200, 200, 1)'
+    g.fillStyle = 'green'
+    g.fill()
+}
+
+var iter = 0
+function loop() {
+    paint_it()
+    update_it()
+//    console.log('iter = ' + iter)
+    // if (iter < 1000) {
+    //     iter++
+        setTimeout(loop, 30)
+    // }
+}
+loop()
+
+document.body.append(c)
+
+function fmod(a, b) {
+    var m = a % b
+    if (m < 0) return m + b
+    return m
+}
+
+</script>
+</body>
