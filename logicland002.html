@@ -1,0 +1,179 @@
+<body style="margin:0px"></body>
+<script>
+
+var model = {
+    view : {
+        scale : 16
+    },
+    brush : 'wire',
+    things : {}
+}
+
+function draw_palette() {
+    var d = document.createElement('div')
+    d.style.width = '100%'
+    d.style.height = '90px'
+    
+    d.textContent = 'hi there!'
+    
+    var b = document.createElement('button')
+    b.style.width = '90px'
+    b.style.height = '90px'
+    b.textContent = '+'
+    b.onclick = function () {
+        model.view.scale *= 2
+        render()
+    }
+    d.append(b)
+    
+    var b = document.createElement('button')
+    b.style.width = '90px'
+    b.style.height = '90px'
+    b.textContent = '-'
+    b.onclick = function () {
+        model.view.scale /= 2
+        render()
+    }
+    d.append(b)
+    
+    // radio buttons
+    var radio_buttons = []
+
+    var b = document.createElement('button')
+    b.style.width = '90px'
+    b.style.height = '90px'
+    b.textContent = 'WIRE'
+    b.onclick = function () {
+        model.brush = 'wire'
+        each(radio_buttons, function (x) { x.style.background = 'grey' })
+        this.style.background = 'gold'
+    }
+    radio_buttons.push(b)
+    d.append(b)
+    b.onclick()
+
+    var b = document.createElement('button')
+    b.style.width = '90px'
+    b.style.height = '90px'
+    b.textContent = 'AND'
+    b.onclick = function () {
+        model.brush = 'and_gate'
+        each(radio_buttons, function (x) { x.style.background = 'grey' })
+        this.style.background = 'gold'
+    }
+    radio_buttons.push(b)
+    d.append(b)
+    b.onclick()
+
+    return d
+}
+document.body.append(draw_palette())
+
+var c = document.createElement('canvas')
+c.width = window.innerWidth
+c.height = window.innerHeight - 90
+var g = c.getContext('2d')
+document.body.append(c)
+
+function render() {
+    g.fillStyle = 'rgba(0, 255, 0, 1)'
+    g.fillRect(0, 0, c.width, c.height)
+
+    var x_tiles = c.width / model.view.scale + 1
+    var y_tiles = c.height / model.view.scale + 1
+
+    for (var y = 0; y < y_tiles; y++) {
+        for (var x = 0; x < x_tiles; x++) {
+            if (model.things[x + ',' + y] == 'wire') {
+                g.fillStyle = 'gold'
+                g.fillRect(x * model.view.scale, y * model.view.scale, model.view.scale, model.view.scale)
+            } else if (model.things[x + ',' + y] == 'and_gate') {
+                g.fillStyle = 'blue'
+                g.fillRect(x * model.view.scale, y * model.view.scale, model.view.scale, model.view.scale)
+            }
+        }
+    }
+    
+    g.beginPath()
+    for (var y = 0; y < y_tiles; y++) {
+        g.moveTo(0, y * model.view.scale + 0.5)
+        g.lineTo(c.width, y * model.view.scale + 0.5)
+    }
+    for (var x = 0; x < x_tiles; x++) {
+        g.moveTo(x * model.view.scale + 0.5, 0)
+        g.lineTo(x * model.view.scale + 0.5, c.height)
+    }
+    g.strokeStyle = 'black'
+    g.stroke()
+}
+render()
+
+c.onmousedown = function (e) {
+    e.preventDefault()
+    var old_pos = getRelPos(c, e)
+    var moved = false
+
+    var oldMove = document.onmousemove
+    document.onmousemove = function (e) {
+        var new_pos = getRelPos(c, e)
+        moved = true
+        
+        old_pos = new_pos
+    }
+    
+    var oldUp = document.onmouseup
+    document.onmouseup = function (e) {
+        document.onmousemove = oldMove
+        document.onmouseup = oldUp
+
+        if (!moved) {
+            var new_pos = getRelPos(c, e)
+
+            var x = Math.floor(new_pos.x / model.view.scale)
+            var y = Math.floor(new_pos.y / model.view.scale)
+
+            console.log('got here!! : ', x, y)
+
+            model.things[x + ',' + y] = model.brush
+            render()
+        }
+    }
+}
+
+function getPos(e) {
+    var x = 0, y = 0
+    while (e != null) {
+        x += e.offsetLeft
+        y += e.offsetTop
+        e = e.offsetParent
+    }
+    return {x : x, y : y}
+}
+
+function getRelPos(to, positionedObject) {
+    var pos = getPos(to)
+    return {
+        x : positionedObject.pageX - pos.x,
+        y : positionedObject.pageY - pos.y
+    }
+}
+
+
+function each(o, cb) {
+	if (o instanceof Array) {
+		for (var i = 0; i < o.length; i++) {
+			if (cb(o[i], i, o) == false)
+				return false
+		}
+	} else {
+		for (var k in o) {
+			if (o.hasOwnProperty(k)) {
+				if (cb(o[k], k, o) == false)
+					return false
+			}
+		}
+	}
+	return true
+}
+
+</script>
