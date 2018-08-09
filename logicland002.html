@@ -1,24 +1,51 @@
+<script src="https://www.gstatic.com/firebasejs/3.9.0/firebase.js"></script>
 <body style="margin:0px"></body>
 <script>
+
+var PALETTE_HEIGHT = 50
+
+var config = {
+    apiKey: "AIzaSyDVM0ekHwUqC_rGsqkT7fJ71FyRum9cxko",
+    authDomain: "glittle.firebaseapp.com",
+    databaseURL: "https://glittle.firebaseio.com",
+    projectId: "glittle",
+    storageBucket: "",
+    messagingSenderId: "1000468536093"
+}
+var db = firebase.initializeApp(config).database().ref()
+
+db.child('/aa/test_node/logicland002').once('value', function (x) {
+    x = x.val()
+    console.log('got heeree!! x=', x)
+    each(x, function (v, k) {
+        model[k] = v
+    })
+    render()
+}, function (x) {
+    console.log('bad news! blah_hkjcuqpbnv...')
+    console.log(x)
+})
 
 var model = {
     view : {
         scale : 16
     },
     brush : 'wire',
-    things : {} // { x: , y: , type: , charge: , version: }
+    version : 0,
+    wires : {}, // { x: , y: , charge: , version: }
+    gates : {}  // { x: , y: , type: }
 }
 
 function draw_palette() {
     var d = document.createElement('div')
     d.style.width = '100%'
-    d.style.height = '90px'
+    d.style.height = PALETTE_HEIGHT + 'px'
     
     d.textContent = 'hi there!'
     
     var b = document.createElement('button')
-    b.style.width = '90px'
-    b.style.height = '90px'
+    b.style.width = PALETTE_HEIGHT + 'px'
+    b.style.height = PALETTE_HEIGHT + 'px'
     b.textContent = '+'
     b.onclick = function () {
         model.view.scale *= 2
@@ -27,8 +54,8 @@ function draw_palette() {
     d.append(b)
     
     var b = document.createElement('button')
-    b.style.width = '90px'
-    b.style.height = '90px'
+    b.style.width = PALETTE_HEIGHT + 'px'
+    b.style.height = PALETTE_HEIGHT + 'px'
     b.textContent = '-'
     b.onclick = function () {
         model.view.scale /= 2
@@ -40,8 +67,8 @@ function draw_palette() {
     var radio_buttons = []
 
     var b = document.createElement('button')
-    b.style.width = '90px'
-    b.style.height = '90px'
+    b.style.width = PALETTE_HEIGHT + 'px'
+    b.style.height = PALETTE_HEIGHT + 'px'
     b.textContent = 'WIRE'
     b.onclick = function () {
         model.brush = 'wire'
@@ -53,8 +80,21 @@ function draw_palette() {
     b.onclick()
 
     var b = document.createElement('button')
-    b.style.width = '90px'
-    b.style.height = '90px'
+    b.style.width = PALETTE_HEIGHT + 'px'
+    b.style.height = PALETTE_HEIGHT + 'px'
+    b.textContent = 'OR'
+    b.onclick = function () {
+        model.brush = 'or_gate'
+        each(radio_buttons, function (x) { x.style.background = 'grey' })
+        this.style.background = 'gold'
+    }
+    radio_buttons.push(b)
+    d.append(b)
+    b.onclick()
+
+    var b = document.createElement('button')
+    b.style.width = PALETTE_HEIGHT + 'px'
+    b.style.height = PALETTE_HEIGHT + 'px'
     b.textContent = 'AND'
     b.onclick = function () {
         model.brush = 'and_gate'
@@ -66,11 +106,24 @@ function draw_palette() {
     b.onclick()
 
     var b = document.createElement('button')
-    b.style.width = '90px'
-    b.style.height = '90px'
+    b.style.width = PALETTE_HEIGHT + 'px'
+    b.style.height = PALETTE_HEIGHT + 'px'
     b.textContent = 'NAND'
     b.onclick = function () {
         model.brush = 'nand_gate'
+        each(radio_buttons, function (x) { x.style.background = 'grey' })
+        this.style.background = 'gold'
+    }
+    radio_buttons.push(b)
+    d.append(b)
+    b.onclick()
+
+    var b = document.createElement('button')
+    b.style.width = PALETTE_HEIGHT + 'px'
+    b.style.height = PALETTE_HEIGHT + 'px'
+    b.textContent = 'delete'
+    b.onclick = function () {
+        model.brush = 'delete'
         each(radio_buttons, function (x) { x.style.background = 'grey' })
         this.style.background = 'gold'
     }
@@ -84,91 +137,73 @@ document.body.append(draw_palette())
 
 var c = document.createElement('canvas')
 c.width = window.innerWidth
-c.height = window.innerHeight - 90
+c.height = window.innerHeight - 50
 var g = c.getContext('2d')
 document.body.append(c)
 
 function propagate() {
-    each(model.things, function (t, key) {
-        if (t.type == 'wire') {
-            each([
-                model.things[t.x       + ',' + (t.y - 1)],
-                model.things[(t.x + 1) + ',' + t.y      ],
-                model.things[t.x       + ',' + (t.y + 1)],
-                model.things[(t.x - 1) + ',' + t.y]
-            ], function (tt) {
-                if (tt && tt.type == 'wire' && tt.version > t.version && !tt.too_soon) {
-                    t.charge = tt.charge
-                    t.version = tt.version
-                    t.too_soon = true
+    model.version++
+    var changes = {}
+    
+    each(model.wires, function (_, _key) {
+        each([
+            model.wires[_.x       + ',' + (_.y - 1)],
+            model.wires[(_.x + 1) + ',' + _.y      ],
+            model.wires[_.x       + ',' + (_.y + 1)],
+            model.wires[(_.x - 1) + ',' + _.y      ]
+        ], function (__) {
+            if (__ && __.version > _.version) {
+                changes[_key] = {
+                    charge : __.charge,
+                    version : __.version
                 }
-            })
-        } else if (t.type == 'and_gate') {
-            var best_charge = 1
-            var best_version = 0
-            each([
-                model.things[(t.x + 0) + ',' + (t.y - 1)],
-                model.things[(t.x + 2) + ',' + (t.y - 1)],
-                model.things[(t.x + 3) + ',' + (t.y + 0)],
-                model.things[(t.x + 3) + ',' + (t.y + 2)],
-                model.things[(t.x + 0) + ',' + (t.y + 3)],
-                model.things[(t.x + 2) + ',' + (t.y + 3)],
-                model.things[(t.x - 1) + ',' + (t.y + 0)],
-                model.things[(t.x - 1) + ',' + (t.y + 2)]
-            ], function (tt) {
-                if (tt && tt.type == 'wire' && tt.charge < 0)
-                    best_charge = -1
-                if (tt && tt.type == 'wire' && tt.version > best_version && !tt.too_soon)
-                    best_version = tt.version
-            })
-            best_version++
-            each([
-                model.things[(t.x + 1) + ',' + (t.y - 1)],
-                model.things[(t.x + 3) + ',' + (t.y + 1)],
-                model.things[(t.x + 1) + ',' + (t.y + 3)],
-                model.things[(t.x - 1) + ',' + (t.y + 1)]
-            ], function (tt) {
-                if (tt && tt.type == 'wire' && tt.version < best_version) {
-                    tt.charge = best_charge
-                    tt.version = best_version
-                    tt.too_soon = true
-                }
-            })
-        } else if (t.type == 'nand_gate') {
-            var best_charge = 1
-            var best_version = 0
-            each([
-                model.things[(t.x + 0) + ',' + (t.y - 1)],
-                model.things[(t.x + 2) + ',' + (t.y - 1)],
-                model.things[(t.x + 3) + ',' + (t.y + 0)],
-                model.things[(t.x + 3) + ',' + (t.y + 2)],
-                model.things[(t.x + 0) + ',' + (t.y + 3)],
-                model.things[(t.x + 2) + ',' + (t.y + 3)],
-                model.things[(t.x - 1) + ',' + (t.y + 0)],
-                model.things[(t.x - 1) + ',' + (t.y + 2)]
-            ], function (tt) {
-                if (tt && tt.type == 'wire' && tt.charge > 0)
-                    best_charge = -1
-                if (tt && tt.type == 'wire' && tt.version > best_version && !tt.too_soon)
-                    best_version = tt.version
-            })
-            best_version++
-            each([
-                model.things[(t.x + 1) + ',' + (t.y - 1)],
-                model.things[(t.x + 3) + ',' + (t.y + 1)],
-                model.things[(t.x + 1) + ',' + (t.y + 3)],
-                model.things[(t.x - 1) + ',' + (t.y + 1)]
-            ], function (tt) {
-                if (tt && tt.type == 'wire' && tt.version < best_version) {
-                    tt.charge = best_charge
-                    tt.version = best_version
-                    tt.too_soon = true
-                }
-            })
-        }
+            }
+        })
     })
-    each(model.things, function (t, key) {
-        delete t.too_soon
+    
+    each(model.gates, function (_) {
+        var high_count = 0
+        var low_count = 0
+        each([
+            model.wires[(_.x + 0) + ',' + (_.y - 1)],
+            model.wires[(_.x + 2) + ',' + (_.y - 1)],
+            model.wires[(_.x + 3) + ',' + (_.y + 0)],
+            model.wires[(_.x + 3) + ',' + (_.y + 2)],
+            model.wires[(_.x + 0) + ',' + (_.y + 3)],
+            model.wires[(_.x + 2) + ',' + (_.y + 3)],
+            model.wires[(_.x - 1) + ',' + (_.y + 0)],
+            model.wires[(_.x - 1) + ',' + (_.y + 2)]
+        ], function (__) {
+            if (__) {
+                if (__.charge > 0) high_count++
+                else low_count++
+            }
+        })
+        var output = -1
+        if (_.type == 'or_gate' && high_count > 0)
+            output = 1
+        if (_.type == 'and_gate' && low_count == 0)
+            output = 1
+        if (_.type == 'nand_gate' && high_count == 0)
+            output = 1
+        each([
+            model.wires[(_.x + 1) + ',' + (_.y - 1)],
+            model.wires[(_.x + 3) + ',' + (_.y + 1)],
+            model.wires[(_.x + 1) + ',' + (_.y + 3)],
+            model.wires[(_.x - 1) + ',' + (_.y + 1)]
+        ], function (__) {
+            if (__) {
+                changes[__.x + ',' + __.y] = {
+                    charge : output,
+                    version : model.version
+                }
+            }
+        })
+    })
+    
+    each(changes, function (_, key) {
+        model.wires[key].charge = _.charge
+        model.wires[key].version = _.version
     })
 }
 
@@ -191,17 +226,18 @@ function render() {
     g.strokeStyle = 'black'
     g.stroke()
 
-    each(model.things, function (t) {
-        if (t.type == 'wire') {
-            g.fillStyle = t.charge > 0 ? 'gold' : 'rgb(128, 128, 0)'
-            g.fillRect(t.x * model.view.scale, t.y * model.view.scale, model.view.scale, model.view.scale)
-        } else if (t.type == 'and_gate') {
-            g.fillStyle = 'blue'
-            g.fillRect(t.x * model.view.scale, t.y * model.view.scale, model.view.scale * 3, model.view.scale * 3)
-        } else if (t.type == 'nand_gate') {
-            g.fillStyle = 'magenta'
-            g.fillRect(t.x * model.view.scale, t.y * model.view.scale, model.view.scale * 3, model.view.scale * 3)
-        }
+    each(model.wires, function (_) {
+        g.fillStyle = _.charge > 0 ? 'gold' : 'rgb(128, 128, 0)'
+        g.fillRect(_.x * model.view.scale, _.y * model.view.scale, model.view.scale, model.view.scale)
+    })
+
+    each(model.gates, function (_) {
+        g.fillStyle =
+            (_.type == 'or_gate') ? 'orange' :
+            (_.type == 'and_gate') ? 'blue' :
+            (_.type == 'nand_gate') ? 'magenta' :
+            'red'
+        g.fillRect(_.x * model.view.scale, _.y * model.view.scale, model.view.scale * 3, model.view.scale * 3)
     })
 }
 
@@ -221,7 +257,7 @@ function loop() {
     // console.log('time: ' + (t_sum / t_count))
 
     
-    setTimeout(loop, 500)
+    setTimeout(loop, 300)
 }
 loop()
 
@@ -248,14 +284,28 @@ c.onmousedown = function (e) {
 
             var x = Math.floor(new_pos.x / model.view.scale)
             var y = Math.floor(new_pos.y / model.view.scale)
-
-            model.things[x + ',' + y] = {
-                x : x,
-                y : y,
-                type : model.brush,
-                charge : -1,
-                version : 0
+            var key = x + ',' + y
+            
+            if (model.brush == 'wire') {
+                model.wires[key] = {
+                    x : x,
+                    y : y,
+                    charge : -1,
+                    version : 0
+                }
+            } else if (model.brush == 'delete') {
+                delete model.wires[key]
+                delete model.gates[key]
+            } else {
+                model.gates[key] = {
+                    x : x,
+                    y : y,
+                    type : model.brush
+                }
             }
+            
+            db.child('/aa/test_node/logicland002').set(model)
+
             render()
         }
     }
