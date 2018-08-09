@@ -6,7 +6,7 @@ var model = {
         scale : 16
     },
     brush : 'wire',
-    things : {}
+    things : {} // { x: , y: , type: , charge: , version: }
 }
 
 function draw_palette() {
@@ -65,6 +65,19 @@ function draw_palette() {
     d.append(b)
     b.onclick()
 
+    var b = document.createElement('button')
+    b.style.width = '90px'
+    b.style.height = '90px'
+    b.textContent = 'NAND'
+    b.onclick = function () {
+        model.brush = 'nand_gate'
+        each(radio_buttons, function (x) { x.style.background = 'grey' })
+        this.style.background = 'gold'
+    }
+    radio_buttons.push(b)
+    d.append(b)
+    b.onclick()
+
     return d
 }
 document.body.append(draw_palette())
@@ -75,24 +88,96 @@ c.height = window.innerHeight - 90
 var g = c.getContext('2d')
 document.body.append(c)
 
+function propagate() {
+    each(model.things, function (t, key) {
+        if (t.type == 'wire') {
+            each([
+                model.things[t.x       + ',' + (t.y - 1)],
+                model.things[(t.x + 1) + ',' + t.y      ],
+                model.things[t.x       + ',' + (t.y + 1)],
+                model.things[(t.x - 1) + ',' + t.y]
+            ], function (tt) {
+                if (tt && tt.type == 'wire' && tt.version > t.version && !tt.too_soon) {
+                    t.charge = tt.charge
+                    t.version = tt.version
+                    t.too_soon = true
+                }
+            })
+        } else if (t.type == 'and_gate') {
+            var best_charge = 1
+            var best_version = 0
+            each([
+                model.things[(t.x + 0) + ',' + (t.y - 1)],
+                model.things[(t.x + 2) + ',' + (t.y - 1)],
+                model.things[(t.x + 3) + ',' + (t.y + 0)],
+                model.things[(t.x + 3) + ',' + (t.y + 2)],
+                model.things[(t.x + 0) + ',' + (t.y + 3)],
+                model.things[(t.x + 2) + ',' + (t.y + 3)],
+                model.things[(t.x - 1) + ',' + (t.y + 0)],
+                model.things[(t.x - 1) + ',' + (t.y + 2)]
+            ], function (tt) {
+                if (tt && tt.type == 'wire' && tt.charge < 0)
+                    best_charge = -1
+                if (tt && tt.type == 'wire' && tt.version > best_version && !tt.too_soon)
+                    best_version = tt.version
+            })
+            best_version++
+            each([
+                model.things[(t.x + 1) + ',' + (t.y - 1)],
+                model.things[(t.x + 3) + ',' + (t.y + 1)],
+                model.things[(t.x + 1) + ',' + (t.y + 3)],
+                model.things[(t.x - 1) + ',' + (t.y + 1)]
+            ], function (tt) {
+                if (tt && tt.type == 'wire' && tt.version < best_version) {
+                    tt.charge = best_charge
+                    tt.version = best_version
+                    tt.too_soon = true
+                }
+            })
+        } else if (t.type == 'nand_gate') {
+            var best_charge = 1
+            var best_version = 0
+            each([
+                model.things[(t.x + 0) + ',' + (t.y - 1)],
+                model.things[(t.x + 2) + ',' + (t.y - 1)],
+                model.things[(t.x + 3) + ',' + (t.y + 0)],
+                model.things[(t.x + 3) + ',' + (t.y + 2)],
+                model.things[(t.x + 0) + ',' + (t.y + 3)],
+                model.things[(t.x + 2) + ',' + (t.y + 3)],
+                model.things[(t.x - 1) + ',' + (t.y + 0)],
+                model.things[(t.x - 1) + ',' + (t.y + 2)]
+            ], function (tt) {
+                if (tt && tt.type == 'wire' && tt.charge > 0)
+                    best_charge = -1
+                if (tt && tt.type == 'wire' && tt.version > best_version && !tt.too_soon)
+                    best_version = tt.version
+            })
+            best_version++
+            each([
+                model.things[(t.x + 1) + ',' + (t.y - 1)],
+                model.things[(t.x + 3) + ',' + (t.y + 1)],
+                model.things[(t.x + 1) + ',' + (t.y + 3)],
+                model.things[(t.x - 1) + ',' + (t.y + 1)]
+            ], function (tt) {
+                if (tt && tt.type == 'wire' && tt.version < best_version) {
+                    tt.charge = best_charge
+                    tt.version = best_version
+                    tt.too_soon = true
+                }
+            })
+        }
+    })
+    each(model.things, function (t, key) {
+        delete t.too_soon
+    })
+}
+
 function render() {
     g.fillStyle = 'rgba(0, 255, 0, 1)'
     g.fillRect(0, 0, c.width, c.height)
 
     var x_tiles = c.width / model.view.scale + 1
     var y_tiles = c.height / model.view.scale + 1
-
-    for (var y = 0; y < y_tiles; y++) {
-        for (var x = 0; x < x_tiles; x++) {
-            if (model.things[x + ',' + y] == 'wire') {
-                g.fillStyle = 'gold'
-                g.fillRect(x * model.view.scale, y * model.view.scale, model.view.scale, model.view.scale)
-            } else if (model.things[x + ',' + y] == 'and_gate') {
-                g.fillStyle = 'blue'
-                g.fillRect(x * model.view.scale, y * model.view.scale, model.view.scale, model.view.scale)
-            }
-        }
-    }
     
     g.beginPath()
     for (var y = 0; y < y_tiles; y++) {
@@ -105,8 +190,40 @@ function render() {
     }
     g.strokeStyle = 'black'
     g.stroke()
+
+    each(model.things, function (t) {
+        if (t.type == 'wire') {
+            g.fillStyle = t.charge > 0 ? 'gold' : 'rgb(128, 128, 0)'
+            g.fillRect(t.x * model.view.scale, t.y * model.view.scale, model.view.scale, model.view.scale)
+        } else if (t.type == 'and_gate') {
+            g.fillStyle = 'blue'
+            g.fillRect(t.x * model.view.scale, t.y * model.view.scale, model.view.scale * 3, model.view.scale * 3)
+        } else if (t.type == 'nand_gate') {
+            g.fillStyle = 'magenta'
+            g.fillRect(t.x * model.view.scale, t.y * model.view.scale, model.view.scale * 3, model.view.scale * 3)
+        }
+    })
 }
-render()
+
+var t_sum = 0
+var t_count = 0
+
+function loop() {
+    
+    var t0 = Date.now()
+    
+    propagate()
+    render()
+    
+    var t1 = Date.now()
+    t_sum += t1 - t0
+    t_count += 1
+    // console.log('time: ' + (t_sum / t_count))
+
+    
+    setTimeout(loop, 500)
+}
+loop()
 
 c.onmousedown = function (e) {
     e.preventDefault()
@@ -132,9 +249,13 @@ c.onmousedown = function (e) {
             var x = Math.floor(new_pos.x / model.view.scale)
             var y = Math.floor(new_pos.y / model.view.scale)
 
-            console.log('got here!! : ', x, y)
-
-            model.things[x + ',' + y] = model.brush
+            model.things[x + ',' + y] = {
+                x : x,
+                y : y,
+                type : model.brush,
+                charge : -1,
+                version : 0
+            }
             render()
         }
     }
