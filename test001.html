@@ -1,0 +1,84 @@
+<script src="https://www.gstatic.com/firebasejs/3.9.0/firebase.js"></script>
+<body style="margin:0px"></body>
+<script>
+
+var PALETTE_HEIGHT = 40
+
+var c = document.createElement('canvas')
+c.width = window.innerWidth
+c.height = window.innerHeight
+var g = c.getContext('2d')
+document.body.append(c)
+
+function render() {
+    g.setTransform(1, 0, 0, 1, 0, 0)
+    g.fillStyle = 'rgba(0, 255, 0, 1)'
+    g.fillRect(0, 0, c.width, c.height)
+}
+
+function loop() {
+    render()
+    setTimeout(loop, 1000)
+}
+loop()
+
+c.onmousedown = function (e) {
+    e.preventDefault()
+    var old_pos = getRelPos(c, e)
+    
+    console.log('down!')
+
+    var oldMove = document.onmousemove
+    document.onmousemove = function (e) {
+        var new_pos = getRelPos(c, e)
+    
+        console.log('move..!')
+    }
+    
+    var oldUp = document.onmouseup
+    document.onmouseup = function (e) {
+        
+        console.log('got here????')
+        
+        document.onmousemove = oldMove
+        document.onmouseup = oldUp
+    }
+}
+
+function getPos(e) {
+    var x = 0, y = 0
+    while (e != null) {
+        x += e.offsetLeft
+        y += e.offsetTop
+        e = e.offsetParent
+    }
+    return {x : x, y : y}
+}
+
+function getRelPos(to, positionedObject) {
+    var pos = getPos(to)
+    return {
+        x : positionedObject.pageX - pos.x,
+        y : positionedObject.pageY - pos.y
+    }
+}
+
+
+function each(o, cb) {
+	if (o instanceof Array) {
+		for (var i = 0; i < o.length; i++) {
+			if (cb(o[i], i, o) == false)
+				return false
+		}
+	} else {
+		for (var k in o) {
+			if (o.hasOwnProperty(k)) {
+				if (cb(o[k], k, o) == false)
+					return false
+			}
+		}
+	}
+	return true
+}
+
+</script>
