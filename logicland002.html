@@ -15,28 +15,20 @@ var config = {
 var db = firebase.initializeApp(config).database().ref()
 
 db.child('/aa/test_node/logicland002').once('value', function (x) {
-    x = x.val()
-    model.version = x.version
-    each(x.wires, function (v, k) {
-        model.wires[k] = v
-    })
-    each(x.gates, function (v, k) {
-        model.gates[k] = v
-    })
+    model = x.val()
     render()
-}, function (x) {
-    console.log('bad news! blah_hkjcuqpbnv...')
-    console.log(x)
-})
+}, function (x) { console.log('bad news!', x) })
+
+var view = {
+    x : 0,
+    y : 0,
+    scale : 16,
+    brush : 'wire',
+    prev_x : 0,
+    prev_y : 0,
+}
 
 var model = {
-    view : {
-        x : 0,
-        y : 0,
-        scale : 16
-    },
-    prev_pos : { x : 0, y : 0 },
-    brush : 'wire',
     version : 0,
     wires : {}, // { x: , y: , charge: , version: }
     gates : {}  // { x: , y: , type: }
@@ -49,106 +41,45 @@ function draw_palette() {
     
     d.textContent = 'hi there!'
     
-    var b = document.createElement('button')
-    b.style.width = PALETTE_HEIGHT + 'px'
-    b.style.height = PALETTE_HEIGHT + 'px'
-    b.textContent = '+'
-    b.onclick = function () {
-        model.view.scale *= 2
-        render()
+    function create_button(text, onclick) {
+        var b = document.createElement('button')
+        b.style.width = PALETTE_HEIGHT + 'px'
+        b.style.height = PALETTE_HEIGHT + 'px'
+        b.textContent = text
+        b.onclick = onclick
+        d.append(b)
+        return b
     }
-    d.append(b)
     
-    var b = document.createElement('button')
-    b.style.width = PALETTE_HEIGHT + 'px'
-    b.style.height = PALETTE_HEIGHT + 'px'
-    b.textContent = '-'
-    b.onclick = function () {
-        model.view.scale /= 2
+    create_button('+', function () {
+        view.scale *= 2
         render()
-    }
-    d.append(b)
+    })
     
+    create_button('-', function () {
+        view.scale /= 2
+        render()
+    })
+
     // radio buttons
     var radio_buttons = []
-
-    var b = document.createElement('button')
-    b.style.width = PALETTE_HEIGHT + 'px'
-    b.style.height = PALETTE_HEIGHT + 'px'
-    b.textContent = 'WIRE'
-    b.onclick = function () {
-        model.brush = 'wire'
-        each(radio_buttons, function (x) { x.style.background = 'grey' })
-        this.style.background = 'gold'
+    
+    function create_radio_button(text, brush) {
+        var b = create_button(text, function () {
+            view.brush = brush
+            each(radio_buttons, function (x) { x.style.background = 'grey' })
+            this.style.background = 'gold'
+        })
+        radio_buttons.push(b)
+        b.onclick()
     }
-    radio_buttons.push(b)
-    d.append(b)
-    b.onclick()
-
-    var b = document.createElement('button')
-    b.style.width = PALETTE_HEIGHT + 'px'
-    b.style.height = PALETTE_HEIGHT + 'px'
-    b.textContent = 'CROSS'
-    b.onclick = function () {
-        model.brush = 'cross_gate'
-        each(radio_buttons, function (x) { x.style.background = 'grey' })
-        this.style.background = 'gold'
-    }
-    radio_buttons.push(b)
-    d.append(b)
-    b.onclick()
-
-    var b = document.createElement('button')
-    b.style.width = PALETTE_HEIGHT + 'px'
-    b.style.height = PALETTE_HEIGHT + 'px'
-    b.textContent = 'OR'
-    b.onclick = function () {
-        model.brush = 'or_gate'
-        each(radio_buttons, function (x) { x.style.background = 'grey' })
-        this.style.background = 'gold'
-    }
-    radio_buttons.push(b)
-    d.append(b)
-    b.onclick()
-
-    var b = document.createElement('button')
-    b.style.width = PALETTE_HEIGHT + 'px'
-    b.style.height = PALETTE_HEIGHT + 'px'
-    b.textContent = 'AND'
-    b.onclick = function () {
-        model.brush = 'and_gate'
-        each(radio_buttons, function (x) { x.style.background = 'grey' })
-        this.style.background = 'gold'
-    }
-    radio_buttons.push(b)
-    d.append(b)
-    b.onclick()
-
-    var b = document.createElement('button')
-    b.style.width = PALETTE_HEIGHT + 'px'
-    b.style.height = PALETTE_HEIGHT + 'px'
-    b.textContent = 'NAND'
-    b.onclick = function () {
-        model.brush = 'nand_gate'
-        each(radio_buttons, function (x) { x.style.background = 'grey' })
-        this.style.background = 'gold'
-    }
-    radio_buttons.push(b)
-    d.append(b)
-    b.onclick()
-
-    var b = document.createElement('button')
-    b.style.width = PALETTE_HEIGHT + 'px'
-    b.style.height = PALETTE_HEIGHT + 'px'
-    b.textContent = 'delete'
-    b.onclick = function () {
-        model.brush = 'delete'
-        each(radio_buttons, function (x) { x.style.background = 'grey' })
-        this.style.background = 'gold'
-    }
-    radio_buttons.push(b)
-    d.append(b)
-    b.onclick()
+    
+    create_radio_button('WIRE', 'wire')
+    create_radio_button('CROSS', 'cross_gate')
+    create_radio_button('OR', 'or_gate')
+    create_radio_button('AND', 'and_gate')
+    create_radio_button('NAND', 'nand_gate')
+    create_radio_button('delete', 'delete')
 
     return d
 }
@@ -267,27 +198,27 @@ function render() {
     g.fillStyle = 'rgba(0, 255, 0, 1)'
     g.fillRect(0, 0, c.width, c.height)
 
-    g.setTransform(model.view.scale, 0, 0, model.view.scale,
-        model.view.x * model.view.scale,
-        model.view.y * model.view.scale)
+    g.setTransform(view.scale, 0, 0, view.scale,
+        view.x * view.scale,
+        view.y * view.scale)
 
-    var x_tiles = c.width / model.view.scale + 1
-    var y_tiles = c.height / model.view.scale + 1
+    var x_tiles = c.width / view.scale + 1
+    var y_tiles = c.height / view.scale + 1
     
-    var x_first_tile = Math.floor(model.view.x / model.view.scale)
-    var y_first_tile = Math.floor(model.view.y / model.view.scale)
+    var x_first_tile = Math.floor(view.x / view.scale)
+    var y_first_tile = Math.floor(view.y / view.scale)
 
     g.beginPath()
     for (var y = y_first_tile; y < y_first_tile + y_tiles; y++) {
-        g.moveTo(0, y + 0.5/model.view.scale)
-        g.lineTo(c.width, y + 0.5/model.view.scale)
+        g.moveTo(0, y + 0.5/view.scale)
+        g.lineTo(c.width, y + 0.5/view.scale)
     }
     for (var x = x_first_tile; x < x_first_tile + x_tiles; x++) {
-        g.moveTo(x + 0.5/model.view.scale, 0)
-        g.lineTo(x + 0.5/model.view.scale, c.height)
+        g.moveTo(x + 0.5/view.scale, 0)
+        g.lineTo(x + 0.5/view.scale, c.height)
     }
     g.strokeStyle = 'black'
-    g.lineWidth = 1/model.view.scale
+    g.lineWidth = 1/view.scale
     g.stroke()
 
     each(model.wires, function (_) {
@@ -340,8 +271,8 @@ c.onmousedown = function (e) {
         var new_pos = getRelPos(c, e)
         moved = true
         
-        model.view.x += (new_pos.x - old_pos.x) / model.view.scale
-        model.view.y += (new_pos.y - old_pos.y) / model.view.scale
+        view.x += (new_pos.x - old_pos.x) / view.scale
+        view.y += (new_pos.y - old_pos.y) / view.scale
         render()
         
         old_pos = new_pos
@@ -355,11 +286,11 @@ c.onmousedown = function (e) {
         if (!moved) {
             var new_pos = getRelPos(c, e)
 
-            var x = Math.floor(new_pos.x / model.view.scale)
-            var y = Math.floor(new_pos.y / model.view.scale)
+            var x = Math.floor(new_pos.x / view.scale)
+            var y = Math.floor(new_pos.y / view.scale)
             var key = x + ',' + y
             
-            if (model.brush == 'wire') {
+            if (view.brush == 'wire') {
                 function add_wire(x, y) {
                     model.wires[x + ',' + y] = {
                         x : x,
@@ -391,25 +322,25 @@ c.onmousedown = function (e) {
                 } else {
                     add_wire(x, y)
                 }
-            } else if (model.brush == 'delete') {
+            } else if (view.brush == 'delete') {
                 if (e.shiftKey) {
-                    var dx = x - prev_pos.x
-                    var dy = y - prev_pos.y
+                    var dx = x - view.prev_x
+                    var dy = y - view.prev_y
                     if (Math.abs(dx) > Math.abs(dy)) {
                         if (dx > 0) {
-                            for (var i = prev_pos.x; i <= x; i++)
-                                delete model.wires[i + ',' + prev_pos.y]
+                            for (var i = view.prev_x; i <= x; i++)
+                                delete model.wires[i + ',' + view.prev_y]
                         } else {
-                            for (var i = x; i <= prev_pos.x; i++)
-                                delete model.wires[i + ',' + prev_pos.y]
+                            for (var i = x; i <= view.prev_x; i++)
+                                delete model.wires[i + ',' + view.prev_y]
                         }
                     } else {
                         if (dy > 0) {
-                            for (var i = prev_pos.y; i <= y; i++)
-                                delete model.wires[prev_pos.x + ',' + i]
+                            for (var i = view.prev_y; i <= y; i++)
+                                delete model.wires[view.prev_x + ',' + i]
                         } else {
-                            for (var i = y; i <= prev_pos.y; i++)
-                                delete model.wires[prev_pos.x + ',' + i]
+                            for (var i = y; i <= view.prev_y; i++)
+                                delete model.wires[view.prev_x + ',' + i]
                         }
                     }
                 } else {
@@ -425,8 +356,9 @@ c.onmousedown = function (e) {
                 }
             }
             
-            prev_pos = { x : x, y : y }
-            
+            view.prev_x = x
+            view.prev_y = y
+
             db.child('/aa/test_node/logicland002').set(model)
 
             render()
