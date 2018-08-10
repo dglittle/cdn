@@ -14,12 +14,9 @@ var config = {
 }
 var db = firebase.initializeApp(config).database().ref()
 
-db.child('/aa/test_node/logicland002').once('value', function (x) {
-    model = x.val()
-    render()
-}, function (x) { console.log('bad news!', x) })
-
 var view = {
+    path: '/aa/test_node',
+    filename : 'logicland002',
     x : 0,
     y : 0,
     scale : 16,
@@ -34,13 +31,39 @@ var model = {
     gates : {}  // { x: , y: , type: }
 }
 
+function fetch_model() {
+    db.child(view.path + '/' + view.filename).once('value', function (x) {
+        model = x.val() || {
+            version : 0,
+            wires : {},
+            gates : {}
+        }
+        render()
+    }, function (x) { console.log('bad news!', x) })
+}
+fetch_model()
+
 function draw_palette() {
     var d = document.createElement('div')
     d.style.width = '100%'
     d.style.height = PALETTE_HEIGHT + 'px'
     
-    d.textContent = 'hi there!'
-    
+    function create_file_loader() {
+        var b = document.createElement('input')
+        b.style.width = PALETTE_HEIGHT * 2 + 'px'
+        b.value = view.filename
+        b.onkeydown = function (e) {
+            if (e.metaKey && e.keyCode == 13) {
+                e.preventDefault()
+                view.filename = b.value
+                fetch_model()
+            }
+        }
+        d.append(b)
+        return b
+    }
+    create_file_loader()
+
     function create_button(text, onclick) {
         var b = document.createElement('button')
         b.style.width = PALETTE_HEIGHT + 'px'
@@ -300,23 +323,23 @@ c.onmousedown = function (e) {
                     }
                 }
                 if (e.shiftKey) {
-                    var dx = x - prev_pos.x
-                    var dy = y - prev_pos.y
+                    var dx = x - view.prev_x
+                    var dy = y - view.prev_y
                     if (Math.abs(dx) > Math.abs(dy)) {
                         if (dx > 0) {
-                            for (var i = prev_pos.x; i <= x; i++)
-                                add_wire(i, prev_pos.y)
+                            for (var i = view.prev_x; i <= x; i++)
+                                add_wire(i, view.prev_y)
                         } else {
-                            for (var i = x; i <= prev_pos.x; i++)
-                                add_wire(i, prev_pos.y)
+                            for (var i = x; i <= view.prev_x; i++)
+                                add_wire(i, view.prev_y)
                         }
                     } else {
                         if (dy > 0) {
-                            for (var i = prev_pos.y; i <= y; i++)
-                                add_wire(prev_pos.x, i)
+                            for (var i = view.prev_y; i <= y; i++)
+                                add_wire(view.prev_x, i)
                         } else {
-                            for (var i = y; i <= prev_pos.y; i++)
-                                add_wire(prev_pos.x, i)
+                            for (var i = y; i <= view.prev_y; i++)
+                                add_wire(view.prev_x, i)
                         }
                     }
                 } else {
@@ -352,14 +375,14 @@ c.onmousedown = function (e) {
                 model.gates[key] = {
                     x : x,
                     y : y,
-                    type : model.brush
+                    type : view.brush
                 }
             }
             
             view.prev_x = x
             view.prev_y = y
 
-            db.child('/aa/test_node/logicland002').set(model)
+            db.child(view.path + '/' + view.filename).set(model)
 
             render()
         }
