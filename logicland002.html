@@ -34,11 +34,14 @@ var model = {
 
 function fetch_model() {
     db.child(view.path + '/' + view.filename).once('value', function (x) {
-        model = x.val() || {
+        model = {
             version : 0,
             wires : {},
             gates : {}
         }
+        each(x.val(), function (v, k) {
+            model[k] = v
+        })
         render()
     }, function (x) { console.log('bad news!', x) })
 }
