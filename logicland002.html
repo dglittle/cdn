@@ -23,6 +23,7 @@ var view = {
     brush : 'wire',
     prev_x : 0,
     prev_y : 0,
+    box : null
 }
 
 var model = {
@@ -104,6 +105,7 @@ function draw_palette() {
     create_radio_button('NAND', 'nand_gate')
     create_radio_button('TOGGLE', 'toggle')
     create_radio_button('delete', 'delete')
+    create_radio_button('box', 'box')
 
     return d
 }
@@ -267,6 +269,14 @@ function render() {
             g.fillRect(_.x, _.y, 3, 3)
         }
     })
+    
+    if (view.brush == 'box' && view.box) {
+        g.fillStyle = 'rgba(255,0,0,0.6)'
+        if (view.box.length == 2)
+            g.fillRect(view.box[0], view.box[1], 1, 1)
+        else
+            g.fillRect(view.box[0], view.box[1], view.box[2] - view.box[0] + 1, view.box[3] - view.box[1] + 1)
+    }
 }
 
 var t_sum = 0
