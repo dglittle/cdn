@@ -318,7 +318,44 @@ c.onmousedown = function (e) {
             var y = Math.floor(new_pos.y / view.scale)
             var key = x + ',' + y
             
-            if (view.brush == 'wire') {
+            var toggle = null
+            for (var dx = 0; dx >= -2; dx--) {
+                for (var dy = 0; dy >= -2; dy--) {
+                    var gate = model.gates[(x + dx) + ',' + (y + dy)]
+                    if (gate && gate.type == 'toggle')
+                        toggle = gate
+                }
+            }
+            
+            if (view.brush == 'delete') {
+                if (e.shiftKey) {
+                    var dx = x - view.prev_x
+                    var dy = y - view.prev_y
+                    if (Math.abs(dx) > Math.abs(dy)) {
+                        if (dx > 0) {
+                            for (var i = view.prev_x; i <= x; i++)
+                                delete model.wires[i + ',' + view.prev_y]
+                        } else {
+                            for (var i = x; i <= view.prev_x; i++)
+                                delete model.wires[i + ',' + view.prev_y]
+                        }
+                    } else {
+                        if (dy > 0) {
+                            for (var i = view.prev_y; i <= y; i++)
+                                delete model.wires[view.prev_x + ',' + i]
+                        } else {
+                            for (var i = y; i <= view.prev_y; i++)
+                                delete model.wires[view.prev_x + ',' + i]
+                        }
+                    }
+                } else {
+                    delete model.wires[key]
+                    delete model.gates[key]
+                }
+            } else if (toggle) {
+                console.log('got here!?')
+                toggle.charge *= -1
+            } else if (view.brush == 'wire') {
                 function add_wire(x, y) {
                     model.wires[x + ',' + y] = {
                         x : x,
@@ -350,31 +387,6 @@ c.onmousedown = function (e) {
                 } else {
                     add_wire(x, y)
                 }
-            } else if (view.brush == 'delete') {
-                if (e.shiftKey) {
-                    var dx = x - view.prev_x
-                    var dy = y - view.prev_y
-                    if (Math.abs(dx) > Math.abs(dy)) {
-                        if (dx > 0) {
-                            for (var i = view.prev_x; i <= x; i++)
-                                delete model.wires[i + ',' + view.prev_y]
-                        } else {
-                            for (var i = x; i <= view.prev_x; i++)
-                                delete model.wires[i + ',' + view.prev_y]
-                        }
-                    } else {
-                        if (dy > 0) {
-                            for (var i = view.prev_y; i <= y; i++)
-                                delete model.wires[view.prev_x + ',' + i]
-                        } else {
-                            for (var i = y; i <= view.prev_y; i++)
-                                delete model.wires[view.prev_x + ',' + i]
-                        }
-                    }
-                } else {
-                    delete model.wires[key]
-                    delete model.gates[key]
-                }
             } else {
                 delete model.wires[key]
                 model.gates[key] = {
@@ -388,7 +400,7 @@ c.onmousedown = function (e) {
             view.prev_x = x
             view.prev_y = y
 
-            db.child(view.path + '/' + view.filename).set(model)
+            // db.child(view.path + '/' + view.filename).set(model)
 
             render()
         }
