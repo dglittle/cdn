@@ -318,6 +318,8 @@ c.onmousedown = function (e) {
             var y = Math.floor((new_pos.y - c.height/2) / view.scale + view.y)
             var key = x + ',' + y
             
+            var changes = { wires : {}, gates : {} }
+            
             var clicked_gate = null
             for (var dx = 0; dx >= -2; dx--) {
                 for (var dy = 0; dy >= -2; dy--) {
@@ -332,32 +334,44 @@ c.onmousedown = function (e) {
                     var dy = y - view.prev_y
                     if (Math.abs(dx) > Math.abs(dy)) {
                         if (dx > 0) {
-                            for (var i = view.prev_x; i <= x; i++)
+                            for (var i = view.prev_x; i <= x; i++) {
                                 delete model.wires[i + ',' + view.prev_y]
+                                changes.wires[i + ',' + view.prev_y] = null
+                            }
                         } else {
-                            for (var i = x; i <= view.prev_x; i++)
+                            for (var i = x; i <= view.prev_x; i++) {
                                 delete model.wires[i + ',' + view.prev_y]
+                                changes.wires[i + ',' + view.prev_y] = null
+                            }
                         }
                     } else {
                         if (dy > 0) {
-                            for (var i = view.prev_y; i <= y; i++)
+                            for (var i = view.prev_y; i <= y; i++) {
                                 delete model.wires[view.prev_x + ',' + i]
+                                changes.wires[view.prev_x + ',' + i] = null
+                            }
                         } else {
-                            for (var i = y; i <= view.prev_y; i++)
+                            for (var i = y; i <= view.prev_y; i++) {
                                 delete model.wires[view.prev_x + ',' + i]
+                                changes.wires[view.prev_x + ',' + i] = null
+                            }
                         }
                     }
                 } else {
                     delete model.wires[key]
+                    changes.wires[key] = null
                     delete model.gates[key]
-                    if (clicked_gate)
+                    changes.gates[key] = null
+                    if (clicked_gate) {
                         delete model.gates[clicked_gate.x + ',' + clicked_gate.y]
+                        changes.gates[clicked_gate.x + ',' + clicked_gate.y] = null
+                    }
                 }
             } else if (clicked_gate && clicked_gate.type == 'toggle') {
                 clicked_gate.charge *= -1
             } else if (view.brush == 'wire') {
                 function add_wire(x, y) {
-                    model.wires[x + ',' + y] = {
+                    changes.wires[x + ',' + y] = model.wires[x + ',' + y] = {
                         x : x,
                         y : y,
                         charge : -1,
@@ -389,7 +403,8 @@ c.onmousedown = function (e) {
                 }
             } else {
                 delete model.wires[key]
-                model.gates[key] = {
+                changes.wires[key] = null
+                changes.gates[key] = model.gates[key] = {
                     x : x,
                     y : y,
                     type : view.brush,
@@ -400,7 +415,8 @@ c.onmousedown = function (e) {
             view.prev_x = x
             view.prev_y = y
 
-            // db.child(view.path + '/' + view.filename).set(model)
+            db.child(view.path + '/' + view.filename + '/wires').update(changes.wires)
+            db.child(view.path + '/' + view.filename + '/gates').update(changes.gates)
 
             render()
         }
