@@ -44,6 +44,17 @@ function fetch_model() {
 }
 fetch_model()
 
+var key_capture_box = document.createElement('input')
+key_capture_box.style.width = '0px'
+key_capture_box.style.height = '0px'
+key_capture_box.style.position = 'absolute'
+key_capture_box.style.left = '0px'
+key_capture_box.style.top = '0px'
+key_capture_box.addEventListener('keydown', function (e) {
+    console.log('hi?')
+})
+document.body.append(key_capture_box)
+
 function draw_palette() {
     var d = document.createElement('div')
     d.style.width = '100%'
@@ -88,9 +99,10 @@ function draw_palette() {
     // radio buttons
     var radio_buttons = []
     
-    function create_radio_button(text, brush) {
+    function create_radio_button(text, brush, cb) {
         var b = create_button(text, function () {
             view.brush = brush
+            if (cb) cb()
             each(radio_buttons, function (x) { x.style.background = 'grey' })
             this.style.background = 'gold'
         })
@@ -105,7 +117,9 @@ function draw_palette() {
     create_radio_button('NAND', 'nand_gate')
     create_radio_button('TOGGLE', 'toggle')
     create_radio_button('delete', 'delete')
-    create_radio_button('box', 'box')
+    create_radio_button('box', 'box', function () {
+        key_capture_box.focus()
+    })
 
     return d
 }
@@ -344,11 +358,21 @@ c.onmousedown = function (e) {
                         for (var dx = 0; dx <= (view.box[2] - view.box[0]); dx++) {
                             var w = model.wires[(view.box[0] + dx) + ',' + (view.box[1] + dy)]
                             if (w) {
-                                changes.wires[(x + dx) + ',' + (y + dy)] = model.wires[(x + dx) + ',' + (y + dy)] = w
+                                changes.wires[(x + dx) + ',' + (y + dy)] = model.wires[(x + dx) + ',' + (y + dy)] = {
+                                    x : x + dx,
+                                    y : y + dy,
+                                    charge : w.charge,
+                                    version : 0
+                                }
                             }
                             var gate = model.gates[(view.box[0] + dx) + ',' + (view.box[1] + dy)]
                             if (gate) {
-                                changes.gates[(x + dx) + ',' + (y + dy)] = model.gates[(x + dx) + ',' + (y + dy)] = gate
+                                changes.gates[(x + dx) + ',' + (y + dy)] = model.gates[(x + dx) + ',' + (y + dy)] = {
+                                    x : x + dx,
+                                    y : y + dy,
+                                    type : gate.type,
+                                    charge : gate.charge || -1
+                                }
                             }
                         }
                     }
