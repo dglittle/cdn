@@ -51,7 +51,7 @@ key_capture_box.style.position = 'absolute'
 key_capture_box.style.left = '0px'
 key_capture_box.style.top = '0px'
 key_capture_box.addEventListener('keydown', function (e) {
-    if (view.box && view.box.length == 4) {
+    if (e.keyCode == 8 && view.box && view.box.length == 4) {
         var changes = { wires : {}, gates : {} }
         for (var y = view.box[1]; y <= view.box[3]; y++) {
             for (var x = view.box[0]; x <= view.box[2]; x++) {
@@ -68,6 +68,9 @@ key_capture_box.addEventListener('keydown', function (e) {
             }
         }
         
+        db.child(view.path + '/' + view.filename + '/wires').update(changes.wires)
+        db.child(view.path + '/' + view.filename + '/gates').update(changes.gates)
+        
         render()
     }
 })
@@ -82,6 +85,9 @@ function draw_palette() {
         var b = document.createElement('input')
         b.style.width = PALETTE_HEIGHT * 2 + 'px'
         b.value = view.filename
+        b.oninput = function () {
+            view.filename = b.value
+        }
         b.onkeydown = function (e) {
             if (e.metaKey && e.keyCode == 13) {
                 e.preventDefault()
