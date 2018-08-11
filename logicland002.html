@@ -225,23 +225,23 @@ function render() {
     g.fillRect(0, 0, c.width, c.height)
 
     g.setTransform(view.scale, 0, 0, view.scale,
-        view.x * view.scale,
-        view.y * view.scale)
+        Math.floor(c.width/2) - view.x*view.scale,
+        Math.floor(c.height/2) - view.y*view.scale)
 
     var x_tiles = c.width / view.scale + 1
     var y_tiles = c.height / view.scale + 1
     
-    var x_first_tile = Math.floor(view.x / view.scale)
-    var y_first_tile = Math.floor(view.y / view.scale)
+    var x_first_tile = Math.floor(view.x - c.width/2/view.scale)
+    var y_first_tile = Math.floor(view.y - c.height/2/view.scale)
 
     g.beginPath()
     for (var y = y_first_tile; y < y_first_tile + y_tiles; y++) {
-        g.moveTo(0, y + 0.5/view.scale)
-        g.lineTo(c.width, y + 0.5/view.scale)
+        g.moveTo(x_first_tile, y + 0.5/view.scale)
+        g.lineTo(x_first_tile + x_tiles, y + 0.5/view.scale)
     }
     for (var x = x_first_tile; x < x_first_tile + x_tiles; x++) {
-        g.moveTo(x + 0.5/view.scale, 0)
-        g.lineTo(x + 0.5/view.scale, c.height)
+        g.moveTo(x + 0.5/view.scale, y_first_tile)
+        g.lineTo(x + 0.5/view.scale, y_first_tile + y_tiles)
     }
     g.strokeStyle = 'black'
     g.lineWidth = 1/view.scale
@@ -299,8 +299,8 @@ c.onmousedown = function (e) {
         var new_pos = getRelPos(c, e)
         moved = true
         
-        view.x += (new_pos.x - old_pos.x) / view.scale
-        view.y += (new_pos.y - old_pos.y) / view.scale
+        view.x -= (new_pos.x - old_pos.x) / view.scale
+        view.y -= (new_pos.y - old_pos.y) / view.scale
         render()
         
         old_pos = new_pos
@@ -314,19 +314,18 @@ c.onmousedown = function (e) {
         if (!moved) {
             var new_pos = getRelPos(c, e)
 
-            var x = Math.floor(new_pos.x / view.scale)
-            var y = Math.floor(new_pos.y / view.scale)
+            var x = Math.floor((new_pos.x - c.width/2) / view.scale + view.x)
+            var y = Math.floor((new_pos.y - c.height/2) / view.scale + view.y)
             var key = x + ',' + y
             
-            var toggle = null
+            var clicked_gate = null
             for (var dx = 0; dx >= -2; dx--) {
                 for (var dy = 0; dy >= -2; dy--) {
                     var gate = model.gates[(x + dx) + ',' + (y + dy)]
-                    if (gate && gate.type == 'toggle')
-                        toggle = gate
+                    if (gate) clicked_gate = gate
                 }
             }
-            
+
             if (view.brush == 'delete') {
                 if (e.shiftKey) {
                     var dx = x - view.prev_x
@@ -351,10 +350,11 @@ c.onmousedown = function (e) {
                 } else {
                     delete model.wires[key]
                     delete model.gates[key]
+                    if (clicked_gate)
+                        delete model.gates[clicked_gate.x + ',' + clicked_gate.y]
                 }
-            } else if (toggle) {
-                console.log('got here!?')
-                toggle.charge *= -1
+            } else if (clicked_gate && clicked_gate.type == 'toggle') {
+                clicked_gate.charge *= -1
             } else if (view.brush == 'wire') {
                 function add_wire(x, y) {
                     model.wires[x + ',' + y] = {
