@@ -102,6 +102,7 @@ function draw_palette() {
     create_radio_button('OR', 'or_gate')
     create_radio_button('AND', 'and_gate')
     create_radio_button('NAND', 'nand_gate')
+    create_radio_button('TOGGLE', 'toggle')
     create_radio_button('delete', 'delete')
 
     return d
@@ -194,6 +195,8 @@ function propagate() {
                 output = 1
             if (_.type == 'nand_gate' && high_count == 0)
                 output = 1
+            if (_.type == 'toggle')
+                output = _.charge
             each([
                 model.wires[(_.x + 1) + ',' + (_.y - 1)],
                 model.wires[(_.x + 3) + ',' + (_.y + 1)],
@@ -258,6 +261,8 @@ function render() {
                 (_.type == 'or_gate') ? 'orange' :
                 (_.type == 'and_gate') ? 'blue' :
                 (_.type == 'nand_gate') ? 'magenta' :
+                (_.type == 'toggle') ?
+                    (_.charge > 0 ? 'cyan' : 'rgb(0, 128, 128)') :
                 'red'
             g.fillRect(_.x, _.y, 3, 3)
         }
@@ -375,7 +380,8 @@ c.onmousedown = function (e) {
                 model.gates[key] = {
                     x : x,
                     y : y,
-                    type : view.brush
+                    type : view.brush,
+                    charge : -1
                 }
             }
             
