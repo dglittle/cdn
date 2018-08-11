@@ -51,7 +51,25 @@ key_capture_box.style.position = 'absolute'
 key_capture_box.style.left = '0px'
 key_capture_box.style.top = '0px'
 key_capture_box.addEventListener('keydown', function (e) {
-    console.log('hi?')
+    if (view.box && view.box.length == 4) {
+        var changes = { wires : {}, gates : {} }
+        for (var y = view.box[1]; y <= view.box[3]; y++) {
+            for (var x = view.box[0]; x <= view.box[2]; x++) {
+                var w = model.wires[x + ',' + y]
+                if (w) {
+                    delete model.wires[x + ',' + y]
+                    changes.wires[x + ',' + y] = null
+                }
+                var gate = model.gates[x + ',' + y]
+                if (gate) {
+                    delete model.gates[x + ',' + y]
+                    changes.gates[x + ',' + y] = null
+                }
+            }
+        }
+        
+        render()
+    }
 })
 document.body.append(key_capture_box)
 
