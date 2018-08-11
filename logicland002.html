@@ -369,6 +369,7 @@ c.onmousedown = function (e) {
                 }
             } else if (clicked_gate && clicked_gate.type == 'toggle') {
                 clicked_gate.charge *= -1
+                changes.gates[clicked_gate.x + ',' + clicked_gate.y] = clicked_gate
             } else if (view.brush == 'wire') {
                 function add_wire(x, y) {
                     changes.wires[x + ',' + y] = model.wires[x + ',' + y] = {
