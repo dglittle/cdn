@@ -85,6 +85,36 @@ key_capture_box.addEventListener('keydown', function (e) {
         
         render()
     }
+    if (view.brush == 'box' && e.keyCode == 70 && view.box && view.box.length == 4) {
+        var changes = { wires : {}, gates : {} }
+        var the_dead = delete_view_box(changes)
+        each(the_dead.wires, function (w) {
+            var X = w.y - view.box[1] + x
+            var Y = w.x - view.box[0] + y
+            changes.wires[X + ',' + Y] = model.wires[X + ',' + Y] = {
+                x : X,
+                y : Y,
+                charge : w.charge,
+                version : w.version
+            }
+        })
+        each(the_dead.gates, function (gate) {
+            var X = gate.y - view.box[1] + x
+            var Y = gate.x - view.box[0] + y
+            changes.gates[X + ',' + Y] = model.gates[X + ',' + Y] = {
+                x : X,
+                y : Y,
+                type : gate.type,
+                charge : gate.charge
+            }
+        })
+        view.box = [x, y, view.box[3] - view.box[1] + x, view.box[2] - view.box[0] + y]
+
+        db.child(view.path + '/' + view.filename + '/wires').update(changes.wires)
+        db.child(view.path + '/' + view.filename + '/gates').update(changes.gates)
+        
+        render()
+    }
 })
 document.body.append(key_capture_box)
 
