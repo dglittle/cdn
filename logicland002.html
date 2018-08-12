@@ -21,6 +21,7 @@ var view = {
     y : 0,
     scale : 16,
     brush : 'wire',
+    play : true,
     prev_x : 0,
     prev_y : 0,
     box : null
@@ -75,7 +76,7 @@ key_capture_box.style.position = 'absolute'
 key_capture_box.style.left = '0px'
 key_capture_box.style.top = '0px'
 key_capture_box.addEventListener('keydown', function (e) {
-    if (e.keyCode == 8 && view.box && view.box.length == 4) {
+    if (view.brush == 'box' && e.keyCode == 8 && view.box && view.box.length == 4) {
         var changes = { wires : {}, gates : {} }
         delete_view_box(changes)
         
@@ -128,6 +129,12 @@ function draw_palette() {
     
     create_button('-', function () {
         view.scale /= 2
+        render()
+    })
+    
+    create_button('stop', function () {
+        view.play = !view.play
+        this.textContent = view.play ? 'stop' : 'play'
         render()
     })
 
@@ -335,8 +342,10 @@ function loop() {
     
     var t0 = Date.now()
     
-    propagate()
-    render()
+    if (view.play) {
+        propagate()
+        render()
+    }
     
     var t1 = Date.now()
     t_sum += t1 - t0
