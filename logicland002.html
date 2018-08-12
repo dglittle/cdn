@@ -173,6 +173,7 @@ function draw_palette() {
         var j = prompt('give me some JSON:')
         if (j) {
             model = JSON.parse(j)
+            db.child(view.path + '/' + view.filename).set(model)
         }
         render()
     })
@@ -217,10 +218,11 @@ var g = c.getContext('2d')
 document.body.append(c)
 
 function propagate() {
-    model.version++
     var changes = {}
-    
+
+    var max_version = 0    
     each(model.wires, function (_, _key) {
+        if (_.version > max_version) max_version = _.version
         each([
             model.wires[_.x       + ',' + (_.y - 1)],
             model.wires[(_.x + 1) + ',' + _.y      ],
@@ -307,7 +309,7 @@ function propagate() {
                 if (__) {
                     changes[__.x + ',' + __.y] = {
                         charge : output,
-                        version : model.version
+                        version : max_version + 1
                     }
                 }
             })
