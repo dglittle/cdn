@@ -2,7 +2,7 @@
 <body style="margin:0px"></body>
 <script>
 
-var PALETTE_HEIGHT = 40
+var PALETTE_HEIGHT = 20
 
 var config = {
     apiKey: "AIzaSyDVM0ekHwUqC_rGsqkT7fJ71FyRum9cxko",
@@ -69,9 +69,9 @@ function delete_view_box(changes) {
     return the_dead
 }
 
-var key_capture_box = document.createElement('input')
-key_capture_box.style.width = '0px'
-key_capture_box.style.height = '0px'
+var key_capture_box = document.createElement('textarea')
+key_capture_box.style.width = '10px'
+key_capture_box.style.height = '10px'
 key_capture_box.style.position = 'absolute'
 key_capture_box.style.left = '0px'
 key_capture_box.style.top = '0px'
@@ -129,7 +129,7 @@ function draw_palette() {
     
     function create_file_loader() {
         var b = document.createElement('input')
-        b.style.width = PALETTE_HEIGHT * 2 + 'px'
+        b.style.width = 100 + 'px'
         b.value = view.filename
         b.oninput = function () {
             view.filename = b.value
@@ -148,8 +148,8 @@ function draw_palette() {
 
     function create_button(text, onclick) {
         var b = document.createElement('button')
-        b.style.width = PALETTE_HEIGHT + 'px'
-        b.style.height = PALETTE_HEIGHT + 'px'
+        b.style.width = PALETTE_HEIGHT*2 + 'px'
+        b.style.height = PALETTE_HEIGHT*2 + 'px'
         b.textContent = text
         b.onclick = onclick
         d.append(b)
