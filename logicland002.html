@@ -411,6 +411,7 @@ c.onmousedown = function (e) {
                                 charge : gate.charge
                             }
                         })
+                        view.box = [x, y, view.box[2] - view.box[0] + x, view.box[3] - view.box[1] + y]
                     } else {
                         for (var dy = 0; dy <= (view.box[3] - view.box[1]); dy++) {
                             for (var dx = 0; dx <= (view.box[2] - view.box[0]); dx++) {
