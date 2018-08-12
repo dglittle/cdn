@@ -105,7 +105,7 @@ key_capture_box.addEventListener('keydown', function (e) {
                 x : X,
                 y : Y,
                 type : gate.type,
-                charge : gate.charge
+                charge : gate.charge || -1
             }
         })
         view.box = [view.box[0], view.box[1], view.box[3] - view.box[1] + view.box[0], view.box[2] - view.box[0] + view.box[1]]
@@ -115,10 +115,6 @@ key_capture_box.addEventListener('keydown', function (e) {
         
         render()
     }
-    if (e.keyCode == 83) {
-        key_capture_box.focus()
-        key_capture_box.value = JSON.stringify(model)
-    }    
 })
 document.body.append(key_capture_box)
 
@@ -179,6 +175,10 @@ function draw_palette() {
             model = JSON.parse(j)
         }
         render()
+    })
+    
+    create_button('get', function () {
+        var j = prompt('here is some JSON:', JSON.stringify(model))
     })
 
     // radio buttons
