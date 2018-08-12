@@ -236,7 +236,7 @@ function propagate() {
                 output = 1
             if (_.type == 'and_gate' && low_count == 0)
                 output = 1
-            if (_.type == 'nand_gate' && high_count == 0)
+            if (_.type == 'nand_gate' && low_count != 0)
                 output = 1
             if (_.type == 'toggle')
                 output = _.charge
