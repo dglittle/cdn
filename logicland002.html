@@ -47,6 +47,23 @@ function fetch_model() {
 }
 fetch_model()
 
+function delete_view_box(changes) {
+    for (var y = view.box[1]; y <= view.box[3]; y++) {
+        for (var x = view.box[0]; x <= view.box[2]; x++) {
+            var w = model.wires[x + ',' + y]
+            if (w) {
+                delete model.wires[x + ',' + y]
+                changes.wires[x + ',' + y] = null
+            }
+            var gate = model.gates[x + ',' + y]
+            if (gate) {
+                delete model.gates[x + ',' + y]
+                changes.gates[x + ',' + y] = null
+            }
+        }
+    }
+}
+
 var key_capture_box = document.createElement('input')
 key_capture_box.style.width = '0px'
 key_capture_box.style.height = '0px'
@@ -56,20 +73,7 @@ key_capture_box.style.top = '0px'
 key_capture_box.addEventListener('keydown', function (e) {
     if (e.keyCode == 8 && view.box && view.box.length == 4) {
         var changes = { wires : {}, gates : {} }
-        for (var y = view.box[1]; y <= view.box[3]; y++) {
-            for (var x = view.box[0]; x <= view.box[2]; x++) {
-                var w = model.wires[x + ',' + y]
-                if (w) {
-                    delete model.wires[x + ',' + y]
-                    changes.wires[x + ',' + y] = null
-                }
-                var gate = model.gates[x + ',' + y]
-                if (gate) {
-                    delete model.gates[x + ',' + y]
-                    changes.gates[x + ',' + y] = null
-                }
-            }
-        }
+        delete_view_box(changes)
         
         db.child(view.path + '/' + view.filename + '/wires').update(changes.wires)
         db.child(view.path + '/' + view.filename + '/gates').update(changes.gates)
