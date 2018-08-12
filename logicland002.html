@@ -115,6 +115,10 @@ key_capture_box.addEventListener('keydown', function (e) {
         
         render()
     }
+    if (e.keyCode == 83) {
+        key_capture_box.focus()
+        key_capture_box.value = JSON.stringify(model)
+    }    
 })
 document.body.append(key_capture_box)
 
