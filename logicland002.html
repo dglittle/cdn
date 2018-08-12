@@ -48,24 +48,30 @@ function fetch_model() {
 }
 fetch_model()
 
-function delete_view_box(changes) {
-    var the_dead = { wires : {}, gates : {} }
+function copy_view_box() {
+    var ret = { wires : {}, gates : {} }
     for (var y = view.box[1]; y <= view.box[3]; y++) {
         for (var x = view.box[0]; x <= view.box[2]; x++) {
             var w = model.wires[x + ',' + y]
-            if (w) {
-                the_dead.wires[x + ',' + y] = model.wires[x + ',' + y]
-                delete model.wires[x + ',' + y]
-                changes.wires[x + ',' + y] = null
-            }
+            if (w) ret.wires[x + ',' + y] = w
+            
             var gate = model.gates[x + ',' + y]
-            if (gate) {
-                the_dead.gates[x + ',' + y] = model.gates[x + ',' + y]
-                delete model.gates[x + ',' + y]
-                changes.gates[x + ',' + y] = null
-            }
+            if (gate) ret.gates[x + ',' + y] = gate
         }
     }
+    return ret
+}
+
+function delete_view_box(changes) {
+    var the_dead = copy_view_box()
+    each(the_dead.wires, function (w) {
+        delete model.wires[w.x + ',' + w.y]
+        changes.wires[w.x + ',' + w.y] = null
+    })
+    each(the_dead.gates, function (gate) {
+        delete model.gates[gate.x + ',' + gate.y]
+        changes.gates[gate.x + ',' + gate.y] = null
+    })
     return the_dead
 }
 
@@ -500,6 +506,7 @@ c.onmousedown = function (e) {
                             Math.max(view.box[0], x),
                             Math.max(view.box[1], y)
                         ]
+                        view.copy = copy_view_box()
                     }
                 }
             } else if (view.brush == 'delete') {
