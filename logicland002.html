@@ -108,7 +108,7 @@ key_capture_box.addEventListener('keydown', function (e) {
                 charge : gate.charge
             }
         })
-        view.box = [view.box[0], view.box[1], view.box[3] - view.box[1] + x, view.box[2] - view.box[0] + y]
+        view.box = [view.box[0], view.box[1], view.box[3] - view.box[1] + view.box[0], view.box[2] - view.box[0] + view.box[1]]
 
         db.child(view.path + '/' + view.filename + '/wires').update(changes.wires)
         db.child(view.path + '/' + view.filename + '/gates').update(changes.gates)
