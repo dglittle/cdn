@@ -141,6 +141,7 @@ function draw_palette() {
             if (e.metaKey && e.keyCode == 13) {
                 e.preventDefault()
                 view.filename = b.value
+                view.box = null
                 fetch_model()
             }
         }
@@ -448,7 +449,28 @@ c.onmousedown = function (e) {
             }
 
             if (view.brush == 'box') {
-                if (e.shiftKey && view.box && view.box.length == 4) {
+                if (e.shiftKey && !view.box && view.copy) {
+                    each(view.copy.wires, function (w) {
+                        var X = w.x - view.box[0] + x
+                        var Y = w.y - view.box[1] + y
+                        changes.wires[X + ',' + Y] = model.wires[X + ',' + Y] = {
+                            x : X,
+                            y : Y,
+                            charge : w.charge,
+                            version : w.version
+                        }
+                    })
+                    each(view.copy.gates, function (gate) {
+                        var X = gate.x - view.box[0] + x
+                        var Y = gate.y - view.box[1] + y
+                        changes.gates[X + ',' + Y] = model.gates[X + ',' + Y] = {
+                            x : X,
+                            y : Y,
+                            type : gate.type,
+                            charge : gate.charge
+                        }
+                    })
+                } else if (e.shiftKey && view.box && view.box.length == 4) {
                     if (e.metaKey) {
                         var the_dead = delete_view_box(changes)
                         each(the_dead.wires, function (w) {
