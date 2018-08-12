@@ -125,10 +125,11 @@ document.body.append(key_capture_box)
 function draw_palette() {
     var d = document.createElement('div')
     d.style.width = '100%'
-    d.style.height = PALETTE_HEIGHT + 'px'
+    d.style.height = PALETTE_HEIGHT*2 + 'px'
     
     function create_file_loader() {
         var b = document.createElement('input')
+        b.style.marginLeft = '10px'
         b.style.width = 100 + 'px'
         b.value = view.filename
         b.oninput = function () {
@@ -149,7 +150,7 @@ function draw_palette() {
     function create_button(text, onclick) {
         var b = document.createElement('button')
         b.style.width = PALETTE_HEIGHT*2 + 'px'
-        b.style.height = PALETTE_HEIGHT*2 + 'px'
+        b.style.height = PALETTE_HEIGHT + 'px'
         b.textContent = text
         b.onclick = onclick
         d.append(b)
@@ -169,6 +170,14 @@ function draw_palette() {
     create_button('stop', function () {
         view.play = !view.play
         this.textContent = view.play ? 'stop' : 'play'
+        render()
+    })
+    
+    create_button('set', function () {
+        var j = prompt('give me some JSON:')
+        if (j) {
+            model = JSON.parse(j)
+        }
         render()
     })
 
@@ -203,7 +212,7 @@ document.body.append(draw_palette())
 
 var c = document.createElement('canvas')
 c.width = window.innerWidth
-c.height = window.innerHeight - 50
+c.height = window.innerHeight - PALETTE_HEIGHT*2
 var g = c.getContext('2d')
 document.body.append(c)
 
