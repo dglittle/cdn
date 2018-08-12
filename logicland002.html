@@ -48,20 +48,24 @@ function fetch_model() {
 fetch_model()
 
 function delete_view_box(changes) {
+    var the_dead = { wires : {}, gates : {} }
     for (var y = view.box[1]; y <= view.box[3]; y++) {
         for (var x = view.box[0]; x <= view.box[2]; x++) {
             var w = model.wires[x + ',' + y]
             if (w) {
+                the_dead.wires[x + ',' + y] = model.wires[x + ',' + y]
                 delete model.wires[x + ',' + y]
                 changes.wires[x + ',' + y] = null
             }
             var gate = model.gates[x + ',' + y]
             if (gate) {
+                the_dead.gates[x + ',' + y] = model.gates[x + ',' + y]
                 delete model.gates[x + ',' + y]
                 changes.gates[x + ',' + y] = null
             }
         }
     }
+    return the_dead
 }
 
 var key_capture_box = document.createElement('input')
@@ -386,26 +390,47 @@ c.onmousedown = function (e) {
             if (view.brush == 'box') {
                 if (e.shiftKey && view.box && view.box.length == 4) {
                     if (e.metaKey) {
-                        delete_view_box(changes)
-                    }
-                    for (var dy = 0; dy <= (view.box[3] - view.box[1]); dy++) {
-                        for (var dx = 0; dx <= (view.box[2] - view.box[0]); dx++) {
-                            var w = model.wires[(view.box[0] + dx) + ',' + (view.box[1] + dy)]
-                            if (w) {
-                                changes.wires[(x + dx) + ',' + (y + dy)] = model.wires[(x + dx) + ',' + (y + dy)] = {
-                                    x : x + dx,
-                                    y : y + dy,
-                                    charge : w.charge,
-                                    version : 0
-                                }
+                        var the_dead = delete_view_box(changes)
+                        each(the_dead.wires, function (w) {
+                            var X = w.x - view.box[0] + x
+                            var Y = w.y - view.box[1] + y
+                            changes.wires[X + ',' + Y] = model.wires[X + ',' + Y] = {
+                                x : X,
+                                y : Y,
+                                charge : w.charge,
+                                version : w.version
                             }
-                            var gate = model.gates[(view.box[0] + dx) + ',' + (view.box[1] + dy)]
-                            if (gate) {
-                                changes.gates[(x + dx) + ',' + (y + dy)] = model.gates[(x + dx) + ',' + (y + dy)] = {
-                                    x : x + dx,
-                                    y : y + dy,
-                                    type : gate.type,
-                                    charge : gate.charge || -1
+                        })
+                        each(the_dead.gates, function (gate) {
+                            var X = gate.x - view.box[0] + x
+                            var Y = gate.y - view.box[1] + y
+                            changes.gates[X + ',' + Y] = model.gates[X + ',' + Y] = {
+                                x : X,
+                                y : Y,
+                                type : gate.type,
+                                charge : gate.charge
+                            }
+                        })
+                    } else {
+                        for (var dy = 0; dy <= (view.box[3] - view.box[1]); dy++) {
+                            for (var dx = 0; dx <= (view.box[2] - view.box[0]); dx++) {
+                                var w = model.wires[(view.box[0] + dx) + ',' + (view.box[1] + dy)]
+                                if (w) {
+                                    changes.wires[(x + dx) + ',' + (y + dy)] = model.wires[(x + dx) + ',' + (y + dy)] = {
+                                        x : x + dx,
+                                        y : y + dy,
+                                        charge : w.charge,
+                                        version : 0
+                                    }
+                                }
+                                var gate = model.gates[(view.box[0] + dx) + ',' + (view.box[1] + dy)]
+                                if (gate) {
+                                    changes.gates[(x + dx) + ',' + (y + dy)] = model.gates[(x + dx) + ',' + (y + dy)] = {
+                                        x : x + dx,
+                                        y : y + dy,
+                                        type : gate.type,
+                                        charge : gate.charge || -1
+                                    }
                                 }
                             }
                         }
