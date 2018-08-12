@@ -375,7 +375,7 @@ c.onmousedown = function (e) {
             for (var dx = 0; dx >= -2; dx--) {
                 for (var dy = 0; dy >= -2; dy--) {
                     var gate = model.gates[(x + dx) + ',' + (y + dy)]
-                    if (gate) clicked_gate = gate
+                    if (gate && (gate.type != 'cross_gate' || (dx == 0 && dy == 0))) clicked_gate = gate
                 }
             }
 
