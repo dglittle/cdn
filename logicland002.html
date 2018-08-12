@@ -385,6 +385,9 @@ c.onmousedown = function (e) {
 
             if (view.brush == 'box') {
                 if (e.shiftKey && view.box && view.box.length == 4) {
+                    if (e.metaKey) {
+                        delete_view_box(changes)
+                    }
                     for (var dy = 0; dy <= (view.box[3] - view.box[1]); dy++) {
                         for (var dx = 0; dx <= (view.box[2] - view.box[0]); dx++) {
                             var w = model.wires[(view.box[0] + dx) + ',' + (view.box[1] + dy)]
