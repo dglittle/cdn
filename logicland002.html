@@ -185,7 +185,9 @@ function draw_palette() {
     })
     
     create_button('get', function () {
-        var j = prompt('here is some JSON:', JSON.stringify(model))
+        key_capture_box.value = JSON.stringify(model)
+        key_capture_box.focus()
+        key_capture_box.setSelectionRange(0, key_capture_box.value.length)
     })
 
     // radio buttons
