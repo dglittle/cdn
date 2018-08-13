@@ -28,7 +28,6 @@ var view = {
 }
 
 var model = {
-    version : 0,
     wires : {}, // { x: , y: , charge: , version: }
     gates : {}  // { x: , y: , type: }
 }
@@ -36,7 +35,6 @@ var model = {
 function fetch_model() {
     db.child(view.path + '/' + view.filename).once('value', function (x) {
         model = {
-            version : 0,
             wires : {},
             gates : {}
         }
@@ -188,6 +186,46 @@ function draw_palette() {
         key_capture_box.value = JSON.stringify(model)
         key_capture_box.focus()
         key_capture_box.setSelectionRange(0, key_capture_box.value.length)
+    })
+    
+    create_button('reset', function () {
+        each(model.wires, function (w) {
+            w.charge = -1
+            w.version = 0
+        })
+        render()
+    })
+    
+    create_button('check', function () {
+        var found = false
+        each(model.wires, function (w) {
+            var x = w.x
+            var y = w.y
+            for (var dx = 0; dx >= -2; dx--) {
+                for (var dy = 0; dy >= -2; dy--) {
+                    var gate = model.gates[(x + dx) + ',' + (y + dy)]
+                    if (gate && (gate.type != 'cross_gate' || (dx == 0 && dy == 0))) {
+                        console.log('found at: ' + (x + dx) + ',' + (y + dy))
+                        found = true
+                    }
+                }
+            }
+        })
+        each(model.gates, function (gate) {
+            var x = gate.x
+            var y = gate.y
+            for (var dx = 0; dx >= -2; dx--) {
+                for (var dy = 0; dy >= -2; dy--) {
+                    if (dx == 0 && dy == 0) continue
+                    var other_gate = model.gates[(x + dx) + ',' + (y + dy)]
+                    if (other_gate) {
+                        console.log('found at: ' + (x + dx) + ',' + (y + dy))
+                        found = true
+                    }
+                }
+            }
+        })
+        alert('found = ' + found)
     })
 
     // radio buttons
@@ -450,6 +488,7 @@ c.onmousedown = function (e) {
             }
 
             if (view.brush == 'box') {
+                console.log('x = ' + x + ', y = ' + y)
                 if (e.shiftKey && view.box && view.box.length == 4) {
                     if (e.metaKey) {
                         var the_dead = delete_view_box(changes)
