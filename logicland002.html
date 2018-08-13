@@ -159,6 +159,7 @@ function draw_palette() {
     
     create_button('+', function () {
         view.scale *= 2
+        zoom_thing.value = view.scale
         render()
     })
     
@@ -173,10 +174,11 @@ function draw_palette() {
         d.append(b)
         return b
     }
-    create_zoom_thing()
+    var zoom_thing = create_zoom_thing()
 
     create_button('-', function () {
         view.scale = Math.floor(view.scale/2)
+        zoom_thing.value = view.scale
         render()
     })
     
