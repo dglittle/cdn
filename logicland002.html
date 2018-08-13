@@ -162,8 +162,21 @@ function draw_palette() {
         render()
     })
     
+    function create_zoom_thing() {
+        var b = document.createElement('input')
+        b.style.width = 30 + 'px'
+        b.value = view.scale
+        b.oninput = function () {
+            view.scale = 1*b.value
+            render()
+        }
+        d.append(b)
+        return b
+    }
+    create_zoom_thing()
+
     create_button('-', function () {
-        view.scale /= 2
+        view.scale = Math.floor(view.scale/2)
         render()
     })
     
