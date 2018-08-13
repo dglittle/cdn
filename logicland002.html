@@ -218,7 +218,7 @@ function draw_palette() {
                 for (var dy = 0; dy >= -2; dy--) {
                     if (dx == 0 && dy == 0) continue
                     var other_gate = model.gates[(x + dx) + ',' + (y + dy)]
-                    if (other_gate) {
+                    if (other_gate && (other_gate.type != 'cross_gate')) {
                         console.log('found at: ' + (x + dx) + ',' + (y + dy))
                         found = true
                     }
@@ -403,7 +403,7 @@ function render() {
 
     each(model.gates, function (_) {
         if (_.type == 'cross_gate') {
-            g.fillStyle = 'black'
+            g.fillStyle = 'rgba(0, 0, 0, 1)'
             g.fillRect(_.x, _.y, 1, 1)
         } else {
             g.fillStyle =
