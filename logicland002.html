@@ -294,26 +294,36 @@ c.height = window.innerHeight - PALETTE_HEIGHT*2
 var g = c.getContext('2d')
 document.body.append(c)
 
+var wave_front = {}
+
 function propagate() {
     var changes = {}
 
     var max_version = 0    
-    each(model.wires, function (_, _key) {
-        if (_.version > max_version) max_version = _.version
+    each(wave_front, function (w, key) {
+        w = model.wires[key]
+        if (w.version > max_version) max_version = w.version
         each([
-            model.wires[_.x       + ',' + (_.y - 1)],
-            model.wires[(_.x + 1) + ',' + _.y      ],
-            model.wires[_.x       + ',' + (_.y + 1)],
-            model.wires[(_.x - 1) + ',' + _.y      ]
-        ], function (__) {
-            if (__ && __.version > _.version) {
-                if (!changes[_key] || __.version > changes[_key].version) {
-                    changes[_key] = {
-                        charge : __.charge,
-                        version : __.version
+            model.wires[w.x       + ',' + (w.y - 1)],
+            model.wires[(w.x + 1) + ',' + w.y      ],
+            model.wires[w.x       + ',' + (w.y + 1)],
+            model.wires[(w.x - 1) + ',' + w.y      ]
+        ], function (_, _key) {
+            each([
+                model.wires[_.x       + ',' + (_.y - 1)],
+                model.wires[(_.x + 1) + ',' + _.y      ],
+                model.wires[_.x       + ',' + (_.y + 1)],
+                model.wires[(_.x - 1) + ',' + _.y      ]
+            ], function (__) {
+                if (__ && __.version > _.version) {
+                    if (!changes[_key] || __.version > changes[_key].version) {
+                        changes[_key] = {
+                            charge : __.charge,
+                            version : __.version
+                        }
                     }
                 }
-            }
+            })
         })
     })
     
@@ -377,13 +387,14 @@ function propagate() {
                 output = 1
             if (_.type == 'toggle')
                 output = _.charge
+            
             each([
                 model.wires[(_.x + 1) + ',' + (_.y - 1)],
                 model.wires[(_.x + 3) + ',' + (_.y + 1)],
                 model.wires[(_.x + 1) + ',' + (_.y + 3)],
                 model.wires[(_.x - 1) + ',' + (_.y + 1)]
             ], function (__) {
-                if (__) {
+                if (__ && __.charge != output) {
                     changes[__.x + ',' + __.y] = {
                         charge : output,
                         version : max_version + 1
@@ -394,7 +405,6 @@ function propagate() {
     })
     
     if (view.shocks) {
-        console.log('got here!?')
         view.shocks--
         each(view.shocker, function (charge, key) {
             changes[key] = {
@@ -408,6 +418,8 @@ function propagate() {
         model.wires[key].version = _.version
         model.wires[key].charge = _.charge
     })
+    
+    wave_front = changes
 }
 
 function render() {
@@ -471,19 +483,28 @@ function render() {
 var t_sum = 0
 var t_count = 0
 
+var t2_sum = 0
+var t2_count = 0
+
 function loop() {
     
-    var t0 = Date.now()
     
     if (view.play) {
+    var t0 = Date.now()
         propagate()
-        render()
-    }
-    
     var t1 = Date.now()
     t_sum += t1 - t0
     t_count += 1
-    // console.log('time: ' + (t_sum / t_count))
+    //console.log('time: ' + (t_sum / t_count))
+    
+    var t0 = Date.now()
+        render()
+    var t1 = Date.now()
+    t2_sum += t1 - t0
+    t2_count += 1
+    //console.log('time2: ' + (t2_sum / t2_count))
+    }
+    
 
     
     setTimeout(loop, 20)
