@@ -216,6 +216,8 @@ function draw_palette() {
         if (s) {
             view.shocker = JSON.parse(s)
             view.shocks += 20
+            
+            console.log(JSON.stringify(view))
         }
     })
     
@@ -394,6 +396,7 @@ function propagate() {
     })
     
     if (view.shocks) {
+        console.log('got here!?')
         view.shocks--
         each(view.shocker, function (charge, key) {
             changes[key] = {
