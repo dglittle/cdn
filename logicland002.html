@@ -302,13 +302,16 @@ function propagate() {
     var max_version = 0    
     each(wave_front, function (w, key) {
         w = model.wires[key]
+        if (!w) { return }
         if (w.version > max_version) max_version = w.version
         each([
             model.wires[w.x       + ',' + (w.y - 1)],
             model.wires[(w.x + 1) + ',' + w.y      ],
             model.wires[w.x       + ',' + (w.y + 1)],
             model.wires[(w.x - 1) + ',' + w.y      ]
-        ], function (_, _key) {
+        ], function (_) {
+            if (!_) { return }
+            var _key = _.x + ',' + _.y
             each([
                 model.wires[_.x       + ',' + (_.y - 1)],
                 model.wires[(_.x + 1) + ',' + _.y      ],
