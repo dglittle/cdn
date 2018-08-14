@@ -28,6 +28,7 @@ var view = {
 }
 
 var model = {
+    version : 0,
     wires : {}, // { x: , y: , charge: , version: }
     gates : {}  // { x: , y: , type: }
 }
@@ -35,11 +36,16 @@ var model = {
 function fetch_model() {
     db.child(view.path + '/' + view.filename).once('value', function (x) {
         model = {
+            version : 0,
             wires : {},
             gates : {}
         }
         each(x.val(), function (v, k) {
             model[k] = v
+        })
+        each(model.wires, function (w) {
+            if (w.version > model.version)
+                model.version = w.version
         })
         render()
     }, function (x) { console.log('bad news!', x) })
@@ -299,11 +305,9 @@ var wave_front = {}
 function propagate() {
     var changes = {}
 
-    var max_version = 0    
     each(wave_front, function (w, key) {
         w = model.wires[key]
         if (!w) { return }
-        if (w.version > max_version) max_version = w.version
         each([
             model.wires[w.x       + ',' + (w.y - 1)],
             model.wires[(w.x + 1) + ',' + w.y      ],
@@ -398,9 +402,10 @@ function propagate() {
                 model.wires[(_.x - 1) + ',' + (_.y + 1)]
             ], function (__) {
                 if (__ && __.charge != output) {
+                    model.version++
                     changes[__.x + ',' + __.y] = {
                         charge : output,
-                        version : max_version + 1
+                        version : model.version
                     }
                 }
             })
@@ -410,9 +415,12 @@ function propagate() {
     if (view.shocks) {
         view.shocks--
         each(view.shocker, function (charge, key) {
-            changes[key] = {
-                charge : charge,
-                version : max_version + 1
+            if (model.wires[key].charge != charge) {
+                model.version++
+                changes[key] = {
+                    charge : charge,
+                    version : model.version
+                }
             }
         })
     }
