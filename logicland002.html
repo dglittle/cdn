@@ -32,6 +32,13 @@ var model = {
     gates : {}  // { x: , y: , type: }
 }
 
+
+var a = []
+
+
+blah br
+
+
 function fetch_model() {
     db.child(view.path + '/' + view.filename).once('value', function (x) {
         model = {
@@ -211,6 +218,14 @@ function draw_palette() {
         render()
     })
     
+    create_button('shock', function () {
+        var s = prompt('give me some jsOn!?!:')
+        if (s) {
+            view.shocker = JSON.parse(s)
+            view.shocks += 20
+        }
+    })
+    
     create_button('check', function () {
         var found = false
         each(model.wires, function (w) {
@@ -384,6 +399,16 @@ function propagate() {
             })
         }
     })
+    
+    if (view.shocks) {
+        view.shocks--
+        each(view.shocker, function (charge, key) {
+            changes[key] = {
+                charge : charge,
+                version : max_version + 1
+            }
+        })
+    }
     
     each(changes, function (_, key) {
         model.wires[key].version = _.version
