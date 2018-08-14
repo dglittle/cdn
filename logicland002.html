@@ -32,13 +32,6 @@ var model = {
     gates : {}  // { x: , y: , type: }
 }
 
-
-var a = []
-
-
-blah br
-
-
 function fetch_model() {
     db.child(view.path + '/' + view.filename).once('value', function (x) {
         model = {
