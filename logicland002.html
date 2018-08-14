@@ -221,7 +221,7 @@ function draw_palette() {
         var s = prompt('give me some jsOn!?!:')
         if (s) {
             view.shocker = JSON.parse(s)
-            view.shocks = (view.shocks || 0) + 20
+            view.shocks = (view.shocks || 0) + 50
         }
     })
     
@@ -415,12 +415,10 @@ function propagate() {
     if (view.shocks) {
         view.shocks--
         each(view.shocker, function (charge, key) {
-            if (model.wires[key].charge != charge) {
-                model.version++
-                changes[key] = {
-                    charge : charge,
-                    version : model.version
-                }
+            model.version++
+            changes[key] = {
+                charge : charge,
+                version : model.version
             }
         })
     }
