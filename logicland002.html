@@ -215,9 +215,7 @@ function draw_palette() {
         var s = prompt('give me some jsOn!?!:')
         if (s) {
             view.shocker = JSON.parse(s)
-            view.shocks += 20
-            
-            console.log(JSON.stringify(view))
+            view.shocks = (view.shocks || 0) + 20
         }
     })
     
