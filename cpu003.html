@@ -440,7 +440,7 @@ function propagate() {
 
 function render() {
     g.setTransform(1, 0, 0, 1, 0, 0)
-    g.fillStyle = 'rgba(0, 255, 0, 1)'
+    g.fillStyle = 'rgba(0, 200, 0, 1)'
     g.fillRect(0, 0, c.width, c.height)
 
     g.setTransform(view.scale, 0, 0, view.scale,
@@ -467,7 +467,7 @@ function render() {
     g.stroke()
 
     each(model.wires, function (_) {
-        g.fillStyle = _.charge > 0 ? 'gold' : 'rgb(128, 128, 0)'
+        g.fillStyle = _.charge > 0 ? 'rgb(255,255,0)' : 'rgb(100, 100, 0)'
         g.fillRect(_.x, _.y, 1, 1)
     })
 
@@ -480,6 +480,9 @@ function render() {
                 (_.type == 'or_gate') ? 'orange' :
                 (_.type == 'and_gate') ? 'blue' :
                 (_.type == 'nand_gate') ? 'magenta' :
+                // (_.type == 'or_gate') ? 'rgb(255,128,128)' :
+                // (_.type == 'and_gate') ? 'rgb(128,255,255)' :
+                // (_.type == 'nand_gate') ? 'rgb(128,128,255)' :
                 (_.type == 'toggle') ?
                     (_.charge > 0 ? 'cyan' : 'rgb(0, 128, 128)') :
                 'red'
