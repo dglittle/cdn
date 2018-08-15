@@ -1,0 +1,835 @@
+<script src="https://glittle.github.io/cdn/cpu003.js"></script>
+<body style="margin:0px"></body>
+<script>
+
+var PALETTE_HEIGHT = 20
+
+var config = {
+    apiKey: "AIzaSyDVM0ekHwUqC_rGsqkT7fJ71FyRum9cxko",
+    authDomain: "glittle.firebaseapp.com",
+    databaseURL: "https://glittle.firebaseio.com",
+    projectId: "glittle",
+    storageBucket: "",
+    messagingSenderId: "1000468536093"
+}
+var db = firebase.initializeApp(config).database().ref()
+
+var view = {
+    x : 0,
+    y : 0,
+    scale : 16,
+    brush : 'wire',
+    play : true,
+    prev_x : 0,
+    prev_y : 0,
+    box : null
+}
+
+var model = cpu003
+
+function copy_view_box() {
+    var ret = { wires : {}, gates : {} }
+    for (var y = view.box[1]; y <= view.box[3]; y++) {
+        for (var x = view.box[0]; x <= view.box[2]; x++) {
+            var w = model.wires[x + ',' + y]
+            if (w) ret.wires[x + ',' + y] = w
+            
+            var gate = model.gates[x + ',' + y]
+            if (gate) ret.gates[x + ',' + y] = gate
+        }
+    }
+    return ret
+}
+
+function delete_view_box(changes) {
+    var the_dead = copy_view_box()
+    each(the_dead.wires, function (w) {
+        delete model.wires[w.x + ',' + w.y]
+        changes.wires[w.x + ',' + w.y] = null
+    })
+    each(the_dead.gates, function (gate) {
+        delete model.gates[gate.x + ',' + gate.y]
+        changes.gates[gate.x + ',' + gate.y] = null
+    })
+    return the_dead
+}
+
+function draw_palette() {
+    var d = document.createElement('div')
+    d.style.width = '100%'
+    d.style.height = PALETTE_HEIGHT*2 + 'px'
+
+    key_capture_box = document.createElement('textarea')
+    key_capture_box.style.width = '20px'
+    key_capture_box.style.height = '19px'
+    key_capture_box.style.marginBottom = '-5px'
+    key_capture_box.addEventListener('keydown', function (e) {
+        if (view.brush == 'box' && e.keyCode == 8 && view.box && view.box.length == 4) {
+            // 8 = DELETE
+            var changes = { wires : {}, gates : {} }
+            delete_view_box(changes)
+
+            render()
+        } else if (view.brush == 'box' && e.keyCode == 72 && view.box && view.box.length == 4) {
+            // 72 = h
+            var changes = { wires : {}, gates : {} }
+            var the_dead = delete_view_box(changes)
+            each(the_dead.wires, function (w) {
+                var X = view.box[0] + (view.box[2] - view.box[0]) - (w.x - view.box[0])
+                var Y = w.y
+                changes.wires[X + ',' + Y] = model.wires[X + ',' + Y] = {
+                    x : X,
+                    y : Y,
+                    charge : w.charge,
+                    version : w.version
+                }
+            })
+            each(the_dead.gates, function (gate) {
+                var X = view.box[0] + (view.box[2] - view.box[0]) - (gate.x - view.box[0]) - (gate.type != 'cross_gate' ? 2 : 0)
+                var Y = gate.y
+                changes.gates[X + ',' + Y] = model.gates[X + ',' + Y] = {
+                    x : X,
+                    y : Y,
+                    type : gate.type,
+                    charge : gate.charge || -1
+                }
+            })
+
+            render()
+        } else if (view.brush == 'box' && e.keyCode == 86 && view.box && view.box.length == 4) {
+            // 86 = v
+            var changes = { wires : {}, gates : {} }
+            var the_dead = delete_view_box(changes)
+            each(the_dead.wires, function (w) {
+                var X = w.x
+                var Y = view.box[1] + (view.box[3] - view.box[1]) - (w.y - view.box[1])
+                changes.wires[X + ',' + Y] = model.wires[X + ',' + Y] = {
+                    x : X,
+                    y : Y,
+                    charge : w.charge,
+                    version : w.version
+                }
+            })
+            each(the_dead.gates, function (gate) {
+                var X = gate.x
+                var Y = view.box[1] + (view.box[3] - view.box[1]) - (gate.y - view.box[1]) - (gate.type != 'cross_gate' ? 2 : 0)
+                changes.gates[X + ',' + Y] = model.gates[X + ',' + Y] = {
+                    x : X,
+                    y : Y,
+                    type : gate.type,
+                    charge : gate.charge || -1
+                }
+            })
+
+            render()
+        } else if (view.brush == 'box' && e.keyCode == 70 && view.box && view.box.length == 4) {
+            // 70 = f
+            var changes = { wires : {}, gates : {} }
+            var the_dead = delete_view_box(changes)
+            each(the_dead.wires, function (w) {
+                var X = w.y - view.box[1] + view.box[0]
+                var Y = w.x - view.box[0] + view.box[1]
+                changes.wires[X + ',' + Y] = model.wires[X + ',' + Y] = {
+                    x : X,
+                    y : Y,
+                    charge : w.charge,
+                    version : w.version
+                }
+            })
+            each(the_dead.gates, function (gate) {
+                var X = gate.y - view.box[1] + view.box[0]
+                var Y = gate.x - view.box[0] + view.box[1]
+                changes.gates[X + ',' + Y] = model.gates[X + ',' + Y] = {
+                    x : X,
+                    y : Y,
+                    type : gate.type,
+                    charge : gate.charge || -1
+                }
+            })
+            view.box = [view.box[0], view.box[1], view.box[3] - view.box[1] + view.box[0], view.box[2] - view.box[0] + view.box[1]]
+
+            render()
+        }
+    })
+    d.append(key_capture_box)
+
+    function create_file_loader() {
+        var b = document.createElement('input')
+        b.style.marginLeft = '10px'
+        b.style.width = 100 + 'px'
+        b.value = view.filename
+        b.oninput = function () {
+            view.filename = b.value
+        }
+        b.onkeydown = function (e) {
+            if (e.metaKey && e.keyCode == 13) {
+                e.preventDefault()
+                view.filename = b.value
+                fetch_model()
+            }
+        }
+        d.append(b)
+        return b
+    }
+    create_file_loader()
+
+    function create_button(text, onclick) {
+        var b = document.createElement('button')
+        b.style.width = PALETTE_HEIGHT*2 + 'px'
+        b.style.height = PALETTE_HEIGHT + 'px'
+        b.textContent = text
+        b.onclick = onclick
+        d.append(b)
+        return b
+    }
+    
+    create_button('+', function () {
+        view.scale *= 2
+        zoom_thing.value = view.scale
+        render()
+    })
+    
+    function create_zoom_thing() {
+        var b = document.createElement('input')
+        b.style.width = 30 + 'px'
+        b.value = view.scale
+        b.oninput = function () {
+            view.scale = 1*b.value
+            render()
+        }
+        d.append(b)
+        return b
+    }
+    var zoom_thing = create_zoom_thing()
+
+    create_button('-', function () {
+        view.scale = Math.floor(view.scale/2)
+        zoom_thing.value = view.scale
+        render()
+    })
+    
+    function create_location_viewer() {
+        var b = document.createElement('input')
+        b.style.width = 50 + 'px'
+        b.value = 'x,y'
+        d.append(b)
+        return b
+    }
+    location_viewer = create_location_viewer()
+    
+    
+    create_button('stop', function () {
+        view.play = !view.play
+        this.textContent = view.play ? 'stop' : 'play'
+        render()
+    })
+    
+    create_button('set', function () {
+        var j = prompt('give me some JSON:')
+        if (j) {
+            model = JSON.parse(j)
+            db.child(view.path + '/' + view.filename).set(model)
+        }
+        render()
+    })
+    
+    create_button('get', function () {
+        key_capture_box.value = JSON.stringify(model)
+        key_capture_box.focus()
+        key_capture_box.setSelectionRange(0, key_capture_box.value.length)
+    })
+    
+    create_button('reset', function () {
+        each(model.wires, function (w) {
+            w.charge = -1
+            w.version = 0
+        })
+        render()
+    })
+    
+    create_button('shock', function () {
+        var s = prompt('give me some jsOn!?!:')
+        if (s) {
+            view.shocker = JSON.parse(s)
+            view.shocks = (view.shocks || 0) + 50
+        }
+    })
+    
+    create_button('check', function () {
+        var found = false
+        each(model.wires, function (w) {
+            var x = w.x
+            var y = w.y
+            for (var dx = 0; dx >= -2; dx--) {
+                for (var dy = 0; dy >= -2; dy--) {
+                    var gate = model.gates[(x + dx) + ',' + (y + dy)]
+                    if (gate && (gate.type != 'cross_gate' || (dx == 0 && dy == 0))) {
+                        console.log('found at: ' + (x + dx) + ',' + (y + dy))
+                        found = true
+                    }
+                }
+            }
+            
+            if (model.wires[(x + 1) + ',' + (y + 0)] &&
+                model.wires[(x + 0) + ',' + (y + 1)] &&
+                model.wires[(x - 1) + ',' + (y + 0)] &&
+                model.wires[(x + 0) + ',' + (y - 1)]) {
+                console.log('found cross-roads at: ' + (x) + ',' + (y))
+                found = true
+            }
+        })
+        each(model.gates, function (gate) {
+            var x = gate.x
+            var y = gate.y
+            for (var dx = 0; dx >= -2; dx--) {
+                for (var dy = 0; dy >= -2; dy--) {
+                    if (dx == 0 && dy == 0) continue
+                    var other_gate = model.gates[(x + dx) + ',' + (y + dy)]
+                    if (other_gate && (other_gate.type != 'cross_gate')) {
+                        console.log('found at: ' + (x + dx) + ',' + (y + dy))
+                        found = true
+                    }
+                }
+            }
+        })
+        alert('found = ' + found)
+    })
+
+    // radio buttons
+    var radio_buttons = []
+    
+    function create_radio_button(text, brush, cb) {
+        var b = create_button(text, function () {
+            view.brush = brush
+            if (cb) cb()
+            each(radio_buttons, function (x) { x.style.background = 'grey' })
+            this.style.background = 'gold'
+        })
+        radio_buttons.push(b)
+        b.onclick()
+    }
+    
+    create_radio_button('WIRE', 'wire')
+    create_radio_button('CROSS', 'cross_gate')
+    create_radio_button('OR', 'or_gate')
+    create_radio_button('AND', 'and_gate')
+    create_radio_button('NAND', 'nand_gate')
+    create_radio_button('TOGGLE', 'toggle')
+    create_radio_button('delete', 'delete')
+    create_radio_button('box', 'box', function () {
+        key_capture_box.focus()
+    })
+
+    return d
+}
+document.body.append(draw_palette())
+
+var c = document.createElement('canvas')
+c.width = window.innerWidth
+c.height = window.innerHeight - PALETTE_HEIGHT*2
+var g = c.getContext('2d')
+document.body.append(c)
+
+var wave_front = {}
+
+function propagate() {
+    var changes = {}
+
+    each(wave_front, function (w, key) {
+        w = model.wires[key]
+        if (!w) { return }
+        each([
+            model.wires[w.x       + ',' + (w.y - 1)],
+            model.wires[(w.x + 1) + ',' + w.y      ],
+            model.wires[w.x       + ',' + (w.y + 1)],
+            model.wires[(w.x - 1) + ',' + w.y      ]
+        ], function (_) {
+            if (!_) { return }
+            var _key = _.x + ',' + _.y
+            each([
+                model.wires[_.x       + ',' + (_.y - 1)],
+                model.wires[(_.x + 1) + ',' + _.y      ],
+                model.wires[_.x       + ',' + (_.y + 1)],
+                model.wires[(_.x - 1) + ',' + _.y      ]
+            ], function (__) {
+                if (__ && __.version > _.version) {
+                    if (!changes[_key] || __.version > changes[_key].version) {
+                        changes[_key] = {
+                            charge : __.charge,
+                            version : __.version
+                        }
+                    }
+                }
+            })
+        })
+    })
+    
+    each(model.gates, function (_) {
+        if (_.type == 'cross_gate') {
+            var ks = [
+                _.x       + ',' + (_.y - 1),
+                (_.x + 1) + ',' + _.y      ,
+                _.x       + ',' + (_.y + 1),
+                (_.x - 1) + ',' + _.y      
+            ]
+            var ws = [
+                model.wires[ks[0]],
+                model.wires[ks[1]],
+                model.wires[ks[2]],
+                model.wires[ks[3]]
+            ]
+            each([
+                [0, 2],
+                [2, 0],
+                [1, 3],
+                [3, 1]
+            ], function (__) {
+                var i = __[0]
+                var ii = __[1]
+                if (ws[i] && ws[ii]) {
+                    if (ws[i].version > ws[ii].version) {
+                        if (!changes[ks[ii]] || ws[i].version > changes[ks[ii]].version) {
+                            changes[ks[ii]] = {
+                                charge : ws[i].charge,
+                                version : ws[i].version
+                            }
+                        }
+                    }
+                }
+            })
+        } else {
+            var high_count = 0
+            var low_count = 0
+            each([
+                model.wires[(_.x + 0) + ',' + (_.y - 1)],
+                model.wires[(_.x + 2) + ',' + (_.y - 1)],
+                model.wires[(_.x + 3) + ',' + (_.y + 0)],
+                model.wires[(_.x + 3) + ',' + (_.y + 2)],
+                model.wires[(_.x + 0) + ',' + (_.y + 3)],
+                model.wires[(_.x + 2) + ',' + (_.y + 3)],
+                model.wires[(_.x - 1) + ',' + (_.y + 0)],
+                model.wires[(_.x - 1) + ',' + (_.y + 2)]
+            ], function (__) {
+                if (__) {
+                    if (__.charge > 0) high_count++
+                    else low_count++
+                }
+            })
+            var output = -1
+            if (_.type == 'or_gate' && high_count > 0)
+                output = 1
+            if (_.type == 'and_gate' && low_count == 0)
+                output = 1
+            if (_.type == 'nand_gate' && low_count != 0)
+                output = 1
+            if (_.type == 'toggle')
+                output = _.charge
+            
+            each([
+                model.wires[(_.x + 1) + ',' + (_.y - 1)],
+                model.wires[(_.x + 3) + ',' + (_.y + 1)],
+                model.wires[(_.x + 1) + ',' + (_.y + 3)],
+                model.wires[(_.x - 1) + ',' + (_.y + 1)]
+            ], function (__) {
+                if (__ && __.charge != output) {
+                    model.version++
+                    changes[__.x + ',' + __.y] = {
+                        charge : output,
+                        version : model.version
+                    }
+                }
+            })
+        }
+    })
+    
+    if (view.shocks) {
+        view.shocks--
+        each(view.shocker, function (charge, key) {
+            model.version++
+            changes[key] = {
+                charge : charge,
+                version : model.version
+            }
+        })
+    }
+    
+    each(changes, function (_, key) {
+        model.wires[key].version = _.version
+        model.wires[key].charge = _.charge
+    })
+    
+    wave_front = changes
+}
+
+function render() {
+    g.setTransform(1, 0, 0, 1, 0, 0)
+    g.fillStyle = 'rgba(0, 255, 0, 1)'
+    g.fillRect(0, 0, c.width, c.height)
+
+    g.setTransform(view.scale, 0, 0, view.scale,
+        Math.floor(c.width/2) - view.x*view.scale,
+        Math.floor(c.height/2) - view.y*view.scale)
+
+    var x_tiles = c.width / view.scale + 1
+    var y_tiles = c.height / view.scale + 1
+    
+    var x_first_tile = Math.floor(view.x - c.width/2/view.scale)
+    var y_first_tile = Math.floor(view.y - c.height/2/view.scale)
+
+    g.beginPath()
+    for (var y = y_first_tile; y < y_first_tile + y_tiles; y++) {
+        g.moveTo(x_first_tile, y + 0.5/view.scale)
+        g.lineTo(x_first_tile + x_tiles, y + 0.5/view.scale)
+    }
+    for (var x = x_first_tile; x < x_first_tile + x_tiles; x++) {
+        g.moveTo(x + 0.5/view.scale, y_first_tile)
+        g.lineTo(x + 0.5/view.scale, y_first_tile + y_tiles)
+    }
+    g.strokeStyle = 'black'
+    g.lineWidth = 1/view.scale
+    g.stroke()
+
+    each(model.wires, function (_) {
+        g.fillStyle = _.charge > 0 ? 'gold' : 'rgb(128, 128, 0)'
+        g.fillRect(_.x, _.y, 1, 1)
+    })
+
+    each(model.gates, function (_) {
+        if (_.type == 'cross_gate') {
+            g.fillStyle = 'rgba(0, 0, 0, 1)'
+            g.fillRect(_.x, _.y, 1, 1)
+        } else {
+            g.fillStyle =
+                (_.type == 'or_gate') ? 'orange' :
+                (_.type == 'and_gate') ? 'blue' :
+                (_.type == 'nand_gate') ? 'magenta' :
+                (_.type == 'toggle') ?
+                    (_.charge > 0 ? 'cyan' : 'rgb(0, 128, 128)') :
+                'red'
+            g.fillRect(_.x, _.y, 3, 3)
+        }
+    })
+    
+    if (view.brush == 'box' && view.box) {
+        g.fillStyle = 'rgba(255,0,0,0.6)'
+        if (view.box.length == 2)
+            g.fillRect(view.box[0], view.box[1], 1, 1)
+        else
+            g.fillRect(view.box[0], view.box[1], view.box[2] - view.box[0] + 1, view.box[3] - view.box[1] + 1)
+    }
+}
+
+var t_sum = 0
+var t_count = 0
+
+var t2_sum = 0
+var t2_count = 0
+
+function loop() {
+    
+    
+    if (view.play) {
+    var t0 = Date.now()
+        propagate()
+        propagate()
+        propagate()
+    var t1 = Date.now()
+    t_sum += t1 - t0
+    t_count += 1
+    //console.log('time: ' + (t_sum / t_count))
+    
+    var t0 = Date.now()
+        render()
+    var t1 = Date.now()
+    t2_sum += t1 - t0
+    t2_count += 1
+    //console.log('time2: ' + (t2_sum / t2_count))
+    }
+    
+
+    
+    setTimeout(loop, 20)
+}
+loop()
+
+c.onmousemove = function (e) {
+    var pos = getRelPos(c, e)
+    var x = Math.floor((pos.x - c.width/2) / view.scale + view.x)
+    var y = Math.floor((pos.y - c.height/2) / view.scale + view.y)
+    location_viewer.value = x + ',' + y
+}
+
+c.onmousedown = function (e) {
+    e.preventDefault()
+    var old_pos = getRelPos(c, e)
+    var moved = false
+
+    var oldMove = document.onmousemove
+    document.onmousemove = function (e) {
+        var new_pos = getRelPos(c, e)
+        moved = true
+        
+        view.x -= (new_pos.x - old_pos.x) / view.scale
+        view.y -= (new_pos.y - old_pos.y) / view.scale
+        render()
+        
+        old_pos = new_pos
+    }
+    
+    var oldUp = document.onmouseup
+    document.onmouseup = function (e) {
+        document.onmousemove = oldMove
+        document.onmouseup = oldUp
+
+        if (!moved) {
+            var new_pos = getRelPos(c, e)
+
+            var x = Math.floor((new_pos.x - c.width/2) / view.scale + view.x)
+            var y = Math.floor((new_pos.y - c.height/2) / view.scale + view.y)
+            var key = x + ',' + y
+            
+            var changes = { wires : {}, gates : {} }
+            
+            var clicked_gate = null
+            for (var dx = 0; dx >= -2; dx--) {
+                for (var dy = 0; dy >= -2; dy--) {
+                    var gate = model.gates[(x + dx) + ',' + (y + dy)]
+                    if (gate && (gate.type != 'cross_gate' || (dx == 0 && dy == 0))) clicked_gate = gate
+                }
+            }
+
+            if (view.brush == 'box') {
+                console.log('x = ' + x + ', y = ' + y)
+                if (e.shiftKey && view.box && view.box.length == 4) {
+                    if (e.metaKey) {
+                        var the_dead = delete_view_box(changes)
+                        each(the_dead.wires, function (w) {
+                            var X = w.x - view.box[0] + x
+                            var Y = w.y - view.box[1] + y
+                            changes.wires[X + ',' + Y] = model.wires[X + ',' + Y] = {
+                                x : X,
+                                y : Y,
+                                charge : w.charge,
+                                version : w.version
+                            }
+                        })
+                        each(the_dead.gates, function (gate) {
+                            var X = gate.x - view.box[0] + x
+                            var Y = gate.y - view.box[1] + y
+                            changes.gates[X + ',' + Y] = model.gates[X + ',' + Y] = {
+                                x : X,
+                                y : Y,
+                                type : gate.type,
+                                charge : gate.charge
+                            }
+                        })
+                        view.box = [x, y, view.box[2] - view.box[0] + x, view.box[3] - view.box[1] + y]
+                        view.copy = copy_view_box()
+                    } else {
+                        each(view.copy.wires, function (w) {
+                            var X = w.x - view.box[0] + x
+                            var Y = w.y - view.box[1] + y
+                            changes.wires[X + ',' + Y] = model.wires[X + ',' + Y] = {
+                                x : X,
+                                y : Y,
+                                charge : w.charge,
+                                version : w.version
+                            }
+                        })
+                        each(view.copy.gates, function (gate) {
+                            var X = gate.x - view.box[0] + x
+                            var Y = gate.y - view.box[1] + y
+                            changes.gates[X + ',' + Y] = model.gates[X + ',' + Y] = {
+                                x : X,
+                                y : Y,
+                                type : gate.type,
+                                charge : gate.charge || -1
+                            }
+                        })
+                    }
+                } else {
+                    if (!view.box || view.box.length == 4) {
+                        view.box = [x, y]
+                    } else {
+                        view.box = [
+                            Math.min(view.box[0], x),
+                            Math.min(view.box[1], y),
+                            Math.max(view.box[0], x),
+                            Math.max(view.box[1], y)
+                        ]
+                        view.copy = copy_view_box()
+                    }
+                }
+            } else if (view.brush == 'delete') {
+                if (e.shiftKey) {
+                    function delete_wires_at(x, y) {
+                        var key = x + ',' + y
+                        
+                        var w = model.wires[key]
+                        if (w) {
+                            delete model.wires[key]
+                            changes.wires[key] = null
+                        }
+                        
+                        var gate = model.gates[key]
+                        if (gate) {
+                            if (gate.type == 'cross_gate') {
+                                changes.wires[key] = model.wires[key] = {
+                                    x : x,
+                                    y : y,
+                                    charge : -1,
+                                    version : 0
+                                }
+                            }
+                            delete model.gates[key]
+                            changes.gates[key] = null
+                        }
+                    }
+                    var dx = x - view.prev_x
+                    var dy = y - view.prev_y
+                    if (Math.abs(dx) > Math.abs(dy)) {
+                        if (dx > 0)
+                            for (var i = view.prev_x; i <= x; i++)
+                                delete_wires_at(i, view.prev_y)
+                        else
+                            for (var i = x; i <= view.prev_x; i++)
+                                delete_wires_at(i, view.prev_y)
+                    } else {
+                        if (dy > 0)
+                            for (var i = view.prev_y; i <= y; i++)
+                                delete_wires_at(view.prev_x, i)
+                        else
+                            for (var i = y; i <= view.prev_y; i++)
+                                delete_wires_at(view.prev_x, i)
+                    }
+                } else {
+                    delete model.wires[key]
+                    changes.wires[key] = null
+                    delete model.gates[key]
+                    changes.gates[key] = null
+                    if (clicked_gate) {
+                        delete model.gates[clicked_gate.x + ',' + clicked_gate.y]
+                        changes.gates[clicked_gate.x + ',' + clicked_gate.y] = null
+                    }
+                }
+            } else if (clicked_gate && clicked_gate.type == 'toggle') {
+                clicked_gate.charge *= -1
+                changes.gates[clicked_gate.x + ',' + clicked_gate.y] = clicked_gate
+            } else if (view.brush == 'wire') {
+                function add_wire(x, y, direction) {
+                    if (direction == 'horz') {
+                        if (model.wires[x + ',' + y] &&
+                            model.wires[x + ',' + (y - 1)] &&
+                            model.wires[x + ',' + (y + 1)]) {
+                            delete model.wires[x + ',' + y]
+                            changes.wires[x + ',' + y] = null
+                            changes.gates[x + ',' + y] = model.gates[x + ',' + y] = {
+                                x : x,
+                                y : y,
+                                type : 'cross_gate',
+                                charge : -1
+                            }
+                            return
+                        }
+                    }
+                    if (direction == 'vert') {
+                        if (model.wires[x + ',' + y] &&
+                            model.wires[(x - 1) + ',' + y] &&
+                            model.wires[(x + 1) + ',' + y]) {
+                            delete model.wires[x + ',' + y]
+                            changes.wires[x + ',' + y] = null
+                            changes.gates[x + ',' + y] = model.gates[x + ',' + y] = {
+                                x : x,
+                                y : y,
+                                type : 'cross_gate',
+                                charge : -1
+                            }
+                            return
+                        }
+                    }
+                    changes.wires[x + ',' + y] = model.wires[x + ',' + y] = {
+                        x : x,
+                        y : y,
+                        charge : -1,
+                        version : 0
+                    }
+                }
+                if (e.shiftKey) {
+                    var dx = x - view.prev_x
+                    var dy = y - view.prev_y
+                    if (Math.abs(dx) > Math.abs(dy)) {
+                        if (dx > 0) {
+                            for (var i = view.prev_x; i <= x; i++)
+                                add_wire(i, view.prev_y, 'horz')
+                        } else {
+                            for (var i = x; i <= view.prev_x; i++)
+                                add_wire(i, view.prev_y, 'horz')
+                        }
+                    } else {
+                        if (dy > 0) {
+                            for (var i = view.prev_y; i <= y; i++)
+                                add_wire(view.prev_x, i, 'vert')
+                        } else {
+                            for (var i = y; i <= view.prev_y; i++)
+                                add_wire(view.prev_x, i, 'vert')
+                        }
+                    }
+                } else {
+                    add_wire(x, y)
+                }
+            } else {
+                delete model.wires[key]
+                changes.wires[key] = null
+                changes.gates[key] = model.gates[key] = {
+                    x : x,
+                    y : y,
+                    type : view.brush,
+                    charge : -1
+                }
+            }
+            
+            view.prev_x = x
+            view.prev_y = y
+
+            render()
+        }
+    }
+}
+
+function getPos(e) {
+    var x = 0, y = 0
+    while (e != null) {
+        x += e.offsetLeft
+        y += e.offsetTop
+        e = e.offsetParent
+    }
+    return {x : x, y : y}
+}
+
+function getRelPos(to, positionedObject) {
+    var pos = getPos(to)
+    return {
+        x : positionedObject.pageX - pos.x,
+        y : positionedObject.pageY - pos.y
+    }
+}
+
+
+function each(o, cb) {
+	if (o instanceof Array) {
+		for (var i = 0; i < o.length; i++) {
+			if (cb(o[i], i, o) == false)
+				return false
+		}
+	} else {
+		for (var k in o) {
+			if (o.hasOwnProperty(k)) {
+				if (cb(o[k], k, o) == false)
+					return false
+			}
+		}
+	}
+	return true
+}
+
+</script>
