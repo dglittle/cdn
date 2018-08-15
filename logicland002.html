@@ -664,7 +664,37 @@ c.onmousedown = function (e) {
                 clicked_gate.charge *= -1
                 changes.gates[clicked_gate.x + ',' + clicked_gate.y] = clicked_gate
             } else if (view.brush == 'wire') {
-                function add_wire(x, y) {
+                function add_wire(x, y, direction) {
+                    if (direction == 'horz') {
+                        if (model.wires[x + ',' + y] &&
+                            model.wires[x + ',' + (y - 1)] &&
+                            model.wires[x + ',' + (y + 1)]) {
+                            delete model.wires[x + ',' + y]
+                            changes.wires[x + ',' + y] = null
+                            changes.gates[x + ',' + y] = model.gates[x + ',' + y] = {
+                                x : x,
+                                y : y,
+                                type : 'cross_gate',
+                                charge : -1
+                            }
+                            return
+                        }
+                    }
+                    if (direction == 'vert') {
+                        if (model.wires[x + ',' + y] &&
+                            model.wires[(x - 1) + ',' + y] &&
+                            model.wires[(x + 1) + ',' + y]) {
+                            delete model.wires[x + ',' + y]
+                            changes.wires[x + ',' + y] = null
+                            changes.gates[x + ',' + y] = model.gates[x + ',' + y] = {
+                                x : x,
+                                y : y,
+                                type : 'cross_gate',
+                                charge : -1
+                            }
+                            return
+                        }
+                    }
                     changes.wires[x + ',' + y] = model.wires[x + ',' + y] = {
                         x : x,
                         y : y,
@@ -678,18 +708,18 @@ c.onmousedown = function (e) {
                     if (Math.abs(dx) > Math.abs(dy)) {
                         if (dx > 0) {
                             for (var i = view.prev_x; i <= x; i++)
-                                add_wire(i, view.prev_y)
+                                add_wire(i, view.prev_y, 'horz')
                         } else {
                             for (var i = x; i <= view.prev_x; i++)
-                                add_wire(i, view.prev_y)
+                                add_wire(i, view.prev_y, 'horz')
                         }
                     } else {
                         if (dy > 0) {
                             for (var i = view.prev_y; i <= y; i++)
-                                add_wire(view.prev_x, i)
+                                add_wire(view.prev_x, i, 'vert')
                         } else {
                             for (var i = y; i <= view.prev_y; i++)
-                                add_wire(view.prev_x, i)
+                                add_wire(view.prev_x, i, 'vert')
                         }
                     }
                 } else {
