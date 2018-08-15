@@ -623,6 +623,29 @@ c.onmousedown = function (e) {
                 }
             } else if (view.brush == 'delete') {
                 if (e.shiftKey) {
+                    function delete_wires_at(x, y) {
+                        var key = x + ',' + y
+                        
+                        var w = model.wires[key]
+                        if (w) {
+                            delete model.wires[key]
+                            changes.wires[key] = null
+                        }
+                        
+                        var gate = model.gates[key]
+                        if (gate) {
+                            if (gate.type == 'cross_gate') {
+                                changes.wires[key] = model.wires[key] = {
+                                    x : x,
+                                    y : y,
+                                    charge : -1,
+                                    version : 0
+                                }
+                            }
+                            delete model.gates[key]
+                            changes.gates[key] = null
+                        }
+                    }
                     var dx = x - view.prev_x
                     var dy = y - view.prev_y
                     if (Math.abs(dx) > Math.abs(dy)) {
