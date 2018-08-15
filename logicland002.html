@@ -90,6 +90,7 @@ function draw_palette() {
     key_capture_box.style.marginBottom = '-5px'
     key_capture_box.addEventListener('keydown', function (e) {
         if (view.brush == 'box' && e.keyCode == 8 && view.box && view.box.length == 4) {
+            // 8 = DELETE
             var changes = { wires : {}, gates : {} }
             delete_view_box(changes)
             
@@ -97,8 +98,66 @@ function draw_palette() {
             db.child(view.path + '/' + view.filename + '/gates').update(changes.gates)
             
             render()
-        }
-        if (view.brush == 'box' && e.keyCode == 70 && view.box && view.box.length == 4) {
+        } else if (view.brush == 'box' && e.keyCode == 72 && view.box && view.box.length == 4) {
+            // 72 = h
+            var changes = { wires : {}, gates : {} }
+            var the_dead = delete_view_box(changes)
+            each(the_dead.wires, function (w) {
+                var X = view.box[0] + (view.box[2] - view.box[0]) - (w.x - view.box[0])
+                var Y = w.y
+                changes.wires[X + ',' + Y] = model.wires[X + ',' + Y] = {
+                    x : X,
+                    y : Y,
+                    charge : w.charge,
+                    version : w.version
+                }
+            })
+            each(the_dead.gates, function (gate) {
+                var X = view.box[0] + (view.box[2] - view.box[0]) - (gate.x - view.box[0]) - (gate.type != 'cross_gate' ? 2 : 0)
+                var Y = gate.y
+                changes.gates[X + ',' + Y] = model.gates[X + ',' + Y] = {
+                    x : X,
+                    y : Y,
+                    type : gate.type,
+                    charge : gate.charge || -1
+                }
+            })
+
+            db.child(view.path + '/' + view.filename + '/wires').update(changes.wires)
+            db.child(view.path + '/' + view.filename + '/gates').update(changes.gates)
+            
+            render()
+        } else if (view.brush == 'box' && e.keyCode == 86 && view.box && view.box.length == 4) {
+            // 86 = v
+            var changes = { wires : {}, gates : {} }
+            var the_dead = delete_view_box(changes)
+            each(the_dead.wires, function (w) {
+                var X = w.x
+                var Y = view.box[1] + (view.box[3] - view.box[1]) - (w.y - view.box[1])
+                changes.wires[X + ',' + Y] = model.wires[X + ',' + Y] = {
+                    x : X,
+                    y : Y,
+                    charge : w.charge,
+                    version : w.version
+                }
+            })
+            each(the_dead.gates, function (gate) {
+                var X = gate.x
+                var Y = view.box[1] + (view.box[3] - view.box[1]) - (gate.y - view.box[1]) - (gate.type != 'cross_gate' ? 2 : 0)
+                changes.gates[X + ',' + Y] = model.gates[X + ',' + Y] = {
+                    x : X,
+                    y : Y,
+                    type : gate.type,
+                    charge : gate.charge || -1
+                }
+            })
+
+            db.child(view.path + '/' + view.filename + '/wires').update(changes.wires)
+            db.child(view.path + '/' + view.filename + '/gates').update(changes.gates)
+            
+            render()
+        } else if (view.brush == 'box' && e.keyCode == 70 && view.box && view.box.length == 4) {
+            // 70 = f
             var changes = { wires : {}, gates : {} }
             var the_dead = delete_view_box(changes)
             each(the_dead.wires, function (w) {
