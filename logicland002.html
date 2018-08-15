@@ -79,60 +79,58 @@ function delete_view_box(changes) {
     return the_dead
 }
 
-var key_capture_box = document.createElement('textarea')
-key_capture_box.style.width = '10px'
-key_capture_box.style.height = '10px'
-key_capture_box.style.position = 'absolute'
-key_capture_box.style.left = '0px'
-key_capture_box.style.top = '0px'
-key_capture_box.addEventListener('keydown', function (e) {
-    if (view.brush == 'box' && e.keyCode == 8 && view.box && view.box.length == 4) {
-        var changes = { wires : {}, gates : {} }
-        delete_view_box(changes)
-        
-        db.child(view.path + '/' + view.filename + '/wires').update(changes.wires)
-        db.child(view.path + '/' + view.filename + '/gates').update(changes.gates)
-        
-        render()
-    }
-    if (view.brush == 'box' && e.keyCode == 70 && view.box && view.box.length == 4) {
-        var changes = { wires : {}, gates : {} }
-        var the_dead = delete_view_box(changes)
-        each(the_dead.wires, function (w) {
-            var X = w.y - view.box[1] + view.box[0]
-            var Y = w.x - view.box[0] + view.box[1]
-            changes.wires[X + ',' + Y] = model.wires[X + ',' + Y] = {
-                x : X,
-                y : Y,
-                charge : w.charge,
-                version : w.version
-            }
-        })
-        each(the_dead.gates, function (gate) {
-            var X = gate.y - view.box[1] + view.box[0]
-            var Y = gate.x - view.box[0] + view.box[1]
-            changes.gates[X + ',' + Y] = model.gates[X + ',' + Y] = {
-                x : X,
-                y : Y,
-                type : gate.type,
-                charge : gate.charge || -1
-            }
-        })
-        view.box = [view.box[0], view.box[1], view.box[3] - view.box[1] + view.box[0], view.box[2] - view.box[0] + view.box[1]]
-
-        db.child(view.path + '/' + view.filename + '/wires').update(changes.wires)
-        db.child(view.path + '/' + view.filename + '/gates').update(changes.gates)
-        
-        render()
-    }
-})
-document.body.append(key_capture_box)
-
 function draw_palette() {
     var d = document.createElement('div')
     d.style.width = '100%'
     d.style.height = PALETTE_HEIGHT*2 + 'px'
+
+    key_capture_box = document.createElement('textarea')
+    key_capture_box.style.width = '20px'
+    key_capture_box.style.height = '19px'
+    key_capture_box.style.marginBottom = '-5px'
+    key_capture_box.addEventListener('keydown', function (e) {
+        if (view.brush == 'box' && e.keyCode == 8 && view.box && view.box.length == 4) {
+            var changes = { wires : {}, gates : {} }
+            delete_view_box(changes)
+            
+            db.child(view.path + '/' + view.filename + '/wires').update(changes.wires)
+            db.child(view.path + '/' + view.filename + '/gates').update(changes.gates)
+            
+            render()
+        }
+        if (view.brush == 'box' && e.keyCode == 70 && view.box && view.box.length == 4) {
+            var changes = { wires : {}, gates : {} }
+            var the_dead = delete_view_box(changes)
+            each(the_dead.wires, function (w) {
+                var X = w.y - view.box[1] + view.box[0]
+                var Y = w.x - view.box[0] + view.box[1]
+                changes.wires[X + ',' + Y] = model.wires[X + ',' + Y] = {
+                    x : X,
+                    y : Y,
+                    charge : w.charge,
+                    version : w.version
+                }
+            })
+            each(the_dead.gates, function (gate) {
+                var X = gate.y - view.box[1] + view.box[0]
+                var Y = gate.x - view.box[0] + view.box[1]
+                changes.gates[X + ',' + Y] = model.gates[X + ',' + Y] = {
+                    x : X,
+                    y : Y,
+                    type : gate.type,
+                    charge : gate.charge || -1
+                }
+            })
+            view.box = [view.box[0], view.box[1], view.box[3] - view.box[1] + view.box[0], view.box[2] - view.box[0] + view.box[1]]
     
+            db.child(view.path + '/' + view.filename + '/wires').update(changes.wires)
+            db.child(view.path + '/' + view.filename + '/gates').update(changes.gates)
+            
+            render()
+        }
+    })
+    d.append(key_capture_box)
+
     function create_file_loader() {
         var b = document.createElement('input')
         b.style.marginLeft = '10px'
@@ -187,6 +185,16 @@ function draw_palette() {
         zoom_thing.value = view.scale
         render()
     })
+    
+    function create_location_viewer() {
+        var b = document.createElement('input')
+        b.style.width = 50 + 'px'
+        b.value = 'x,y'
+        d.append(b)
+        return b
+    }
+    location_viewer = create_location_viewer()
+    
     
     create_button('stop', function () {
         view.play = !view.play
@@ -519,6 +527,13 @@ function loop() {
     setTimeout(loop, 20)
 }
 loop()
+
+c.onmousemove = function (e) {
+    var pos = getRelPos(c, e)
+    var x = Math.floor((pos.x - c.width/2) / view.scale + view.x)
+    var y = Math.floor((pos.y - c.height/2) / view.scale + view.y)
+    location_viewer.value = x + ',' + y
+}
 
 c.onmousedown = function (e) {
     e.preventDefault()
