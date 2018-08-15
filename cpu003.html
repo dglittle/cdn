@@ -150,26 +150,6 @@ function draw_palette() {
     })
     d.append(key_capture_box)
 
-    function create_file_loader() {
-        var b = document.createElement('input')
-        b.style.marginLeft = '10px'
-        b.style.width = 100 + 'px'
-        b.value = view.filename
-        b.oninput = function () {
-            view.filename = b.value
-        }
-        b.onkeydown = function (e) {
-            if (e.metaKey && e.keyCode == 13) {
-                e.preventDefault()
-                view.filename = b.value
-                fetch_model()
-            }
-        }
-        d.append(b)
-        return b
-    }
-    create_file_loader()
-
     function create_button(text, onclick) {
         var b = document.createElement('button')
         b.style.width = PALETTE_HEIGHT*2 + 'px'
