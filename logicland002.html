@@ -649,29 +649,19 @@ c.onmousedown = function (e) {
                     var dx = x - view.prev_x
                     var dy = y - view.prev_y
                     if (Math.abs(dx) > Math.abs(dy)) {
-                        if (dx > 0) {
-                            for (var i = view.prev_x; i <= x; i++) {
-                                delete model.wires[i + ',' + view.prev_y]
-                                changes.wires[i + ',' + view.prev_y] = null
-                            }
-                        } else {
-                            for (var i = x; i <= view.prev_x; i++) {
-                                delete model.wires[i + ',' + view.prev_y]
-                                changes.wires[i + ',' + view.prev_y] = null
-                            }
-                        }
+                        if (dx > 0)
+                            for (var i = view.prev_x; i <= x; i++)
+                                delete_wires_at(i, view.prev_y)
+                        else
+                            for (var i = x; i <= view.prev_x; i++)
+                                delete_wires_at(i, view.prev_y)
                     } else {
-                        if (dy > 0) {
-                            for (var i = view.prev_y; i <= y; i++) {
-                                delete model.wires[view.prev_x + ',' + i]
-                                changes.wires[view.prev_x + ',' + i] = null
-                            }
-                        } else {
-                            for (var i = y; i <= view.prev_y; i++) {
-                                delete model.wires[view.prev_x + ',' + i]
-                                changes.wires[view.prev_x + ',' + i] = null
-                            }
-                        }
+                        if (dy > 0)
+                            for (var i = view.prev_y; i <= y; i++)
+                                delete_wires_at(view.prev_x, i)
+                        else
+                            for (var i = y; i <= view.prev_y; i++)
+                                delete_wires_at(view.prev_x, i)
                     }
                 } else {
                     delete model.wires[key]
