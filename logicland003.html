@@ -558,8 +558,10 @@ function render() {
     g.lineWidth = 1/view.scale
     g.stroke()
 
-    g.imageSmoothingEnabled = false
-    g.drawImage(render_prep_canvas, view.low_x, view.low_y, view.used_width, view.used_height)
+    if (render_prep_canvas) {
+        g.imageSmoothingEnabled = false
+        g.drawImage(render_prep_canvas, view.low_x, view.low_y, view.used_width, view.used_height)
+    }
 
     if (view.brush == 'box' && view.box) {
         g.fillStyle = 'rgba(255,0,0,0.6)'
