@@ -479,7 +479,7 @@ function draw_thing(_) {
     if (_.t == 'wire') {
         set_pixel(_.x, _.y, _.c > 0 ? [255, 255, 0] : [128, 128, 0])
     } else if (_.t == 'cross_gate') {
-        set_pixel(_.x, _.y, _.c > 0 ? [255, 255, 255] : [0, 0, 0])
+        set_pixel(_.x, _.y, [0, 0, 0])
     } else {
         var fac = _.c > 0 ? 1 : 0.5
         var color = 
