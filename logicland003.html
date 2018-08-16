@@ -654,29 +654,31 @@ c.onmousedown = function (e) {
             var y = Math.floor((new_pos.y - c.height/2) / view.scale + view.y)
             var key = x + ',' + y
             
-            var changes = { wires : {}, gates : {} }
+            var changes = {}
             
-            var clicked_gate = null
+            var clicked_thing = null
             for (var dx = 0; dx >= -2; dx--) {
                 for (var dy = 0; dy >= -2; dy--) {
-                    var gate = model.gates[(x + dx) + ',' + (y + dy)]
-                    if (gate && (gate.type != 'cross_gate' || (dx == 0 && dy == 0))) clicked_gate = gate
+                    var thing = model[(x + dx) + ',' + (y + dy)]
+                    if (thing && (-dx) < stuff_sizes[thing.t] && (-dy) < stuff_sizes[thing.t]) {
+                        clicked_thing = thing
+                    }
                 }
             }
 
             if (view.brush == 'box') {
-                console.log('x = ' + x + ', y = ' + y)
                 if (e.shiftKey && view.box && view.box.length == 4) {
                     if (e.metaKey) {
                         var the_dead = delete_view_box(changes)
-                        each(the_dead.wires, function (w) {
-                            var X = w.x - view.box[0] + x
-                            var Y = w.y - view.box[1] + y
-                            changes.wires[X + ',' + Y] = model.wires[X + ',' + Y] = {
+                        each(the_dead, function (_) {
+                            var X = _.x - view.box[0] + x
+                            var Y = _.y - view.box[1] + y
+                            changes[X + ',' + Y] = {
                                 x : X,
                                 y : Y,
-                                charge : w.charge,
-                                version : w.version
+                                t : _.t,
+                                c : _.c,
+                                v : _.v
                             }
                         })
                         each(the_dead.gates, function (gate) {
