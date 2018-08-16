@@ -29,38 +29,57 @@ var view = {
 
 var model = {
     version : 0,
-    wires : {}, // { x: , y: , charge: , version: }
-    gates : {}  // { x: , y: , type: }
+    stuff : {}, // { x: , y: , t: , c: , v: } (t=type, c=charge, v=version)
+}
+
+var stuff_sizes = {
+    'wire' : 1,
+    'cross_gate' : 1,
+    'and_gate' : 3,
+    'or_gate' : 3,
+    'nand_gate' : 3,
+    'toggle' : 3
+}
+
+var wave_front = {}
+
+function update_model(changes) {
+    model.version = 0
+    each(changes, function (_, key) {
+        if (_) {
+            if (_.version > model.version)
+                model.version = _.version
+            model.stuff[key] = _
+        } else {
+            delete model.stuff[key]
+        }
+    })
+    db.child(view.path + '/' + view.filename + '/stuff').update(changes)
+    render()
 }
 
 function fetch_model() {
     db.child(view.path + '/' + view.filename).once('value', function (x) {
-        model = {
-            version : 0,
-            wires : {},
-            gates : {}
-        }
-        each(x.val(), function (v, k) {
-            model[k] = v
+        x = x.val()
+        var changes = {}
+        each(model.stuff, function (_, key) {
+            changes[key] = null
         })
-        each(model.wires, function (w) {
-            if (w.version > model.version)
-                model.version = w.version
+        each(x.stuff, function (_, key) {
+            changes[key] = _
         })
-        render()
+        update_model(changes)
     }, function (x) { console.log('bad news!', x) })
 }
 fetch_model()
 
 function copy_view_box() {
-    var ret = { wires : {}, gates : {} }
+    var ret = {}
     for (var y = view.box[1]; y <= view.box[3]; y++) {
         for (var x = view.box[0]; x <= view.box[2]; x++) {
-            var w = model.wires[x + ',' + y]
-            if (w) ret.wires[x + ',' + y] = w
-            
-            var gate = model.gates[x + ',' + y]
-            if (gate) ret.gates[x + ',' + y] = gate
+            var key = x + ',' + y
+            var _ = model.stuff[key]
+            if (_) ret.stuff[key] = _
         }
     }
     return ret
@@ -68,13 +87,8 @@ function copy_view_box() {
 
 function delete_view_box(changes) {
     var the_dead = copy_view_box()
-    each(the_dead.wires, function (w) {
-        delete model.wires[w.x + ',' + w.y]
-        changes.wires[w.x + ',' + w.y] = null
-    })
-    each(the_dead.gates, function (gate) {
-        delete model.gates[gate.x + ',' + gate.y]
-        changes.gates[gate.x + ',' + gate.y] = null
+    each(the_dead, function (w, key) {
+        changes[key] = null
     })
     return the_dead
 }
@@ -91,71 +105,41 @@ function draw_palette() {
     key_capture_box.addEventListener('keydown', function (e) {
         if (view.brush == 'box' && e.keyCode == 8 && view.box && view.box.length == 4) {
             // 8 = DELETE
-            var changes = { wires : {}, gates : {} }
+            var changes = {}
             delete_view_box(changes)
-            
-            db.child(view.path + '/' + view.filename + '/wires').update(changes.wires)
-            db.child(view.path + '/' + view.filename + '/gates').update(changes.gates)
-            
-            render()
+            update_model(changes)
         } else if (view.brush == 'box' && e.keyCode == 72 && view.box && view.box.length == 4) {
             // 72 = h
-            var changes = { wires : {}, gates : {} }
+            var changes = {}
             var the_dead = delete_view_box(changes)
-            each(the_dead.wires, function (w) {
-                var X = view.box[0] + (view.box[2] - view.box[0]) - (w.x - view.box[0])
-                var Y = w.y
-                changes.wires[X + ',' + Y] = model.wires[X + ',' + Y] = {
+            each(the_dead, function (_) {
+                var x = view.box[0] + (view.box[2] - view.box[0]) - (_.x - view.box[0]) - (stuff_sizes[_.type] - 1)
+                var Y = _.y
+                changes[X + ',' + Y] = {
                     x : X,
                     y : Y,
-                    charge : w.charge,
-                    version : w.version
+                    t : _.t,
+                    c : _.c,
+                    v : _.v
                 }
             })
-            each(the_dead.gates, function (gate) {
-                var X = view.box[0] + (view.box[2] - view.box[0]) - (gate.x - view.box[0]) - (gate.type != 'cross_gate' ? 2 : 0)
-                var Y = gate.y
-                changes.gates[X + ',' + Y] = model.gates[X + ',' + Y] = {
-                    x : X,
-                    y : Y,
-                    type : gate.type,
-                    charge : gate.charge || -1
-                }
-            })
-
-            db.child(view.path + '/' + view.filename + '/wires').update(changes.wires)
-            db.child(view.path + '/' + view.filename + '/gates').update(changes.gates)
-            
-            render()
+            update_model(changes)
         } else if (view.brush == 'box' && e.keyCode == 86 && view.box && view.box.length == 4) {
             // 86 = v
-            var changes = { wires : {}, gates : {} }
+            var changes = {}
             var the_dead = delete_view_box(changes)
-            each(the_dead.wires, function (w) {
-                var X = w.x
-                var Y = view.box[1] + (view.box[3] - view.box[1]) - (w.y - view.box[1])
-                changes.wires[X + ',' + Y] = model.wires[X + ',' + Y] = {
+            each(the_dead, function (_) {
+                var x = _.x
+                var Y = view.box[1] + (view.box[3] - view.box[1]) - (_.y - view.box[1]) - (stuff_sizes[_.type] - 1)
+                changes[X + ',' + Y] = {
                     x : X,
                     y : Y,
-                    charge : w.charge,
-                    version : w.version
+                    t : _.t,
+                    c : _.c,
+                    v : _.v
                 }
             })
-            each(the_dead.gates, function (gate) {
-                var X = gate.x
-                var Y = view.box[1] + (view.box[3] - view.box[1]) - (gate.y - view.box[1]) - (gate.type != 'cross_gate' ? 2 : 0)
-                changes.gates[X + ',' + Y] = model.gates[X + ',' + Y] = {
-                    x : X,
-                    y : Y,
-                    type : gate.type,
-                    charge : gate.charge || -1
-                }
-            })
-
-            db.child(view.path + '/' + view.filename + '/wires').update(changes.wires)
-            db.child(view.path + '/' + view.filename + '/gates').update(changes.gates)
-            
-            render()
+            update_model(changes)
         } else if (view.brush == 'box' && e.keyCode == 70 && view.box && view.box.length == 4) {
             // 70 = f
             var changes = { wires : {}, gates : {} }
@@ -181,11 +165,7 @@ function draw_palette() {
                 }
             })
             view.box = [view.box[0], view.box[1], view.box[3] - view.box[1] + view.box[0], view.box[2] - view.box[0] + view.box[1]]
-    
-            db.child(view.path + '/' + view.filename + '/wires').update(changes.wires)
-            db.child(view.path + '/' + view.filename + '/gates').update(changes.gates)
-            
-            render()
+            update_model(changes)
         }
     })
     d.append(key_capture_box)
@@ -366,8 +346,6 @@ c.width = window.innerWidth
 c.height = window.innerHeight - PALETTE_HEIGHT*2
 var g = c.getContext('2d')
 document.body.append(c)
-
-var wave_front = {}
 
 function propagate() {
     var changes = {}
@@ -587,41 +565,36 @@ function render() {
     g.lineWidth = 1/view.scale
     g.stroke()
 
-    // each(model.wires, function (_, key) {
-    //     if (wave_front[key]) {
-    //         set_pixel(_.x, _.y, _.charge > 0 ? [255, 255, 0] : [128, 128, 0])
-    //     }
-    // })
+    each(model.wires, function (_, key) {
+        set_pixel(_.x, _.y, _.charge > 0 ? [255, 255, 0] : [128, 128, 0])
+    })
 
-    // each(model.gates, function (_) {
-    //     if (_.type == 'cross_gate') {
-    //         set_pixel(_.x, _.y, [0, 0, 0])
-    //     } else {
-    //         var color = 
-    //             (_.type == 'or_gate') ? [255, 128, 0] :
-    //             (_.type == 'and_gate') ? [0, 0, 255] :
-    //             (_.type == 'nand_gate') ? [255, 0, 255] :
-    //             (_.type == 'toggle') ?
-    //                 (_.charge > 0 ? [0, 255, 255] : [0, 128, 128]) :
-    //             [255, 0, 0]
-    //         for (var yy = 0; yy < 3; yy++) {
-    //             for (var xx = 0; xx < 3; xx++) {
-    //                 set_pixel(_.x + xx, _.y + yy, color)
-    //             }
-    //         }
-    //     }
-    // })
+    each(model.gates, function (_) {
+        if (_.type == 'cross_gate') {
+            set_pixel(_.x, _.y, [0, 0, 0])
+        } else {
+            var color = 
+                (_.type == 'or_gate') ? [255, 128, 0] :
+                (_.type == 'and_gate') ? [0, 0, 255] :
+                (_.type == 'nand_gate') ? [255, 0, 255] :
+                (_.type == 'toggle') ?
+                    (_.charge > 0 ? [0, 255, 255] : [0, 128, 128]) :
+                [255, 0, 0]
+            for (var yy = 0; yy < 3; yy++) {
+                for (var xx = 0; xx < 3; xx++) {
+                    set_pixel(_.x + xx, _.y + yy, color)
+                }
+            }
+        }
+    })
 
     var newCanvas = document.createElement('canvas')
     newCanvas.width = width
     newCanvas.height = height
     newCanvas.getContext('2d').putImageData(img_data, 0, 0)
     
-    // g.putImageData(img_data, 0, 0)
-    //g.setTransform(1, 0, 0, 1, 100, 0)
     g.imageSmoothingEnabled = false
     g.drawImage(newCanvas, x1, y1, width, height)
-    // g.drawImage(newCanvas, x1, x2)
 
     if (view.brush == 'box' && view.box) {
         g.fillStyle = 'rgba(255,0,0,0.6)'
