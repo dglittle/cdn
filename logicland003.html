@@ -337,6 +337,7 @@ function propagate() {
     each(wave_front, function (_, key) {
         _ = get_thing_at(_.x, _.y)
         if (!_) { return }
+        key = _.x + ',' + _.y
         if (_.t == 'wire') {
             var best_v = _.v
             var best_c = _.c
