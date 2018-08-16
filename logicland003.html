@@ -42,12 +42,6 @@ var stuff_sizes = {
 var wave_front = {}
 
 function update_model(changes, dontUpdateFirebase) {
-    
-    
-    console.log('update_model:')
-    console.log(changes)
-
-    
     each(changes, function (_, key) {
         if (_) {
             model[key] = _
@@ -85,7 +79,8 @@ function fetch_model() {
         set_new_model(x.val(), true)
     }, function (x) { console.log('bad news!', x) })
 }
-fetch_model()
+// work here
+// fetch_model()
 
 function copy_view_box() {
     var ret = {}
@@ -468,7 +463,7 @@ var render_prep_canvas = null
 
 function set_pixel(x, y, color) {
     if (render_prep_image_data) {
-        var base = (y - y1) * render_prep_image_data.width * 4 + (x - x1) * 4
+        var base = (y - view.low_y) * render_prep_image_data.width * 4 + (x - view.low_x) * 4
         render_prep_image_data.data[base + 0] = color[0]
         render_prep_image_data.data[base + 1] = color[1]
         render_prep_image_data.data[base + 2] = color[2]
@@ -525,8 +520,8 @@ function render_prep() {
     view.used_width = width
     view.used_height = height
 
-    var render_prep_image_data = g.createImageData(width, height)
-
+    render_prep_image_data = g.createImageData(width, height)
+    
     each(model, function (_, key) {
         draw_thing(_)
     })
@@ -606,7 +601,8 @@ function loop() {
     
     setTimeout(loop, 20)
 }
-loop()
+// work here
+// loop()
 
 c.onmousemove = function (e) {
     var pos = getRelPos(c, e)
@@ -800,12 +796,6 @@ c.onmousedown = function (e) {
                         }
                     }
                 } else {
-                    
-                    
-                    debugger
-                    
-                    
-                    
                     add_wire(x, y)
                 }
             } else {
