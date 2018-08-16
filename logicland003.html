@@ -347,8 +347,31 @@ function propagate() {
             var adj = get_adjacent(_.x, _.y)
             each(adj, function (__, i) {
                 __ = get_thing_at(__[0], __[1])
+                
+                
+                
+                
+                
                 if (__ && __.t == 'cross_gate') {
+                    
+                    
+                    if (_.x == 0 && _.y == -8) {
+                        console.log('WIRE4: ' + JSON.stringify(__))
+                        console.log(JSON.stringify(__))
+                    }
+                    
+                    
+                    
                     __ = model[__[2] + ',' + __[3]]
+                    
+                    
+                    if (_.x == 0 && _.y == -8) {
+                        console.log('WIRE3: ' + JSON.stringify(__))
+                    }
+                    
+                    
+                    
+                    
                     if (__ && __.t == 'wire' && __.v > best_v) {
                         best_v = __.v
                         best_c = __.c
