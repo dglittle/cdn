@@ -436,7 +436,7 @@ function set_pixel(x, y, color) {
 
 function draw_thing(_) {
     if (_.t == 'wire') {
-        set_pixel(_.x, _.y, _.c > 0 ? [255, 255, 0] : [128, 128, 0])
+        set_pixel(_.x, _.y, _.c > 0 ? [255, 255, 0] : [80, 80, 0])
     } else if (_.t == 'cross_gate') {
         set_pixel(_.x, _.y, [0, 0, 0])
     } else {
@@ -496,7 +496,7 @@ function render_prep() {
 
 function render() {
     g.setTransform(1, 0, 0, 1, 0, 0)
-    g.fillStyle = 'rgba(0, 255, 0, 1)'
+    g.fillStyle = 'rgba(0, 32, 0, 1)'
     g.fillRect(0, 0, c.width, c.height)
     
     g.setTransform(view.scale, 0, 0, view.scale,
@@ -509,18 +509,18 @@ function render() {
     var x_first_tile = Math.floor(view.x - c.width/2/view.scale)
     var y_first_tile = Math.floor(view.y - c.height/2/view.scale)
 
-    g.beginPath()
-    for (var y = y_first_tile; y < y_first_tile + y_tiles; y++) {
-        g.moveTo(x_first_tile, y + 0.5/view.scale)
-        g.lineTo(x_first_tile + x_tiles, y + 0.5/view.scale)
-    }
-    for (var x = x_first_tile; x < x_first_tile + x_tiles; x++) {
-        g.moveTo(x + 0.5/view.scale, y_first_tile)
-        g.lineTo(x + 0.5/view.scale, y_first_tile + y_tiles)
-    }
-    g.strokeStyle = 'black'
-    g.lineWidth = 1/view.scale
-    g.stroke()
+    // g.beginPath()
+    // for (var y = y_first_tile; y < y_first_tile + y_tiles; y++) {
+    //     g.moveTo(x_first_tile, y + 0.5/view.scale)
+    //     g.lineTo(x_first_tile + x_tiles, y + 0.5/view.scale)
+    // }
+    // for (var x = x_first_tile; x < x_first_tile + x_tiles; x++) {
+    //     g.moveTo(x + 0.5/view.scale, y_first_tile)
+    //     g.lineTo(x + 0.5/view.scale, y_first_tile + y_tiles)
+    // }
+    // g.strokeStyle = 'black'
+    // g.lineWidth = 1/view.scale
+    // g.stroke()
 
     if (render_prep_canvas) {
         render_prep_canvas.getContext('2d').putImageData(render_prep_image_data, 0, 0)
