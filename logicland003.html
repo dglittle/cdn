@@ -55,6 +55,8 @@ function update_model(changes, dontUpdateFirebase) {
     each(model, function (_) {
         if (_.v > version) version = _.v
     })
+    
+    render_prep()
 
     render()
     if (!dontUpdateFirebase)
@@ -320,10 +322,10 @@ document.body.append(c)
 
 function get_adjacent(x, y) {
     return [
-        model[x       + ',' + (y - 1)],
-        model[(x + 1) + ',' + y      ],
-        model[x       + ',' + (y + 1)],
-        model[(x - 1) + ',' + y      ]
+        [x, y - 1, x, y - 2],
+        [x + 1, y, x + 2, y],
+        [x, y + 1, x, y + 2],
+        [x - 1, y, x - 2, y]
     ]
 }
 
@@ -332,26 +334,21 @@ function propagate() {
     var changes = {}
     var new_wave_front = {}
     each(wave_front, function (_, key) {
-        _ = model[key]
-        if (!_) {
-            work here
-            for (var dx = 0; dx >= -2; dx--) {
-                for (var dy = 0; dy >= -2; dy--) {
-                    var thing = model[(x + dx) + ',' + (y + dy)]
-                    if (thing && (-dx) < stuff_sizes[thing.t] && (-dy) < stuff_sizes[thing.t]) {
-                        clicked_thing = thing
-                    }
-                }
-            }
-            
-            work here
-        }
+        _ = get_thing_at(_.x, _.y)
+        if (!_) { return }
         if (_.t == 'wire') {
             var best_v = _.v
             var best_c = _.c
             var adj = get_adjacent(_.x, _.y)
-            each(adj, function (__, __key) {
-                if (__ && __.t == 'wire' && __.v > best_v) {
+            each(adj, function (__) {
+                __ = get_thing_at(__[0], __[1])
+                if (__ && __.t == 'cross_gate') {
+                    __ = model[__[2] + ',' + __[3]]
+                    if (__ && __.t == 'wire' && __.v > best_v) {
+                        best_v = __.v
+                        best_c = __.c
+                    }
+                } else if (__ && (_.x == __.x || _.y == __.y) && __.v > best_v) {
                     best_v = __.v
                     best_c = __.c
                 }
@@ -361,45 +358,25 @@ function propagate() {
                     c : best_c,
                     v : best_v
                 }
-                each(adj, function (__, __key) {
-                    new_wave_front[__key] = true
+                each(adj, function (__) {
+                    new_wave_front[__[0] + ',' + __[1]] = {
+                        x : __.x,
+                        y : __.y
+                    }
                 })
             }
         } else if (_.t == 'cross_gate') {
-            var ks = [
-                _.x       + ',' + (_.y - 1),
-                (_.x + 1) + ',' + _.y      ,
-                _.x       + ',' + (_.y + 1),
-                (_.x - 1) + ',' + _.y      
-            ]
-            var ws = [
-                model[ks[0]],
-                model[ks[1]],
-                model[ks[2]],
-                model[ks[3]]
-            ]
-            each([
-                [0, 2],
-                [2, 0],
-                [1, 3],
-                [3, 1]
-            ], function (__) {
-                var i = __[0]
-                var ii = __[1]
-                if (ws[i] && ws[ii] && ws[i].t == 'wire' && ws[ii].t == 'wire') {
-                    if (ws[i].v > ws[ii].v) {
-                        if (!changes[ks[ii]] || ws[i].v > changes[ks[ii]].v) {
-                            changes[ks[ii]] = {
-                                x : ws[ii].x,
-                                y : ws[ii].y,
-                                t : ws[ii].t,
-                                c : ws[i].c,
-                                v : ws[i].v
-                            }
-                        }
+            _.c = -1
+            each(get_adjacent(_.x, _.y), function (__) {
+                var w = model[__[0] + ',' + __[1]]
+                if (w && w.t == 'wire') {
+                    if (w.c > 0) _.c = 1
+                    new_wave_front[__[0] + ',' + __[1]] = {
+                        x : __[0],
+                        y : __[1]
                     }
                 }
-            })            
+            })
         } else if (stuff_sizes[_.t] == 3) {
             var high_count = 0
             var low_count = 0
@@ -426,209 +403,105 @@ function propagate() {
             if (_.t == 'nand_gate' && low_count != 0)
                 output = 1
             if (_.t == 'toggle')
-                output = _.c
+                output = _.cc
             
-            each([
-                model[(_.x + 1) + ',' + (_.y - 1)],
-                model[(_.x + 3) + ',' + (_.y + 1)],
-                model[(_.x + 1) + ',' + (_.y + 3)],
-                model[(_.x - 1) + ',' + (_.y + 1)]
-            ], function (__) {
-                if (__ && __.c != output) {
-                    changes[__.x + ',' + __.y] = {
-                        x : __.x,
-                        y : __.y,
-                        t : __.t,
-                        c : output,
-                        v : version
-                    }
+            if (output != _.c) {
+                changes[key] = {
+                    c : output,
+                    v : version
                 }
-            })
+                each([
+                    [_.x + 1, _.y - 1],
+                    [_.x + 3, _.y + 1],
+                    [_.x + 1, _.y + 3],
+                    [_.x - 1, _.y + 1]
+                    ], function (pos) {
+                    var w = model[pos[0] + ',' + pos[1]]
+                    if (w && w.t == 'wire') {
+                        new_wave_front[pos[0] + ',' + pos[1]] = {
+                            x : pos[0],
+                            y : pos[1]
+                        }
+                    }
+                })
+            }
         }        
-        
-        
-        
-        
-        each([
-            model[_.x       + ',' + (_.y - 1)],
-            model[(_.x + 1) + ',' + _.y      ],
-            model[_.x       + ',' + (_.y + 1)],
-            model[(_.x - 1) + ',' + _.y      ]
-        ], function (__, __key) {
-            if (__ && stuff_sizes[__.t] == 1 && _.v > __.v)
-                new_wave_front[__key] = __
-        })
-        each([
-            model[(_.x - 2) + ',' + (_.y - 3)],
-            model[(_.x + 0) + ',' + (_.y - 3)],
-            model[(_.x + 1) + ',' + (_.y - 2)],
-            model[(_.x + 1) + ',' + (_.y + 0)],
-            model[(_.x + 0) + ',' + (_.y + 1)],
-            model[(_.x - 2) + ',' + (_.y + 1)],
-            model[(_.x - 3) + ',' + (_.y + 0)],
-            model[(_.x - 3) + ',' + (_.y - 2)]
-        ], function (__, __key) {
-            if (__ && stuff_sizes[__.t] == 3 && _.v > __.v)
-                new_wave_front[__key] = __
-        })
     })
-    
-    each(new_wave_front, function (_, key) {
-        if (_.t == 'wire') {
-            each([
-                model[_.x       + ',' + (_.y - 1)],
-                model[(_.x + 1) + ',' + _.y      ],
-                model[_.x       + ',' + (_.y + 1)],
-                model[(_.x - 1) + ',' + _.y      ]
-            ], function (__, __key) {
-                if (__ && __.t == 'wire' && __.v > _.v) {
-                    if (!changes[key] || __.v > changes[key].v) {
-                        changes[key] = {
-                            x : _.x,
-                            y : _.y,
-                            t : _.t,
-                            c : __.c,
-                            v : __.v
-                        }
-                    }
-                }
-            })
-        } else if (_.t == 'cross_gate') {
-            var ks = [
-                _.x       + ',' + (_.y - 1),
-                (_.x + 1) + ',' + _.y      ,
-                _.x       + ',' + (_.y + 1),
-                (_.x - 1) + ',' + _.y      
-            ]
-            var ws = [
-                model[ks[0]],
-                model[ks[1]],
-                model[ks[2]],
-                model[ks[3]]
-            ]
-            each([
-                [0, 2],
-                [2, 0],
-                [1, 3],
-                [3, 1]
-            ], function (__) {
-                var i = __[0]
-                var ii = __[1]
-                if (ws[i] && ws[ii] && ws[i].t == 'wire' && ws[ii].t == 'wire') {
-                    if (ws[i].v > ws[ii].v) {
-                        if (!changes[ks[ii]] || ws[i].v > changes[ks[ii]].v) {
-                            changes[ks[ii]] = {
-                                x : ws[ii].x,
-                                y : ws[ii].y,
-                                t : ws[ii].t,
-                                c : ws[i].c,
-                                v : ws[i].v
-                            }
-                        }
-                    }
-                }
-            })            
-        } else if (stuff_sizes[_.t] == 3) {
-            var high_count = 0
-            var low_count = 0
-            each([
-                model[(_.x + 0) + ',' + (_.y - 1)],
-                model[(_.x + 2) + ',' + (_.y - 1)],
-                model[(_.x + 3) + ',' + (_.y + 0)],
-                model[(_.x + 3) + ',' + (_.y + 2)],
-                model[(_.x + 0) + ',' + (_.y + 3)],
-                model[(_.x + 2) + ',' + (_.y + 3)],
-                model[(_.x - 1) + ',' + (_.y + 0)],
-                model[(_.x - 1) + ',' + (_.y + 2)]
-            ], function (__) {
-                if (__) {
-                    if (__.c > 0) high_count++
-                    else low_count++
-                }
-            })
-            var output = -1
-            if (_.t == 'or_gate' && high_count > 0)
-                output = 1
-            if (_.t == 'and_gate' && low_count == 0)
-                output = 1
-            if (_.t == 'nand_gate' && low_count != 0)
-                output = 1
-            if (_.t == 'toggle')
-                output = _.c
-            
-            each([
-                model[(_.x + 1) + ',' + (_.y - 1)],
-                model[(_.x + 3) + ',' + (_.y + 1)],
-                model[(_.x + 1) + ',' + (_.y + 3)],
-                model[(_.x - 1) + ',' + (_.y + 1)]
-            ], function (__) {
-                if (__ && __.c != output) {
-                    changes[__.x + ',' + __.y] = {
-                        x : __.x,
-                        y : __.y,
-                        t : __.t,
-                        c : output,
-                        v : version
-                    }
-                }
-            })
-        }
-    })
-    
+
     if (view.shocks) {
         view.shocks--
         each(view.shocker, function (charge, key) {
             var _ = model[key]
             if (_) {
                 changes[key] = {
-                    x : _.x,
-                    y : _.y,
-                    t : _.t,
                     c : charge,
                     v : version
                 }
+                var comma = key.indexOf(',')
+                var x = 1*key.slice(0, comma)
+                var y = 1*key.slice(comma)
+                each(get_adjacent(x, y), function (__) {
+                    new_wave_front[__[0] + ',' + __[1]] = {
+                        x : __[0],
+                        y : __[1]
+                    }
+                })
             }
         })
     }
     
-    update_model(changes)
+    each(changes, function (_, key) {
+        model[key].c = _.c
+        model[key].v = _.v
+        draw_thing(model[key])
+    })
 }
 
-var old_image_stuff = null
+var render_prep_image_data = null
+var render_prep_canvas = null
 
-function render() {
-    g.setTransform(1, 0, 0, 1, 0, 0)
-    g.fillStyle = 'rgba(0, 255, 0, 1)'
-    g.fillRect(0, 0, c.width, c.height)
-    
-    g.setTransform(view.scale, 0, 0, view.scale,
-        Math.floor(c.width/2) - view.x*view.scale,
-        Math.floor(c.height/2) - view.y*view.scale)
+function set_pixel(x, y, color) {
+    if (render_prep_image_data) {
+        var base = (y - y1) * render_prep_image_data.width * 4 + (x - x1) * 4
+        render_prep_image_data.data[base + 0] = color[0]
+        render_prep_image_data.data[base + 1] = color[1]
+        render_prep_image_data.data[base + 2] = color[2]
+        render_prep_image_data.data[base + 3] = 255
+    }
+}
 
+function draw_thing(_) {
+    if (_.t == 'wire') {
+        set_pixel(_.x, _.y, _.c > 0 ? [255, 255, 0] : [128, 128, 0])
+    } else if (_.t == 'cross_gate') {
+        set_pixel(_.x, _.y, _.c > 0 ? [255, 255, 255] : [0, 0, 0])
+    } else {
+        var fac = _.c > 0 ? 1 : 0.5
+        var color = 
+            (_.t == 'or_gate') ? [fac * 255, fac * 128, 0] :
+            (_.t == 'and_gate') ? [0, 0, fac * 255] :
+            (_.t == 'nand_gate') ? [fac * 255, 0, fac * 255] :
+            (_.t == 'toggle') ? [0, fac * 255, fac * 255] :
+            [255, 0, 0]
+        for (var yy = 0; yy < 3; yy++) {
+            for (var xx = 0; xx < 3; xx++) {
+                set_pixel(_.x + xx, _.y + yy, color)
+            }
+        }
+    }
+}
+
+function render_prep() {
     var x1 = Infinity
     var y1 = Infinity
     var x2 = -Infinity
     var y2 = -Infinity
 
-    each(model.wires, function (_) {
+    each(model, function (_) {
         if (_.x < x1) x1 = _.x
         if (_.y < y1) y1 = _.y
-        if (_.x > x2) x2 = _.x
-        if (_.y > y2) y2 = _.y
-    })
-
-    each(model.gates, function (_) {
-        if (_.type == 'cross_gate') {
-            if (_.x < x1) x1 = _.x
-            if (_.y < y1) y1 = _.y
-            if (_.x > x2) x2 = _.x
-            if (_.y > y2) y2 = _.y
-        } else {
-            if (_.x < x1) x1 = _.x
-            if (_.y < y1) y1 = _.y
-            if (_.x + 2 > x2) x2 = _.x + 2
-            if (_.y + 2 > y2) y2 = _.y + 2
-        }
+        if (_.x + (stuff_sizes[_.t] - 1) > x2) x2 = _.x + (stuff_sizes[_.t] - 1)
+        if (_.y + (stuff_sizes[_.t] - 1) > y2) y2 = _.y + (stuff_sizes[_.t] - 1)
     })
     
     if (x1 == Infinity) {
@@ -640,29 +513,31 @@ function render() {
     
     var width = x2 - x1 + 1
     var height = y2 - y1 + 1
-
-    if (old_image_stuff) {
-        if (old_image_stuff.width == width && old_image_stuff.height == height) {
-            var img_data = old_image_stuff.img_data
-        } else {
-            var img_data = g.createImageData(width, height)
-        }
-    } else {
-        var img_data = g.createImageData(width, height)
-    }
-    old_image_stuff = {
-        img_data : img_data,
-        width : width,
-        height : height
-    }
     
-    function set_pixel(x, y, color) {
-        var base = (y - y1) * width * 4 + (x - x1) * 4
-        img_data.data[base + 0] = color[0]
-        img_data.data[base + 1] = color[1]
-        img_data.data[base + 2] = color[2]
-        img_data.data[base + 3] = 255
-    }
+    view.low_x = x1
+    view.low_y = y1
+    view.used_width = width
+    view.used_height = height
+
+    var render_prep_image_data = g.createImageData(width, height)
+
+    each(model, function (_, key) {
+        draw_thing(_)
+    })
+
+    render_prep_canvas = document.createElement('canvas')
+    render_prep_canvas.width = width
+    render_prep_canvas.height = height
+}
+
+function render() {
+    g.setTransform(1, 0, 0, 1, 0, 0)
+    g.fillStyle = 'rgba(0, 255, 0, 1)'
+    g.fillRect(0, 0, c.width, c.height)
+    
+    g.setTransform(view.scale, 0, 0, view.scale,
+        Math.floor(c.width/2) - view.x*view.scale,
+        Math.floor(c.height/2) - view.y*view.scale)
 
     var x_tiles = c.width / view.scale + 1
     var y_tiles = c.height / view.scale + 1
@@ -683,36 +558,8 @@ function render() {
     g.lineWidth = 1/view.scale
     g.stroke()
 
-    each(model.wires, function (_, key) {
-        set_pixel(_.x, _.y, _.charge > 0 ? [255, 255, 0] : [128, 128, 0])
-    })
-
-    each(model.gates, function (_) {
-        if (_.type == 'cross_gate') {
-            set_pixel(_.x, _.y, [0, 0, 0])
-        } else {
-            var color = 
-                (_.type == 'or_gate') ? [255, 128, 0] :
-                (_.type == 'and_gate') ? [0, 0, 255] :
-                (_.type == 'nand_gate') ? [255, 0, 255] :
-                (_.type == 'toggle') ?
-                    (_.charge > 0 ? [0, 255, 255] : [0, 128, 128]) :
-                [255, 0, 0]
-            for (var yy = 0; yy < 3; yy++) {
-                for (var xx = 0; xx < 3; xx++) {
-                    set_pixel(_.x + xx, _.y + yy, color)
-                }
-            }
-        }
-    })
-
-    var newCanvas = document.createElement('canvas')
-    newCanvas.width = width
-    newCanvas.height = height
-    newCanvas.getContext('2d').putImageData(img_data, 0, 0)
-    
     g.imageSmoothingEnabled = false
-    g.drawImage(newCanvas, x1, y1, width, height)
+    g.drawImage(render_prep_canvas, view.low_x, view.low_y, view.used_width, view.used_height)
 
     if (view.brush == 'box' && view.box) {
         g.fillStyle = 'rgba(255,0,0,0.6)'
@@ -732,8 +579,6 @@ function loop() {
     
     if (view.play) {
         var t0 = Date.now()
-        propagate()
-        propagate()
         propagate()
         var t1 = Date.now()
         t1_agg = a * (t1 - t0) + (1 - a) * t1_agg
@@ -810,37 +655,18 @@ c.onmousedown = function (e) {
                                 v : _.v
                             }
                         })
-                        each(the_dead.gates, function (gate) {
-                            var X = gate.x - view.box[0] + x
-                            var Y = gate.y - view.box[1] + y
-                            changes.gates[X + ',' + Y] = model.gates[X + ',' + Y] = {
-                                x : X,
-                                y : Y,
-                                type : gate.type,
-                                charge : gate.charge
-                            }
-                        })
                         view.box = [x, y, view.box[2] - view.box[0] + x, view.box[3] - view.box[1] + y]
                         view.copy = copy_view_box()
                     } else {
-                        each(view.copy.wires, function (w) {
-                            var X = w.x - view.box[0] + x
-                            var Y = w.y - view.box[1] + y
-                            changes.wires[X + ',' + Y] = model.wires[X + ',' + Y] = {
+                        each(view.copy, function (_) {
+                            var X = _.x - view.box[0] + x
+                            var Y = _.y - view.box[1] + y
+                            changes[X + ',' + Y] = {
                                 x : X,
                                 y : Y,
-                                charge : w.charge,
-                                version : w.version
-                            }
-                        })
-                        each(view.copy.gates, function (gate) {
-                            var X = gate.x - view.box[0] + x
-                            var Y = gate.y - view.box[1] + y
-                            changes.gates[X + ',' + Y] = model.gates[X + ',' + Y] = {
-                                x : X,
-                                y : Y,
-                                type : gate.type,
-                                charge : gate.charge || -1
+                                t : _.t,
+                                c : _.c,
+                                v : _.v
                             }
                         })
                     }
@@ -861,25 +687,17 @@ c.onmousedown = function (e) {
                 if (e.shiftKey) {
                     function delete_wires_at(x, y) {
                         var key = x + ',' + y
-                        
-                        var w = model.wires[key]
-                        if (w) {
-                            delete model.wires[key]
-                            changes.wires[key] = null
-                        }
-                        
-                        var gate = model.gates[key]
-                        if (gate) {
-                            if (gate.type == 'cross_gate') {
-                                changes.wires[key] = model.wires[key] = {
-                                    x : x,
-                                    y : y,
-                                    charge : -1,
-                                    version : 0
-                                }
+                        var _ = model[key]
+                        if (_ && _.t == 'wire') {
+                            changes[key] = null
+                        } else if (_ && _.t == 'cross_gate') {
+                            changes[key] = {
+                                x : _.x,
+                                y : _.y,
+                                t : 'wire',
+                                c : -1,
+                                v : 0
                             }
-                            delete model.gates[key]
-                            changes.gates[key] = null
                         }
                     }
                     var dx = x - view.prev_x
@@ -899,57 +717,60 @@ c.onmousedown = function (e) {
                             for (var i = y; i <= view.prev_y; i++)
                                 delete_wires_at(view.prev_x, i)
                     }
-                } else {
-                    delete model.wires[key]
-                    changes.wires[key] = null
-                    delete model.gates[key]
-                    changes.gates[key] = null
-                    if (clicked_gate) {
-                        delete model.gates[clicked_gate.x + ',' + clicked_gate.y]
-                        changes.gates[clicked_gate.x + ',' + clicked_gate.y] = null
-                    }
+                } else if (clicked_thing) {
+                    changes[clicked_thing.x + ',' + clicked_thing.y] = null
                 }
-            } else if (clicked_gate && clicked_gate.type == 'toggle') {
-                clicked_gate.charge *= -1
-                changes.gates[clicked_gate.x + ',' + clicked_gate.y] = clicked_gate
+            } else if (clicked_thing && clicked_thing.type == 'toggle') {
+                clicked_thing.cc *= clicked_thing * -1
+                wave_front[clicked_thing.x + ',' + clicked_thing.y] = {
+                    x : clicked_thing.x,
+                    y : clicked_thing.y
+                }
+                return
             } else if (view.brush == 'wire') {
                 function add_wire(x, y, direction) {
                     if (direction == 'horz') {
-                        if (model.wires[x + ',' + y] &&
-                            model.wires[x + ',' + (y - 1)] &&
-                            model.wires[x + ',' + (y + 1)]) {
-                            delete model.wires[x + ',' + y]
-                            changes.wires[x + ',' + y] = null
-                            changes.gates[x + ',' + y] = model.gates[x + ',' + y] = {
+                        if (model[x + ',' + y] &&
+                            model[x + ',' + y].t == 'wire' &&
+                            model[x + ',' + (y - 1)] &&
+                            model[x + ',' + (y - 1)].t == 'wire' &&
+                            model[x + ',' + (y + 1)] &&
+                            model[x + ',' + (y + 1)].t == 'wire') {
+                            changes[x + ',' + y] = {
                                 x : x,
                                 y : y,
-                                type : 'cross_gate',
-                                charge : -1
+                                t : 'cross_gate',
+                                c : -1,
+                                v : 0
                             }
                             return
                         }
                     }
                     if (direction == 'vert') {
-                        if (model.wires[x + ',' + y] &&
-                            model.wires[(x - 1) + ',' + y] &&
-                            model.wires[(x + 1) + ',' + y]) {
-                            delete model.wires[x + ',' + y]
-                            changes.wires[x + ',' + y] = null
-                            changes.gates[x + ',' + y] = model.gates[x + ',' + y] = {
+                        if (model[x + ',' + y] &&
+                            model[x + ',' + y].t == 'wire' &&
+                            model[(x - 1) + ',' + y] &&
+                            model[(x - 1) + ',' + y].t == 'wire' &&
+                            model[(x + 1) + ',' + y] &&
+                            model[(x + 1) + ',' + y].t == 'wire') {
+                            changes[x + ',' + y] = {
                                 x : x,
                                 y : y,
-                                type : 'cross_gate',
-                                charge : -1
+                                t : 'cross_gate',
+                                c : -1,
+                                v : 0
                             }
                             return
                         }
                     }
-                    changes.wires[x + ',' + y] = model.wires[x + ',' + y] = {
+                    changes[x + ',' + y] = {
                         x : x,
                         y : y,
-                        charge : -1,
-                        version : 0
+                        t : 'wire',
+                        c : -1,
+                        v : 0
                     }
+                    return
                 }
                 if (e.shiftKey) {
                     var dx = x - view.prev_x
@@ -975,23 +796,22 @@ c.onmousedown = function (e) {
                     add_wire(x, y)
                 }
             } else {
-                delete model.wires[key]
-                changes.wires[key] = null
-                changes.gates[key] = model.gates[key] = {
+                if (clicked_thing) {
+                    changes[clicked_thing.x + ',' + clicked_thing.y] = null
+                }
+                changes[key] = {
                     x : x,
                     y : y,
-                    type : view.brush,
-                    charge : -1
+                    t : view.brush,
+                    c : -1,
+                    v : 0
                 }
             }
             
             view.prev_x = x
             view.prev_y = y
-
-            db.child(view.path + '/' + view.filename + '/wires').update(changes.wires)
-            db.child(view.path + '/' + view.filename + '/gates').update(changes.gates)
-
-            render()
+            
+            update_model(changes)
         }
     }
 }
