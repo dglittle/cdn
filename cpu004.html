@@ -32,7 +32,7 @@ var stuff_sizes = {
 
 var wave_front = {}
 
-function update_model(changes, dontUpdateFirebase) {
+function update_model(changes) {
     each(changes, function (_, key) {
         if (_) {
             model[key] = _
@@ -50,11 +50,9 @@ function update_model(changes, dontUpdateFirebase) {
     render_prep()
 
     render()
-    if (!dontUpdateFirebase)
-        db.child(view.path + '/' + view.filename).update(changes)
 }
 
-function set_new_model(new_model, dontUpdateFirebase) {
+function set_new_model(new_model) {
     var changes = {}
     each(model, function (_, key) {
         changes[key] = null
@@ -574,6 +572,7 @@ function loop() {
     
     setTimeout(loop, LOOP_INTERVAL)
 }
+update_model({})
 loop()
 
 c.onmousemove = function (e) {
