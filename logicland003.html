@@ -42,6 +42,12 @@ var stuff_sizes = {
 var wave_front = {}
 
 function update_model(changes, dontUpdateFirebase) {
+    
+    
+    console.log('update_model:')
+    console.log(changes)
+
+    
     each(changes, function (_, key) {
         if (_) {
             model[key] = _
@@ -772,7 +778,6 @@ c.onmousedown = function (e) {
                         c : -1,
                         v : 0
                     }
-                    return
                 }
                 if (e.shiftKey) {
                     var dx = x - view.prev_x
@@ -795,6 +800,12 @@ c.onmousedown = function (e) {
                         }
                     }
                 } else {
+                    
+                    
+                    debugger
+                    
+                    
+                    
                     add_wire(x, y)
                 }
             } else {
