@@ -392,7 +392,7 @@ function propagate() {
                 model[(_.x - 1) + ',' + (_.y + 0)],
                 model[(_.x - 1) + ',' + (_.y + 2)]
             ], function (__) {
-                if (__) {
+                if (__ && __.t == 'wire') {
                     if (__.c > 0) high_count++
                     else low_count++
                 }
@@ -589,6 +589,15 @@ function loop() {
     if (view.play) {
         var t0 = Date.now()
         propagate()
+        propagate()
+        propagate()
+        propagate()
+        propagate()
+        propagate()
+        propagate()
+        propagate()
+        propagate()
+        propagate()
         var t1 = Date.now()
         t1_agg = a * (t1 - t0) + (1 - a) * t1_agg
 
@@ -596,11 +605,6 @@ function loop() {
         render()
         var t1 = Date.now()
         t2_agg = a * (t1 - t0) + (1 - a) * t2_agg
-
-        // if (Math.random() < 0.03) {
-        //     console.log('time1: ' + t1_agg)
-        //     console.log('time2: ' + t2_agg)
-        // }
     }
     
 
