@@ -1,0 +1,822 @@
+<script src="https://dglittle.github.io/cdn/cpu004.js"></script>
+<body style="margin:0px"></body>
+<script>
+
+var PALETTE_HEIGHT = 20
+var LOOP_INTERVAL = 20 // 20
+
+var view = {
+    x : -22,
+    y : 32,
+    scale : 2,
+    brush : 'wire',
+    play : true,
+    prev_x : 0,
+    prev_y : 0,
+    box : null
+}
+
+var version = 0
+var model = cpu004 // { x: , y: , t: , c: , v: } (t=type, c=charge, v=version)
+
+var stuff_sizes = {
+    'wire' : 1,
+    'cross_gate' : 1,
+    'and_gate' : 3,
+    'or_gate' : 3,
+    'nand_gate' : 3,
+    'toggle' : 3
+}
+
+var wave_front = {}
+
+function update_model(changes) {
+    each(changes, function (_, key) {
+        if (_) {
+            model[key] = _
+        } else {
+            delete model[key]
+        }
+    })
+    
+    wave_front = model
+    version = 0
+    each(model, function (_) {
+        if (_.v > version) version = _.v
+    })
+    
+    render_prep()
+
+    render()
+}
+
+function set_new_model(new_model) {
+    var changes = {}
+    each(model, function (_, key) {
+        changes[key] = null
+    })
+    each(new_model, function (_, key) {
+        changes[key] = _
+    })
+    update_model(changes, dontUpdateFirebase)
+}
+
+function copy_view_box() {
+    var ret = {}
+    for (var y = view.box[1]; y <= view.box[3]; y++) {
+        for (var x = view.box[0]; x <= view.box[2]; x++) {
+            var key = x + ',' + y
+            var _ = model[key]
+            if (_) ret[key] = _
+        }
+    }
+    return ret
+}
+
+function delete_view_box(changes) {
+    var the_dead = copy_view_box()
+    each(the_dead, function (_, key) {
+        changes[key] = null
+    })
+    return the_dead
+}
+
+function get_thing_at(x, y) {
+    for (var dx = 0; dx >= -2; dx--) {
+        for (var dy = 0; dy >= -2; dy--) {
+            var thing = model[(x + dx) + ',' + (y + dy)]
+            if (thing && (-dx) < stuff_sizes[thing.t] && (-dy) < stuff_sizes[thing.t]) {
+                return thing
+            }
+        }
+    }
+}
+
+function draw_palette() {
+    var d = document.createElement('div')
+    d.style.width = '100%'
+    d.style.height = PALETTE_HEIGHT*2 + 'px'
+
+    key_capture_box = document.createElement('textarea')
+    key_capture_box.style.width = '20px'
+    key_capture_box.style.height = '19px'
+    key_capture_box.style.marginBottom = '-5px'
+    key_capture_box.addEventListener('keydown', function (e) {
+        if (view.brush == 'box' && e.keyCode == 8 && view.box && view.box.length == 4) {
+            // 8 = DELETE
+            var changes = {}
+            delete_view_box(changes)
+            update_model(changes)
+        } else if (view.brush == 'box' && e.keyCode == 72 && view.box && view.box.length == 4) {
+            // 72 = h
+            var changes = {}
+            var the_dead = delete_view_box(changes)
+            each(the_dead, function (_) {
+                var x = view.box[0] + (view.box[2] - view.box[0]) - (_.x - view.box[0]) - (stuff_sizes[_.t] - 1)
+                var Y = _.y
+                changes[X + ',' + Y] = {
+                    x : X,
+                    y : Y,
+                    t : _.t,
+                    c : _.c,
+                    v : _.v
+                }
+            })
+            update_model(changes)
+        } else if (view.brush == 'box' && e.keyCode == 86 && view.box && view.box.length == 4) {
+            // 86 = v
+            var changes = {}
+            var the_dead = delete_view_box(changes)
+            each(the_dead, function (_) {
+                var x = _.x
+                var Y = view.box[1] + (view.box[3] - view.box[1]) - (_.y - view.box[1]) - (stuff_sizes[_.t] - 1)
+                changes[X + ',' + Y] = {
+                    x : X,
+                    y : Y,
+                    t : _.t,
+                    c : _.c,
+                    v : _.v
+                }
+            })
+            update_model(changes)
+        } else if (view.brush == 'box' && e.keyCode == 70 && view.box && view.box.length == 4) {
+            // 70 = f
+            var changes = {}
+            var the_dead = delete_view_box(changes)
+            each(the_dead, function (_) {
+                var X = _.y - view.box[1] + view.box[0]
+                var Y = _.x - view.box[0] + view.box[1]
+                changes[X + ',' + Y] = {
+                    x : X,
+                    y : Y,
+                    t : _.t,
+                    c : _.c,
+                    v : _.v
+                }
+            })
+            view.box = [view.box[0], view.box[1], view.box[3] - view.box[1] + view.box[0], view.box[2] - view.box[0] + view.box[1]]
+            update_model(changes)
+        }
+    })
+    d.append(key_capture_box)
+
+    function create_button(text, onclick) {
+        var b = document.createElement('button')
+        b.style.width = PALETTE_HEIGHT*2 + 'px'
+        b.style.height = PALETTE_HEIGHT + 'px'
+        b.textContent = text
+        b.onclick = onclick
+        d.append(b)
+        return b
+    }
+    
+    create_button('+', function () {
+        view.scale *= 2
+        zoom_thing.value = view.scale
+        render()
+    })
+    
+    function create_zoom_thing() {
+        var b = document.createElement('input')
+        b.style.width = 30 + 'px'
+        b.value = view.scale
+        b.oninput = function () {
+            view.scale = 1*b.value
+            render()
+        }
+        d.append(b)
+        return b
+    }
+    var zoom_thing = create_zoom_thing()
+
+    create_button('-', function () {
+        view.scale = Math.floor(view.scale/2)
+        zoom_thing.value = view.scale
+        render()
+    })
+    
+    function create_location_viewer() {
+        var b = document.createElement('input')
+        b.style.width = 50 + 'px'
+        b.value = 'x,y'
+        d.append(b)
+        return b
+    }
+    location_viewer = create_location_viewer()
+    
+    
+    create_button('stop', function () {
+        view.play = !view.play
+        this.textContent = view.play ? 'stop' : 'play'
+        render()
+    })
+    
+    create_button('set', function () {
+        var j = prompt('give me some JSON:')
+        if (j) j = JSON.parse(j)
+        if (j) set_new_model(j)
+    })
+    
+    create_button('get', function () {
+        key_capture_box.value = JSON.stringify(model)
+        key_capture_box.focus()
+        key_capture_box.setSelectionRange(0, key_capture_box.value.length)
+    })
+    
+    create_button('reset', function () {
+        var changes = {}
+        each(model, function (_, key) {
+            changes[key] = {
+                x : _.x,
+                y : _.y,
+                t : _.t,
+                c : -1,
+                v : 0
+            }
+        })
+        update_model(changes, true)
+    })
+    
+    create_button('shock', function () {
+        var s = prompt('give me some jsOn!?!:')
+        if (s) {
+            view.shocker = JSON.parse(s)
+            view.shocks = (view.shocks || 0) + 50
+        }
+    })
+
+    // radio buttons
+    var radio_buttons = []
+    
+    function create_radio_button(text, brush, cb) {
+        var b = create_button(text, function () {
+            view.brush = brush
+            if (cb) cb()
+            each(radio_buttons, function (x) { x.style.background = 'grey' })
+            this.style.background = 'gold'
+        })
+        radio_buttons.push(b)
+        b.onclick()
+    }
+    
+    create_radio_button('WIRE', 'wire')
+    create_radio_button('CROSS', 'cross_gate')
+    create_radio_button('OR', 'or_gate')
+    create_radio_button('AND', 'and_gate')
+    create_radio_button('NAND', 'nand_gate')
+    create_radio_button('TOGGLE', 'toggle')
+    create_radio_button('delete', 'delete')
+    create_radio_button('box', 'box', function () {
+        key_capture_box.focus()
+    })
+
+    return d
+}
+document.body.append(draw_palette())
+
+var c = document.createElement('canvas')
+c.width = window.innerWidth
+c.height = window.innerHeight - PALETTE_HEIGHT*2
+var g = c.getContext('2d')
+document.body.append(c)
+
+function get_adjacent(x, y) {
+    return [
+        [x, y - 1, x, y - 2],
+        [x + 1, y, x + 2, y],
+        [x, y + 1, x, y + 2],
+        [x - 1, y, x - 2, y]
+    ]
+}
+
+function propagate() {
+    version++
+    var changes = {}
+    var new_wave_front = {}
+    each(wave_front, function (_, key) {
+        _ = get_thing_at(_.x, _.y)
+        if (!_) { return }
+        key = _.x + ',' + _.y
+        if (_.t == 'wire') {
+            var best_v = _.v
+            var best_c = _.c
+            var adj = get_adjacent(_.x, _.y)
+            each(adj, function (a, i) {
+                var __ = get_thing_at(a[0], a[1])
+                if (__ && __.t == 'cross_gate') {
+                    __ = model[a[2] + ',' + a[3]]
+                    if (__ && __.t == 'wire' && __.v > best_v) {
+                        best_v = __.v
+                        best_c = __.c
+                    }
+                } else if (__ && (__.t == 'wire' || (_.x == __.x + 1 || _.y == __.y + 1)) && __.v > best_v) {
+                    best_v = __.v
+                    best_c = __.c
+                }
+            })
+            if (best_v != _.v) {
+                changes[key] = {
+                    c : best_c,
+                    v : best_v
+                }
+                each(adj, function (__) {
+                    new_wave_front[__[0] + ',' + __[1]] = {
+                        x : __[0],
+                        y : __[1]
+                    }
+                })
+            }
+        } else if (_.t == 'cross_gate') {
+            _.c = -1
+            each(get_adjacent(_.x, _.y), function (__) {
+                var w = model[__[0] + ',' + __[1]]
+                if (w && w.t == 'wire') {
+                    if (w.c > 0) _.c = 1
+                    new_wave_front[__[0] + ',' + __[1]] = {
+                        x : __[0],
+                        y : __[1]
+                    }
+                }
+            })
+        } else if (stuff_sizes[_.t] == 3) {
+            var high_count = 0
+            var low_count = 0
+            each([
+                model[(_.x + 0) + ',' + (_.y - 1)],
+                model[(_.x + 2) + ',' + (_.y - 1)],
+                model[(_.x + 3) + ',' + (_.y + 0)],
+                model[(_.x + 3) + ',' + (_.y + 2)],
+                model[(_.x + 0) + ',' + (_.y + 3)],
+                model[(_.x + 2) + ',' + (_.y + 3)],
+                model[(_.x - 1) + ',' + (_.y + 0)],
+                model[(_.x - 1) + ',' + (_.y + 2)]
+            ], function (__) {
+                if (__ && __.t == 'wire') {
+                    if (__.c > 0) high_count++
+                    else low_count++
+                }
+            })
+            var output = -1
+            if (_.t == 'or_gate' && high_count > 0)
+                output = 1
+            if (_.t == 'and_gate' && low_count == 0)
+                output = 1
+            if (_.t == 'nand_gate' && low_count != 0)
+                output = 1
+            if (_.t == 'toggle')
+                output = _.cc
+            
+            if (output != _.c) {
+                changes[key] = {
+                    c : output,
+                    v : version
+                }
+                each([
+                    [_.x + 1, _.y - 1],
+                    [_.x + 3, _.y + 1],
+                    [_.x + 1, _.y + 3],
+                    [_.x - 1, _.y + 1]
+                    ], function (pos) {
+                    var w = model[pos[0] + ',' + pos[1]]
+                    if (w && w.t == 'wire') {
+                        new_wave_front[pos[0] + ',' + pos[1]] = {
+                            x : pos[0],
+                            y : pos[1]
+                        }
+                    }
+                })
+            }
+        }        
+    })
+
+    if (view.shocks) {
+        view.shocks--
+        each(view.shocker, function (charge, key) {
+            var _ = model[key]
+            if (_) {
+                changes[key] = {
+                    c : charge,
+                    v : version
+                }
+                var comma = key.indexOf(',')
+                var x = 1*key.slice(0, comma)
+                var y = 1*key.slice(comma + 1)
+
+                each(get_adjacent(x, y), function (__) {
+                    new_wave_front[__[0] + ',' + __[1]] = {
+                        x : __[0],
+                        y : __[1]
+                    }
+                })
+            }
+        })
+    }
+    
+    each(changes, function (_, key) {
+        model[key].c = _.c
+        model[key].v = _.v
+        draw_thing(model[key])
+    })
+    
+    wave_front = new_wave_front
+}
+
+var render_prep_image_data = null
+var render_prep_canvas = null
+
+function set_pixel(x, y, color) {
+    if (render_prep_image_data) {
+        var base = (y - view.low_y) * render_prep_image_data.width * 4 + (x - view.low_x) * 4
+        render_prep_image_data.data[base + 0] = color[0]
+        render_prep_image_data.data[base + 1] = color[1]
+        render_prep_image_data.data[base + 2] = color[2]
+        render_prep_image_data.data[base + 3] = 255
+    }
+}
+
+function draw_thing(_) {
+    if (_.t == 'wire') {
+        set_pixel(_.x, _.y, _.c > 0 ? [255, 255, 0] : [80, 80, 0])
+    } else if (_.t == 'cross_gate') {
+        set_pixel(_.x, _.y, [0, 0, 0])
+    } else {
+        var fac = _.c > 0 ? 1 : 0.5
+        var color = 
+            (_.t == 'or_gate') ? [fac * 255, fac * 128, 0] :
+            (_.t == 'and_gate') ? [0, 0, fac * 255] :
+            (_.t == 'nand_gate') ? [fac * 255, 0, fac * 255] :
+            (_.t == 'toggle') ? [0, fac * 255, fac * 255] :
+            [255, 0, 0]
+        for (var yy = 0; yy < 3; yy++) {
+            for (var xx = 0; xx < 3; xx++) {
+                set_pixel(_.x + xx, _.y + yy, color)
+            }
+        }
+    }
+}
+
+function render_prep() {
+    var x1 = Infinity
+    var y1 = Infinity
+    var x2 = -Infinity
+    var y2 = -Infinity
+
+    each(model, function (_) {
+        if (_.x < x1) x1 = _.x
+        if (_.y < y1) y1 = _.y
+        if (_.x + (stuff_sizes[_.t] - 1) > x2) x2 = _.x + (stuff_sizes[_.t] - 1)
+        if (_.y + (stuff_sizes[_.t] - 1) > y2) y2 = _.y + (stuff_sizes[_.t] - 1)
+    })
+    
+    if (x1 == Infinity) {
+        x1 = 0
+        y1 = 0
+        x2 = 0
+        y2 = 0
+    }
+    
+    var width = x2 - x1 + 1
+    var height = y2 - y1 + 1
+    
+    view.low_x = x1
+    view.low_y = y1
+    view.used_width = width
+    view.used_height = height
+
+    render_prep_image_data = g.createImageData(width, height)
+    
+    each(model, function (_, key) {
+        draw_thing(_)
+    })
+    
+    render_prep_canvas = document.createElement('canvas')
+    render_prep_canvas.width = width
+    render_prep_canvas.height = height
+}
+
+checker_canvas = document.createElement('canvas')
+checker_canvas.width = 2
+checker_canvas.height = 2
+checker_canvas.getContext('2d').fillStyle = 'rgba(0, 32, 0, 1)'
+checker_canvas.getContext('2d').fillRect(0, 0, 2, 2)
+checker_canvas.getContext('2d').fillStyle = 'rgba(0, 40, 0, 1)'
+checker_canvas.getContext('2d').fillRect(1, 0, 1, 1)
+checker_canvas.getContext('2d').fillRect(0, 1, 1, 1)
+var checker_pattern = g.createPattern(checker_canvas, 'repeat')
+
+function render() {
+    g.setTransform(view.scale, 0, 0, view.scale,
+        Math.floor(c.width/2) - view.x*view.scale,
+        Math.floor(c.height/2) - view.y*view.scale)
+
+    g.fillStyle = checker_pattern
+    g.fillRect(view.x - (c.width/2/view.scale), view.y - (c.height/2/view.scale), c.width/view.scale, c.height/view.scale)
+
+    if (render_prep_canvas) {
+        render_prep_canvas.getContext('2d').putImageData(render_prep_image_data, 0, 0)
+        
+        g.imageSmoothingEnabled = false
+        g.drawImage(render_prep_canvas, view.low_x, view.low_y, view.used_width, view.used_height)
+    }
+
+    if (view.brush == 'box' && view.box) {
+        g.fillStyle = 'rgba(255,0,0,0.6)'
+        if (view.box.length == 2)
+            g.fillRect(view.box[0], view.box[1], 1, 1)
+        else
+            g.fillRect(view.box[0], view.box[1], view.box[2] - view.box[0] + 1, view.box[3] - view.box[1] + 1)
+    }
+}
+
+var t1_agg = 0
+var t2_agg = 0
+
+function loop() {
+    
+    var a = 0.1
+    
+    if (view.play) {
+        var t0 = Date.now()
+        propagate()
+        propagate()
+        propagate()
+        propagate()
+        propagate()
+        propagate()
+        propagate()
+        propagate()
+        propagate()
+        propagate()
+        var t1 = Date.now()
+        t1_agg = a * (t1 - t0) + (1 - a) * t1_agg
+
+        var t0 = Date.now()
+        render()
+        var t1 = Date.now()
+        t2_agg = a * (t1 - t0) + (1 - a) * t2_agg
+        
+        // if (Math.random() < 0.03) {
+        //     console.log('t1_agg: ' + t1_agg)
+        //     console.log('t2_agg: ' + t2_agg)
+        // }
+    }
+    
+
+    
+    setTimeout(loop, LOOP_INTERVAL)
+}
+update_model({})
+loop()
+
+c.onmousemove = function (e) {
+    var pos = getRelPos(c, e)
+    var x = Math.floor((pos.x - c.width/2) / view.scale + view.x)
+    var y = Math.floor((pos.y - c.height/2) / view.scale + view.y)
+    location_viewer.value = x + ',' + y
+}
+
+c.onmousedown = function (e) {
+    e.preventDefault()
+    var old_pos = getRelPos(c, e)
+    var moved = false
+
+    var oldMove = document.onmousemove
+    document.onmousemove = function (e) {
+        var new_pos = getRelPos(c, e)
+        moved = true
+        
+        view.x -= (new_pos.x - old_pos.x) / view.scale
+        view.y -= (new_pos.y - old_pos.y) / view.scale
+        render()
+        
+        old_pos = new_pos
+    }
+    
+    var oldUp = document.onmouseup
+    document.onmouseup = function (e) {
+        document.onmousemove = oldMove
+        document.onmouseup = oldUp
+
+        if (!moved) {
+            var new_pos = getRelPos(c, e)
+
+            var x = Math.floor((new_pos.x - c.width/2) / view.scale + view.x)
+            var y = Math.floor((new_pos.y - c.height/2) / view.scale + view.y)
+            var key = x + ',' + y
+            
+            var changes = {}
+            
+            var clicked_thing = get_thing_at(x, y)
+
+            if (view.brush == 'box') {
+                if (e.shiftKey && view.box && view.box.length == 4) {
+                    if (e.metaKey) {
+                        var the_dead = delete_view_box(changes)
+                        each(the_dead, function (_) {
+                            var X = _.x - view.box[0] + x
+                            var Y = _.y - view.box[1] + y
+                            changes[X + ',' + Y] = {
+                                x : X,
+                                y : Y,
+                                t : _.t,
+                                c : _.c,
+                                v : _.v
+                            }
+                        })
+                        view.box = [x, y, view.box[2] - view.box[0] + x, view.box[3] - view.box[1] + y]
+                        view.copy = copy_view_box()
+                    } else {
+                        each(view.copy, function (_) {
+                            var X = _.x - view.box[0] + x
+                            var Y = _.y - view.box[1] + y
+                            changes[X + ',' + Y] = {
+                                x : X,
+                                y : Y,
+                                t : _.t,
+                                c : _.c,
+                                v : _.v
+                            }
+                        })
+                    }
+                } else {
+                    if (!view.box || view.box.length == 4) {
+                        view.box = [x, y]
+                    } else {
+                        view.box = [
+                            Math.min(view.box[0], x),
+                            Math.min(view.box[1], y),
+                            Math.max(view.box[0], x),
+                            Math.max(view.box[1], y)
+                        ]
+                        view.copy = copy_view_box()
+                    }
+                }
+            } else if (view.brush == 'delete') {
+                if (e.shiftKey) {
+                    function delete_wires_at(x, y) {
+                        var key = x + ',' + y
+                        var _ = model[key]
+                        if (_ && _.t == 'wire') {
+                            changes[key] = null
+                        } else if (_ && _.t == 'cross_gate') {
+                            changes[key] = {
+                                x : _.x,
+                                y : _.y,
+                                t : 'wire',
+                                c : -1,
+                                v : 0
+                            }
+                        }
+                    }
+                    var dx = x - view.prev_x
+                    var dy = y - view.prev_y
+                    if (Math.abs(dx) > Math.abs(dy)) {
+                        if (dx > 0)
+                            for (var i = view.prev_x; i <= x; i++)
+                                delete_wires_at(i, view.prev_y)
+                        else
+                            for (var i = x; i <= view.prev_x; i++)
+                                delete_wires_at(i, view.prev_y)
+                    } else {
+                        if (dy > 0)
+                            for (var i = view.prev_y; i <= y; i++)
+                                delete_wires_at(view.prev_x, i)
+                        else
+                            for (var i = y; i <= view.prev_y; i++)
+                                delete_wires_at(view.prev_x, i)
+                    }
+                } else if (clicked_thing) {
+                    changes[clicked_thing.x + ',' + clicked_thing.y] = null
+                }
+            } else if (clicked_thing && clicked_thing.type == 'toggle') {
+                clicked_thing.cc *= clicked_thing * -1
+                wave_front[clicked_thing.x + ',' + clicked_thing.y] = {
+                    x : clicked_thing.x,
+                    y : clicked_thing.y
+                }
+                return
+            } else if (view.brush == 'wire') {
+                function add_wire(x, y, direction) {
+                    if (direction == 'horz') {
+                        if (model[x + ',' + y] &&
+                            model[x + ',' + y].t == 'wire' &&
+                            model[x + ',' + (y - 1)] &&
+                            model[x + ',' + (y - 1)].t == 'wire' &&
+                            model[x + ',' + (y + 1)] &&
+                            model[x + ',' + (y + 1)].t == 'wire') {
+                            changes[x + ',' + y] = {
+                                x : x,
+                                y : y,
+                                t : 'cross_gate',
+                                c : -1,
+                                v : 0
+                            }
+                            return
+                        }
+                    }
+                    if (direction == 'vert') {
+                        if (model[x + ',' + y] &&
+                            model[x + ',' + y].t == 'wire' &&
+                            model[(x - 1) + ',' + y] &&
+                            model[(x - 1) + ',' + y].t == 'wire' &&
+                            model[(x + 1) + ',' + y] &&
+                            model[(x + 1) + ',' + y].t == 'wire') {
+                            changes[x + ',' + y] = {
+                                x : x,
+                                y : y,
+                                t : 'cross_gate',
+                                c : -1,
+                                v : 0
+                            }
+                            return
+                        }
+                    }
+                    changes[x + ',' + y] = {
+                        x : x,
+                        y : y,
+                        t : 'wire',
+                        c : -1,
+                        v : 0
+                    }
+                }
+                if (e.shiftKey) {
+                    var dx = x - view.prev_x
+                    var dy = y - view.prev_y
+                    if (Math.abs(dx) > Math.abs(dy)) {
+                        if (dx > 0) {
+                            for (var i = view.prev_x; i <= x; i++)
+                                add_wire(i, view.prev_y, 'horz')
+                        } else {
+                            for (var i = x; i <= view.prev_x; i++)
+                                add_wire(i, view.prev_y, 'horz')
+                        }
+                    } else {
+                        if (dy > 0) {
+                            for (var i = view.prev_y; i <= y; i++)
+                                add_wire(view.prev_x, i, 'vert')
+                        } else {
+                            for (var i = y; i <= view.prev_y; i++)
+                                add_wire(view.prev_x, i, 'vert')
+                        }
+                    }
+                } else {
+                    add_wire(x, y)
+                }
+            } else {
+                if (clicked_thing) {
+                    changes[clicked_thing.x + ',' + clicked_thing.y] = null
+                }
+                changes[key] = {
+                    x : x,
+                    y : y,
+                    t : view.brush,
+                    c : -1,
+                    v : 0
+                }
+            }
+            
+            view.prev_x = x
+            view.prev_y = y
+            
+            update_model(changes)
+        }
+    }
+}
+
+function getPos(e) {
+    var x = 0, y = 0
+    while (e != null) {
+        x += e.offsetLeft
+        y += e.offsetTop
+        e = e.offsetParent
+    }
+    return {x : x, y : y}
+}
+
+function getRelPos(to, positionedObject) {
+    var pos = getPos(to)
+    return {
+        x : positionedObject.pageX - pos.x,
+        y : positionedObject.pageY - pos.y
+    }
+}
+
+
+function each(o, cb) {
+	if (o instanceof Array) {
+		for (var i = 0; i < o.length; i++) {
+			if (cb(o[i], i, o) == false)
+				return false
+		}
+	} else {
+		for (var k in o) {
+			if (o.hasOwnProperty(k)) {
+				if (cb(o[k], k, o) == false)
+					return false
+			}
+		}
+	}
+	return true
+}
+
+</script>
