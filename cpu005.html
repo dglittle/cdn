@@ -689,8 +689,7 @@ c.onmousedown = function (e) {
                     changes[clicked_thing.x + ',' + clicked_thing.y] = null
                 }
             } else if (clicked_thing && clicked_thing.t == 'toggle') {
-                clicked_thing.cc *= clicked_thing.c * -1
-                console.log(clicked_thing.cc)
+                clicked_thing.cc = (clicked_thing.cc || -1) * -1
                 wave_front[clicked_thing.x + ',' + clicked_thing.y] = {
                     x : clicked_thing.x,
                     y : clicked_thing.y
