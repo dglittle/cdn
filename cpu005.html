@@ -688,7 +688,7 @@ c.onmousedown = function (e) {
                 } else if (clicked_thing) {
                     changes[clicked_thing.x + ',' + clicked_thing.y] = null
                 }
-            } else if (clicked_thing && clicked_thing.type == 'toggle') {
+            } else if (clicked_thing && clicked_thing.t == 'toggle') {
                 clicked_thing.cc *= clicked_thing * -1
                 wave_front[clicked_thing.x + ',' + clicked_thing.y] = {
                     x : clicked_thing.x,
