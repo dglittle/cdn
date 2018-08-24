@@ -5,101 +5,28 @@
 <style type="text/css">
 </style>
 </head>
-<body style="margin:0px">
+<body style="margin:0px;background:blue">
 <script>
 
 var c = document.createElement('canvas')
-c.width = 36
+c.width = 40
 c.height = 37
 document.body.appendChild(c)
 
-
-
-
-var img = new Image();   // Create new img element
+var img = new Image()
 img.addEventListener('load', function(e) {
-    console.log('got here?', e)
-    //c.getContext('2d').drawImage(img, 0, 0)
-}, false);
-
-
-    c.getContext('2d').fillStyle = 'red'
-    c.getContext('2d').fillRect(0, 0, 20, 40)
-
+    c.getContext('2d').drawImage(img, 0, -6)
     drawFace(c, 100, 0.5, 0.8)
-img.src = 'https://dglittle.github.io/smiley-slider/smiley-slider.png'; // Set source path
-
-
-
-function drawSmiley(g, x, y) {
-    drawFace(c, 100, 0.5, 0.8)
-}
-
-
-function SmileySlider(container) {
-    
-    var PI180 = Math.PI / 180;
-    
-    imgSrc = 'https://dglittle.github.io/smiley-slider/smiley-slider.png'
-
-    var width = 329
-    var height = 37
-    
-    var headWidth = 40
-    var maxHeadX = width - headWidth + 1
-    
-    var base = document.createElement('div')
-    base.style.width = 40 + "px"
-    base.style.height = 37 + "px"
-    base.style.background = "blue"
-    
-    var head = document.createElement('div')
-    head.style.width = headWidth + "px"
-    head.style.height = height + "px"
-    head.style.marginRight = '-' + head.style.width
-    head.style.marginBottom = '-' + head.style.height
-    head.style.position = "relative"
-    head.style.background = "url('" + imgSrc + "') scroll 0px -6px"
-    base.appendChild(head)
-
-    var face = document.createElement('canvas')
-    face.style.width = 36 + "px"
-    face.style.height = 37 + "px"
-    face.style.position = "relative"
-    face.style.left = 4 + "px"
-    face.width = 36
-    face.height = 37
-    head.appendChild(face)
-    
-    container.appendChild(base)
-
-	
-
-
-
-
-
-    
-    //////////////////////////////////////////////////////////////
-    // utils
-    
-
-    
-    head.style.left = 0 + "px"
-    drawFace(face, 100, 0.5, 0.8)
-}
-
-var d = document.createElement('div')
-document.body.append(d)
-var s = new SmileySlider(d)
-
-
+}, false)
+img.src = 'https://dglittle.github.io/smiley-slider/smiley-slider.png'
 
 function drawFace(canvas, radius, emotion, innerScale) {
     emotion = Math.max(0, Math.min(1, emotion));
     var diam = radius * 2;
     
     var ctx = canvas.getContext('2d');
+    ctx.save()
+    ctx.translate(4, 0)
 
     ctx.beginPath();
     ctx.fillStyle = '#414084'; 
@@ -112,6 +39,8 @@ function drawFace(canvas, radius, emotion, innerScale) {
     ctx.strokeStyle = '#414084';
     drawEyeBrows(ctx, 9.5, 16, 23, 16, 7, 5, emotion);
     ctx.stroke();
+    
+    ctx.restore()
 };
 
 function drawSmile(context, mainRadius, offsetY, innerScale, emotion) {
