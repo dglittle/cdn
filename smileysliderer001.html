@@ -11,10 +11,6 @@
 <script src="https://code.jquery.com/jquery-2.0.3.min.js"></script>
 <script>
 
-
-
-
-
 function SmileySlider(container, imgSrc) {
     if (!imgSrc)
         imgSrc = "smiley-slider.png"
@@ -29,16 +25,6 @@ function SmileySlider(container, imgSrc) {
     base.style.width = width + "px"
     base.style.height = height + "px"
     base.style.background = "white"
-    
-    var track = document.createElement('div')
-    track.style.width = width + "px"
-    track.style.height = 6 + "px"
-    track.style.marginRight = '-' + track.style.width
-    track.style.marginBottom = '-' + track.style.height
-    track.style.position = "relative"
-    track.style.top = 15 + "px"
-    track.style.background = "url('" + imgSrc + "')"
-    base.appendChild(track)
     
     var head = document.createElement('div')
     head.style.width = headWidth + "px"
@@ -99,65 +85,6 @@ function SmileySlider(container, imgSrc) {
         position(0.5)
     }, 0)
 
-    //////////////////////////////////////////////////////////////
-    // mouse
-
-    glass.onmousedown = function (e) {
-        e.preventDefault()
-        var pos = getRelPos(glass, e)
-        
-        var grabX = headWidth / 2
-        var headX = positionInt()
-        if (pos.x >= headX && pos.x < headX + headWidth) {
-            grabX = pos.x - headX
-        }
-        
-        positionInt(pos.x - grabX)
-
-        var oldMove = document.onmousemove
-        document.onmousemove = function (e) {
-            var pos = getRelPos(glass, e)
-            
-            positionInt(pos.x - grabX)
-        }
-        
-        var oldUp = document.onmouseup
-        document.onmouseup = function (e) {
-            document.onmousemove = oldMove
-            document.onmouseup = oldUp
-        }
-    }
-
-    //////////////////////////////////////////////////////////////
-    // touch
-
-    glass.ontouchstart = function (e) {
-        e.preventDefault()
-        var pos = getRelPos(glass, e.touches[0])
-
-        var grabX = headWidth / 2
-        var headX = positionInt()
-        if (pos.x >= headX && pos.x < headX + headWidth) {
-            grabX = pos.x - headX
-        }
-
-        positionInt(pos.x - grabX)
-
-        var oldMove = document.ontouchmove
-        document.ontouchmove = function (e) {
-            e.preventDefault();
-            var pos = getRelPos(glass, e.touches[0])
-            positionInt(pos.x - grabX)
-        }
-
-        var oldEnd = document.ontouchend;
-        var oldCancel = document.ontouchcancel
-        document.ontouchend = document.ontouchcancel = function (e) {
-            document.ontouchmove = oldMove
-            document.ontouchend = oldEnd
-            document.ontouchcancel = oldCancel;
-        }
-    }
 
     //////////////////////////////////////////////////////////////
     // core drawing code
@@ -296,31 +223,12 @@ function SmileySlider(container, imgSrc) {
 <script>
 
 $(function () {
-    var s = new SmileySlider(document.getElementById("slider"))
-    
-    s.position(0) // make it sad
-    s.position(1) // make it happy
-    
-    var p = s.position() // get it's position
-    s.position(p / 2) // make it half as happy
-    
-    s.position(function (p) {
-        // do something when it changes
-    })
-
-    $.ajax({
-        url : 'http://view-count.herokuapp.com/view/' + encodeURIComponent(location.href),
-        xhrFields : { withCredentials: true },
-        success : function (count) { }
-    })    
+    var d = document.createElement('div')
+    document.body.append(d)
+    var s = new SmileySlider(d, 'http://dglittle.github.io/smiley-slider/smiley-slider.png')
 })
 
 </script>
-
-<table style="width:329px;margin-left:auto;margin-right:auto">
-    <tr><td><div id="slider" style="margin-top:100px;margin-bottom:100px;"></div></td></tr>
-    <tr><td align="center"><small><a href="https://github.com/dglittle/smiley-slider">source code</a></small></td></tr>
-</table>
 
 </body>
 </html>
