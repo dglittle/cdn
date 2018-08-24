@@ -1,5 +1,3 @@
-
-<!DOCTYPE html>
 <html>
 <head>
 <meta charset='utf-8'>
@@ -7,8 +5,7 @@
 <style type="text/css">
 </style>
 </head>
-<body>
-<script src="https://code.jquery.com/jquery-2.0.3.min.js"></script>
+<body style="margin:0px">
 <script>
 
 function SmileySlider(container, imgSrc) {
@@ -22,9 +19,9 @@ function SmileySlider(container, imgSrc) {
     var maxHeadX = width - headWidth + 1
     
     var base = document.createElement('div')
-    base.style.width = width + "px"
-    base.style.height = height + "px"
-    base.style.background = "white"
+    base.style.width = 40 + "px"
+    base.style.height = 37 + "px"
+    base.style.background = "blue"
     
     var head = document.createElement('div')
     head.style.width = headWidth + "px"
@@ -40,55 +37,12 @@ function SmileySlider(container, imgSrc) {
     face.style.height = 37 + "px"
     face.style.position = "relative"
     face.style.left = 4 + "px"
-    face.width = "36"
-    face.height = "37"
+    face.width = 36
+    face.height = 37
     head.appendChild(face)
-    
-    var glass = document.createElement('div')
-    glass.style.width = width + "px"
-    glass.style.height = height + "px"
-    glass.style.marginRight = '-' + glass.style.width
-    glass.style.marginBottom = '-' + glass.style.height
-    glass.style.position = "relative"
-    base.appendChild(glass)
     
     container.appendChild(base)
 
-    //////////////////////////////////////////////////////////////
-    // head position
-    
-    var onHeadMove = null
-    
-    function positionInt(e) {
-        if (e === undefined) {
-            return getPos(head).x - getPos(base).x
-        } else {
-            head.style.left = Math.round(cap(e, 0, maxHeadX)) + "px"
-            var p = position()
-            drawFace(face, 100, p, 0.8)
-            if (onHeadMove) onHeadMove(p)
-        }
-    }
-    
-    function position(e) {
-        if (e === undefined) {
-            return lerp(0, 0, maxHeadX, 1, positionInt())
-        } else if (typeof(e) == "function") {
-            onHeadMove = e
-        } else {
-            positionInt(lerp(0, 0, 1, maxHeadX, e))
-        }
-    }
-    
-    this.position = position    
-    setTimeout(function () {
-        position(0.5)
-    }, 0)
-
-
-    //////////////////////////////////////////////////////////////
-    // core drawing code
-    
     var PI180 = Math.PI / 180;
 	
     function drawFace(canvas, radius, emotion, innerScale) {
@@ -195,40 +149,12 @@ function SmileySlider(container, imgSrc) {
         return (t - t0) * (v1 - v0) / (t1 - t0) + v0
     }
     
-    function getPos(e) {
-        var x = 0, y = 0
-        while (e != null) {
-            x += e.offsetLeft
-            y += e.offsetTop
-            e = e.offsetParent
-        }
-        return {x : x, y : y}
-    }
-    
-    function getRelPos(to, positionedObject) {
-        var pos = getPos(to)
-        return {
-            x : positionedObject.pageX - pos.x,
-            y : positionedObject.pageY - pos.y
-        }
-    }
+    head.style.left = 0 + "px"
+    drawFace(face, 100, 0.5, 0.8)
 }
 
-
-
-
-
-
-</script>
-<script>
-
-$(function () {
-    var d = document.createElement('div')
-    document.body.append(d)
-    var s = new SmileySlider(d, 'http://dglittle.github.io/smiley-slider/smiley-slider.png')
-})
+var d = document.createElement('div')
+document.body.append(d)
+var s = new SmileySlider(d, 'http://dglittle.github.io/smiley-slider/smiley-slider.png')
 
 </script>
-
-</body>
-</html>
