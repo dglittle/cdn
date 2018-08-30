@@ -1,0 +1,151 @@
+
+
+
+<body style="margin:0px">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.6.1/gl-matrix-min.js"></script>
+<script src="https://dglittle.github.io/cdn/utils001.js"></script>
+<script>
+
+var tau = Math.PI * 2
+
+var n = 64
+
+var c = document.createElement('canvas')
+c.width = n
+c.height = n
+document.body.append(c)
+var g = c.getContext('2d')
+
+var cc = document.createElement('canvas')
+cc.width = n
+cc.height = n
+document.body.append(cc)
+var gg = cc.getContext('2d')
+
+var img_data = g.createImageData(n, n)
+
+var E = []
+var M = []
+
+for (var y = 0; y < n; y++) {
+    for (var x = 0; x < n; x++) {
+        E.push(vec3.random(vec3.create()))
+        M.push(vec3.random(vec3.create()))
+    }
+}
+
+function get_index(x, y) {
+    return fmod(y, n) * n + fmod(x, n)
+}
+
+function step_physics() {
+    var dt = 1
+    
+    function field_curl(F) {
+        var F_curl
+        for (var y = 0; y < n; y++) {
+            for (var x = 0; x < n; x++) {
+                var sum = vec3.create()
+                var curl = vec3.create()
+                
+                vec3.cross(curl, F[get_index(x, y - 1)], vec3.fromValues(0, -1, 0))
+                vec3.add(sum, sum, curl)
+                
+                vec3.cross(curl, F[get_index(x + 1, y)], vec3.fromValues(1, 0, 0))
+                vec3.add(sum, sum, curl)
+                
+                vec3.cross(curl, F[get_index(x, y + 1)], vec3.fromValues(0, 1, 0))
+                vec3.add(sum, sum, curl)
+                
+                vec3.cross(curl, F[get_index(x - 1, y)], vec3.fromValues(-1, 0, 0))
+                vec3.add(sum, sum, curl)
+                
+                vec3.scale(sum, sum, 1/4)
+                F_curl[get_index(x, y)] = sum
+            }
+        }
+        return F_curl
+    }
+    
+    var E_curl = field_curl(E)
+    var M_curl = field_curl(M)
+    
+    for (var i = 0; i < E.length; i++) {
+        vec3.add(E[i], E[i], M_curl)
+        vec3.add(M[i], M[i], E_curl)
+    }
+}
+
+function get_color_for_vec3(v3) {
+    var a = Math.atan2(v3[1], v3[0])
+    var a = fmod(a, tau)
+
+    var R = 0
+    var G = 0
+    var B = 0
+    if (a < tau/3) {
+        R = lerp(0, 1, tau/3, 0, a)
+        G = lerp(0, 0, tau/3, 1, a)
+    } else if (a < tau*2/3) {
+        G = lerp(tau/3, 1, tau*2/3, 0, a)
+        B = lerp(tau/3, 0, tau*2/3, 1, a)
+    } else {
+        B = lerp(tau*2/3, 1, tau, 0, a)
+        R = lerp(tau*2/3, 0, tau, 1, a)
+    }
+    if (v3[2] >= 0) {
+        var fac = 1 - Math.abs(v3[2])
+        R = R * fac
+        G = G * fac
+        B = B * fac
+    } else {
+        var aa = lerp(-1, 0, 0, 1, v3[2])
+        R = R * aa + (1 - aa)
+        G = G * aa + (1 - aa)
+        B = B * aa + (1 - aa)
+    }
+
+    return [
+        Math.floor(255 * R),
+        Math.floor(255 * G),
+        Math.floor(255 * B),
+    ]
+}
+
+function draw_everything() {
+    for (var i = 0; i < E.length; i++) {
+        var c = get_color_for_vec3(E[i])
+        img_data[i * 4 + 0] = c[0]
+        img_data[i * 4 + 1] = c[1]
+        img_data[i * 4 + 2] = c[2]
+        img_data[i * 4 + 3] = 255
+    }
+    
+    g.drawImage(img_data, 0, 0)
+    
+    for (var i = 0; i < M.length; i++) {
+        var c = get_color_for_vec3(M[i])
+        img_data[i * 4 + 0] = c[0]
+        img_data[i * 4 + 1] = c[1]
+        img_data[i * 4 + 2] = c[2]
+        img_data[i * 4 + 3] = 255
+    }
+    
+    gg.drawImage(img_data, 0, 0)
+}
+
+function loop() {
+    step_physics()
+    draw_everything()
+    setTimeout(loop, 1000)
+}
+loop()
+
+function fmod(a, b) {
+    var m = a % b
+    if (m < 0) return m + b
+    return m
+}
+
+</script>
+</body>
