@@ -71,14 +71,17 @@ function sync7_merge(s7, cs, custom_merge_function) {
         function find_paths_from_a_up_to_LCAs(a) {
             if (LCAs[a]) {
                 path_so_far.push(a)
-                paths.push(path_so_far.clone())
+                paths.push(path_so_far.slice(0))
                 path_so_far.pop()
+            } else {
+                each(s7.commits[a].to_parents, function (d, p) {
+                    if (LCAs[p] || !CAs[p]) {
+                        path_so_far.push(p)
+                        find_paths_from_a_up_to_LCAs(p)
+                        path_so_far.pop()
+                    }
+                })
             }
-            each(s7.commits[a].to_parents, function (d, p) {
-                path_so_far.push(p)
-                find_paths_from_a_up_to_b(p, b)
-                path_so_far.pop()
-            })
         }
         
         
