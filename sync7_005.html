@@ -59,52 +59,51 @@ function sync7_merge(s7, cs, custom_merge_function) {
     var prev_merge_node_text = texts[prev_merge_node]
     var ancestors = sync7_get_ancestors(s7, prev_merge_node)
     for (var i = 1; i < leaves.length; i++) {
-        var i_ancestors = sync7_get_ancestors(s7, leaves[i])
+        var leaf = leaves[i]
+        var i_ancestors = sync7_get_ancestors(s7, leaf)
         var CAs = sync7_intersection(ancestors, i_ancestors)
         var LCAs = sync7_get_leaves(CAs)
         each(i_ancestors, function (v, k) {
             ancestors[k] = v
         })
         
-        var paths = []
+        var paths = {}
         path_so_far = []
-        function find_paths_from_a_up_to_LCAs(a) {
+        function find_paths_up_to_LCAs(a) {
             if (LCAs[a]) {
-                path_so_far.push(a)
-                paths.push(path_so_far.slice(0))
-                path_so_far.pop()
+                if (!paths[a]) paths[a] = []
+                paths[a].push(path_so_far.slice(0))
             } else {
                 each(s7.commits[a].to_parents, function (d, p) {
                     if (LCAs[p] || !CAs[p]) {
                         path_so_far.push(p)
-                        find_paths_from_a_up_to_LCAs(p)
+                        find_paths_up_to_LCAs(p)
                         path_so_far.pop()
                     }
                 })
             }
         }
+        find_paths_up_to_LCAs(prev_merge_node)
+        var prev_paths = paths
+        paths = {}
+        path_so_far = []
+        find_paths_up_to_LCAs(leaf)
+        var leaf_paths = paths
         
-        
-        
-        
-        work here
-        
-        
-        
-        
-        function trace_toward_ancestors(starts_and_ends, id) {
-            if id is an LCA,
-                do stuff
-            else
-                for each to_parent,
-                    if it's in sync7_intersection but not an LCA,
-                        stop recursing
-                    else
-                        trace starts and ends up to it,
-                        and recursively trace_toward_ancestors
-        }
-        
-        
+        each(prev_paths, function (paths, dest) {
+            prev_paths[dest] = sync7_diff_merge_trans()
+        })
+
+
+
+work here        
+    var diff = []
+    var prev = s7.leaf
+    each(leaf_to_lca, function (next) {
+        diff = sync7_diff_merge_trans(diff, s7.commits[prev].to_parents[next])
+        prev = next
+    })
+
         
         
         
@@ -233,6 +232,17 @@ function sync7_diff_merge_trans(a, b, a_factor, b_factor) {
     return ret
 }
 
+function sync7_merge_path_up(s7, from, path) {
+    var diff = []
+    var prev = from
+    each(path, function (next) {
+        diff = sync7_diff_merge_trans(diff, s7.commits[prev].to_parents[next])
+        prev = next
+    })
+    return diff
+}
+
+
 function sync7_get_text(s7, id) {
     var ls = sync7_get_leaves(sync7_intersection(sync7_get_ancestors(s7, s7.leaf, true), sync7_get_ancestors(s7, id, true)))
     var lca = Object.keys(ls)[0]
@@ -243,12 +253,8 @@ function sync7_get_text(s7, id) {
         lca_to_id.push(id)
     }
     
-    var diff = []
-    var prev = s7.leaf
-    each(leaf_to_lca, function (next) {
-        diff = sync7_diff_merge_trans(diff, s7.commits[prev].to_parents[next])
-        prev = next
-    })
+    var diff = sync7_merge_path_up(s7, s7.leaf, leaf_to_lca)
+    var prev = lca
     each(lca_to_id, function (next) {
         diff = sync7_diff_merge_trans(diff, s7.commits[next].to_parents[prev], 1, -1)
         prev = next
