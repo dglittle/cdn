@@ -9,16 +9,25 @@
 var tau = Math.PI * 2
 
 var n = 64
+var zoom = 4
 
 var c = document.createElement('canvas')
 c.width = n
 c.height = n
+c.style.imageRendering = 'pixelated'
+c.style.width = n * zoom
+c.style.height = n * zoom
+c.style.margin = '4px'
 document.body.append(c)
 var g = c.getContext('2d')
 
 var cc = document.createElement('canvas')
 cc.width = n
 cc.height = n
+cc.style.imageRendering = 'pixelated'
+cc.style.width = n * zoom
+cc.style.height = n * zoom
+cc.style.margin = '4px'
 document.body.append(cc)
 var gg = cc.getContext('2d')
 
@@ -33,6 +42,7 @@ for (var y = 0; y < n; y++) {
         M.push(vec3.random(vec3.create()))
     }
 }
+// E[E.length / 2][2] = 1
 
 function get_index(x, y) {
     return fmod(y, n) * n + fmod(x, n)
@@ -41,39 +51,41 @@ function get_index(x, y) {
 function step_physics() {
     var dt = 1
     
-    function field_curl(F) {
-        var F_curl
+    function field_div(F) {
+        var F_div = []
         for (var y = 0; y < n; y++) {
             for (var x = 0; x < n; x++) {
-                var sum = vec3.create()
-                var curl = vec3.create()
+                var sum = 0
+
+                sum += vec3.dot(F[get_index(x, y - 1)], vec3.fromValues(0, -1, 0))
+                sum += vec3.dot(F[get_index(x + 1, y)], vec3.fromValues(1, 0, 0))
+                sum += vec3.dot(F[get_index(x, y + 1)], vec3.fromValues(0, 1, 0))
+                sum += vec3.dot(F[get_index(x - 1, y)], vec3.fromValues(-1, 0, 0))
                 
-                vec3.cross(curl, F[get_index(x, y - 1)], vec3.fromValues(0, -1, 0))
-                vec3.add(sum, sum, curl)
-                
-                vec3.cross(curl, F[get_index(x + 1, y)], vec3.fromValues(1, 0, 0))
-                vec3.add(sum, sum, curl)
-                
-                vec3.cross(curl, F[get_index(x, y + 1)], vec3.fromValues(0, 1, 0))
-                vec3.add(sum, sum, curl)
-                
-                vec3.cross(curl, F[get_index(x - 1, y)], vec3.fromValues(-1, 0, 0))
-                vec3.add(sum, sum, curl)
-                
-                vec3.scale(sum, sum, 1/4)
-                F_curl[get_index(x, y)] = sum
+                F_div[get_index(x, y)] = sum / 4
             }
         }
-        return F_curl
+        return F_div
+    }
+
+    var f = -dt
+    var E_div = field_div(E)
+    for (var y = 0; y < n; y++) {
+        for (var x = 0; x < n; x++) {
+            var div = E_div[get_index(x, y)]
+            vec3.add(E[get_index(x, y - 1)], E[get_index(x, y - 1)], vec3.fromValues(0, div * f, 0))
+            vec3.add(E[get_index(x + 1, y)], E[get_index(x + 1, y)], vec3.fromValues(div * -f, 0, 0))
+            vec3.add(E[get_index(x, y + 1)], E[get_index(x, y + 1)], vec3.fromValues(0, div * -f, 0))
+            vec3.add(E[get_index(x - 1, y)], E[get_index(x - 1, y)], vec3.fromValues(div * f, 0, 0))
+        }
     }
     
-    var E_curl = field_curl(E)
-    var M_curl = field_curl(M)
-    
-    for (var i = 0; i < E.length; i++) {
-        vec3.add(E[i], E[i], M_curl)
-        vec3.add(M[i], M[i], E_curl)
-    }
+    // var f = dt
+    // for (var y = 0; y < n; y++) {
+    //     for (var x = 0; x < n; x++) {
+    //         vec3.scale(E[get_index(x, y)], E[get_index(x, y)], 0.9)
+    //     }
+    // }
 }
 
 function get_color_for_vec3(v3) {
@@ -94,7 +106,7 @@ function get_color_for_vec3(v3) {
         R = lerp(tau*2/3, 0, tau, 1, a)
     }
     if (v3[2] >= 0) {
-        var fac = 1 - Math.abs(v3[2])
+        var fac = (1 - Math.abs(v3[2])) / 2
         R = R * fac
         G = G * fac
         B = B * fac
@@ -104,6 +116,12 @@ function get_color_for_vec3(v3) {
         G = G * aa + (1 - aa)
         B = B * aa + (1 - aa)
     }
+    
+    var len = vec3.len(v3)
+    if (len > 1) len = 1
+    R *= len
+    G *= len
+    B *= len
 
     return [
         Math.floor(255 * R),
@@ -113,33 +131,43 @@ function get_color_for_vec3(v3) {
 }
 
 function draw_everything() {
+    console.log('draw_everything..')
+
     for (var i = 0; i < E.length; i++) {
         var c = get_color_for_vec3(E[i])
-        img_data[i * 4 + 0] = c[0]
-        img_data[i * 4 + 1] = c[1]
-        img_data[i * 4 + 2] = c[2]
-        img_data[i * 4 + 3] = 255
+        img_data.data[i * 4 + 0] = c[0]
+        img_data.data[i * 4 + 1] = c[1]
+        img_data.data[i * 4 + 2] = c[2]
+        img_data.data[i * 4 + 3] = 255
     }
     
-    g.drawImage(img_data, 0, 0)
+    g.putImageData(img_data, 0, 0)
     
     for (var i = 0; i < M.length; i++) {
         var c = get_color_for_vec3(M[i])
-        img_data[i * 4 + 0] = c[0]
-        img_data[i * 4 + 1] = c[1]
-        img_data[i * 4 + 2] = c[2]
-        img_data[i * 4 + 3] = 255
+        img_data.data[i * 4 + 0] = c[0]
+        img_data.data[i * 4 + 1] = c[1]
+        img_data.data[i * 4 + 2] = c[2]
+        img_data.data[i * 4 + 3] = 255
     }
     
-    gg.drawImage(img_data, 0, 0)
+    gg.putImageData(img_data, 0, 0)
 }
 
+var stop = false
+
 function loop() {
+    if (stop) { return }
     step_physics()
     draw_everything()
-    setTimeout(loop, 1000)
+    setTimeout(loop, 100)
 }
 loop()
+
+document.addEventListener('keydown', function (e) {
+    console.log('stop!')
+    stop = true
+})
 
 function fmod(a, b) {
     var m = a % b
