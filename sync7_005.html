@@ -54,7 +54,7 @@ function sync7_merge(s7, cs, custom_merge_function) {
         delete s7.commits[k]
     })
     s7.temp_commits = {}
-
+    
     var prev_merge_node = leaves[0]
     var prev_merge_node_text = texts[prev_merge_node]
     var ancestors = sync7_get_ancestors(s7, prev_merge_node)
@@ -72,7 +72,7 @@ function sync7_merge(s7, cs, custom_merge_function) {
             var hit_LCA = LCAs[x]
             if (!CAs[x]) {
                 each(s7.commits[x].to_parents, function (d, p) {
-                    hit_LCA ||= helper(p)
+                    hit_LCA = hit_LCA || helper(p)
                 })
             }
             if (hit_LCA) {
@@ -426,8 +426,8 @@ var repoA = create_sync7_repo()
 var repoB = create_sync7_repo()
 var c_x = sync7_commit(repoA, 'x')
 sync7_merge(repoB, c_x, my_custom_merge_func)
-// var c_xz = sync7_commit(repoA, 'xz')
-// var c_y = sync7_commit(repoB, 'y')
+var c_xz = sync7_commit(repoA, 'xz')
+var c_y = sync7_commit(repoB, 'y')
 // sync7_merge(repoA, c_y, my_custom_merge_func)
 // var c_q = sync7_commit(repoB, 'q')
 // sync7_merge(repoB, c_xz, my_custom_merge_func)
@@ -435,6 +435,9 @@ sync7_merge(repoB, c_x, my_custom_merge_func)
 // var c_qzB = sync7_commit(repoB, 'qzB')
 // sync7_merge(repoA, c_q, my_custom_merge_func)
 // sync7_merge(repoA, c_qzB, my_custom_merge_func)
+console.log('AAA------------------------')
 console.log(JSON.stringify(repoA, null, '    '))
+console.log('BBB------------------------')
+console.log(JSON.stringify(repoB, null, '    '))
 
 </script>
