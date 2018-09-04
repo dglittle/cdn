@@ -72,24 +72,104 @@ function sync7_merge(s7, cs, custom_merge_function) {
             ancestors[k] = v
         })
         
-        var prev_nodes_to_LCAs = {}
-        function helper(x) {
+        function helper(collector, x) {
             var hit_LCA = LCAs[x]
             if (!CAs[x]) {
                 each(s7.commits[x].to_parents, function (d, p) {
-                    hit_LCA = hit_LCA || helper(p)
+                    hit_LCA = hit_LCA || helper(collector, p)
                 })
             }
             if (hit_LCA) {
-                prev_nodes_to_LCAs[x] = true
+                collector[x] = true
                 return true
             }
         }
-        helper(prev_merge_node)
         
-        console.log('BLAH!')
-        console.log(prev_nodes_to_LCAs)
+        var prev_node_to_LCAs = {}
+        helper(prev_node_to_LCAs, prev_merge_node)
+        var leaf_to_LCAs = {}
+        helper(leaf_to_LCAs, leaf)
+        
+        
+        console.log('BLAH!2')
+        console.log(prev_node_to_LCAs)
         console.log(prev_merge_node)
+        console.log(leaf_to_LCAs)
+        console.log(leaf)
+        
+        
+        function get_initial_untouched_regions_for_node(node) {
+            var untouched_regions = {}
+            each(s7.commits[node].to_parents, function (d, p) {
+                var offset = 0
+                each(d, function (r) {
+                    if (typeof(r) == 'number') {
+                        untouched_regions[offset] = [offset, r[0], offset]
+                        offset += r[0]
+                    } else {
+                        offset += r[0].length
+                    }
+                })
+            })
+            return untouched_regions
+        }
+        var u = get_initial_untouched_regions_for_node(prev_merge_node)
+        function breakup_equality_regions(untouched_regions, node, fine_set) {
+            var to_parents = s7.commits[node].to_parents
+            each(to_parents, function (d, p) {
+                var offset = 0
+                each(d, function (r) {
+                    if (typeof(r) == 'number') {
+                        untouched_regions[offset] = [offset, r[0], offset]
+                        offset += r[0]
+                    } else {
+                        offset += r[0].length
+                    }
+                })
+            })
+        }
+        breakup_equality_regions(u, prev_merge_node, prev_node_to_LCAs)
+        
+        
+        
+        
+        
+        
+        frontier = [prev_merge_node]
+        while (frontier.length > 0) {
+            
+        }
+        
+        
+        
+        
+        
+        
+        var untouched_regions_for_node = {}
+        function rec(node) {
+            var to_parents = s7.commits[node].to_parents
+            each(to_parents, function (d, p) {
+                var offset = 0
+                each(d, function (r) {
+                    if (typeof(r) == 'number') {
+                        untouched_regions[offset] = [offset, r[0], offset]
+                        offset += r[0]
+                    } else {
+                        offset += r[0].length
+                    }
+                })
+            })
+        }
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         throw 'bloop'
         
         
@@ -433,9 +513,6 @@ var repoA = create_sync7_repo()
 var repoB = create_sync7_repo()
 var c_x = sync7_commit(repoA, 'x')
 sync7_merge(repoB, c_x, my_custom_merge_func)
-
-
-
 var c_xz = sync7_commit(repoA, 'xz')
 var c_y = sync7_commit(repoB, 'y')
 
@@ -443,9 +520,6 @@ console.log('AAA------------------------')
 console.log(JSON.stringify(repoA, null, '    '))
 console.log('BBB------------------------')
 console.log(JSON.stringify(repoB, null, '    '))
-
-
-
 
 sync7_merge(repoA, c_y, my_custom_merge_func)
 // var c_q = sync7_commit(repoB, 'q')
