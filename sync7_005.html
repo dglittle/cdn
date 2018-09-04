@@ -433,14 +433,17 @@ var repoA = create_sync7_repo()
 var repoB = create_sync7_repo()
 var c_x = sync7_commit(repoA, 'x')
 sync7_merge(repoB, c_x, my_custom_merge_func)
+
+
+
 var c_xz = sync7_commit(repoA, 'xz')
 var c_y = sync7_commit(repoB, 'y')
-
 
 console.log('AAA------------------------')
 console.log(JSON.stringify(repoA, null, '    '))
 console.log('BBB------------------------')
 console.log(JSON.stringify(repoB, null, '    '))
+
 
 
 
