@@ -67,65 +67,88 @@ function sync7_merge(s7, cs, custom_merge_function) {
             ancestors[k] = v
         })
         
-        var paths = {}
-        path_so_far = []
-        function find_paths_up_to_LCAs(a) {
-            if (LCAs[a]) {
-                if (!paths[a]) paths[a] = []
-                paths[a].push(path_so_far.slice(0))
-            } else {
-                each(s7.commits[a].to_parents, function (d, p) {
-                    if (LCAs[p] || !CAs[p]) {
-                        path_so_far.push(p)
-                        find_paths_up_to_LCAs(p)
-                        path_so_far.pop()
-                    }
+        var prev_nodes_to_LCAs = {}
+        function helper(x) {
+            var hit_LCA = LCAs[x]
+            if (!CAs[x]) {
+                each(s7.commits[x].to_parents, function (d, p) {
+                    hit_LCA ||= helper(p)
                 })
             }
+            if (hit_LCA) {
+                prev_nodes_to_LCAs[x] = true
+                return true
+            }
         }
-        find_paths_up_to_LCAs(prev_merge_node)
-        var prev_paths = paths
-        paths = {}
-        path_so_far = []
-        find_paths_up_to_LCAs(leaf)
-        var leaf_paths = paths
+        helper(prev_merge_node)
         
-        each(prev_paths, function (paths, dest) {
+        console.log('BLAH!')
+        console.log(prev_nodes_to_LCAs)
+        throw 'bloop'
+        
+        
+        
+        
+        
+        // var paths = {}
+        // path_so_far = []
+        // function find_paths_up_to_LCAs(a) {
+        //     if (LCAs[a]) {
+        //         if (!paths[a]) paths[a] = []
+        //         paths[a].push(path_so_far.slice(0))
+        //     } else {
+        //         each(s7.commits[a].to_parents, function (d, p) {
+        //             if (LCAs[p] || !CAs[p]) {
+        //                 path_so_far.push(p)
+        //                 find_paths_up_to_LCAs(p)
+        //                 path_so_far.pop()
+        //             }
+        //         })
+        //     }
+        // }
+        // find_paths_up_to_LCAs(prev_merge_node)
+        // var prev_paths = paths
+        // paths = {}
+        // path_so_far = []
+        // find_paths_up_to_LCAs(leaf)
+        // var leaf_paths = paths
+        
+        // each(prev_paths, function (paths, dest) {
             
             
             
             
             
-            prev_paths[dest] = sync7_merge_path_up(s7, prev_merge_node, )
-        })
+        //     prev_paths[dest] = sync7_merge_path_up(s7, prev_merge_node, )
+        // })
 
 
 
 
 
-sync7_merge_path_up
+// sync7_merge_path_up
 
 
 
 
-work here        
-    var diff = []
-    var prev = s7.leaf
-    each(leaf_to_lca, function (next) {
-        diff = sync7_diff_merge_trans(diff, s7.commits[prev].to_parents[next])
-        prev = next
-    })
+// work here        
+//     var diff = []
+//     var prev = s7.leaf
+//     each(leaf_to_lca, function (next) {
+//         diff = sync7_diff_merge_trans(diff, s7.commits[prev].to_parents[next])
+//         prev = next
+//     })
 
         
         
         
-        each([prev_merge_node, leaves[i]], function (leaf) {
-            var regions = []
-            each(s7.commits[leaf].to_parents, function (d, p) {
-                each(d, function (d, i) {
-                    regions[i] = 
-                })
-            })
+//         each([prev_merge_node, leaves[i]], function (leaf) {
+//             var regions = []
+//             each(s7.commits[leaf].to_parents, function (d, p) {
+//                 each(d, function (d, i) {
+//                     regions[i] = 
+//                 })
+//             })
             
             
             
@@ -134,14 +157,14 @@ work here
             
             
             
-            // follow each region up to all parents,
-                if we encounter an LCA,
-                    deal with that,
-                if we encounter a member of sync7_intersection,
-                    we've gone too far
-                otherwise,
-                    continue following parents up
-        })
+//             // follow each region up to all parents,
+//                 if we encounter an LCA,
+//                     deal with that,
+//                 if we encounter a member of sync7_intersection,
+//                     we've gone too far
+//                 otherwise,
+//                     continue following parents up
+        // })
         
         
         
@@ -151,15 +174,15 @@ work here
         
         
         
-        var m = custom_merge_func(prev_merge_node_text, texts[leaves[i]], sync7_calc_diffs_to_ancestors(s7, prev_merge_node, leaves[i], LCAs))
-        var id = guid()
-        s7.temp_commits[id] = true
-        s7.commits[id] = { to_parents : {} }
-        s7.commits[id].to_parents[prev_merge_node] = m.to_a
-        s7.commits[id].to_parents[leaves[i]] = m.to_b
+        // var m = custom_merge_func(prev_merge_node_text, texts[leaves[i]], sync7_calc_diffs_to_ancestors(s7, prev_merge_node, leaves[i], LCAs))
+        // var id = guid()
+        // s7.temp_commits[id] = true
+        // s7.commits[id] = { to_parents : {} }
+        // s7.commits[id].to_parents[prev_merge_node] = m.to_a
+        // s7.commits[id].to_parents[leaves[i]] = m.to_b
         
-        prev_merge_node = id
-        prev_merge_node_text = m.text
+        // prev_merge_node = id
+        // prev_merge_node_text = m.text
         
         
         
