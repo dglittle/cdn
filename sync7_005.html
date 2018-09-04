@@ -14,7 +14,7 @@ function my_custom_merge_func() {
 function create_sync7_repo() {
     return {
         commits : {
-            'root' : { to_parents : {} }
+            'root' : { to_parents : {}, from_kids : {} }
         },
         temp_commits : {},
         leaf : 'root',
@@ -30,8 +30,8 @@ function sync7_commit(s7, s) {
 
     var id = guid()
     var to_parents = {}
-    to_parents[s7.leaf] = sync7_diff(s, s7.text)
-    s7.commits[id] = cs[id] = { to_parents : to_parents }
+    s7.commits[s7.leaf].from_kids[id] = to_parents[s7.leaf] = sync7_diff(s, s7.text)
+    s7.commits[id] = cs[id] = { to_parents : to_parents, from_kids : {} }
     s7.leaf = id
     
     s7.text = s
@@ -84,6 +84,7 @@ function sync7_merge(s7, cs, custom_merge_function) {
         
         console.log('BLAH!')
         console.log(prev_nodes_to_LCAs)
+        console.log(prev_merge_node)
         throw 'bloop'
         
         
@@ -192,6 +193,7 @@ function sync7_merge(s7, cs, custom_merge_function) {
         
         
     }
+
     s7.leaf = prev_merge_node
     s7.text = prev_merge_node_text
 }
@@ -428,16 +430,21 @@ var c_x = sync7_commit(repoA, 'x')
 sync7_merge(repoB, c_x, my_custom_merge_func)
 var c_xz = sync7_commit(repoA, 'xz')
 var c_y = sync7_commit(repoB, 'y')
-// sync7_merge(repoA, c_y, my_custom_merge_func)
+
+
+console.log('AAA------------------------')
+console.log(JSON.stringify(repoA, null, '    '))
+console.log('BBB------------------------')
+console.log(JSON.stringify(repoB, null, '    '))
+
+
+
+sync7_merge(repoA, c_y, my_custom_merge_func)
 // var c_q = sync7_commit(repoB, 'q')
 // sync7_merge(repoB, c_xz, my_custom_merge_func)
 // var c_yzA = sync7_commit(repoA, 'yzA')
 // var c_qzB = sync7_commit(repoB, 'qzB')
 // sync7_merge(repoA, c_q, my_custom_merge_func)
 // sync7_merge(repoA, c_qzB, my_custom_merge_func)
-console.log('AAA------------------------')
-console.log(JSON.stringify(repoA, null, '    '))
-console.log('BBB------------------------')
-console.log(JSON.stringify(repoB, null, '    '))
 
 </script>
