@@ -41,6 +41,11 @@ function sync7_commit(s7, s) {
 function sync7_merge(s7, cs, custom_merge_function) {
     each(cs, function (c, id) {
         s7.commits[id] = c
+        each(c.to_parents, function (d, p) {
+            if (!cs[p] && s7.commits[p]) {
+                s7.commits[p].from_kids[id] = d
+            }
+        })
     })
     var leaves = sync7_get_leaves(s7.commits, s7.temp_commits)
     leaves = Object.keys(leaves).sort()
