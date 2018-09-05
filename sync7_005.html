@@ -148,7 +148,7 @@ function sync7_merge(s7, cs, custom_merge_function) {
                 endpoints.push([offset, 1, offset])
                 endpoints.push([offset, 0, offset])
             })
-            endpoints.push([texts[node].length, 0, texts[node].length])
+            endpoints.push([texts[node].length, 1, texts[node].length])
             
             return endpoints
         }
@@ -220,7 +220,7 @@ function sync7_merge(s7, cs, custom_merge_function) {
         }
         
         project_region_endpoints_to_LCAs(prev_merge_node)
-        // project_region_endpoints_to_LCAs(leaf)
+        project_region_endpoints_to_LCAs(leaf)
 
         throw 'bloop'
         
