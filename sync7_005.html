@@ -118,13 +118,16 @@ function sync7_merge(s7, cs, custom_merge_function) {
                             uo = 0
                         }
                         if (!untouched[ui]) { return false }
-                        if (end_point <= untouched[ui][2] + uo) { return }
-                        if (typeof(r) == 'number') {
-                            var x = untouched[ui][2] + uo - offset + poffset
-                            pur[x] = [untouched[ui][0] + uo, end_point - (untouched[ui][2] + uo), x]
+                        if (end_point > untouched[ui][2] + uo) {
+                            if (typeof(r) == 'number') {
+                                var x = untouched[ui][2] + uo - offset + poffset
+                                pur[x] = [untouched[ui][0] + uo, end_point - (untouched[ui][2] + uo), x]
+                            }
+                            uo = end_point - untouched[ui][2]
+                            dividers[untouched[ui][0] + uo] = untouched[ui][0] + uo
                         }
-                        uo = end_point - untouched[ui][2]
-                        dividers[untouched[ui][0] + uo] = untouched[ui][0] + uo
+                        offset = end_point
+                        poffset += (typeof(r) == 'number') ? r : r[1].length
                     })
                     
                     var parent_ready_to_go = true
@@ -156,11 +159,33 @@ function sync7_merge(s7, cs, custom_merge_function) {
             endpoints_for_node[node] = get_region_endpoints_for_node(node, nodes_on_path_to_LCAs)
             
             function helper(node) {
-                if (regions_for_node[node]) return regions_for_node[node]
-                var final_regions = []
+                if (endpoints_for_node[node]) return endpoints_for_node[node]
+                var agg = {}
                 each(s7.commits[node].from_kids, function (d, k) {
                     if (!nodes_on_path_to_LCAs[k]) { return }
-                    each(helper(k), function (r) {
+                    
+                    var offset = 0
+                    var poffset = 0
+                    var endpoints = helper(k)
+                    var ei = 0
+                    
+                    each(d, function (d) {
+                        if (typeof(d) == 'number') {
+                            offset += d
+                            poffset += d
+                        } else {
+                            offset += d[0].length
+                            poffset += d[1].length
+                        }
+                    })
+                    
+                    
+                    
+                    
+                    
+                    each(helper(k), function (e) {
+                        
+                        
                         
                         project up one level,
                         and add in a min/max way to final_regions
