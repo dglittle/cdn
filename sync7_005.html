@@ -90,7 +90,7 @@ function sync7_merge(s7, cs, custom_merge_function) {
             return agg
         }
 
-        function get_regions_for_node(node, nodes_on_path_to_LCAs) {
+        function get_region_endpoints_for_node(node, nodes_on_path_to_LCAs) {
             var dividers = {}
             var untouched_regions_for_node = {}
             untouched_regions_for_node[node] = [[0, texts[node].length, 0]]
@@ -139,21 +139,21 @@ function sync7_merge(s7, cs, custom_merge_function) {
             }
             helper(node)
             
-            var regions = []
-            var prev_offset = 0
+            var endpoints = []
+            endpoints.push([0, 0, 0])
             each(Object.values(dividers).sort(), function (offset) {
-                regions.push([prev_offset, offset])
-                prev_offset = offset
+                endpoints.push([offset, 1, offset])
+                endpoints.push([offset, 0, offset])
             })
-            regions.push([prev_offset, texts[node].length])
+            endpoints.push([texts[node].length, 0, texts[node].length])
             
-            return regions
+            return endpoints
         }
         
-        function project_regions_to_LCAs(node) {
+        function project_region_endpoints_to_LCAs(node) {
             var nodes_on_path_to_LCAs = get_nodes_on_path_to_LCAs(node)
-            var regions_for_node = {}
-            regions_for_node[node] = get_regions_for_node(node, nodes_on_path_to_LCAs)
+            var endpoints_for_node = {}
+            endpoints_for_node[node] = get_region_endpoints_for_node(node, nodes_on_path_to_LCAs)
             
             function helper(node) {
                 if (regions_for_node[node]) return regions_for_node[node]
