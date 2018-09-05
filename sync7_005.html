@@ -90,10 +90,7 @@ function sync7_merge(s7, cs, custom_merge_function) {
             return agg
         }
 
-        var prev_node_to_LCAs = get_nodes_on_path_to_LCAs(prev_merge_node)
-        var leaf_to_LCAs = get_nodes_on_path_to_LCAs(leaf)
-        
-        function get_regions_for_node(node) {
+        function get_regions_for_node(node, nodes_on_path_to_LCAs) {
             var dividers = {}
             var untouched_regions_for_node = {}
             untouched_regions_for_node[node] = [[0, texts[node].length, 0]]
@@ -102,6 +99,8 @@ function sync7_merge(s7, cs, custom_merge_function) {
                 untouched_regions_for_node[node] = true
                 var c = s7.commits[node]
                 each(c.to_parents, function (d, p) {
+                    if (!nodes_on_path_to_LCAs[p]) { return }
+                    
                     var ui = 0
                     var uo = 0
                     var pur = untouched_regions_for_node[p] =
@@ -151,10 +150,123 @@ function sync7_merge(s7, cs, custom_merge_function) {
             return regions
         }
         
-        var prev_regions = get_regions_for_node(prev_merge_node)
-        var leaf_regions = get_regions_for_node(leaf)
-        
-        
+        function project_regions_to_LCAs(node) {
+            var nodes_on_path_to_LCAs = get_nodes_on_path_to_LCAs(node)
+            var regions_for_node = {}
+            regions_for_node[node] = get_regions_for_node(node, nodes_on_path_to_LCAs)
+            
+            function helper(node) {
+                if (regions_for_node[node]) return regions_for_node[node]
+                var final_regions = []
+                each(s7.commits[node].from_kids, function (d, k) {
+                    if (!nodes_on_path_to_LCAs[k]) { return }
+                    each(helper(k), function (r) {
+                        
+                        project up one level,
+                        and add in a min/max way to final_regions
+                        
+                    })
+                })
+                
+                for each child,
+                    get it's regions
+                and then accumulate these regions (min/max)
+            }
+            
+            each(LCAs, function (_, lca) {
+                helper(lca)
+            })
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            untouched_regions_for_node[node] = [[0, texts[node].length, 0]]
+            function helper(node) {
+                var untouched = Object.values(untouched_regions_for_node[node]).sort(function (a, b) { return a[2] - b[2] })
+                untouched_regions_for_node[node] = true
+                var c = s7.commits[node]
+                each(c.to_parents, function (d, p) {
+                    if (!nodes_on_path_to_LCAs[p]) { return }
+                    
+                    var ui = 0
+                    var uo = 0
+                    var pur = untouched_regions_for_node[p] =
+                        untouched_regions_for_node[p] || {}
+                    var offset = 0
+                    var poffset = 0
+                    each(d, function (r) {
+                        var end_point = offset + ((typeof(r) == 'number') ? r : r[0].length)
+                        while (untouched[ui] && end_point >= untouched[ui][2] + untouched[ui][1]) {
+                            if (typeof(r) == 'number') {
+                                var x = untouched[ui][2] + uo - offset + poffset
+                                pur[x] = [untouched[ui][0] + uo, untouched[ui][1] - uo, x]
+                            }
+                            ui++
+                            uo = 0
+                        }
+                        if (!untouched[ui]) { return false }
+                        if (end_point <= untouched[ui][2] + uo) { return }
+                        if (typeof(r) == 'number') {
+                            var x = untouched[ui][2] + uo - offset + poffset
+                            pur[x] = [untouched[ui][0] + uo, end_point - (untouched[ui][2] + uo), x]
+                        }
+                        uo = end_point - untouched[ui][2]
+                        dividers[untouched[ui][0] + uo] = untouched[ui][0] + uo
+                    })
+                    
+                    var parent_ready_to_go = true
+                    each(s7.commits[p].from_kids, function (d, k) {
+                        if (untouched_regions_for_node[k] !== true) {
+                            parent_ready_to_go = false
+                            return false
+                        }
+                    })
+                    if (parent_ready_to_go) helper(p)
+                })
+            }
+            helper(node)
+            
+            var regions = []
+            var prev_offset = 0
+            each(Object.values(dividers).sort(), function (offset) {
+                regions.push([prev_offset, offset])
+                prev_offset = offset
+            })
+            regions.push([prev_offset, texts[node].length])
+            
+            return regions
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     
         console.log('BLOOP!')
