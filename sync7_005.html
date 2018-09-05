@@ -61,7 +61,6 @@ function sync7_merge(s7, cs, custom_merge_function) {
     s7.temp_commits = {}
     
     var prev_merge_node = leaves[0]
-    var prev_merge_node_text = texts[prev_merge_node]
     var ancestors = sync7_get_ancestors(s7, prev_merge_node)
     for (var i = 1; i < leaves.length; i++) {
         var leaf = leaves[i]
@@ -97,79 +96,52 @@ function sync7_merge(s7, cs, custom_merge_function) {
         console.log(leaf_to_LCAs)
         console.log(leaf)
         
-        
-        function get_initial_untouched_regions_for_node(node) {
-            var untouched_regions = {}
-            each(s7.commits[node].to_parents, function (d, p) {
-                var offset = 0
-                each(d, function (r) {
-                    if (typeof(r) == 'number') {
-                        untouched_regions[offset] = [offset, r[0], offset]
-                        offset += r[0]
-                    } else {
-                        offset += r[0].length
-                    }
-                })
-            })
-            return untouched_regions
-        }
-        var u = get_initial_untouched_regions_for_node(prev_merge_node)
-        function breakup_equality_regions(untouched_regions, node, fine_set) {
-            var to_parents = s7.commits[node].to_parents
-            each(to_parents, function (d, p) {
-                var offset = 0
-                each(d, function (r) {
-                    if (typeof(r) == 'number') {
-                        untouched_regions[offset] = [offset, r[0], offset]
-                        offset += r[0]
-                    } else {
-                        offset += r[0].length
-                    }
-                })
-            })
-        }
-        breakup_equality_regions(u, prev_merge_node, prev_node_to_LCAs)
-        
-        
-        
-        
-        
-        
-        frontier = [prev_merge_node]
-        while (frontier.length > 0) {
-            
-        }
-        
-        
-        
-        
-        
-        
         var untouched_regions_for_node = {}
-        function rec(node) {
-            var to_parents = s7.commits[node].to_parents
-            each(to_parents, function (d, p) {
+        untouched_regions_for_node[prev_merge_node] = [[0, texts[prev_merge_node].length, 0]]
+        function breakup_rec(node) {
+            var untouched = Object.values(untouched_regions_for_node[node]).sort(function (a, b) { return a[2] - b[2] })
+            untouched_regions_for_node[node] = true
+            var c = s7.commits[node]
+            each(c.to_parents, function (d, p) {
+                var ui = 0
+                var uo = 0
+                var pur = untouched_regions_for_node[p] =
+                    untouched_regions_for_node[p] || {}
                 var offset = 0
+                var poffset = 0
                 each(d, function (r) {
+                    var end_point = offset + ((typeof(r) == 'number') ? r : r[0].length)
+                    while (untouched[ui] && end_point >= untouched[ui][2] + untouched[ui][1]) {
+                        if (typeof(r) == 'number') {
+                            var x = untouched[ui][2] + uo - offset + poffset
+                            pur[x] = [untouched[ui][0] + uo, untouched[ui][1] - uo, x]
+                        }
+                        ui++
+                        uo = 0
+                    }
+                    if (!untouched[ui]) { return false }
+                    if (end_point <= untouched[ui][2] + uo) { return }
                     if (typeof(r) == 'number') {
-                        untouched_regions[offset] = [offset, r[0], offset]
-                        offset += r[0]
-                    } else {
-                        offset += r[0].length
+                        var x = untouched[ui][2] + uo - offset + poffset
+                        pur[x] = [untouched[ui][0] + uo, end_point - (untouched[ui][2] + uo), x]
+                    }
+                    uo = end_point - untouched[ui][2]
+                })
+                
+                var parent_ready_to_go = true
+                each(s7.commits[p].from_kids, function (d, k) {
+                    if (untouched_regions_for_node[k] !== true) {
+                        parent_ready_to_go = false
+                        return false
                     }
                 })
+                if (parent_ready_to_go) breakup_rec(p)
             })
         }
         
-        
-        
-        
-        
-        
-        
-        
-        
-        
+        console.log('BLOOP!')
+        console.log(untouched_regions_for_node)
+            
         throw 'bloop'
         
         
