@@ -61,6 +61,7 @@ function sync7_merge(s7, cs, custom_merge_function) {
     s7.temp_commits = {}
     
     var prev_merge_node = leaves[0]
+    var prev_merge_node_text = texts[prev_merge_node]
     var ancestors = sync7_get_ancestors(s7, prev_merge_node)
     for (var i = 1; i < leaves.length; i++) {
         var leaf = leaves[i]
@@ -138,6 +139,10 @@ function sync7_merge(s7, cs, custom_merge_function) {
                 if (parent_ready_to_go) breakup_rec(p)
             })
         }
+        
+        debugger
+        
+        breakup_rec(prev_merge_node)
         
         console.log('BLOOP!')
         console.log(untouched_regions_for_node)
