@@ -178,7 +178,7 @@ function sync7_merge(s7, cs, custom_merge_function) {
                     var poffset = 0
                     each(d, function (d) {
                         var end = offset + ((typeof(d) == 'number') ? d : d[0].length)
-                        while (endpoints[ei][2] < end || (endpoints[ei][1] == 1 && endpoints[ei][2] <= end)) {
+                        while (endpoints[ei] && (endpoints[ei][2] < end || (endpoints[ei][1] == 1 && endpoints[ei][2] <= end))) {
                             if (typeof(d) == 'number') {
                                 add_to_agg(endpoints[ei], endpoints[ei][2] - offset + poffset)
                             } else if (endpoints[ei][1] == 0) {
