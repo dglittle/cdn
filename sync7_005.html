@@ -90,9 +90,8 @@ function sync7_merge(s7, cs, custom_merge_function) {
             return agg
         }
 
-        function get_region_endpoints_for_node(node, nodes_on_path_to_LCAs) {
+        function get_region_endpoints_for_node(node, nodes_on_path_to_LCAs, untouched_regions_for_node) {
             var dividers = {}
-            var untouched_regions_for_node = {}
             untouched_regions_for_node[node] = [[0, texts[node].length, 0]]
             function helper(node) {
                 var untouched = Object.values(untouched_regions_for_node[node]).sort(function (a, b) { return a[2] - b[2] })
@@ -155,8 +154,9 @@ function sync7_merge(s7, cs, custom_merge_function) {
         
         function project_region_endpoints_to_LCAs(node) {
             var nodes_on_path_to_LCAs = get_nodes_on_path_to_LCAs(node)
+            var untouched_regions_for_node = {}
             var endpoints_for_node = {}
-            endpoints_for_node[node] = get_region_endpoints_for_node(node, nodes_on_path_to_LCAs)
+            endpoints_for_node[node] = get_region_endpoints_for_node(node, nodes_on_path_to_LCAs, untouched_regions_for_node)
             
             function helper(node) {
                 if (endpoints_for_node[node]) return endpoints_for_node[node]
@@ -206,7 +206,7 @@ function sync7_merge(s7, cs, custom_merge_function) {
                 return endpoints_for_node[node] = endpoints.sort(function (a, b) {
                     if (a[2] != b[2])
                         return a[2] - b[2]
-                    return a[1] - b[1]
+                    return b[1] - a[1]
                 })
             }
             
@@ -215,11 +215,12 @@ function sync7_merge(s7, cs, custom_merge_function) {
             })
             
             console.log('BLARRRR!')
+            console.log(LCAs)
             console.log(endpoints_for_node)
             
         }
         
-        project_region_endpoints_to_LCAs(prev_merge_node)
+        //project_region_endpoints_to_LCAs(prev_merge_node)
         project_region_endpoints_to_LCAs(leaf)
 
         throw 'bloop'
