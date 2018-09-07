@@ -175,9 +175,7 @@ function sync7_merge(s7, cs, custom_merge_function) {
             do_one_against_the_other(b, a, prev_dividers)
         })
         
-        
-        
-            
+        function calc_endpoints(dividers, node) {
             var endpoints = []
             endpoints.push([0, 0, 0])
             each(Object.values(dividers).sort(), function (offset) {
@@ -187,35 +185,24 @@ function sync7_merge(s7, cs, custom_merge_function) {
             endpoints.push([texts[node].length, 1, texts[node].length])
             
             return endpoints
+        }
         
-        
-                function  {
-
-        
-
-        
+        var prev_endpoints = calc_endpoints(prev_dividers, prev_merge_node)
+        var leaf_endpoints = calc_endpoints(leaf_dividers, leaf)
         
         
         
+        console.log('blah!')
         
-        
-        
+        throw 'got here?'
         
         
         
         
-        
-        
-        
-        
-        
-        
-        function project_region_endpoints_to_LCAs(node) {
-            var nodes_on_path_to_LCAs = get_nodes_on_path_to_LCAs(node)
-            var untouched_regions_for_node = {}
+        function project_endpoints_to_LCAs(endpoints, node, nodes_on_path_to_LCAs) {
             var endpoints_for_node = {}
-            endpoints_for_node[node] = get_region_endpoints_for_node(node, nodes_on_path_to_LCAs, untouched_regions_for_node)
-            
+            endpoints_for_node[node] = endpoints
+
             function helper(node) {
                 if (endpoints_for_node[node]) return endpoints_for_node[node]
                 var agg = {}
