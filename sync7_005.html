@@ -255,10 +255,10 @@ function sync7_merge(s7, cs, custom_merge_function) {
                 regions_for_node[lca] = regions
                 each(endpoints, function (e) {
                     if (e[1] == 0) {
-                        var i = lookup_by_begin[e[0]]
+                        var i = lookup_by_begin[e[0]];
                         (regions[i] = regions[i] || [])[0] = e[2]
                     } else {
-                        var i = lookup_by_end[e[0]]
+                        var i = lookup_by_end[e[0]];
                         (regions[i] = regions[i] || [])[1] = e[2]
                     }
                 })
