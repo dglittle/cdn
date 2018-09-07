@@ -151,10 +151,21 @@ function sync7_merge(s7, cs, custom_merge_function) {
             
             return endpoints
         }
+
+        var prev_nodes_on_path_to_LCAs = get_nodes_on_path_to_LCAs(prev_merge_node)
+        var prev_dividers = {}
+        var prev_untouched_regions_for_node = {}
+        calc_dividers_and_such_for_node(prev_merge_node, prev_nodes_on_path_to_LCAs, prev_dividers, prev_untouched_regions_for_node)
+
+        var leaf_nodes_on_path_to_LCAs = get_nodes_on_path_to_LCAs(leaf)
+        var leaf_dividers = {}
+        var leaf_untouched_regions_for_node = {}
+        calc_dividers_and_such_for_node(leaf, leaf_nodes_on_path_to_LCAs, leaf_dividers, leaf_untouched_regions_for_node)
         
         
         
-                function calc_dividers_and_such_for_node(node, nodes_on_path_to_LCAs, dividers, untouched_regions_for_node) {
+        
+                function  {
 
         
         calc prev_node's untouched_regions_for_node + dividers
