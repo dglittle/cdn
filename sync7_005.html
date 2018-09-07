@@ -263,15 +263,36 @@ function sync7_merge(s7, cs, custom_merge_function) {
                     }
                 })
             })
-
-            console.log('BLARRRR!')
-            console.log(node)
-            console.log(LCAs)
-            console.log(regions_for_node)
             
+            return regions_for_node
         }
         
-        project_endpoints_to_LCAs(prev_endpoints, prev_merge_node, prev_nodes_on_path_to_LCAs)
+        var prev_regions_per_node = project_endpoints_to_LCAs(prev_endpoints, prev_merge_node, prev_nodes_on_path_to_LCAs)
+        var leaf_regions_per_node = project_endpoints_to_LCAs(leaf_endpoints, leaf, leaf_nodes_on_path_to_LCAs)
+
+        each(LCAs, function (_, lca) {
+            function process(base, regions, untouched) {
+                var ri = 0
+                var r
+                each(untouched, function (u) {
+                    while ((r = regions[ri]) && r[0] + r[1] <= u[0]) { ri++ }
+                    while ((r = regions[ri]) && r[0] < u[0] + u[1]) {
+                        base[ri][2] = true
+                        r[2] = true
+                        ri++
+                    }
+                })
+            }
+            process(prev_regions_per_node[prev_merge_node], prev_regions_per_node[lca], prev_untouched_regions_for_node[lca])
+            process(leaf_regions_per_node[leaf], leaf_regions_per_node[lca], leaf_untouched_regions_for_node[lca])
+        })
+        
+        console.log('BLAR!!')
+        console.log(leaf)
+        console.log(leaf_regions_per_node)
+
+
+
 
         throw 'bloop'
         
