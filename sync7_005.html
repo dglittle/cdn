@@ -146,12 +146,12 @@ function sync7_merge(s7, cs, custom_merge_function) {
                 var bb, bi = 0
                 each(a, function (aa) {
                     while ((bb = b[bi]) && (bb[2] + bb[1] <= aa[2])) bi++
-                    if (bb[2] < aa[2]) {
+                    if (bb && bb[2] < aa[2]) {
                         var x = aa[2] - bb[2] + bb[0]
                         dividers[x] = x
                     }
                     while ((bb = b[bi]) && (bb[2] + bb[1] <= aa[2] + aa[1])) bi++
-                    if (bb[2] < aa[2] + aa[1]) {
+                    if (bb && bb[2] < aa[2] + aa[1]) {
                         var x = aa[2] + aa[1] - bb[2] + bb[0]
                         dividers[x] = x
                     }
@@ -160,30 +160,8 @@ function sync7_merge(s7, cs, custom_merge_function) {
             
             var a = prev_untouched_regions_for_node[lca]
             var b = leaf_untouched_regions_for_node[lca]
-            
-            
-            
-            work here
-            
-            
-            console.log('HI!')
-            console.log('lca = ', lca)
-            console.log('a = ', prev_untouched_regions_for_node)
-            console.log('b = ', leaf_untouched_regions_for_node)
-            
-            
-            console.log('leaf_dividers = ', leaf_dividers)
-            console.log('prev_dividers = ', prev_dividers)
-            
-            
             do_one_against_the_other(a, b, leaf_dividers)
             do_one_against_the_other(b, a, prev_dividers)
-            
-            
-            
-            
-            console.log('leaf_dividers = ', leaf_dividers)
-            console.log('prev_dividers = ', prev_dividers)
         })
         
         function calc_endpoints(dividers, node) {
