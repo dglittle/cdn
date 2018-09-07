@@ -93,16 +93,14 @@ function sync7_merge(s7, cs, custom_merge_function) {
         function calc_dividers_and_such_for_node(node, nodes_on_path_to_LCAs, dividers, untouched_regions_for_node) {
             untouched_regions_for_node[node] = [[0, texts[node].length, 0]]
             function helper(node) {
-                var untouched = Object.values(untouched_regions_for_node[node]).sort(function (a, b) { return a[2] - b[2] })
-                untouched_regions_for_node[node] = untouched
-                var c = s7.commits[node]
-                each(c.to_parents, function (d, p) {
-                    if (!nodes_on_path_to_LCAs[p]) { return }
+                if (untouched_regions_for_node[node]) return untouched_regions_for_node[node]
+                var pur = {}
+                each(s7.commits[node].from_kids, function (d, k) {
+                    if (!nodes_on_path_to_LCAs[k]) { return }
+                    var untouched = helper(k)
                     
                     var ui = 0
                     var uo = 0
-                    var pur = untouched_regions_for_node[p] =
-                        untouched_regions_for_node[p] || {}
                     var offset = 0
                     var poffset = 0
                     each(d, function (r) {
@@ -127,19 +125,10 @@ function sync7_merge(s7, cs, custom_merge_function) {
                         offset = end_point
                         poffset += (typeof(r) == 'number') ? r : r[1].length
                     })
-                    
-                    var parent_ready_to_go = true
-                    each(s7.commits[p].from_kids, function (d, k) {
-                        var u = untouched_regions_for_node[k]
-                        if (!u || !(u instanceof Array)) {
-                            parent_ready_to_go = false
-                            return false
-                        }
-                    })
-                    if (parent_ready_to_go) helper(p)
                 })
+                return untouched_regions_for_node[node] = Object.values(pur).sort(function (a, b) { return a[2] - b[2] })
             }
-            helper(node)
+            each(LCAs, function (_, lca) { helper(lca) })
         }
 
         var prev_nodes_on_path_to_LCAs = get_nodes_on_path_to_LCAs(prev_merge_node)
@@ -152,7 +141,7 @@ function sync7_merge(s7, cs, custom_merge_function) {
         var leaf_untouched_regions_for_node = {}
         calc_dividers_and_such_for_node(leaf, leaf_nodes_on_path_to_LCAs, leaf_dividers, leaf_untouched_regions_for_node)
         
-        each(LCAs, function (lca) {
+        each(LCAs, function (_, lca) {
             function do_one_against_the_other(a, b, dividers) {
                 var bb, bi = 0
                 each(a, function (aa) {
@@ -174,13 +163,27 @@ function sync7_merge(s7, cs, custom_merge_function) {
             
             
             
+            work here
+            
+            
             console.log('HI!')
-            console.log('a = ', a)
-            console.log('b = ', b)
+            console.log('lca = ', lca)
+            console.log('a = ', prev_untouched_regions_for_node)
+            console.log('b = ', leaf_untouched_regions_for_node)
+            
+            
+            console.log('leaf_dividers = ', leaf_dividers)
+            console.log('prev_dividers = ', prev_dividers)
             
             
             do_one_against_the_other(a, b, leaf_dividers)
             do_one_against_the_other(b, a, prev_dividers)
+            
+            
+            
+            
+            console.log('leaf_dividers = ', leaf_dividers)
+            console.log('prev_dividers = ', prev_dividers)
         })
         
         function calc_endpoints(dividers, node) {
