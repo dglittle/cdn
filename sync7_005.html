@@ -178,31 +178,7 @@ function sync7_merge(s7, cs, custom_merge_function) {
         
         var prev_endpoints = calc_endpoints(prev_dividers, prev_merge_node)
         var leaf_endpoints = calc_endpoints(leaf_dividers, leaf)
-        
-        
-        
-        console.log('blah!')
-        console.log(prev_merge_node)
-        console.log(prev_endpoints)
-        console.log(leaf)
-        console.log(leaf_endpoints)
-        
-        throw 'got here?'
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+
         function project_endpoints_to_LCAs(endpoints, node, nodes_on_path_to_LCAs) {
             var endpoints_for_node = {}
             endpoints_for_node[node] = endpoints
@@ -258,37 +234,44 @@ function sync7_merge(s7, cs, custom_merge_function) {
                     return b[1] - a[1]
                 })
             }
+
+            var regions_for_node = {}
+
+            var lookup_by_begin = {}
+            var lookup_by_end = {}
+            var base_regions = []
+            regions_for_node[node] = base_regions
+            for (var i = 0; i < endpoints.length; i += 2) {
+                var e0 = endpoints[i][0]
+                var e1 = endpoints[i + 1][0]
+                base_regions.push([e0, e1 - e0])
+                lookup_by_begin[e0] = base_regions.length - 1
+                lookup_by_end[e1] = base_regions.length - 1
+            }
             
             each(LCAs, function (_, lca) {
-                helper(lca)
+                var endpoints = helper(lca)
+                var regions = []
+                regions_for_node[lca] = regions
+                each(endpoints, function (e) {
+                    if (e[1] == 0) {
+                        var i = lookup_by_begin[e[0]]
+                        (regions[i] = regions[i] || [])[0] = e[2]
+                    } else {
+                        var i = lookup_by_end[e[0]]
+                        (regions[i] = regions[i] || [])[1] = e[2]
+                    }
+                })
             })
-            
-            
-            
-            
-            
-            
-            
-            // work here
-            
-            // var regions = {}
-            // regions[node] = []
-            // each(endpoints_for_node[node], function (e) {
-            //     regions[node].push([e[0], work here])
-            // })
-            
-            
-            
-            
-            
+
             console.log('BLARRRR!')
+            console.log(node)
             console.log(LCAs)
-            console.log(endpoints_for_node)
+            console.log(regions_for_node)
             
         }
         
-        //project_region_endpoints_to_LCAs(prev_merge_node)
-        project_region_endpoints_to_LCAs(leaf)
+        project_endpoints_to_LCAs(prev_endpoints, prev_merge_node, prev_nodes_on_path_to_LCAs)
 
         throw 'bloop'
         
