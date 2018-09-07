@@ -162,17 +162,32 @@ function sync7_merge(s7, cs, custom_merge_function) {
         var leaf_untouched_regions_for_node = {}
         calc_dividers_and_such_for_node(leaf, leaf_nodes_on_path_to_LCAs, leaf_dividers, leaf_untouched_regions_for_node)
         
-        
+        each(LCAs, function (lca) {
+            function do_one_against_the_other(a, b, dividers) {
+                var bb, bi = 0
+                each(a, function (aa) {
+                    while (bb = b[bi]) {
+                        if (bb[2] + bb[1] < aa[2]) {
+                            bi++
+                        } else if (bb[2] < aa[2] && bb[2] + bb[1] > aa[2]) {
+                            var x = aa[2] - bb[2] + bb[0]
+                            dividers[x] = x
+                        }
+                    }
+                })
+            }
+            
+            var a = prev_untouched_regions_for_node[lca]
+            var b = leaf_untouched_regions_for_node[lca]
+            do_one_against_the_other(a, b, leaf_dividers)
+            do_one_against_the_other(b, a, prev_dividers)
+        })
         
         
                 function  {
 
         
-        calc prev_node's untouched_regions_for_node + dividers
-        calc leaf_node's untouched_regions_for_node + dividers
-        examine all fork points, and possibly create  dividers
-        
-        
+
         
         
         
