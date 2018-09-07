@@ -89,31 +89,12 @@ function sync7_merge(s7, cs, custom_merge_function) {
             helper(node)
             return agg
         }
-        
-        
-        calc prev_node's untouched_regions_for_node + dividers
-        calc leaf_node's untouched_regions_for_node + dividers
-        examine all fork points, and possibly create  dividers
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
 
-        function get_region_endpoints_for_node(node, nodes_on_path_to_LCAs, untouched_regions_for_node) {
-            var dividers = {}
+        function calc_dividers_and_such_for_node(node, nodes_on_path_to_LCAs, dividers, untouched_regions_for_node) {
             untouched_regions_for_node[node] = [[0, texts[node].length, 0]]
             function helper(node) {
                 var untouched = Object.values(untouched_regions_for_node[node]).sort(function (a, b) { return a[2] - b[2] })
-                untouched_regions_for_node[node] = true
+                untouched_regions_for_node[node] = untouched
                 var c = s7.commits[node]
                 each(c.to_parents, function (d, p) {
                     if (!nodes_on_path_to_LCAs[p]) { return }
@@ -149,7 +130,8 @@ function sync7_merge(s7, cs, custom_merge_function) {
                     
                     var parent_ready_to_go = true
                     each(s7.commits[p].from_kids, function (d, k) {
-                        if (untouched_regions_for_node[k] !== true) {
+                        var u = untouched_regions_for_node[k]
+                        if (!u || !(u instanceof Array)) {
                             parent_ready_to_go = false
                             return false
                         }
@@ -169,6 +151,33 @@ function sync7_merge(s7, cs, custom_merge_function) {
             
             return endpoints
         }
+        
+        
+        
+                function calc_dividers_and_such_for_node(node, nodes_on_path_to_LCAs, dividers, untouched_regions_for_node) {
+
+        
+        calc prev_node's untouched_regions_for_node + dividers
+        calc leaf_node's untouched_regions_for_node + dividers
+        examine all fork points, and possibly create  dividers
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         
         function project_region_endpoints_to_LCAs(node) {
             var nodes_on_path_to_LCAs = get_nodes_on_path_to_LCAs(node)
