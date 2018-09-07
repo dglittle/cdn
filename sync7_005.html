@@ -262,8 +262,11 @@ function sync7_merge(s7, cs, custom_merge_function) {
                         (regions[i] = regions[i] || [])[1] = e[2]
                     }
                 })
+                each(regions, function (r) {
+                    r[1] = r[1] - r[0]
+                })
             })
-            
+
             return regions_for_node
         }
         
@@ -275,8 +278,8 @@ function sync7_merge(s7, cs, custom_merge_function) {
                 var ri = 0
                 var r
                 each(untouched, function (u) {
-                    while ((r = regions[ri]) && r[0] + r[1] <= u[0]) { ri++ }
-                    while ((r = regions[ri]) && r[0] < u[0] + u[1]) {
+                    while ((r = regions[ri]) && r[0] + r[1] <= u[2]) { ri++ }
+                    while ((r = regions[ri]) && r[0] < u[2] + u[1]) {
                         base[ri][2] = true
                         r[2] = true
                         ri++
@@ -290,6 +293,8 @@ function sync7_merge(s7, cs, custom_merge_function) {
         console.log('BLAR!!')
         console.log(leaf)
         console.log(leaf_regions_per_node)
+        console.log(prev_merge_node)
+        console.log(prev_regions_per_node)
 
 
 
