@@ -140,16 +140,6 @@ function sync7_merge(s7, cs, custom_merge_function) {
                 })
             }
             helper(node)
-            
-            var endpoints = []
-            endpoints.push([0, 0, 0])
-            each(Object.values(dividers).sort(), function (offset) {
-                endpoints.push([offset, 1, offset])
-                endpoints.push([offset, 0, offset])
-            })
-            endpoints.push([texts[node].length, 1, texts[node].length])
-            
-            return endpoints
         }
 
         var prev_nodes_on_path_to_LCAs = get_nodes_on_path_to_LCAs(prev_merge_node)
@@ -166,13 +156,15 @@ function sync7_merge(s7, cs, custom_merge_function) {
             function do_one_against_the_other(a, b, dividers) {
                 var bb, bi = 0
                 each(a, function (aa) {
-                    while (bb = b[bi]) {
-                        if (bb[2] + bb[1] < aa[2]) {
-                            bi++
-                        } else if (bb[2] < aa[2] && bb[2] + bb[1] > aa[2]) {
-                            var x = aa[2] - bb[2] + bb[0]
-                            dividers[x] = x
-                        }
+                    while ((bb = b[bi]) && (bb[2] + bb[1] <= aa[2])) bi++
+                    if (bb[2] < aa[2]) {
+                        var x = aa[2] - bb[2] + bb[0]
+                        dividers[x] = x
+                    }
+                    while ((bb = b[bi]) && (bb[2] + bb[1] <= aa[2] + aa[1])) bi++
+                    if (bb[2] < aa[2] + aa[1]) {
+                        var x = aa[2] + aa[1] - bb[2] + bb[0]
+                        dividers[x] = x
                     }
                 })
             }
@@ -182,6 +174,19 @@ function sync7_merge(s7, cs, custom_merge_function) {
             do_one_against_the_other(a, b, leaf_dividers)
             do_one_against_the_other(b, a, prev_dividers)
         })
+        
+        
+        
+            
+            var endpoints = []
+            endpoints.push([0, 0, 0])
+            each(Object.values(dividers).sort(), function (offset) {
+                endpoints.push([offset, 1, offset])
+                endpoints.push([offset, 0, offset])
+            })
+            endpoints.push([texts[node].length, 1, texts[node].length])
+            
+            return endpoints
         
         
                 function  {
