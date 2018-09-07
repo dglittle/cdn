@@ -171,6 +171,14 @@ function sync7_merge(s7, cs, custom_merge_function) {
             
             var a = prev_untouched_regions_for_node[lca]
             var b = leaf_untouched_regions_for_node[lca]
+            
+            
+            
+            console.log('HI!')
+            console.log('a = ', a)
+            console.log('b = ', b)
+            
+            
             do_one_against_the_other(a, b, leaf_dividers)
             do_one_against_the_other(b, a, prev_dividers)
         })
@@ -193,8 +201,23 @@ function sync7_merge(s7, cs, custom_merge_function) {
         
         
         console.log('blah!')
+        console.log(prev_merge_node)
+        console.log(prev_endpoints)
+        console.log(leaf)
+        console.log(leaf_endpoints)
         
         throw 'got here?'
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         
         
         
@@ -265,13 +288,13 @@ function sync7_merge(s7, cs, custom_merge_function) {
             
             
             
-            work here
+            // work here
             
-            var regions = {}
-            regions[node] = []
-            each(endpoints_for_node[node], function (e) {
-                regions[node].push([e[0], work here])
-            })
+            // var regions = {}
+            // regions[node] = []
+            // each(endpoints_for_node[node], function (e) {
+            //     regions[node].push([e[0], work here])
+            // })
             
             
             
@@ -624,6 +647,35 @@ function sync7_diff_apply(s, diff) {
     texts.push(s.substr(offset))
     return texts.join('')
 }
+
+
+
+
+var repoA = create_sync7_repo()
+var repoB = create_sync7_repo()
+var c_ab = sync7_commit(repoA, 'ab')
+sync7_merge(repoB, c_ab, my_custom_merge_func)
+var c_abc = sync7_commit(repoA, 'abc')
+var c_aZb = sync7_commit(repoB, 'aZb')
+
+console.log('AAA------------------------')
+console.log(JSON.stringify(repoA, null, '    '))
+console.log('BBB------------------------')
+console.log(JSON.stringify(repoB, null, '    '))
+
+sync7_merge(repoA, c_aZb, my_custom_merge_func)
+// var c_q = sync7_commit(repoB, 'q')
+// sync7_merge(repoB, c_xz, my_custom_merge_func)
+// var c_yzA = sync7_commit(repoA, 'yzA')
+// var c_qzB = sync7_commit(repoB, 'qzB')
+// sync7_merge(repoA, c_q, my_custom_merge_func)
+// sync7_merge(repoA, c_qzB, my_custom_merge_func)
+
+
+throw 'stop'
+
+
+
 
 var repoA = create_sync7_repo()
 var repoB = create_sync7_repo()
