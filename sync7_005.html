@@ -289,6 +289,26 @@ function sync7_merge(s7, cs, custom_merge_function) {
             process(prev_regions_per_node[prev_merge_node], prev_regions_per_node[lca], prev_untouched_regions_for_node[lca])
             process(leaf_regions_per_node[leaf], leaf_regions_per_node[lca], leaf_untouched_regions_for_node[lca])
         })
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+
+
+
+
+
+
+
+
 
         function get_num_regions_for_LCA(lca) {
             // work here : not implemented
@@ -323,14 +343,17 @@ function sync7_merge(s7, cs, custom_merge_function) {
                     if (pr[0] == lr[0]) {
                         if (pr[2] && lr[2])
                             are_the_same = true
-                        if (pr[1] == 0 && lr[1] != 0)
+                        else if (pr[1] == 0 && lr[1] != 0)
                             a_before_b = true
-                        if (lr[1] == 0 && pr[1] != 0)
+                        else if (lr[1] == 0 && pr[1] != 0)
                             b_before_a = true
                     } else if (pr[0] < lr[0]) a_before_b = true
                     else b_before_a = true
                 })
                 if (are_the_same) return 0
+                
+                
+                work here
                 
                 
                 
