@@ -289,6 +289,109 @@ function sync7_merge(s7, cs, custom_merge_function) {
             process(prev_regions_per_node[prev_merge_node], prev_regions_per_node[lca], prev_untouched_regions_for_node[lca])
             process(leaf_regions_per_node[leaf], leaf_regions_per_node[lca], leaf_untouched_regions_for_node[lca])
         })
+
+        function get_num_regions_for_LCA(lca) {
+            // work here : not implemented
+            
+            // we need to know how large the lca is
+            
+            // var divs = {}
+            // divs[0] = true
+            // divs[]
+            // var a = prev_regions_per_node[lca]
+            // var b = leaf_regions_per_node[lca]
+        }
+        
+        
+        
+        custom_merge_func(prev_merge_node, leaf, LCAs, function get_num_regions_for_node(node) {
+            if (node == prev_merge_node) return prev_regions_per_node[node]
+            if (node == leaf) return leaf_regions_per_node[node]
+            throw 'not implementedness, oh no!'
+        }, function which_comes_first(a, ai, b, bi) {
+            var prev_regions = prev_regions_per_node[prev_merge_node]
+            var leaf_regions = leaf_regions_per_node[leaf]
+            function which_comes_first(prev_i, leaf_i) {
+                var a = prev_regions[prev_i]
+                var b = leaf_regions[leaf_i]
+                var a_before_b = false
+                var b_before_a = false
+                var are_the_same = false
+                each(LCAs, function (_, lca) {
+                    var pr = prev_regions_per_node[lca][prev_i]
+                    var lr = leaf_regions_per_node[lca][leaf_i]
+                    if (pr[0] == lr[0]) {
+                        if (pr[2] && lr[2])
+                            are_the_same = true
+                        if (pr[1] == 0 && lr[1] != 0)
+                            a_before_b = true
+                        if (lr[1] == 0 && pr[1] != 0)
+                            b_before_a = true
+                    } else if (pr[0] < lr[0]) a_before_b = true
+                    else b_before_a = true
+                })
+                if (are_the_same) return 0
+                
+                
+                
+                
+                
+                if (a_before_b && !b_before_a) return -1
+                if (b_before_a && !a_before_b) return 1
+                
+                
+                
+                
+                if (a[2] && b[2]) {
+                    var are_the_same = false
+                    each(LCAs, function (_, lca) {
+                        if (prev_regions_per_node[lca][prev_i][0] == leaf_regions_per_node[lca][leaf_i][0]) {
+                            are_the_same = true
+                            return false
+                        }
+                    })
+                    if (are_the_same) return 0
+                    return -2
+                }
+            }
+        })
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        INFO WE GOTs
+        prev_regions_per_node (leaf, each LCA)
+            {[[start, length, untouched]]}
+        leaf_regions_per_node (leaf, each LCA)
+        
+        
+        function space_dag_oh_space_dag_which_is_first(a, b) {
+            
+        }
+        
+        
+        
+        info to give to custom_merge_func
+            - s7 (so they can lookup keys)
+            - leaf_a key
+            - leaf_b key
+            - fork_point keys
+            - get_num_regions_for_key(key)
+            - which_region_comes_first(key, index, key, index)
+                - returns "a", "b", "dunno", "equal"
+            - is_region_deleted(key, index)
+
+        
+        
+        
+        
+        
         
         console.log('BLAR!!')
         console.log(leaf)
