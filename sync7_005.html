@@ -217,7 +217,7 @@ function sync7_merge(s7, cs, custom_merge_function) {
                         poffset += (typeof(d) == 'number') ? d : d[1].length
                     })
                     while (endpoints[ei]) {
-                        add_to_agg(endpoints[ei], offset)
+                        add_to_agg(endpoints[ei], poffset)
                         ei++
                     }
                 })
@@ -272,24 +272,93 @@ function sync7_merge(s7, cs, custom_merge_function) {
         
         var prev_regions_per_node = project_endpoints_to_LCAs(prev_endpoints, prev_merge_node, prev_nodes_on_path_to_LCAs)
         var leaf_regions_per_node = project_endpoints_to_LCAs(leaf_endpoints, leaf, leaf_nodes_on_path_to_LCAs)
+        
+        var prev_regions = prev_regions_per_node[prev_merge_node]
+        var leaf_regions = leaf_regions_per_node[leaf]
+
+        var prev_untouched_regions_for_LCA_by_position = {}
+        var leaf_untouched_regions_for_LCA_by_position = {}
 
         each(LCAs, function (_, lca) {
-            function process(base, regions, untouched) {
+            function process(base, regions, untouched, _by_position) {
+                _by_position[lca] = {}
                 var ri = 0
                 var r
                 each(untouched, function (u) {
                     while ((r = regions[ri]) && r[0] + r[1] <= u[2]) { ri++ }
                     while ((r = regions[ri]) && r[0] < u[2] + u[1]) {
+                        _by_position[lca][r[0]] = true
                         base[ri][2] = true
                         r[2] = true
                         ri++
                     }
                 })
             }
-            process(prev_regions_per_node[prev_merge_node], prev_regions_per_node[lca], prev_untouched_regions_for_node[lca])
-            process(leaf_regions_per_node[leaf], leaf_regions_per_node[lca], leaf_untouched_regions_for_node[lca])
+            process(prev_regions_per_node[prev_merge_node], prev_regions_per_node[lca], prev_untouched_regions_for_node[lca], prev_untouched_regions_for_LCA_by_position)
+            process(leaf_regions_per_node[leaf], leaf_regions_per_node[lca], leaf_untouched_regions_for_node[lca], leaf_untouched_regions_for_LCA_by_position)
         })
         
+        function mark_deletes(regions_for_node, node, other_untouched_for_LCA_by_position) {
+            each(regions_for_node[node], function (r, ri) {
+                if (r[2]) {
+                    r[3] = true
+                    each(LCAs, function (_, lca) {
+                        if (regions_for_node[lca][ri][2] && other_untouched_for_LCA_by_position[lca][r[0]]) {
+                            r[3] = false
+                        }
+                    })
+                }
+            })
+        }
+        mark_deletes(prev_regions_per_node, prev_merge_node, leaf_untouched_regions_for_LCA_by_position)
+        mark_deletes(leaf_regions_per_node, leaf, prev_untouched_regions_for_LCA_by_position)
+
+        function which_comes_first(prev_i, leaf_i) {
+            var a = prev_regions[prev_i]
+            var b = leaf_regions[leaf_i]
+            var a_before_b = false
+            var b_before_a = false
+            var are_the_same = false
+            each(LCAs, function (_, lca) {
+                var pr = prev_regions_per_node[lca][prev_i]
+                var lr = leaf_regions_per_node[lca][leaf_i]
+                if (pr[0] == lr[0]) {
+                    if (pr[2] && lr[2])
+                        are_the_same = true
+                    else if (pr[1] == 0 && lr[1] != 0)
+                        a_before_b = true
+                    else if (lr[1] == 0 && pr[1] != 0)
+                        b_before_a = true
+                } else if (pr[0] < lr[0]) a_before_b = true
+                else b_before_a = true
+            })
+            if (are_the_same) return 0
+            if (a_before_b && !b_before_a) return -1
+            if (b_before_a && !a_before_b) return 1
+            return NaN
+        }
+        
+        var li = 0
+        each(prev_regions, function (pr, pi) {
+            for (; li < leaf_regions.length; li++) {
+                var x = which_comes_first(pi, li)
+                if ()
+            }
+        })
+
+        for each region in prev_regions
+            for each region in leaf_regions (remembering position from last loop)
+                if prev region comes before leaf region,
+                    mark it so, and continue outter loop
+        
+        
+        
+        
+        
+        
+        
+        custom_merge_func(s7, prev_merge_node, leaf, texts[prev_merge_node], texts[leaf], dag)
+
         
         
         
