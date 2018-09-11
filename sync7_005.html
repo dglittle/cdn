@@ -6,9 +6,15 @@
 
 Math.randomSeed(7)
 
-function my_custom_merge_func() {
-    console.log('what do you want from me!?')
-    throw 'bad'
+function my_custom_merge_func(s7, a, b, a_text, b_text, a_regions, b_regions) {
+    console.log('HI!!')
+    console.log(a)
+    console.log(b)
+    console.log(a_text)
+    console.log(b_text)
+    console.log(a_regions)
+    console.log(b_regions)
+    throw 'stop'
 }
 
 function create_sync7_repo() {
@@ -287,7 +293,7 @@ function sync7_merge(s7, cs, custom_merge_function) {
                 each(untouched, function (u) {
                     while ((r = regions[ri]) && r[0] + r[1] <= u[2]) { ri++ }
                     while ((r = regions[ri]) && r[0] < u[2] + u[1]) {
-                        _by_position[lca][r[0]] = true
+                        _by_position[lca][r[0]] = ri
                         base[ri][2] = true
                         r[2] = true
                         ri++
@@ -301,10 +307,12 @@ function sync7_merge(s7, cs, custom_merge_function) {
         function mark_deletes(regions_for_node, node, other_untouched_for_LCA_by_position) {
             each(regions_for_node[node], function (r, ri) {
                 if (r[2]) {
-                    r[3] = true
+                    r[3] = -1
                     each(LCAs, function (_, lca) {
-                        if (regions_for_node[lca][ri][2] && other_untouched_for_LCA_by_position[lca][r[0]]) {
-                            r[3] = false
+                        var other_ri = other_untouched_for_LCA_by_position[lca][r[0]]
+                        if (regions_for_node[lca][ri][2] && (typeof(other_ri) == 'number')) {
+                            r[3] = other_ri
+                            return false
                         }
                     })
                 }
@@ -338,269 +346,22 @@ function sync7_merge(s7, cs, custom_merge_function) {
             return NaN
         }
         
-        var li = 0
-        each(prev_regions, function (pr, pi) {
-            for (; li < leaf_regions.length; li++) {
-                var x = which_comes_first(pi, li)
-                if ()
-            }
-        })
-
-        for each region in prev_regions
-            for each region in leaf_regions (remembering position from last loop)
-                if prev region comes before leaf region,
-                    mark it so, and continue outter loop
-        
-        
-        
-        
-        
-        
-        
-        custom_merge_func(s7, prev_merge_node, leaf, texts[prev_merge_node], texts[leaf], dag)
-
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-
-
-
-
-
-
-
-
-
-        function get_num_regions_for_LCA(lca) {
-            // work here : not implemented
-            
-            // we need to know how large the lca is
-            
-            // var divs = {}
-            // divs[0] = true
-            // divs[]
-            // var a = prev_regions_per_node[lca]
-            // var b = leaf_regions_per_node[lca]
-        }
-        
-        
-        
-        custom_merge_func(prev_merge_node, leaf, LCAs, function get_num_regions_for_node(node) {
-            if (node == prev_merge_node) return prev_regions_per_node[node]
-            if (node == leaf) return leaf_regions_per_node[node]
-            throw 'not implementedness, oh no!'
-        }, function which_comes_first(a, ai, b, bi) {
-            var prev_regions = prev_regions_per_node[prev_merge_node]
-            var leaf_regions = leaf_regions_per_node[leaf]
-            function which_comes_first(prev_i, leaf_i) {
-                var a = prev_regions[prev_i]
-                var b = leaf_regions[leaf_i]
-                var a_before_b = false
-                var b_before_a = false
-                var are_the_same = false
-                each(LCAs, function (_, lca) {
-                    var pr = prev_regions_per_node[lca][prev_i]
-                    var lr = leaf_regions_per_node[lca][leaf_i]
-                    if (pr[0] == lr[0]) {
-                        if (pr[2] && lr[2])
-                            are_the_same = true
-                        else if (pr[1] == 0 && lr[1] != 0)
-                            a_before_b = true
-                        else if (lr[1] == 0 && pr[1] != 0)
-                            b_before_a = true
-                    } else if (pr[0] < lr[0]) a_before_b = true
-                    else b_before_a = true
-                })
-                if (are_the_same) return 0
-                
-                
-                work here
-                
-                
-                
-                
-                
-                if (a_before_b && !b_before_a) return -1
-                if (b_before_a && !a_before_b) return 1
-                
-                
-                
-                
-                if (a[2] && b[2]) {
-                    var are_the_same = false
-                    each(LCAs, function (_, lca) {
-                        if (prev_regions_per_node[lca][prev_i][0] == leaf_regions_per_node[lca][leaf_i][0]) {
-                            are_the_same = true
-                            return false
-                        }
-                    })
-                    if (are_the_same) return 0
-                    return -2
+        function calc_known_orderings(a_regions, b_regions) {
+            var bi = 0
+            each(a_regions, function (ar, ai) {
+                for ( ; bi < b_regions.length; bi++) {
+                    var x = which_comes_first(ai, bi)
+                    if (x == -1) {
+                        ar[4] = bi
+                        return
+                    }
                 }
-            }
-        })
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        INFO WE GOTs
-        prev_regions_per_node (leaf, each LCA)
-            {[[start, length, untouched]]}
-        leaf_regions_per_node (leaf, each LCA)
-        
-        
-        function space_dag_oh_space_dag_which_is_first(a, b) {
-            
+            })
         }
+        calc_known_orderings(prev_regions, leaf_regions)
+        calc_known_orderings(leaf_regions, prev_regions)
         
-        
-        
-        info to give to custom_merge_func
-            - s7 (so they can lookup keys)
-            - leaf_a key
-            - leaf_b key
-            - fork_point keys
-            - get_num_regions_for_key(key)
-            - which_region_comes_first(key, index, key, index)
-                - returns "a", "b", "dunno", "equal"
-            - is_region_deleted(key, index)
-
-        
-        
-        
-        
-        
-        
-        console.log('BLAR!!')
-        console.log(leaf)
-        console.log(leaf_regions_per_node)
-        console.log(prev_merge_node)
-        console.log(prev_regions_per_node)
-
-
-
-
-        throw 'bloop'
-        
-        
-        
-        
-        
-        // var paths = {}
-        // path_so_far = []
-        // function find_paths_up_to_LCAs(a) {
-        //     if (LCAs[a]) {
-        //         if (!paths[a]) paths[a] = []
-        //         paths[a].push(path_so_far.slice(0))
-        //     } else {
-        //         each(s7.commits[a].to_parents, function (d, p) {
-        //             if (LCAs[p] || !CAs[p]) {
-        //                 path_so_far.push(p)
-        //                 find_paths_up_to_LCAs(p)
-        //                 path_so_far.pop()
-        //             }
-        //         })
-        //     }
-        // }
-        // find_paths_up_to_LCAs(prev_merge_node)
-        // var prev_paths = paths
-        // paths = {}
-        // path_so_far = []
-        // find_paths_up_to_LCAs(leaf)
-        // var leaf_paths = paths
-        
-        // each(prev_paths, function (paths, dest) {
-            
-            
-            
-            
-            
-        //     prev_paths[dest] = sync7_merge_path_up(s7, prev_merge_node, )
-        // })
-
-
-
-
-
-// sync7_merge_path_up
-
-
-
-
-// work here        
-//     var diff = []
-//     var prev = s7.leaf
-//     each(leaf_to_lca, function (next) {
-//         diff = sync7_diff_merge_trans(diff, s7.commits[prev].to_parents[next])
-//         prev = next
-//     })
-
-        
-        
-        
-//         each([prev_merge_node, leaves[i]], function (leaf) {
-//             var regions = []
-//             each(s7.commits[leaf].to_parents, function (d, p) {
-//                 each(d, function (d, i) {
-//                     regions[i] = 
-//                 })
-//             })
-            
-            
-            
-            
-            
-            
-            
-            
-//             // follow each region up to all parents,
-//                 if we encounter an LCA,
-//                     deal with that,
-//                 if we encounter a member of sync7_intersection,
-//                     we've gone too far
-//                 otherwise,
-//                     continue following parents up
-        // })
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        // var m = custom_merge_func(prev_merge_node_text, texts[leaves[i]], sync7_calc_diffs_to_ancestors(s7, prev_merge_node, leaves[i], LCAs))
-        // var id = guid()
-        // s7.temp_commits[id] = true
-        // s7.commits[id] = { to_parents : {} }
-        // s7.commits[id].to_parents[prev_merge_node] = m.to_a
-        // s7.commits[id].to_parents[leaves[i]] = m.to_b
-        
-        // prev_merge_node = id
-        // prev_merge_node_text = m.text
-        
-        
-        
-        
-        
-        
-        
-        
+        custom_merge_func(s7, prev_merge_node, leaf, texts[prev_merge_node], texts[leaf], prev_regions, leaf_regions)
     }
 
     s7.leaf = prev_merge_node
