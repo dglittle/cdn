@@ -22,8 +22,10 @@ function my_custom_merge_func(s7, a, b, a_text, b_text, a_regions, b_regions) {
     var on_a = true
     var ai = 0
     var bi = 0
-    var aa, bb
-    while ((aa = a_regions[ai]) || (bb = b_regions[bi])) {
+    while (true) {
+        var aa = a_regions[ai]
+        var bb = b_regions[bi]
+        if (!aa && !bb) break
         if (!aa) on_a = false
         if (!bb) on_a = true
         if (on_a) {
@@ -38,6 +40,10 @@ function my_custom_merge_func(s7, a, b, a_text, b_text, a_regions, b_regions) {
             } else {
     
     console.log('HI!!!!!!')
+    console.log(ai)
+    console.log(bi)
+    console.log(aa)
+    console.log(bb)
     console.log(text)
     console.log(a_diff)
     console.log(b_diff)
@@ -56,6 +62,10 @@ function my_custom_merge_func(s7, a, b, a_text, b_text, a_regions, b_regions) {
             } else {
     
     console.log('HI!!!!!!')
+    console.log(ai)
+    console.log(bi)
+    console.log(aa)
+    console.log(bb)
     console.log(text)
     console.log(a_diff)
     console.log(b_diff)
