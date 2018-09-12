@@ -34,7 +34,7 @@ function my_custom_merge_func(s7, a, b, a_text, b_text, a_regions, b_regions) {
                     var t = a_text.substr(aa[0], aa[1])
                     text.push(t)
                     a_diff.push(aa[1])
-                    b_diff.push(['', t])
+                    b_diff.push([t, ''])
                 }
                 ai++
             } else if (bb && bb[5] < ai) {
@@ -48,7 +48,7 @@ function my_custom_merge_func(s7, a, b, a_text, b_text, a_regions, b_regions) {
                     var t = b_text.substr(bb[0], bb[1])
                     text.push(t)
                     b_diff.push(bb[1])
-                    a_diff.push(['', t])
+                    a_diff.push([t, ''])
                 }
                 bi++
             } else if (aa && aa[5] < bi) {
@@ -58,6 +58,13 @@ function my_custom_merge_func(s7, a, b, a_text, b_text, a_regions, b_regions) {
             }
         }
     }
+    
+    
+    
+    work here : b_diff is wrong (comment out this line and run it, and see console output)
+    
+    
+    
     
     console.log('HI!!!!!!')
     console.log(text)
