@@ -43,7 +43,7 @@ function my_custom_merge_func(s7, a, b, a_text, b_text, a_regions, b_regions) {
                 c_diff.push(cc[1])
                 d_diff.push([t, ''])
             }
-            if (on_a) ai++ else bi++
+            if (on_a) { ai++ } else { bi++ }
         } else if (dd && dd[5] < ci) {
             on_a = !on_a
         } else {
