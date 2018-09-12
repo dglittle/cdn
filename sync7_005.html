@@ -22,7 +22,13 @@ function my_custom_merge_func(s7, a, b, a_text, b_text, a_regions, b_regions) {
     var on_a = true
     var ai = 0
     var bi = 0
-    while (true) {
+    
+    var safe = 0
+    
+    while (true && safe < 30) {
+        
+        safe++
+        
         var aa = a_regions[ai]
         var bb = b_regions[bi]
         if (!aa && !bb) break
@@ -43,7 +49,7 @@ function my_custom_merge_func(s7, a, b, a_text, b_text, a_regions, b_regions) {
                 a_diff.push(aa[1])
                 b_diff.push([t, ''])
             }
-            ai++
+            if (on_a) { ai++ } else { bi++ }
         } else if (bb && bb[5] < ai) {
             on_a = false
         } else {
