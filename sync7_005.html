@@ -7,6 +7,17 @@
 Math.randomSeed(7)
 
 function my_custom_merge_func(s7, a, b, a_text, b_text, a_regions, b_regions) {
+    // var ai = 0
+    // var bi = 0
+    // while (ai < a_regions.length && bi < b_regions.length) {
+    //     var aa = a_regions[ai]
+    //     var bb = b_regions[bi]
+        
+        
+    // }
+    
+    
+    
     console.log('HI!!')
     console.log(a)
     console.log(b)
@@ -303,20 +314,10 @@ function sync7_merge(s7, cs, custom_merge_func) {
             process(prev_regions_per_node[prev_merge_node], prev_regions_per_node[lca], prev_untouched_regions_for_node[lca], prev_untouched_regions_for_LCA_by_position)
             process(leaf_regions_per_node[leaf], leaf_regions_per_node[lca], leaf_untouched_regions_for_node[lca], leaf_untouched_regions_for_LCA_by_position)
         })
-        
-        
-        
-        console.log('WOOOOT')
-        console.log(prev_merge_node)
-        console.log(prev_untouched_regions_for_LCA_by_position)
-        console.log(leaf)
-        console.log(leaf_untouched_regions_for_LCA_by_position)
-        
-        
-        
-        
+
         function mark_deletes(regions_for_node, node, other_untouched_for_LCA_by_position) {
             each(regions_for_node[node], function (r, ri) {
+                r[4] = r[5] = -1
                 if (r[2]) {
                     r[3] = -1
                     each(LCAs, function (_, lca) {
@@ -359,6 +360,7 @@ function sync7_merge(s7, cs, custom_merge_func) {
                 for ( ; bi < b_regions[b_node].length; bi++) {
                     if (is_definitely_before(a_regions, a_node, ai, b_regions, b_node, bi)) {
                         ar[4] = bi
+                        b_regions[b_node][bi][5] = ai
                         return
                     }
                 }
