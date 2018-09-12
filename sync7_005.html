@@ -33,9 +33,15 @@ function my_custom_merge_func(s7, a, b, a_text, b_text, a_regions, b_regions) {
                 a_diff.push(aa[1])
                 b_diff.push([0, t])
                 ai++
-            } else if (bb[5] < ai) {
+            } else if (bb && bb[5] < ai) {
                 on_a = false
             } else {
+    
+    console.log('HI!!!!!!')
+    console.log(text)
+    console.log(a_diff)
+    console.log(b_diff)
+    
                 throw 'failure'
             }
         } else {
@@ -45,9 +51,15 @@ function my_custom_merge_func(s7, a, b, a_text, b_text, a_regions, b_regions) {
                 b_diff.push(bb[1])
                 a_diff.push([0, t])
                 bi++
-            } else if (aa[5] < bi) {
+            } else if (aa && aa[5] < bi) {
                 on_a = true
             } else {
+    
+    console.log('HI!!!!!!')
+    console.log(text)
+    console.log(a_diff)
+    console.log(b_diff)
+    
                 throw 'failure'
             }
         }
