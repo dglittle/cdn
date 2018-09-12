@@ -7,17 +7,36 @@
 Math.randomSeed(7)
 
 function my_custom_merge_func(s7, a, b, a_text, b_text, a_regions, b_regions) {
-    // var ai = 0
-    // var bi = 0
-    // while (ai < a_regions.length && bi < b_regions.length) {
-    //     var aa = a_regions[ai]
-    //     var bb = b_regions[bi]
-        
-        
-    // }
     
-    
-    
+    var text = []
+    var a_diff = []
+    var b_diff = []
+    var on_a = true
+    var ai = 0
+    var bi = 0
+    var aa, bb
+    while ((aa = a_regions[ai]) || (bb = b_regions[bi])) {
+        if (!aa) on_a = false
+        if (!bb) on_a = true
+        if (on_a) {
+            if (aa[5] < bi) {
+                var t = a_text.substr(aa[0], aa[1])
+                text.push(t)
+                a_diff.push(aa[1])
+                b_diff.push([0, t])
+                ai++
+            } else on_a = false
+        } else {
+            if (bb[5] < ai) {
+                var t = b_text.substr(bb[0], bb[1])
+                text.push(t)
+                b_diff.push(bb[1])
+                a_diff.push([0, t])
+                bi++
+            } else on_a = true
+        }
+    }
+
     console.log('HI!!')
     console.log(a)
     console.log(b)
@@ -25,6 +44,12 @@ function my_custom_merge_func(s7, a, b, a_text, b_text, a_regions, b_regions) {
     console.log(b_text)
     console.log(a_regions)
     console.log(b_regions)
+    
+    console.log('HI!!!!!!')
+    console.log(text)
+    console.log(a_diff)
+    console.log(b_diff)
+    
     throw 'stop'
 }
 
