@@ -28,24 +28,24 @@ function my_custom_merge_func(s7, a, b, a_text, b_text, a_regions, b_regions) {
         if (!aa && !bb) break
         if (!aa) on_a = false
         if (!bb) on_a = true
+        
         var ci = on_a ? ai : bi
         var di = on_a ? bi : ai
         var cc = on_a ? aa : bb
         var dd = on_a ? bb : aa
         var c_text = on_a ? a_text : b_text
         var d_text = on_a ? b_text : a_text
-        var c_diff = on_a ? a_diff : b_diff
-        var d_diff = on_a ? b_diff : a_diff
+        
         if (cc[5] < di) {
             if (!cc[2] || cc[3] >= di) {
-                var t = c_text.substr(cc[0], cc[1])
-                c_text.push(t)
-                c_diff.push(cc[1])
-                d_diff.push([t, ''])
+                var t = a_text.substr(aa[0], aa[1])
+                text.push(t)
+                a_diff.push(aa[1])
+                b_diff.push([t, ''])
             }
-            if (on_a) { ai++ } else { bi++ }
-        } else if (dd && dd[5] < ci) {
-            on_a = !on_a
+            ai++
+        } else if (bb && bb[5] < ai) {
+            on_a = false
         } else {
             throw 'failure'
         }
