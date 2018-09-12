@@ -28,7 +28,30 @@ function my_custom_merge_func(s7, a, b, a_text, b_text, a_regions, b_regions) {
         if (!aa && !bb) break
         if (!aa) on_a = false
         if (!bb) on_a = true
-        if (on_a) {
+        var cc = on_a ? aa : bb
+        var dd = on_a ? bb : aa
+        var c_text = on_a ? a_text : b_text
+        var d_text = on_a ? b_text : a_text
+        if (cc[5] < di) {
+            if (!cc[2] || cc[3] >= di) {
+                var t = a_text.substr(aa[0], aa[1])
+                c_text.push(t)
+                a_diff.push(aa[1])
+                b_diff.push([t, ''])
+            }
+            ai++
+        } else if (bb && bb[5] < ai) {
+            on_a = false
+        } else {
+            throw 'failure'
+        }
+        
+        
+        if (on_a) 
+            
+            
+            
+            
             if (aa[5] < bi) {
                 if (!aa[2] || aa[3] >= bi) {
                     var t = a_text.substr(aa[0], aa[1])
@@ -61,7 +84,7 @@ function my_custom_merge_func(s7, a, b, a_text, b_text, a_regions, b_regions) {
     
     
     
-    work here : b_diff is wrong (comment out this line and run it, and see console output)
+    // work here : b_diff is wrong (comment out this line and run it, and see console output)
     
     
     
