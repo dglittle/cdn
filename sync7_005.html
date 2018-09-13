@@ -7,6 +7,7 @@
 Math.randomSeed(7)
 
 function my_custom_merge_func(s7, a, b, a_text, b_text, a_regions, b_regions) {
+    // regions be like [pos, len, untouched, index in other region array of this untouched or -1 if not present, index of first region in other array that this region is definitely before, index of last region in other array that this region is definitely after]
     
     console.log('HI!!')
     console.log(a)
@@ -55,6 +56,8 @@ function my_custom_merge_func(s7, a, b, a_text, b_text, a_regions, b_regions) {
         } else {
             throw 'failure'
         }
+        
+        console.log('got here??')
     }
     
     
