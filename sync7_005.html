@@ -9,13 +9,13 @@ Math.randomSeed(7)
 function my_custom_merge_func(s7, a, b, a_text, b_text, a_regions, b_regions) {
     // regions be like [pos, len, untouched?, index in other region array of this untouched or -1 if not present, index of first region in other array that this region is definitely before, index of last region in other array that this region is definitely after]
     
-    // console.log('HI!!')
-    // console.log(a)
-    // console.log(b)
-    // console.log(a_text)
-    // console.log(b_text)
-    // console.log(a_regions)
-    // console.log(b_regions)
+    console.log('HI!!')
+    console.log(a)
+    console.log(b)
+    console.log(a_text)
+    console.log(b_text)
+    console.log(a_regions)
+    console.log(b_regions)
     
     var text = []
     var a_diff = []
@@ -682,17 +682,16 @@ sync7_merge(repoA, c_q, my_custom_merge_func)
 sync7_merge(repoA, c_qzB, my_custom_merge_func)
 sync7_merge(repoB, c_yzA, function (s7, a, b, a_text, b_text, a_regions, b_regions) {
     
-    debugger
-    
-    my_custom_merge_func(s7, a, b, a_text, b_text, a_regions, b_regions)
+
+    return my_custom_merge_func(s7, a, b, a_text, b_text, a_regions, b_regions)
     
 })
 
 
-console.log('AAA------------------------')
-console.log(JSON.stringify(repoA, null, '    '))
-console.log('BBB------------------------')
-console.log(JSON.stringify(repoB, null, '    '))
+// console.log('AAA------------------------')
+// console.log(JSON.stringify(repoA, null, '    '))
+// console.log('BBB------------------------')
+// console.log(JSON.stringify(repoB, null, '    '))
 
 
 
