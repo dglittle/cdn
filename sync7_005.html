@@ -7,15 +7,15 @@
 Math.randomSeed(7)
 
 function my_custom_merge_func(s7, a, b, a_text, b_text, a_regions, b_regions) {
-    // regions be like [pos, len, untouched, index in other region array of this untouched or -1 if not present, index of first region in other array that this region is definitely before, index of last region in other array that this region is definitely after]
+    // regions be like [pos, len, untouched?, index in other region array of this untouched or -1 if not present, index of first region in other array that this region is definitely before, index of last region in other array that this region is definitely after]
     
-    console.log('HI!!')
-    console.log(a)
-    console.log(b)
-    console.log(a_text)
-    console.log(b_text)
-    console.log(a_regions)
-    console.log(b_regions)
+    // console.log('HI!!')
+    // console.log(a)
+    // console.log(b)
+    // console.log(a_text)
+    // console.log(b_text)
+    // console.log(a_regions)
+    // console.log(b_regions)
     
     var text = []
     var a_diff = []
@@ -23,15 +23,7 @@ function my_custom_merge_func(s7, a, b, a_text, b_text, a_regions, b_regions) {
     var on_a = true
     var ai = 0
     var bi = 0
-    
-    var safe = 0
-
-    while (true && safe < 30) {
-        
-        console.log('got here??: ', safe)
-        
-        safe++
-        
+    while (true) {
         var aa = a_regions[ai]
         var bb = b_regions[bi]
         if (!aa && !bb) break
@@ -54,17 +46,17 @@ function my_custom_merge_func(s7, a, b, a_text, b_text, a_regions, b_regions) {
                     c_diff.push(['', t])
                 } else if (cc[3] == di) {
                     text.push(t)
-                    c_diff.push(cc[1])
-                    d_diff.push(cc[1])
+                    sync7_push_eq(c_diff, cc[1])
+                    sync7_push_eq(d_diff, cc[1])
                     if (on_a) { bi++ } else { ai++ }
                 } else {
                     text.push(t)
-                    c_diff.push(cc[1])
+                    sync7_push_eq(c_diff, cc[1])
                     d_diff.push([t, ''])
                 }
             } else {
                 text.push(t)
-                c_diff.push(cc[1])
+                sync7_push_eq(c_diff, cc[1])
                 d_diff.push([t, ''])
             }
             if (on_a) { ai++ } else { bi++ }
@@ -74,20 +66,17 @@ function my_custom_merge_func(s7, a, b, a_text, b_text, a_regions, b_regions) {
             throw 'failure'
         }
     }
-    
-    
-    
-    // work here : b_diff is wrong (comment out this line and run it, and see console output)
-    
-    
-    
-    
-    console.log('HI!!!!!!')
-    console.log(text)
-    console.log(a_diff)
-    console.log(b_diff)
-    
-    throw 'stop'
+
+    // console.log('HI!!!!!!')
+    // console.log(text)
+    // console.log(a_diff)
+    // console.log(b_diff)
+
+    return {
+        text : text.join(''),
+        to_a : a_diff,
+        to_b : b_diff
+    }
 }
 
 function create_sync7_repo() {
@@ -377,9 +366,9 @@ function sync7_merge(s7, cs, custom_merge_func) {
             process(leaf_regions_per_node[leaf], leaf_regions_per_node[lca], leaf_untouched_regions_for_node[lca], leaf_untouched_regions_for_LCA_by_position)
         })
 
-        function mark_deletes(regions_for_node, node, other_untouched_for_LCA_by_position) {
+        function mark_deletes_and_more(regions_for_node, node, other_untouched_for_LCA_by_position) {
             each(regions_for_node[node], function (r, ri) {
-                r[4] = r[5] = -1
+                r[4] = r[5] = -1 // <-- the "more"
                 if (r[2]) {
                     r[3] = -1
                     each(LCAs, function (_, lca) {
@@ -393,8 +382,8 @@ function sync7_merge(s7, cs, custom_merge_func) {
                 }
             })
         }
-        mark_deletes(prev_regions_per_node, prev_merge_node, leaf_untouched_regions_for_LCA_by_position)
-        mark_deletes(leaf_regions_per_node, leaf, prev_untouched_regions_for_LCA_by_position)
+        mark_deletes_and_more(prev_regions_per_node, prev_merge_node, leaf_untouched_regions_for_LCA_by_position)
+        mark_deletes_and_more(leaf_regions_per_node, leaf, prev_untouched_regions_for_LCA_by_position)
 
         function is_definitely_before(a_regions, a_node, ai, b_regions, b_node, bi) {
             var a_before_b = false
@@ -431,7 +420,9 @@ function sync7_merge(s7, cs, custom_merge_func) {
         calc_known_orderings(prev_regions_per_node, prev_merge_node, leaf_regions_per_node, leaf)
         calc_known_orderings(leaf_regions_per_node, leaf, prev_regions_per_node, prev_merge_node)
 
-        custom_merge_func(s7, prev_merge_node, leaf, texts[prev_merge_node], texts[leaf], prev_regions, leaf_regions)
+        var m = custom_merge_func(s7, prev_merge_node, leaf, texts[prev_merge_node], texts[leaf], prev_regions, leaf_regions)
+        var id = guid()
+        
     }
 
     s7.leaf = prev_merge_node
