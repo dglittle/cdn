@@ -9,13 +9,13 @@ Math.randomSeed(7)
 function my_custom_merge_func(s7, a, b, a_text, b_text, a_regions, b_regions) {
     // regions be like [pos, len, untouched?, index in other region array of this untouched or -1 if not present, index of first region in other array that this region is definitely before, index of last region in other array that this region is definitely after]
     
-    console.log('HI!!')
-    console.log(a)
-    console.log(b)
-    console.log(a_text)
-    console.log(b_text)
-    console.log(a_regions)
-    console.log(b_regions)
+    // console.log('HI!!')
+    // console.log(a)
+    // console.log(b)
+    // console.log(a_text)
+    // console.log(b_text)
+    // console.log(a_regions)
+    // console.log(b_regions)
     
     var text = []
     var a_diff = []
@@ -104,6 +104,18 @@ function sync7_commit(s7, s) {
     
     s7.text = s
     return cs
+}
+
+function sync7_pretty_print(s7) {
+    var output = []
+    function helper(node, indent) {
+        output.push('    '.repeat(indent) + node + ':' + sync7_get_text(s7, node))
+        each(s7.commits[node].from_kids, function (_, kid) {
+            helper(kid, indent + 1)
+        })
+    }
+    helper('root')
+    console.log(output.join('\n'))
 }
 
 function sync7_merge(s7, cs, custom_merge_func) {
@@ -672,6 +684,16 @@ var repoB = create_sync7_repo()
 var c_x = sync7_commit(repoA, 'x')
 sync7_merge(repoB, c_x, my_custom_merge_func)
 var c_xz = sync7_commit(repoA, 'xz')
+
+
+console.log('AAA------------------------')
+sync7_pretty_print(repoA)
+console.log('BBB------------------------')
+sync7_pretty_print(repoB)
+
+throw 'stop6'
+
+
 var c_y = sync7_commit(repoB, 'y')
 sync7_merge(repoA, c_y, my_custom_merge_func)
 var c_q = sync7_commit(repoB, 'q')
@@ -680,6 +702,16 @@ var c_yzA = sync7_commit(repoA, 'yzA')
 var c_qzB = sync7_commit(repoB, 'qzB')
 sync7_merge(repoA, c_q, my_custom_merge_func)
 sync7_merge(repoA, c_qzB, my_custom_merge_func)
+
+
+console.log('AAA------------------------')
+console.log(JSON.stringify(c_yzA, null, '    '))
+
+
+
+throw 'stop4'
+
+
 sync7_merge(repoB, c_yzA, function (s7, a, b, a_text, b_text, a_regions, b_regions) {
     
 
@@ -711,9 +743,9 @@ var c_abc = sync7_commit(repoA, 'abc')
 var c_aZb = sync7_commit(repoB, 'aZb')
 
 console.log('AAA------------------------')
-console.log(JSON.stringify(repoA, null, '    '))
+sync7_pretty_print(repoA)
 console.log('BBB------------------------')
-console.log(JSON.stringify(repoB, null, '    '))
+sync7_pretty_print(repoB)
 
 sync7_merge(repoA, c_aZb, my_custom_merge_func)
 
