@@ -421,8 +421,15 @@ function sync7_merge(s7, cs, custom_merge_func) {
         calc_known_orderings(leaf_regions_per_node, leaf, prev_regions_per_node, prev_merge_node)
 
         var m = custom_merge_func(s7, prev_merge_node, leaf, texts[prev_merge_node], texts[leaf], prev_regions, leaf_regions)
-        var id = guid()
         
+        var id = guid()
+        var to_parents = {}
+        s7.commits[prev_merge_node].from_kids[id] = to_parents[prev_merge_node] = m.to_a
+        s7.commits[leaf].from_kids[id] = to_parents[leaf] = m.to_b
+        s7.commits[id] = temp_commits[id] = { to_parents : to_parents, from_kids : {} }
+        
+        prev_merge_node = id
+        prev_merge_node_text = m.text
     }
 
     s7.leaf = prev_merge_node
