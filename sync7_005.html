@@ -670,14 +670,13 @@ function sync7_diff_apply(s, diff) {
 function sync7_pretty_print(s7) {
     var output = []
     function helper(node, indent) {
-        console.log('NODE: ' + node)
-        output.push('    '.repeat(indent) + node + ':' + sync7_get_text(s7, node))
+        output.push('- '.repeat(indent) + node + ':' + sync7_get_text(s7, node))
         each(s7.commits[node].from_kids, function (_, kid) {
             if (s7.commits[kid])
                 helper(kid, indent + 1)
         })
     }
-    helper('root')
+    helper('root', 0)
     console.log(output.join('\n'))
 }
 
@@ -690,6 +689,15 @@ var repoB = create_sync7_repo()
 var c_x = sync7_commit(repoA, 'x')
 sync7_merge(repoB, c_x, my_custom_merge_func)
 var c_xz = sync7_commit(repoA, 'xz')
+var c_y = sync7_commit(repoB, 'y')
+sync7_merge(repoA, c_y, my_custom_merge_func)
+var c_q = sync7_commit(repoB, 'q')
+sync7_merge(repoB, c_xz, my_custom_merge_func)
+var c_yzA = sync7_commit(repoA, 'yzA')
+var c_qzB = sync7_commit(repoB, 'qzB')
+sync7_merge(repoA, c_q, my_custom_merge_func)
+sync7_merge(repoA, c_qzB, my_custom_merge_func)
+sync7_merge(repoB, c_yzA, my_custom_merge_func)
 
 
 console.log('AAA------------------------')
@@ -700,14 +708,6 @@ sync7_pretty_print(repoB)
 throw 'stop6'
 
 
-var c_y = sync7_commit(repoB, 'y')
-sync7_merge(repoA, c_y, my_custom_merge_func)
-var c_q = sync7_commit(repoB, 'q')
-sync7_merge(repoB, c_xz, my_custom_merge_func)
-var c_yzA = sync7_commit(repoA, 'yzA')
-var c_qzB = sync7_commit(repoB, 'qzB')
-sync7_merge(repoA, c_q, my_custom_merge_func)
-sync7_merge(repoA, c_qzB, my_custom_merge_func)
 
 
 console.log('AAA------------------------')
