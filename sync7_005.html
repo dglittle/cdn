@@ -106,18 +106,6 @@ function sync7_commit(s7, s) {
     return cs
 }
 
-function sync7_pretty_print(s7) {
-    var output = []
-    function helper(node, indent) {
-        output.push('    '.repeat(indent) + node + ':' + sync7_get_text(s7, node))
-        each(s7.commits[node].from_kids, function (_, kid) {
-            helper(kid, indent + 1)
-        })
-    }
-    helper('root')
-    console.log(output.join('\n'))
-}
-
 function sync7_merge(s7, cs, custom_merge_func) {
     each(cs, function (c, id) {
         s7.commits[id] = c
@@ -679,6 +667,24 @@ function sync7_diff_apply(s, diff) {
 
 
 
+function sync7_pretty_print(s7) {
+    var output = []
+    function helper(node, indent) {
+        console.log('NODE: ' + node)
+        output.push('    '.repeat(indent) + node + ':' + sync7_get_text(s7, node))
+        each(s7.commits[node].from_kids, function (_, kid) {
+            if (s7.commits[kid])
+                helper(kid, indent + 1)
+        })
+    }
+    helper('root')
+    console.log(output.join('\n'))
+}
+
+
+
+
+
 var repoA = create_sync7_repo()
 var repoB = create_sync7_repo()
 var c_x = sync7_commit(repoA, 'x')
@@ -689,7 +695,8 @@ var c_xz = sync7_commit(repoA, 'xz')
 console.log('AAA------------------------')
 sync7_pretty_print(repoA)
 console.log('BBB------------------------')
-sync7_pretty_print(repoB)
+// sync7_pretty_print(repoB)
+console.log(JSON.stringify(repoB, null, '    '))
 
 throw 'stop6'
 
