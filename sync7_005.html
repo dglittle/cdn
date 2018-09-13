@@ -665,6 +665,40 @@ function sync7_diff_apply(s, diff) {
 
 
 
+
+
+var repoA = create_sync7_repo()
+var repoB = create_sync7_repo()
+var c_x = sync7_commit(repoA, 'x')
+sync7_merge(repoB, c_x, my_custom_merge_func)
+var c_xz = sync7_commit(repoA, 'xz')
+var c_y = sync7_commit(repoB, 'y')
+
+
+sync7_merge(repoA, c_y, my_custom_merge_func)
+
+
+console.log('AAA------------------------')
+console.log(JSON.stringify(repoA, null, '    '))
+console.log('BBB------------------------')
+console.log(JSON.stringify(repoB, null, '    '))
+
+
+
+// var c_q = sync7_commit(repoB, 'q')
+// sync7_merge(repoB, c_xz, my_custom_merge_func)
+// var c_yzA = sync7_commit(repoA, 'yzA')
+// var c_qzB = sync7_commit(repoB, 'qzB')
+// sync7_merge(repoA, c_q, my_custom_merge_func)
+// sync7_merge(repoA, c_qzB, my_custom_merge_func)
+
+
+
+throw 'stop3'
+
+
+
+
 var repoA = create_sync7_repo()
 var repoB = create_sync7_repo()
 var c_ab = sync7_commit(repoA, 'ab')
@@ -678,37 +712,20 @@ console.log('BBB------------------------')
 console.log(JSON.stringify(repoB, null, '    '))
 
 sync7_merge(repoA, c_aZb, my_custom_merge_func)
-// var c_q = sync7_commit(repoB, 'q')
-// sync7_merge(repoB, c_xz, my_custom_merge_func)
-// var c_yzA = sync7_commit(repoA, 'yzA')
-// var c_qzB = sync7_commit(repoB, 'qzB')
-// sync7_merge(repoA, c_q, my_custom_merge_func)
-// sync7_merge(repoA, c_qzB, my_custom_merge_func)
 
-
-throw 'stop'
-
-
-
-
-var repoA = create_sync7_repo()
-var repoB = create_sync7_repo()
-var c_x = sync7_commit(repoA, 'x')
-sync7_merge(repoB, c_x, my_custom_merge_func)
-var c_xz = sync7_commit(repoA, 'xz')
-var c_y = sync7_commit(repoB, 'y')
 
 console.log('AAA------------------------')
 console.log(JSON.stringify(repoA, null, '    '))
 console.log('BBB------------------------')
 console.log(JSON.stringify(repoB, null, '    '))
 
-sync7_merge(repoA, c_y, my_custom_merge_func)
 // var c_q = sync7_commit(repoB, 'q')
 // sync7_merge(repoB, c_xz, my_custom_merge_func)
 // var c_yzA = sync7_commit(repoA, 'yzA')
 // var c_qzB = sync7_commit(repoB, 'qzB')
 // sync7_merge(repoA, c_q, my_custom_merge_func)
 // sync7_merge(repoA, c_qzB, my_custom_merge_func)
+
+
 
 </script>
