@@ -673,9 +673,20 @@ var c_x = sync7_commit(repoA, 'x')
 sync7_merge(repoB, c_x, my_custom_merge_func)
 var c_xz = sync7_commit(repoA, 'xz')
 var c_y = sync7_commit(repoB, 'y')
-
-
 sync7_merge(repoA, c_y, my_custom_merge_func)
+var c_q = sync7_commit(repoB, 'q')
+sync7_merge(repoB, c_xz, my_custom_merge_func)
+var c_yzA = sync7_commit(repoA, 'yzA')
+var c_qzB = sync7_commit(repoB, 'qzB')
+sync7_merge(repoA, c_q, my_custom_merge_func)
+sync7_merge(repoA, c_qzB, my_custom_merge_func)
+sync7_merge(repoB, c_yzA, function (s7, a, b, a_text, b_text, a_regions, b_regions) {
+    
+    debugger
+    
+    my_custom_merge_func(s7, a, b, a_text, b_text, a_regions, b_regions)
+    
+})
 
 
 console.log('AAA------------------------')
@@ -685,12 +696,6 @@ console.log(JSON.stringify(repoB, null, '    '))
 
 
 
-// var c_q = sync7_commit(repoB, 'q')
-// sync7_merge(repoB, c_xz, my_custom_merge_func)
-// var c_yzA = sync7_commit(repoA, 'yzA')
-// var c_qzB = sync7_commit(repoB, 'qzB')
-// sync7_merge(repoA, c_q, my_custom_merge_func)
-// sync7_merge(repoA, c_qzB, my_custom_merge_func)
 
 
 
