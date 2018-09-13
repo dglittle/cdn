@@ -25,8 +25,10 @@ function my_custom_merge_func(s7, a, b, a_text, b_text, a_regions, b_regions) {
     var bi = 0
     
     var safe = 0
-    
+
     while (true && safe < 30) {
+        
+        console.log('got here??: ', safe)
         
         safe++
         
@@ -42,22 +44,35 @@ function my_custom_merge_func(s7, a, b, a_text, b_text, a_regions, b_regions) {
         var dd = on_a ? bb : aa
         var c_text = on_a ? a_text : b_text
         var d_text = on_a ? b_text : a_text
-        
+        var c_diff = on_a ? a_diff : b_diff
+        var d_diff = on_a ? b_diff : a_diff
+
         if (cc[5] < di) {
-            if (!cc[2] || cc[3] >= di) {
-                var t = a_text.substr(aa[0], aa[1])
+            var t = c_text.substr(cc[0], cc[1])
+            if (cc[2]) {
+                if (cc[3] < di) {
+                    c_diff.push(['', t])
+                } else if (cc[3] == di) {
+                    text.push(t)
+                    c_diff.push(cc[1])
+                    d_diff.push(cc[1])
+                    if (on_a) { bi++ } else { ai++ }
+                } else {
+                    text.push(t)
+                    c_diff.push(cc[1])
+                    d_diff.push([t, ''])
+                }
+            } else {
                 text.push(t)
-                a_diff.push(aa[1])
-                b_diff.push([t, ''])
+                c_diff.push(cc[1])
+                d_diff.push([t, ''])
             }
             if (on_a) { ai++ } else { bi++ }
-        } else if (bb && bb[5] < ai) {
-            on_a = false
+        } else if (dd && dd[5] < ci) {
+            on_a = !on_a
         } else {
             throw 'failure'
         }
-        
-        console.log('got here??')
     }
     
     
