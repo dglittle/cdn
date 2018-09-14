@@ -719,60 +719,30 @@ function add_random_stuff() {
                 test_repos.diffsync.b.commit(random_text))
         }
     } else {
-        var x = test_repos.sync7.a_network_buffer.shift()
-        if (x) sync7_merge(test_repos.sync7.a, x, my_custom_merge_func)
-            
-        var x = test_repos.diffsync.a_network_buffer.shift()
-        if (x) test_repos.sync7.a.merge(x)
+        if (Math.random() < 0.5) {
+            var x = test_repos.sync7.a_network_buffer.shift()
+            if (x) sync7_merge(test_repos.sync7.a, x, my_custom_merge_func)
+                
+            var x = test_repos.diffsync.a_network_buffer.shift()
+            if (x) test_repos.sync7.a.merge(x)
+        } else {
+            var x = test_repos.sync7.b_network_buffer.shift()
+            if (x) sync7_merge(test_repos.sync7.b, x, my_custom_merge_func)
+                
+            var x = test_repos.diffsync.b_network_buffer.shift()
+            if (x) test_repos.sync7.b.merge(x)
+        }
     }
     
-    
-    
-    
-    
+    console.log('BLOOP:')
+    console.log(test_repos.sync7.a.text)
+    console.log(test_repos.sync7.b.text)
+    console.log(test_repos.diffsync.a.cache)
+    console.log(test_repos.diffsync.b.cache)
 }
 
-
-
-// var repoA = create_sync7_repo()
-// var repoB = create_sync7_repo()
-// var c_x = sync7_commit(repoA, 'x')
-// sync7_merge(repoB, c_x, my_custom_merge_func)
-// var c_xz = sync7_commit(repoA, 'xz')
-// var c_y = sync7_commit(repoB, 'y')
-// sync7_merge(repoA, c_y, my_custom_merge_func)
-// var c_q = sync7_commit(repoB, 'q')
-// sync7_merge(repoB, c_xz, my_custom_merge_func)
-// var c_yzA = sync7_commit(repoA, 'yzA')
-// var c_qzB = sync7_commit(repoB, 'qzB')
-// sync7_merge(repoA, c_q, my_custom_merge_func)
-// sync7_merge(repoA, c_qzB, my_custom_merge_func)
-// sync7_merge(repoB, c_yzA, my_custom_merge_func)
-
-// console.log('AAA------------------------')
-// sync7_pretty_print(repoA)
-// console.log('BBB------------------------')
-// sync7_pretty_print(repoB)
-
-
-var repoA = diffsync.create_minigit()
-var repoB = diffsync.create_minigit()
-var c_x = repoA.commit('x')
-repoB.merge(c_x)
-var c_xz = repoA.commit('xz')
-var c_y = repoB.commit('y')
-repoA.merge(c_y)
-var c_q = repoB.commit('q')
-repoB.merge(c_xz)
-var c_yzA = repoA.commit('yzA')
-var c_qzB = repoB.commit('qzB')
-repoA.merge(c_q)
-repoA.merge(c_qzB)
-repoB.merge(c_yzA)
-
-console.log('AAA------------------------')
-console.log(JSON.stringify(repoA, null, '    '))
-console.log('BBB------------------------')
-console.log(JSON.stringify(repoB, null, '    '))
+for (var i = 0; i < 3; i++) {
+    add_random_stuff()
+}
 
 </script>
