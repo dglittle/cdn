@@ -712,7 +712,7 @@ function create_random_ops() {
         }
     }
     add_random_ops()
-    while (Math.random() < 0.5) add_random_ops()
+    while (Math.random() < 0.7) add_random_ops()
     return ops
 }
 
@@ -727,11 +727,21 @@ function apply_ops_to_sync7(s7s, ops) {
             var pos = Math.floor((t.length + 1) * op.pos)
             var del = Math.floor((t.length - pos) * op.del)
             other_s7.buffer.push(sync7_commit(s7, t.slice(0, pos) + op.text + t.slice(pos + del)))
+            
+            console.log('OP COMMIT')
+            console.log('side: ' + op.side)
+            console.log('pos: ' + pos)
+            console.log('del: ' + del)
+            console.log('txt: ' + op.text)
+            
         } else {
             var x = s7.buffer.shift()
             if (x) {
                 sync7_merge(s7, x, my_custom_merge_func)
             }
+            
+            console.log('OP MERGE')
+            console.log('side: ' + op.side)
         }
     })
 }
@@ -773,31 +783,176 @@ function apply_ops_to_test_repos(ops) {
     return test_repos
 }
 
-for (var tests = 0; tests < 1000; tests++) {
-    console.log('TEST ' + tests + '------------')
-    var ops = create_random_ops()
-    var good = false
-    for (var i = 0; i < 100; i++) {
-        var res = apply_ops_to_test_repos(ops)
-        if (res.same) {
-            good = true
-            break
-        }
-    }
-    if (!good) {
-        console.log('BLOOP:')
-        console.log('ops: ' + JSON.stringify(ops, null, '  '))
-        console.log('As7: ' + res.sync7.a.text)
-        console.log('Adi: ' + res.diffsync.a.cache)
-        console.log('Bs7: ' + res.sync7.b.text)
-        console.log('Bdi: ' + res.diffsync.b.cache)
+// for (var tests = 0; tests < 1000; tests++) {
+//     console.log('TEST ' + tests + '------------')
+//     var ops = create_random_ops()
+//     var good = false
+//     for (var i = 0; i < 100; i++) {
+//         var res = apply_ops_to_test_repos(ops)
+//         if (res.same) {
+//             good = true
+//             break
+//         }
+//     }
+//     if (!good) {
+//         console.log('BLOOP:')
+//         console.log('ops: ' + JSON.stringify(ops, null, '  '))
+//         console.log('As7: ' + res.sync7.a.text)
+//         console.log('Adi: ' + res.diffsync.a.cache)
+//         console.log('Bs7: ' + res.sync7.b.text)
+//         console.log('Bdi: ' + res.diffsync.b.cache)
         
-        throw 'stop7'
-    } else {
-        console.log('BLAR! ' + ops.length)
-        console.log('a: ' + res.sync7.a.text + ' == ' + res.diffsync.a.cache)
-        console.log('b: ' + res.sync7.b.text + ' == ' + res.diffsync.b.cache)
-    }
-}
+//         throw 'stop7'
+//     } else {
+//         console.log('BLAR! ' + ops.length + ' i=' + i)
+//         console.log('a: ' + res.sync7.a.text + ' == ' + res.diffsync.a.cache)
+//         console.log('b: ' + res.sync7.b.text + ' == ' + res.diffsync.b.cache)
+//     }
+// }
+
+
+
+var ops = [
+  {
+    "op": "commit",
+    "side": "a",
+    "pos": 0.9999570965301245,
+    "del": 0.44521494791842997,
+    "text": ""
+  },
+  {
+    "op": "merge",
+    "side": "b"
+  },
+  {
+    "op": "commit",
+    "side": "a",
+    "pos": 0.05368952942080796,
+    "del": 0.06457954924553633,
+    "text": "qbo"
+  },
+  {
+    "op": "merge",
+    "side": "b"
+  },
+  {
+    "op": "commit",
+    "side": "b",
+    "pos": 0.9655027657281607,
+    "del": 0.26370564731769264,
+    "text": "nl"
+  },
+  {
+    "op": "commit",
+    "side": "b",
+    "pos": 0.24014281737618148,
+    "del": 0.5421455469913781,
+    "text": ""
+  },
+  {
+    "op": "commit",
+    "side": "a",
+    "pos": 0.8433719205204397,
+    "del": 0.28897320618852973,
+    "text": ""
+  },
+  {
+    "op": "commit",
+    "side": "b",
+    "pos": 0.2834677987266332,
+    "del": 0.7846520182210952,
+    "text": ""
+  },
+  {
+    "op": "commit",
+    "side": "b",
+    "pos": 0.45051321294158697,
+    "del": 0.4819274989422411,
+    "text": ""
+  },
+  {
+    "op": "merge",
+    "side": "b"
+  },
+  {
+    "op": "commit",
+    "side": "b",
+    "pos": 0.6695510358549654,
+    "del": 0.9484359009657055,
+    "text": ""
+  },
+  {
+    "op": "commit",
+    "side": "a",
+    "pos": 0.4851815819274634,
+    "del": 0.5195468624588102,
+    "text": "s"
+  },
+  {
+    "op": "merge",
+    "side": "b"
+  },
+  {
+    "op": "commit",
+    "side": "b",
+    "pos": 0.5007958002388477,
+    "del": 0.010806302540004253,
+    "text": "d"
+  },
+  {
+    "op": "commit",
+    "side": "a",
+    "pos": 0.40356892137788236,
+    "del": 0.9749668168369681,
+    "text": "mskk"
+  },
+  {
+    "op": "commit",
+    "side": "a",
+    "pos": 0.12605189695023,
+    "del": 0.5974989042151719,
+    "text": "k"
+  },
+  {
+    "op": "commit",
+    "side": "a",
+    "pos": 0.0005642878822982311,
+    "del": 0.22985604172572494,
+    "text": ""
+  },
+  {
+    "op": "commit",
+    "side": "a",
+    "pos": 0.3785425592213869,
+    "del": 0.7673236806876957,
+    "text": ""
+  },
+  {
+    "op": "commit",
+    "side": "b",
+    "pos": 0.34216816537082195,
+    "del": 0.5974741077516228,
+    "text": "h"
+  },
+  {
+    "op": "commit",
+    "side": "a",
+    "pos": 0.07369676511734724,
+    "del": 0.7330839496571571,
+    "text": ""
+  },
+  {
+    "op": "commit",
+    "side": "b",
+    "pos": 0.9344592134002596,
+    "del": 0.8115924296434969,
+    "text": "o"
+  },
+  {
+    "op": "merge",
+    "side": "a"
+  }
+]
+apply_ops_to_test_repos(ops)
 
 </script>
