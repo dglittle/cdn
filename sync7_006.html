@@ -756,7 +756,7 @@ function apply_ops_to_diffsync(dss, ops) {
     })
 }
 
-for (var tests = 0; tests < 10; tests++) {
+function apply_ops_to_test_repos(ops) {
     var test_repos = {
         sync7 : {
             a : create_sync7_repo(),
@@ -767,19 +767,36 @@ for (var tests = 0; tests < 10; tests++) {
             b : diffsync.create_minigit()
         }
     }
-
-    var ops = create_random_ops()
     apply_ops_to_sync7(test_repos.sync7, ops)
     apply_ops_to_diffsync(test_repos.diffsync, ops)
-    if ((test_repos.sync7.a.text != test_repos.diffsync.a.cache) || (test_repos.sync7.b.text != test_repos.diffsync.b.cache)) {
+    test_repos.same = (test_repos.sync7.a.text == test_repos.diffsync.a.cache) && (test_repos.sync7.b.text == test_repos.diffsync.b.cache)
+    return test_repos
+}
+
+for (var tests = 0; tests < 1000; tests++) {
+    console.log('TEST ' + tests + '------------')
+    var ops = create_random_ops()
+    var good = false
+    for (var i = 0; i < 100; i++) {
+        var res = apply_ops_to_test_repos(ops)
+        if (res.same) {
+            good = true
+            break
+        }
+    }
+    if (!good) {
         console.log('BLOOP:')
         console.log('ops: ' + JSON.stringify(ops, null, '  '))
-        console.log('As7: ' + test_repos.sync7.a.text)
-        console.log('Adi: ' + test_repos.diffsync.a.cache)
-        console.log('Bs7: ' + test_repos.sync7.b.text)
-        console.log('Bdi: ' + test_repos.diffsync.b.cache)
+        console.log('As7: ' + res.sync7.a.text)
+        console.log('Adi: ' + res.diffsync.a.cache)
+        console.log('Bs7: ' + res.sync7.b.text)
+        console.log('Bdi: ' + res.diffsync.b.cache)
         
         throw 'stop7'
+    } else {
+        console.log('BLAR! ' + ops.length)
+        console.log('a: ' + res.sync7.a.text + ' == ' + res.diffsync.a.cache)
+        console.log('b: ' + res.sync7.b.text + ' == ' + res.diffsync.b.cache)
     }
 }
 
