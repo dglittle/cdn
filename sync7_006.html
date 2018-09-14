@@ -684,31 +684,95 @@ function sync7_pretty_print(s7) {
     console.log(output.join('\n'))
 }
 
+var test_repos = {
+    sync7 : {
+        a : create_sync7_repo(),
+        b : create_sync7_repo(),
+        a_network_buffer : [],
+        b_network_buffer : []
+    },
+    diffsync : {
+        a : diffsync.create_minigit(),
+        b : diffsync.create_minigit(),
+        a_network_buffer : [],
+        b_network_buffer : []
+    }
+}
+
+function add_random_stuff() {
+    if (Math.random() < 0.5) {
+        var random_text = ''
+        var length = Math.floor(Math.random() * 3) + 1
+        for (var i = 0; i < length; i++) {
+            random_text += String.fromCharCode(97 + Math.floor(Math.random() * 26))
+        }
+        
+        if (Math.random() < 0.5) {
+            test_repos.sync7.b_network_buffer.push(
+                sync7_commit(test_repos.sync7.a, random_text))
+            test_repos.diffsync.b_network_buffer.push(
+                test_repos.diffsync.a.commit(random_text))
+        } else {
+            test_repos.sync7.a_network_buffer.push(
+                sync7_commit(test_repos.sync7.b, random_text))
+            test_repos.diffsync.a_network_buffer.push(
+                test_repos.diffsync.b.commit(random_text))
+        }
+    } else {
+        var x = test_repos.sync7.a_network_buffer.shift()
+        if (x) sync7_merge(test_repos.sync7.a, x, my_custom_merge_func)
+            
+        var x = test_repos.diffsync.a_network_buffer.shift()
+        if (x) test_repos.sync7.a.merge(x)
+    }
+    
+    
+    
+    
+    
+}
 
 
 
+// var repoA = create_sync7_repo()
+// var repoB = create_sync7_repo()
+// var c_x = sync7_commit(repoA, 'x')
+// sync7_merge(repoB, c_x, my_custom_merge_func)
+// var c_xz = sync7_commit(repoA, 'xz')
+// var c_y = sync7_commit(repoB, 'y')
+// sync7_merge(repoA, c_y, my_custom_merge_func)
+// var c_q = sync7_commit(repoB, 'q')
+// sync7_merge(repoB, c_xz, my_custom_merge_func)
+// var c_yzA = sync7_commit(repoA, 'yzA')
+// var c_qzB = sync7_commit(repoB, 'qzB')
+// sync7_merge(repoA, c_q, my_custom_merge_func)
+// sync7_merge(repoA, c_qzB, my_custom_merge_func)
+// sync7_merge(repoB, c_yzA, my_custom_merge_func)
 
-var repoA = create_sync7_repo()
-var repoB = create_sync7_repo()
-var c_x = sync7_commit(repoA, 'x')
-sync7_merge(repoB, c_x, my_custom_merge_func)
-var c_xz = sync7_commit(repoA, 'xz')
-var c_y = sync7_commit(repoB, 'y')
-sync7_merge(repoA, c_y, my_custom_merge_func)
-var c_q = sync7_commit(repoB, 'q')
-sync7_merge(repoB, c_xz, my_custom_merge_func)
-var c_yzA = sync7_commit(repoA, 'yzA')
-var c_qzB = sync7_commit(repoB, 'qzB')
-sync7_merge(repoA, c_q, my_custom_merge_func)
-sync7_merge(repoA, c_qzB, my_custom_merge_func)
-sync7_merge(repoB, c_yzA, my_custom_merge_func)
+// console.log('AAA------------------------')
+// sync7_pretty_print(repoA)
+// console.log('BBB------------------------')
+// sync7_pretty_print(repoB)
+
+
+var repoA = diffsync.create_minigit()
+var repoB = diffsync.create_minigit()
+var c_x = repoA.commit('x')
+repoB.merge(c_x)
+var c_xz = repoA.commit('xz')
+var c_y = repoB.commit('y')
+repoA.merge(c_y)
+var c_q = repoB.commit('q')
+repoB.merge(c_xz)
+var c_yzA = repoA.commit('yzA')
+var c_qzB = repoB.commit('qzB')
+repoA.merge(c_q)
+repoA.merge(c_qzB)
+repoB.merge(c_yzA)
 
 console.log('AAA------------------------')
-sync7_pretty_print(repoA)
+console.log(JSON.stringify(repoA, null, '    '))
 console.log('BBB------------------------')
-sync7_pretty_print(repoB)
-
-
-
+console.log(JSON.stringify(repoB, null, '    '))
 
 </script>
