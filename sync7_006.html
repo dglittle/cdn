@@ -671,11 +671,6 @@ function sync7_diff_apply(s, diff) {
     return texts.join('')
 }
 
-
-
-
-
-
 function sync7_pretty_print(s7) {
     var output = []
     function helper(node, indent) {
@@ -713,69 +708,6 @@ sync7_pretty_print(repoA)
 console.log('BBB------------------------')
 sync7_pretty_print(repoB)
 
-
-throw 'stop6'
-
-
-
-
-// console.log('AAA------------------------')
-// console.log(JSON.stringify(c_yzA, null, '    '))
-
-
-
-// throw 'stop4'
-
-
-// sync7_merge(repoB, c_yzA, function (s7, a, b, a_text, b_text, a_regions, b_regions) {
-    
-
-//     return my_custom_merge_func(s7, a, b, a_text, b_text, a_regions, b_regions)
-    
-// })
-
-
-// console.log('AAA------------------------')
-// console.log(JSON.stringify(repoA, null, '    '))
-// console.log('BBB------------------------')
-// console.log(JSON.stringify(repoB, null, '    '))
-
-
-
-
-
-
-// throw 'stop3'
-
-
-
-
-// var repoA = create_sync7_repo()
-// var repoB = create_sync7_repo()
-// var c_ab = sync7_commit(repoA, 'ab')
-// sync7_merge(repoB, c_ab, my_custom_merge_func)
-// var c_abc = sync7_commit(repoA, 'abc')
-// var c_aZb = sync7_commit(repoB, 'aZb')
-
-// console.log('AAA------------------------')
-// sync7_pretty_print(repoA)
-// console.log('BBB------------------------')
-// sync7_pretty_print(repoB)
-
-// sync7_merge(repoA, c_aZb, my_custom_merge_func)
-
-
-// console.log('AAA------------------------')
-// console.log(JSON.stringify(repoA, null, '    '))
-// console.log('BBB------------------------')
-// console.log(JSON.stringify(repoB, null, '    '))
-
-// var c_q = sync7_commit(repoB, 'q')
-// sync7_merge(repoB, c_xz, my_custom_merge_func)
-// var c_yzA = sync7_commit(repoA, 'yzA')
-// var c_qzB = sync7_commit(repoB, 'qzB')
-// sync7_merge(repoA, c_q, my_custom_merge_func)
-// sync7_merge(repoA, c_qzB, my_custom_merge_func)
 
 
 
