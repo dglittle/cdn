@@ -793,112 +793,32 @@ function apply_ops_to_test_repos(ops, debug) {
     return test_repos
 }
 
+Math.randomSeed(12)
 
-
-// Math.randomSeed(12)
-
-// for (var tests = 0; tests < 1000; tests++) {
-//     console.log('TEST ' + tests + '------------')
-//     var ops = create_random_ops()
-//     var good = false
-//     for (var i = 0; i < 100; i++) {
-//         var res = apply_ops_to_test_repos(ops)
-//         if (res.same) {
-//             good = true
-//             break
-//         }
-//     }
-//     if (!good) {
-//         console.log('BLOOP:')
-//         console.log('ops: ' + JSON.stringify(ops, null, '  '))
-//         console.log('As7: ' + res.sync7.a.text)
-//         console.log('Adi: ' + res.diffsync.a.cache)
-//         console.log('Bs7: ' + res.sync7.b.text)
-//         console.log('Bdi: ' + res.diffsync.b.cache)
-        
-        
-        
-//         apply_ops_to_test_repos(ops, true)
-        
-        
-        
-//         throw 'stop7'
-//     } else {
-//         console.log('BLAR! ' + ops.length + ' i=' + i)
-//         console.log('a: ' + res.sync7.a.text + ' == ' + res.diffsync.a.cache)
-//         console.log('b: ' + res.sync7.b.text + ' == ' + res.diffsync.b.cache)
-//     }
-// }
-
-
-
-
-var ops = [
-  {
-    "op": "merge",
-    "side": "a"
-  },
-  {
-    "op": "commit",
-    "side": "b",
-    "pos": 0.44872420583851635,
-    "del": 0.39373981510289013,
-    "text": ""
-  },
-  {
-    "op": "commit",
-    "side": "a",
-    "pos": 0.9436873670201749,
-    "del": 0.35421252879314125,
-    "text": "l"
-  },
-  {
-    "op": "commit",
-    "side": "b",
-    "pos": 0.48374787298962474,
-    "del": 0.14794724620878696,
-    "text": "klxjdwko"
-  },
-  {
-    "op": "merge",
-    "side": "a"
-  },
-  {
-    "op": "merge",
-    "side": "a"
-  },
-  {
-    "op": "commit",
-    "side": "a",
-    "pos": 0.7623426464851946,
-    "del": 0.7867789717856795,
-    "text": "f"
-  },
-  {
-    "op": "commit",
-    "side": "b",
-    "pos": 0.8585502330679446,
-    "del": 0.7811895154882222,
-    "text": "nluqpxc"
-  },
-  {
-    "op": "merge",
-    "side": "a"
-  },
-//   {
-//     "op": "merge",
-//     "side": "b"
-//   }
-]
-
-
-
-
-var res = apply_ops_to_test_repos(ops, true)
-console.log(JSON.stringify(res.sync7.a, null, '  '))
-console.log('As7: ' + res.sync7.a.text)
-console.log('Adi: ' + res.diffsync.a.cache)
-console.log('Bs7: ' + res.sync7.b.text)
-console.log('Bdi: ' + res.diffsync.b.cache)
+for (var tests = 0; tests < 1000; tests++) {
+    console.log('TEST ' + tests + '------------')
+    var ops = create_random_ops()
+    var good = false
+    for (var i = 0; i < 100; i++) {
+        var res = apply_ops_to_test_repos(ops)
+        if (res.same) {
+            good = true
+            break
+        }
+    }
+    if (!good) {
+        console.log('BLOOP:')
+        console.log('ops: ' + JSON.stringify(ops, null, '  '))
+        console.log('As7: ' + res.sync7.a.text)
+        console.log('Adi: ' + res.diffsync.a.cache)
+        console.log('Bs7: ' + res.sync7.b.text)
+        console.log('Bdi: ' + res.diffsync.b.cache)
+        throw 'stop7'
+    } else {
+        console.log('BLAR! ' + ops.length + ' i=' + i)
+        console.log('a: ' + res.sync7.a.text + ' == ' + res.diffsync.a.cache)
+        console.log('b: ' + res.sync7.b.text + ' == ' + res.diffsync.b.cache)
+    }
+}
 
 </script>
