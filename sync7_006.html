@@ -737,12 +737,6 @@ function apply_ops_to_sync7(s7s, ops, debug) {
             }
             
         } else {
-            
-                console.log('WOOOOOOOO! ' + ops.length + ' --- ' + (opi - 1))
-                console.log(ops.length == opi - 1)
-
-
-            
             var x = s7.buffer.shift()
             if (x) {
                 sync7_merge(s7, x, my_custom_merge_func, ops.length == opi + 1)
