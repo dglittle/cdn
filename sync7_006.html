@@ -684,65 +684,97 @@ function sync7_pretty_print(s7) {
     console.log(output.join('\n'))
 }
 
+function create_random_text() {
+    var random_text = ''
+    function add_char() {
+        random_text += String.fromCharCode(97 + Math.floor(Math.random() * 26))
+    }
+    while (Math.random() < 0.5) add_char()
+    return random_text
+}
+
+function create_random_ops() {
+    var ops = []
+    function add_random_ops() {
+        if (Math.random() < 0.5) {
+            ops.push({
+                op : 'commit',
+                side : Math.random() < 0.5 ? 'a' : 'b',
+                pos : Math.random(),
+                del : Math.random(),
+                text : create_random_text()
+            })
+        } else {
+            ops.push({
+                op : 'merge',
+                side : Math.random() < 0.5 ? 'a' : 'b'
+            })
+        }
+    }
+    add_random_ops()
+    while (Math.random() < 0.5) add_random_ops()
+    return ops
+}
+
+function apply_ops_to_sync7(s7s, ops) {
+    if (!s7s.a.buffer) s7s.a.buffer = []
+    if (!s7s.b.buffer) s7s.b.buffer = []
+    each(ops, function (op) {
+        var s7 = s7s[op.side]
+        var other_s7 = s7s[op.side == 'a' ? 'b' : 'a']
+        if (op.op == 'commit') {
+            var t = s7.text
+            var pos = Math.floor((t.length + 1) * op.pos)
+            var del = Math.floor((t.length - pos) * op.del)
+            other_s7.buffer.push(sync7_commit(s7, t.slice(0, pos) + op.text + t.slice(pos + del)))
+        } else {
+            var x = s7.buffer.shift()
+            if (x) {
+                sync7_merge(s7, x, my_custom_merge_func)
+            }
+        }
+    })
+}
+
+function apply_ops_to_diffsync(dss, ops) {
+    if (!dss.a.buffer) dss.a.buffer = []
+    if (!dss.b.buffer) dss.b.buffer = []
+    each(ops, function (op) {
+        var ds = dss[op.side]
+        var other_ds = dss[op.side == 'a' ? 'b' : 'a']
+        if (op.op == 'commit') {
+            var t = ds.cache
+            var pos = Math.floor((t.length + 1) * op.pos)
+            var del = Math.floor((t.length - pos) * op.del)
+            other_ds.buffer.push(ds.commit(t.slice(0, pos) + op.text + t.slice(pos + del)))
+        } else {
+            var x = ds.buffer.shift()
+            if (x) {
+                ds.merge(x)
+            }
+        }
+    })
+}
+
 var test_repos = {
     sync7 : {
         a : create_sync7_repo(),
-        b : create_sync7_repo(),
-        a_network_buffer : [],
-        b_network_buffer : []
+        b : create_sync7_repo()
     },
     diffsync : {
         a : diffsync.create_minigit(),
-        b : diffsync.create_minigit(),
-        a_network_buffer : [],
-        b_network_buffer : []
+        b : diffsync.create_minigit()
     }
 }
 
-function add_random_stuff() {
-    if (Math.random() < 0.5) {
-        var random_text = ''
-        var length = Math.floor(Math.random() * 3) + 1
-        for (var i = 0; i < length; i++) {
-            random_text += String.fromCharCode(97 + Math.floor(Math.random() * 26))
-        }
-        
-        if (Math.random() < 0.5) {
-            test_repos.sync7.b_network_buffer.push(
-                sync7_commit(test_repos.sync7.a, random_text))
-            test_repos.diffsync.b_network_buffer.push(
-                test_repos.diffsync.a.commit(random_text))
-        } else {
-            test_repos.sync7.a_network_buffer.push(
-                sync7_commit(test_repos.sync7.b, random_text))
-            test_repos.diffsync.a_network_buffer.push(
-                test_repos.diffsync.b.commit(random_text))
-        }
-    } else {
-        if (Math.random() < 0.5) {
-            var x = test_repos.sync7.a_network_buffer.shift()
-            if (x) sync7_merge(test_repos.sync7.a, x, my_custom_merge_func)
-                
-            var x = test_repos.diffsync.a_network_buffer.shift()
-            if (x) test_repos.sync7.a.merge(x)
-        } else {
-            var x = test_repos.sync7.b_network_buffer.shift()
-            if (x) sync7_merge(test_repos.sync7.b, x, my_custom_merge_func)
-                
-            var x = test_repos.diffsync.b_network_buffer.shift()
-            if (x) test_repos.sync7.b.merge(x)
-        }
-    }
-    
-    console.log('BLOOP:')
-    console.log(test_repos.sync7.a.text)
-    console.log(test_repos.sync7.b.text)
-    console.log(test_repos.diffsync.a.cache)
-    console.log(test_repos.diffsync.b.cache)
-}
+var ops = create_random_ops()
+apply_ops_to_sync7(test_repos.sync7, ops)
+apply_ops_to_diffsync(test_repos.diffsync, ops)
 
-for (var i = 0; i < 3; i++) {
-    add_random_stuff()
-}
+console.log('BLOOP:')
+console.log('As7: ' + test_repos.sync7.a.text)
+console.log('Adi: ' + test_repos.diffsync.a.cache)
+console.log('Bs7: ' + test_repos.sync7.b.text)
+console.log('Bdi: ' + test_repos.diffsync.b.cache)
 
 </script>
