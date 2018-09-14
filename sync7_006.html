@@ -716,7 +716,7 @@ function create_random_ops() {
     return ops
 }
 
-function apply_ops_to_sync7(s7s, ops) {
+function apply_ops_to_sync7(s7s, ops, debug) {
     if (!s7s.a.buffer) s7s.a.buffer = []
     if (!s7s.b.buffer) s7s.b.buffer = []
     each(ops, function (op) {
@@ -728,25 +728,29 @@ function apply_ops_to_sync7(s7s, ops) {
             var del = Math.floor((t.length - pos) * op.del)
             other_s7.buffer.push(sync7_commit(s7, t.slice(0, pos) + op.text + t.slice(pos + del)))
             
-            // console.log('OP COMMIT')
-            // console.log('side: ' + op.side)
-            // console.log('pos: ' + pos)
-            // console.log('del: ' + del)
-            // console.log('txt: ' + op.text)
+            if (debug) {
+                console.log('OP COMMIT')
+                console.log('side: ' + op.side)
+                console.log('pos: ' + pos)
+                console.log('del: ' + del)
+                console.log('txt: ' + op.text)
+            }
             
         } else {
             var x = s7.buffer.shift()
             if (x) {
                 sync7_merge(s7, x, my_custom_merge_func)
             }
-            
-            // console.log('OP MERGE')
-            // console.log('side: ' + op.side)
+
+            if (debug) {
+                console.log('OP MERGE')
+                console.log('side: ' + op.side)
+            }
         }
     })
 }
 
-function apply_ops_to_diffsync(dss, ops) {
+function apply_ops_to_diffsync(dss, ops, debug) {
     if (!dss.a.buffer) dss.a.buffer = []
     if (!dss.b.buffer) dss.b.buffer = []
     each(ops, function (op) {
@@ -766,7 +770,7 @@ function apply_ops_to_diffsync(dss, ops) {
     })
 }
 
-function apply_ops_to_test_repos(ops) {
+function apply_ops_to_test_repos(ops, debug) {
     var test_repos = {
         sync7 : {
             a : create_sync7_repo(),
@@ -777,8 +781,8 @@ function apply_ops_to_test_repos(ops) {
             b : diffsync.create_minigit()
         }
     }
-    apply_ops_to_sync7(test_repos.sync7, ops)
-    apply_ops_to_diffsync(test_repos.diffsync, ops)
+    apply_ops_to_sync7(test_repos.sync7, ops, debug)
+    apply_ops_to_diffsync(test_repos.diffsync, ops, debug)
     test_repos.same = (test_repos.sync7.a.text == test_repos.diffsync.a.cache) && (test_repos.sync7.b.text == test_repos.diffsync.b.cache)
     return test_repos
 }
@@ -805,6 +809,12 @@ for (var tests = 0; tests < 1000; tests++) {
         console.log('Adi: ' + res.diffsync.a.cache)
         console.log('Bs7: ' + res.sync7.b.text)
         console.log('Bdi: ' + res.diffsync.b.cache)
+        
+        
+        
+        apply_ops_to_test_repos(ops, true)
+        
+        
         
         throw 'stop7'
     } else {
