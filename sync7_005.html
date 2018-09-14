@@ -706,21 +706,12 @@ var c_yzA = sync7_commit(repoA, 'yzA')
 var c_qzB = sync7_commit(repoB, 'qzB')
 sync7_merge(repoA, c_q, my_custom_merge_func)
 sync7_merge(repoA, c_qzB, my_custom_merge_func)
-
+sync7_merge(repoB, c_yzA, my_custom_merge_func)
 
 console.log('AAA------------------------')
 sync7_pretty_print(repoA)
-
-
 console.log('BBB------------------------')
-// sync7_pretty_print(repoB)
-console.log(JSON.stringify(repoB, null, '    '))
-
-debugger
-sync7_merge(repoB, c_yzA, my_custom_merge_func)
-
-// console.log('BBB------------------------')
-// sync7_pretty_print(repoB)
+sync7_pretty_print(repoB)
 
 
 throw 'stop6'
