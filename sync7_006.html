@@ -756,18 +756,18 @@ function apply_ops_to_diffsync(dss, ops) {
     })
 }
 
-var test_repos = {
-    sync7 : {
-        a : create_sync7_repo(),
-        b : create_sync7_repo()
-    },
-    diffsync : {
-        a : diffsync.create_minigit(),
-        b : diffsync.create_minigit()
-    }
-}
-
 for (var tests = 0; tests < 10; tests++) {
+    var test_repos = {
+        sync7 : {
+            a : create_sync7_repo(),
+            b : create_sync7_repo()
+        },
+        diffsync : {
+            a : diffsync.create_minigit(),
+            b : diffsync.create_minigit()
+        }
+    }
+
     var ops = create_random_ops()
     apply_ops_to_sync7(test_repos.sync7, ops)
     apply_ops_to_diffsync(test_repos.diffsync, ops)
