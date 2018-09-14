@@ -442,6 +442,8 @@ function sync7_diff_merge_trans(a, b, a_factor, b_factor) {
     var b_i = 0
     var a_offset = 0
     var b_offset = 0
+    var a_dumped_load = false
+    var b_dumped_load = false
     function neg_idx(i) {
         return i == 0 ? 1 : 0
     }
@@ -461,27 +463,32 @@ function sync7_diff_merge_trans(a, b, a_factor, b_factor) {
         } else if (typeof(da) == 'number') {
             var a_len = da - a_offset
             var b_len = db[b_idx(0)].length - b_offset
-            sync7_push_rep(ret, db[b_idx(0)].substr(b_offset, Math.min(a_len, b_len)), b_offset == 0 ? db[b_idx(1)] : '')
+            sync7_push_rep(ret, db[b_idx(0)].substr(b_offset, Math.min(a_len, b_len)), !b_dumped_load ? db[b_idx(1)] : '')
+            b_dumped_load = true
         } else if (typeof(db) == 'number') {
             var a_len = da[a_idx(1)].length - a_offset
             var b_len = db - b_offset
-            sync7_push_rep(ret, a_offset == 0 ? da[a_idx(0)] : '', da[a_idx(1)].substr(a_offset, Math.min(a_len, b_len)))
+            sync7_push_rep(ret, !a_dumped_load ? da[a_idx(0)] : '', da[a_idx(1)].substr(a_offset, Math.min(a_len, b_len)))
+            a_dumped_load = true
         } else {
             var a_len = da[a_idx(1)].length - a_offset
             var b_len = db[b_idx(0)].length - b_offset
-            sync7_push_rep(ret, a_offset == 0 ? da[a_idx(0)] : '', b_offset == 0 ? db[b_idx(1)] : '')
+            sync7_push_rep(ret, !a_dumped_load ? da[a_idx(0)] : '', !b_dumped_load ? db[b_idx(1)] : '')
+            a_dumped_load = b_dumped_load = true
         }
         if (a_len > b_len) {
             a_offset += b_len
         } else {
             a_i++
             a_offset = 0
+            a_dumped_load = false
         }
         if (a_len < b_len) {
             b_offset += a_len
         } else {
             b_i++
             b_offset = 0
+            b_dumped_load = false
         }
     }
     while (a_i < a.length) {
@@ -489,20 +496,22 @@ function sync7_diff_merge_trans(a, b, a_factor, b_factor) {
         if (typeof(da) == 'number') {
             sync7_push_eq(ret, da)
         } else {
-            sync7_push_rep(ret, a_offset == 0 ? da[a_idx(0)] : '', da[a_idx(1)].substr(a_offset))
+            sync7_push_rep(ret, !a_dumped_load ? da[a_idx(0)] : '', da[a_idx(1)].substr(a_offset))
         }
         a_i++
         a_offset = 0
+        a_dumped_load = false
     }
     while (b_i < b.length) {
         var db = b[b_i]
         if (typeof(db) == 'number') {
             sync7_push_eq(ret, db)
         } else {
-            sync7_push_rep(ret, db[b_idx(0)].substr(b_offset), b_offset == 0 ? db[b_idx(1)] : '')
+            sync7_push_rep(ret, db[b_idx(0)].substr(b_offset), !b_dumped_load ? db[b_idx(1)] : '')
         }
         b_i++
         b_offset = 0
+        b_dumped_load = false
     }
     return ret
 }
@@ -697,33 +706,42 @@ var c_yzA = sync7_commit(repoA, 'yzA')
 var c_qzB = sync7_commit(repoB, 'qzB')
 sync7_merge(repoA, c_q, my_custom_merge_func)
 sync7_merge(repoA, c_qzB, my_custom_merge_func)
-sync7_merge(repoB, c_yzA, my_custom_merge_func)
 
 
 console.log('AAA------------------------')
 sync7_pretty_print(repoA)
+
+
 console.log('BBB------------------------')
-sync7_pretty_print(repoB)
+// sync7_pretty_print(repoB)
+console.log(JSON.stringify(repoB, null, '    '))
+
+debugger
+sync7_merge(repoB, c_yzA, my_custom_merge_func)
+
+// console.log('BBB------------------------')
+// sync7_pretty_print(repoB)
+
 
 throw 'stop6'
 
 
 
 
-console.log('AAA------------------------')
-console.log(JSON.stringify(c_yzA, null, '    '))
+// console.log('AAA------------------------')
+// console.log(JSON.stringify(c_yzA, null, '    '))
 
 
 
-throw 'stop4'
+// throw 'stop4'
 
 
-sync7_merge(repoB, c_yzA, function (s7, a, b, a_text, b_text, a_regions, b_regions) {
+// sync7_merge(repoB, c_yzA, function (s7, a, b, a_text, b_text, a_regions, b_regions) {
     
 
-    return my_custom_merge_func(s7, a, b, a_text, b_text, a_regions, b_regions)
+//     return my_custom_merge_func(s7, a, b, a_text, b_text, a_regions, b_regions)
     
-})
+// })
 
 
 // console.log('AAA------------------------')
@@ -736,30 +754,30 @@ sync7_merge(repoB, c_yzA, function (s7, a, b, a_text, b_text, a_regions, b_regio
 
 
 
-throw 'stop3'
+// throw 'stop3'
 
 
 
 
-var repoA = create_sync7_repo()
-var repoB = create_sync7_repo()
-var c_ab = sync7_commit(repoA, 'ab')
-sync7_merge(repoB, c_ab, my_custom_merge_func)
-var c_abc = sync7_commit(repoA, 'abc')
-var c_aZb = sync7_commit(repoB, 'aZb')
+// var repoA = create_sync7_repo()
+// var repoB = create_sync7_repo()
+// var c_ab = sync7_commit(repoA, 'ab')
+// sync7_merge(repoB, c_ab, my_custom_merge_func)
+// var c_abc = sync7_commit(repoA, 'abc')
+// var c_aZb = sync7_commit(repoB, 'aZb')
 
-console.log('AAA------------------------')
-sync7_pretty_print(repoA)
-console.log('BBB------------------------')
-sync7_pretty_print(repoB)
+// console.log('AAA------------------------')
+// sync7_pretty_print(repoA)
+// console.log('BBB------------------------')
+// sync7_pretty_print(repoB)
 
-sync7_merge(repoA, c_aZb, my_custom_merge_func)
+// sync7_merge(repoA, c_aZb, my_custom_merge_func)
 
 
-console.log('AAA------------------------')
-console.log(JSON.stringify(repoA, null, '    '))
-console.log('BBB------------------------')
-console.log(JSON.stringify(repoB, null, '    '))
+// console.log('AAA------------------------')
+// console.log(JSON.stringify(repoA, null, '    '))
+// console.log('BBB------------------------')
+// console.log(JSON.stringify(repoB, null, '    '))
 
 // var c_q = sync7_commit(repoB, 'q')
 // sync7_merge(repoB, c_xz, my_custom_merge_func)
