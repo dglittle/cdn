@@ -707,7 +707,7 @@ function create_random_ops() {
             ops.push({
                 op : 'commit',
                 side : Math.random() < 0.33 ? 'a' :
-                    Math.random() < 0.5 ? 'b' : c,
+                    Math.random() < 0.5 ? 'b' : 'c',
                 pos : Math.random(),
                 del : Math.random(),
                 text : create_random_text()
@@ -716,7 +716,7 @@ function create_random_ops() {
             ops.push({
                 op : 'merge',
                 side : Math.random() < 0.33 ? 'a' :
-                    Math.random() < 0.5 ? 'b' : c
+                    Math.random() < 0.5 ? 'b' : 'c'
             })
         }
     }
