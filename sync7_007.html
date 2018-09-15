@@ -725,6 +725,7 @@ function charsync_merge(charsync_obj, edit_ops) {
                     }
 
                     each(op.chars, function (c, ii) {
+                        ii = 1*ii
                         charsync_obj.splice(i + ii, 0, {
                             id : op.id + ii,
                             char: c,
@@ -895,13 +896,63 @@ function apply_ops_to_test_repos(ops, debug) {
     return test_repos
 }
 
-Math.randomSeed(12)
+Math.randomSeed(21)
 
 for (var tests = 0; tests < 1; tests++) {
     console.log('TEST ' + tests + '------------')
     var ops = create_random_ops()
+    
+    
+    
+    
+    var ops = [
+  {
+    "op": "commit",
+    "side": "b",
+    "pos": 0.645622197072953,
+    "del": 0.11418494675308466,
+    "text": "f"
+  },
+  {
+    "op": "commit",
+    "side": "a",
+    "pos": 0.7062780393753201,
+    "del": 0.9944855829235166,
+    "text": "u"
+  },
+  {
+    "op": "commit",
+    "side": "a",
+    "pos": 0.0017568706534802914,
+    "del": 0.07812454388476908,
+    "text": "m"
+  },
+  {
+    "op": "merge",
+    "side": "b"
+  },
+  {
+    "op": "merge",
+    "side": "b"
+  },
+  {
+    "op": "merge",
+    "side": "a"
+  },
+  {
+    "op": "commit",
+    "side": "a",
+    "pos": 0.5331117489840835,
+    "del": 0.44894425035454333,
+    "text": "kmhp"
+  }
+]
+    
+    
+    
+    
     var good = false
-    for (var i = 0; i < 100; i++) {
+    for (var i = 0; i < 1; i++) {
         var res = apply_ops_to_test_repos(ops)
         if (res.same) {
             good = true
@@ -911,16 +962,37 @@ for (var tests = 0; tests < 1; tests++) {
     if (!good) {
         console.log('BLOOP:')
         console.log('ops: ' + JSON.stringify(ops, null, '  '))
+        apply_ops_to_test_repos(ops, true)
         console.log('As7: ' + res.sync7.a.text)
-        console.log('Adi: ' + res.diffsync.a.cache)
+        console.log('Ach: ' + charsync_linearize(res.charsync.a))
         console.log('Bs7: ' + res.sync7.b.text)
-        console.log('Bdi: ' + res.diffsync.b.cache)
+        console.log('Bch: ' + charsync_linearize(res.charsync.b))
+
+        
+        console.log('Ach: ' + JSON.stringify(res.charsync.a))
+        console.log('ops: ' + JSON.stringify(ops))
+        
+        
         throw 'stop7'
     } else {
         console.log('BLAR! ' + ops.length + ' i=' + i)
-        console.log('a: ' + res.sync7.a.text + ' == ' + res.diffsync.a.cache)
-        console.log('b: ' + res.sync7.b.text + ' == ' + res.diffsync.b.cache)
+        console.log('a: ' + res.sync7.a.text + ' == ' + charsync_linearize(res.charsync.a))
+        console.log('b: ' + res.sync7.b.text + ' == ' + charsync_linearize(res.charsync.b))
     }
 }
+
+
+// As7: fmkmhpu
+// As7: mukmhpf
+
+// Ach: fmkmhpu
+
+// Bs7: fmu
+// Bs7: muf
+
+// Bch: mfu
+// Bch: muf
+
+
 
 </script>
