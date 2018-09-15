@@ -706,7 +706,8 @@ function create_random_ops() {
         if (Math.random() < 0.5) {
             ops.push({
                 op : 'commit',
-                side : Math.random() < 0.5 ? 'a' : 'b',
+                side : Math.random() < 0.33 ? 'a' :
+                    Math.random() < 0.5 ? 'b' : c,
                 pos : Math.random(),
                 del : Math.random(),
                 text : create_random_text()
@@ -714,7 +715,8 @@ function create_random_ops() {
         } else {
             ops.push({
                 op : 'merge',
-                side : Math.random() < 0.5 ? 'a' : 'b'
+                side : Math.random() < 0.33 ? 'a' :
+                    Math.random() < 0.5 ? 'b' : c
             })
         }
     }
@@ -726,14 +728,22 @@ function create_random_ops() {
 function apply_ops_to_sync7(s7s, ops, debug) {
     if (!s7s.a.buffer) s7s.a.buffer = []
     if (!s7s.b.buffer) s7s.b.buffer = []
+    if (!s7s.c.buffer) s7s.c.buffer = []
     each(ops, function (op, opi) {
         var s7 = s7s[op.side]
-        var other_s7 = s7s[op.side == 'a' ? 'b' : 'a']
+        var other_s7s = []
+        each(s7s, function (s7, key) {
+            if (key != op.side)
+                other_s7s.push(s7)
+        })
         if (op.op == 'commit') {
             var t = s7.text
             var pos = Math.floor((t.length + 1) * op.pos)
             var del = Math.floor((t.length - pos) * op.del)
-            other_s7.buffer.push(sync7_commit(s7, t.slice(0, pos) + op.text + t.slice(pos + del)))
+            var msg = sync7_commit(s7, t.slice(0, pos) + op.text + t.slice(pos + del))
+            each(other_s7s, function (s7) {
+                s7.buffer.push(msg)
+            })
             
             if (debug) {
                 console.log('OP COMMIT')
@@ -746,7 +756,7 @@ function apply_ops_to_sync7(s7s, ops, debug) {
         } else {
             var x = s7.buffer.shift()
             if (x) {
-                sync7_merge(s7, x, my_custom_merge_func, ops.length == opi + 1)
+                sync7_merge(s7, x, my_custom_merge_func)
             }
 
             if (debug) {
@@ -760,14 +770,22 @@ function apply_ops_to_sync7(s7s, ops, debug) {
 function apply_ops_to_diffsync(dss, ops, debug) {
     if (!dss.a.buffer) dss.a.buffer = []
     if (!dss.b.buffer) dss.b.buffer = []
+    if (!dss.c.buffer) dss.c.buffer = []
     each(ops, function (op) {
         var ds = dss[op.side]
-        var other_ds = dss[op.side == 'a' ? 'b' : 'a']
+        var others = []
+        each(dss, function (ds, key) {
+            if (key != op.side)
+                others.push(ds)
+        })
         if (op.op == 'commit') {
             var t = ds.cache
             var pos = Math.floor((t.length + 1) * op.pos)
             var del = Math.floor((t.length - pos) * op.del)
-            other_ds.buffer.push(ds.commit(t.slice(0, pos) + op.text + t.slice(pos + del)))
+            var msg = ds.commit(t.slice(0, pos) + op.text + t.slice(pos + del))
+            each(others, function (ds) {
+                ds.buffer.push(msg)
+            })
         } else {
             var x = ds.buffer.shift()
             if (x) {
@@ -781,22 +799,24 @@ function apply_ops_to_test_repos(ops, debug) {
     var test_repos = {
         sync7 : {
             a : create_sync7_repo(),
-            b : create_sync7_repo()
+            b : create_sync7_repo(),
+            c : create_sync7_repo()
         },
         diffsync : {
             a : diffsync.create_minigit(),
-            b : diffsync.create_minigit()
+            b : diffsync.create_minigit(),
+            c : diffsync.create_minigit()
         }
     }
     apply_ops_to_sync7(test_repos.sync7, ops, debug)
     apply_ops_to_diffsync(test_repos.diffsync, ops, debug)
-    test_repos.same = (test_repos.sync7.a.text == test_repos.diffsync.a.cache) && (test_repos.sync7.b.text == test_repos.diffsync.b.cache)
+    test_repos.same = (test_repos.sync7.a.text == test_repos.diffsync.a.cache) && (test_repos.sync7.b.text == test_repos.diffsync.b.cache) && (test_repos.sync7.c.text == test_repos.diffsync.c.cache)
     return test_repos
 }
 
 Math.randomSeed(12)
 
-for (var tests = 0; tests < 1000; tests++) {
+for (var tests = 0; tests < 1; tests++) {
     console.log('TEST ' + tests + '------------')
     var ops = create_random_ops()
     var good = false
