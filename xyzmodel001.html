@@ -9,8 +9,8 @@
 var tau = Math.PI * 2
 
 var c = document.createElement('canvas')
-c.width = 512 // 256
-c.height = 512 // 256
+c.width = 256
+c.height = 256
 var g = c.getContext('2d')
 
 var cc = document.createElement('canvas')
@@ -126,7 +126,7 @@ function paint_it() {
                 G = G * fac
                 B = B * fac
             } else {
-                var aa = lerp(-1, 0.5, 0, 1, s[2])
+                var aa = lerp(-1, 0, 0, 1, s[2])
                 R = R * aa + (1 - aa)
                 G = G * aa + (1 - aa)
                 B = B * aa + (1 - aa)
