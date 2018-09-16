@@ -818,7 +818,7 @@ function apply_ops_to_test_repos(ops, debug) {
     sync7_time_agg += Date.now() - begin_time
 
     var begin_time = Date.now()
-    apply_ops_to_diffsync(test_repos.diffsync, ops, debug)
+    //apply_ops_to_diffsync(test_repos.diffsync, ops, debug)
     diffsync_time_agg += Date.now() - begin_time
     
     test_repos.same = (test_repos.sync7.a.text == test_repos.diffsync.a.cache) && (test_repos.sync7.b.text == test_repos.diffsync.b.cache) && (test_repos.sync7.c.text == test_repos.diffsync.c.cache)
@@ -827,8 +827,13 @@ function apply_ops_to_test_repos(ops, debug) {
 
 Math.randomSeed(133)
 
-for (var tests = 0; tests < 1000; tests++) {
-    console.log('TEST ' + tests + '------------')
+var inner_loop_agg = 0
+var printing_agg = 0
+
+for (var tests = 0; tests < 41; tests++) {
+
+
+    var begin_time = Date.now()
 
     var ops = create_random_ops()
     var good = false
@@ -840,23 +845,34 @@ for (var tests = 0; tests < 1000; tests++) {
         }
     }
     
-    console.log('sync7    time: ' + (sync7_time_agg / 1000))
-    console.log('diffsync time: ' + (diffsync_time_agg / 1000))
+    inner_loop_agg += Date.now() - begin_time
     
-    if (!good) {
-        console.log('BLOOP:')
-        console.log('ops: ' + JSON.stringify(ops, null, '  '))
-        console.log('As7: ' + res.sync7.a.text)
-        console.log('Adi: ' + res.diffsync.a.cache)
-        console.log('Bs7: ' + res.sync7.b.text)
-        console.log('Bdi: ' + res.diffsync.b.cache)
-        throw 'stop7'
-    } else {
-        console.log('BLAR! ' + ops.length + ' i=' + i)
-        console.log('a: ' + res.sync7.a.text + ' == ' + res.diffsync.a.cache)
-        console.log('b: ' + res.sync7.b.text + ' == ' + res.diffsync.b.cache)
-        console.log('c: ' + res.sync7.c.text + ' == ' + res.diffsync.c.cache)
+    if (tests % 10 == 0) {
+        var begin_time = Date.now()
+        
+        console.log('TEST ' + tests + '------------')
+        console.log('printing_agg: ' + (printing_agg / 1000))
+        console.log('inner_loop_agg: ' + (inner_loop_agg / 1000))
+        console.log('sync7    time: ' + (sync7_time_agg / 1000))
+        console.log('diffsync time: ' + (diffsync_time_agg / 1000))
+        
+        printing_agg += Date.now() - begin_time
     }
+    
+    // if (!good) {
+    //     console.log('BLOOP:')
+    //     console.log('ops: ' + JSON.stringify(ops, null, '  '))
+    //     console.log('As7: ' + res.sync7.a.text)
+    //     console.log('Adi: ' + res.diffsync.a.cache)
+    //     console.log('Bs7: ' + res.sync7.b.text)
+    //     console.log('Bdi: ' + res.diffsync.b.cache)
+    //     throw 'stop7'
+    // } else {
+        // console.log('BLAR! ' + ops.length + ' i=' + i)
+        // console.log('a: ' + res.sync7.a.text + ' == ' + res.diffsync.a.cache)
+        // console.log('b: ' + res.sync7.b.text + ' == ' + res.diffsync.b.cache)
+        // console.log('c: ' + res.sync7.c.text + ' == ' + res.diffsync.c.cache)
+    // }
 }
 
 </script>
