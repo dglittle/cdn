@@ -742,7 +742,7 @@ function apply_ops_to_sync7(s7s, ops, debug) {
             var del = Math.floor((t.length - pos) * op.del)
             var msg = sync7_commit(s7, t.slice(0, pos) + op.text + t.slice(pos + del))
             each(other_s7s, function (s7) {
-                s7.buffer.push(msg)
+                s7.buffer.push(JSON.parse(JSON.stringify(msg)))
             })
             
             if (debug) {
@@ -784,7 +784,7 @@ function apply_ops_to_diffsync(dss, ops, debug) {
             var del = Math.floor((t.length - pos) * op.del)
             var msg = ds.commit(t.slice(0, pos) + op.text + t.slice(pos + del))
             each(others, function (ds) {
-                ds.buffer.push(msg)
+                ds.buffer.push(JSON.parse(JSON.stringify(msg)))
             })
         } else {
             var x = ds.buffer.shift()
@@ -816,7 +816,7 @@ function apply_ops_to_test_repos(ops, debug) {
 
 Math.randomSeed(12)
 
-for (var tests = 0; tests < 1; tests++) {
+for (var tests = 0; tests < 1000; tests++) {
     console.log('TEST ' + tests + '------------')
     var ops = create_random_ops()
     var good = false
@@ -839,6 +839,7 @@ for (var tests = 0; tests < 1; tests++) {
         console.log('BLAR! ' + ops.length + ' i=' + i)
         console.log('a: ' + res.sync7.a.text + ' == ' + res.diffsync.a.cache)
         console.log('b: ' + res.sync7.b.text + ' == ' + res.diffsync.b.cache)
+        console.log('c: ' + res.sync7.c.text + ' == ' + res.diffsync.c.cache)
     }
 }
 
