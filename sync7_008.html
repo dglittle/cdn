@@ -129,7 +129,6 @@ function sync7_merge(s7, cs, custom_merge_func) {
     s7.temp_commits = {}
     
     var prev_merge_node = leaves[0]
-    var prev_merge_node_text = texts[prev_merge_node]
     var ancestors = sync7_get_ancestors(s7, prev_merge_node)
     for (var i = 1; i < leaves.length; i++) {
         var leaf = leaves[i]
@@ -146,7 +145,7 @@ function sync7_merge(s7, cs, custom_merge_func) {
                 var hit_LCA = LCAs[x]
                 if (!CAs[x]) {
                     each(s7.commits[x].to_parents, function (d, p) {
-                        hit_LCA = hit_LCA || helper(p)
+                        hit_LCA = helper(p) || hit_LCA
                     })
                 }
                 if (hit_LCA) {
@@ -429,11 +428,11 @@ function sync7_merge(s7, cs, custom_merge_func) {
         s7.commits[id] = s7.temp_commits[id] = { to_parents : to_parents, from_kids : {} }
         
         prev_merge_node = id
-        prev_merge_node_text = m.text
+        texts[prev_merge_node] = m.text
     }
 
     s7.leaf = prev_merge_node
-    s7.text = prev_merge_node_text
+    s7.text = texts[prev_merge_node]
 }
 
 function sync7_diff_merge_trans(a, b, a_factor, b_factor) {
@@ -721,7 +720,7 @@ function create_random_ops() {
         }
     }
     add_random_ops()
-    while (Math.random() < 0.7) add_random_ops()
+    while (Math.random() < 0.8) add_random_ops()
     return ops
 }
 
@@ -816,10 +815,11 @@ function apply_ops_to_test_repos(ops, debug) {
     return test_repos
 }
 
-Math.randomSeed(12)
+Math.randomSeed(133)
 
 for (var tests = 0; tests < 1000; tests++) {
     console.log('TEST ' + tests + '------------')
+
     var ops = create_random_ops()
     var good = false
     for (var i = 0; i < 100; i++) {
