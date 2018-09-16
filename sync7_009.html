@@ -796,6 +796,9 @@ function apply_ops_to_diffsync(dss, ops, debug) {
     })
 }
 
+var sync7_time_agg = 0
+var diffsync_time_agg = 0
+
 function apply_ops_to_test_repos(ops, debug) {
     var test_repos = {
         sync7 : {
@@ -809,8 +812,15 @@ function apply_ops_to_test_repos(ops, debug) {
             c : diffsync.create_minigit()
         }
     }
+    
+    var begin_time = Date.now()
     apply_ops_to_sync7(test_repos.sync7, ops, debug)
+    sync7_time_agg += Date.now() - begin_time
+
+    var begin_time = Date.now()
     apply_ops_to_diffsync(test_repos.diffsync, ops, debug)
+    diffsync_time_agg += Date.now() - begin_time
+    
     test_repos.same = (test_repos.sync7.a.text == test_repos.diffsync.a.cache) && (test_repos.sync7.b.text == test_repos.diffsync.b.cache) && (test_repos.sync7.c.text == test_repos.diffsync.c.cache)
     return test_repos
 }
@@ -829,6 +839,10 @@ for (var tests = 0; tests < 1000; tests++) {
             break
         }
     }
+    
+    console.log('sync7    time: ' + (sync7_time_agg / 1000))
+    console.log('diffsync time: ' + (diffsync_time_agg / 1000))
+    
     if (!good) {
         console.log('BLOOP:')
         console.log('ops: ' + JSON.stringify(ops, null, '  '))
