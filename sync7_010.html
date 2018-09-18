@@ -942,7 +942,7 @@ Math.randomSeed(133)
 for (var tests = 0; tests < 3; tests++) {
     var ops = create_random_ops()
     var good = false
-    for (var i = 0; i < 100; i++) {
+    for (var i = 0; i < 10; i++) {
         var res = apply_ops_to_test_repos(ops)
         if (res.same) {
             good = true
