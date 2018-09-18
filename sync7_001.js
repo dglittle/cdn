@@ -5,8 +5,8 @@ var sync7 = (typeof(module) != 'undefined') ? module.exports : {}
     sync7.version = 1001
     sync7.port = 70407
     
-    // var client = diffsync.create_client({
-    //     ws_url : 'ws://invisible.college:' + diffsync.port,
+    // var client = sync7.create_client({
+    //     ws_url : 'ws://invisible.college:' + sync7.port,
     //     channel : 'the_cool_room',
     //     get_text : function () {
     //         return current_text_displayed_to_user
@@ -17,17 +17,12 @@ var sync7 = (typeof(module) != 'undefined') ? module.exports : {}
     //     on_text : function (text, range) {
     //         current_text_displayed_to_user = text
     //         set_selection(range[0], range[1])
-    //     },
-    //     on_ranges : function (peer_ranges) {
-    //.        for (peer in peer_ranges) {
-    //             set_peer_selection(peer_ranges[peer][0], peer_ranges[peer][1])
-    //         }
     //     }
     // })
     //
     // client.on_change() <-- call this when the user changes the text or cursor/selection position
     //
-    diffsync.create_client = function (options) {
+    sync7.create_client = function (options) {
         var self = {}
         self.on_change = null
         self.on_window_closing = null
@@ -36,12 +31,11 @@ var sync7 = (typeof(module) != 'undefined') ? module.exports : {}
         var on_channels = null
     
         var uid = guid()
-        var minigit = diffsync.create_minigit()
+        var s7 = sync7.create()
         var unacknowledged_commits = {}
     
         var prev_range = [-1, -1]
-        var peer_ranges = {}
-    
+
         window.addEventListener('beforeunload', function () {
             if (self.on_window_closing) self.on_window_closing()
         })
@@ -53,7 +47,7 @@ var sync7 = (typeof(module) != 'undefined') ? module.exports : {}
             var ws = new WebSocket(options.ws_url)
     
             function send(o) {
-                o.v = diffsync.version
+                o.v = sync7.version
                 o.uid = uid
                 o.channel = options.channel
                 try {
