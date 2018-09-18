@@ -499,16 +499,241 @@ var sync7 = (typeof(module) != 'undefined') ? module.exports : {}
             to_b : b_diff
         }
     }
+
+    function sync7_diff_merge_trans(a, b, a_factor, b_factor) {
+        var ret = []
+        var a_i = 0
+        var b_i = 0
+        var a_offset = 0
+        var b_offset = 0
+        var a_dumped_load = false
+        var b_dumped_load = false
+        function neg_idx(i) {
+            return i == 0 ? 1 : 0
+        }
+        function a_idx(i) {
+            return a_factor == -1 ? neg_idx(i) : i
+        }
+        function b_idx(i) {
+            return b_factor == -1 ? neg_idx(i) : i
+        }
+        while (a_i < a.length && b_i < b.length) {
+            var da = a[a_i]
+            var db = b[b_i]
+            if (typeof(da) == 'number' && typeof(db) == 'number') {
+                var a_len = da - a_offset
+                var b_len = db - b_offset
+                sync7_push_eq(ret, Math.min(a_len, b_len))
+            } else if (typeof(da) == 'number') {
+                var a_len = da - a_offset
+                var b_len = db[b_idx(0)].length - b_offset
+                sync7_push_rep(ret, db[b_idx(0)].substr(b_offset, Math.min(a_len, b_len)), !b_dumped_load ? db[b_idx(1)] : '')
+                b_dumped_load = true
+            } else if (typeof(db) == 'number') {
+                var a_len = da[a_idx(1)].length - a_offset
+                var b_len = db - b_offset
+                sync7_push_rep(ret, !a_dumped_load ? da[a_idx(0)] : '', da[a_idx(1)].substr(a_offset, Math.min(a_len, b_len)))
+                a_dumped_load = true
+            } else {
+                var a_len = da[a_idx(1)].length - a_offset
+                var b_len = db[b_idx(0)].length - b_offset
+                sync7_push_rep(ret, !a_dumped_load ? da[a_idx(0)] : '', !b_dumped_load ? db[b_idx(1)] : '')
+                a_dumped_load = b_dumped_load = true
+            }
+            if (a_len > b_len) {
+                a_offset += b_len
+            } else {
+                a_i++
+                a_offset = 0
+                a_dumped_load = false
+            }
+            if (a_len < b_len) {
+                b_offset += a_len
+            } else {
+                b_i++
+                b_offset = 0
+                b_dumped_load = false
+            }
+        }
+        while (a_i < a.length) {
+            var da = a[a_i]
+            if (typeof(da) == 'number') {
+                sync7_push_eq(ret, da)
+            } else {
+                sync7_push_rep(ret, !a_dumped_load ? da[a_idx(0)] : '', da[a_idx(1)].substr(a_offset))
+            }
+            a_i++
+            a_offset = 0
+            a_dumped_load = false
+        }
+        while (b_i < b.length) {
+            var db = b[b_i]
+            if (typeof(db) == 'number') {
+                sync7_push_eq(ret, db)
+            } else {
+                sync7_push_rep(ret, db[b_idx(0)].substr(b_offset), !b_dumped_load ? db[b_idx(1)] : '')
+            }
+            b_i++
+            b_offset = 0
+            b_dumped_load = false
+        }
+        return ret
+    }
+    
+    function sync7_merge_path_up(s7, from, path) {
+        var diff = []
+        var prev = from
+        each(path, function (next) {
+            diff = sync7_diff_merge_trans(diff, s7.commits[prev].to_parents[next])
+            prev = next
+        })
+        return diff
+    }
     
     
+    function sync7_get_text(s7, id) {
+        var ls = sync7_get_leaves(sync7_intersection(sync7_get_ancestors(s7, s7.leaf, true), sync7_get_ancestors(s7, id, true)))
+        var lca = Object.keys(ls)[0]
+        var leaf_to_lca = sync7_get_path_to_ancestor(s7, s7.leaf, lca)
+        var lca_to_id = sync7_get_path_to_ancestor(s7, id, lca).reverse()
+        if (lca_to_id.length > 0) {
+            lca_to_id.shift()
+            lca_to_id.push(id)
+        }
+        
+        var diff = sync7_merge_path_up(s7, s7.leaf, leaf_to_lca)
+        var prev = lca
+        each(lca_to_id, function (next) {
+            diff = sync7_diff_merge_trans(diff, s7.commits[next].to_parents[prev], 1, -1)
+            prev = next
+        })
+        
+        return sync7_diff_apply(s7.text, diff)
+    }
+        
+    function sync7_get_leaves(commits, ignore) {
+        if (!ignore) ignore = {}
+        var leaves = {}
+        each(commits, function (_, id) {
+            if (ignore[id]) { return }
+            leaves[id] = true
+        })
+        each(commits, function (c, id) {
+            if (ignore[id]) { return }
+            each(c.to_parents, function (_, p) {
+                delete leaves[p]
+            })
+        })
+        return leaves
+    }
+        
+    function sync7_get_ancestors(s7, id, include_self) {
+        var frontier = [id]
+        var ancestors = {}
+        if (include_self)
+            ancestors[id] = s7.commits[id]
+        while (frontier.length > 0) {
+            var next = frontier.shift()
+            each(s7.commits[next].to_parents, function (_, p) {
+                if (!ancestors[p]) {
+                    ancestors[p] = s7.commits[p]
+                    frontier.push(p)
+                }
+            })
+        }
+        return ancestors
+    }
     
+    function sync7_get_path_to_ancestor(s7, a, b) {
+        if (a == b) { return [] }
+        var frontier = [a]
+        var backs = {}
+        while (frontier.length > 0) {
+            var next = frontier.shift()
+            if (next == b) {
+                var path = []
+                while (next && (next != a)) {
+                    path.unshift(next)
+                    next = backs[next]
+                }
+                return path
+            }
+            each(s7.commits[next].to_parents, function (_, p) {
+                if (!backs[p]) {
+                    backs[p] = next
+                    frontier.push(p)
+                }
+            })
+        }
+        throw 'no path found from ' + a + ' to ' + b
+    }
     
+    function sync7_intersection(a, b) {
+        var common = {}
+        each(a, function (_, x) {
+            if (b[x]) {
+                common[x] = a[x]
+            }
+        })
+        return common
+    }
     
+    function sync7_diff(a, b) {
+        var ret = []
+        var d = diff_main(a, b)
+        for (var i = 0; i < d.length; i++) {
+            var top = ret[ret.length - 1]
+            if (d[i][0] == 0) {
+                ret.push(d[i][1].length)
+            } else if (d[i][0] == 1) {
+                if (top && (typeof(top) != 'number'))
+                    top[1] += d[i][1]
+                else
+                    ret.push(['', d[i][1]])
+            } else {
+                if (top && (typeof(top) != 'number'))
+                    top[0] += d[i][1]
+                else
+                    ret.push([d[i][1], ''])
+            }
+        }
+        return ret
+    }
     
+    function sync7_push_eq(diffs, size) {
+        if (typeof(diffs[diffs.length - 1]) == 'number') {
+            diffs[diffs.length - 1] += size
+        } else diffs.push(size)
+    }
     
+    function sync7_push_rep(diffs, del, ins) {
+        if (del.length == 0 && ins.length == 0) { return }
+        if (diffs.length > 0) {
+            var top = diffs[diffs.length - 1]
+            if (typeof(top) != 'number') {
+                top[0] += del
+                top[1] += ins
+                return
+            }
+        }
+        diffs.push([del, ins])
+    }
     
-    
-    
+    function sync7_diff_apply(s, diff) {
+        var offset = 0
+        var texts = []
+        each(diff, function (d) {
+            if (typeof(d) == 'number') {
+                texts.push(s.substr(offset, d))
+                offset += d
+            } else {
+                texts.push(d[1])
+                offset += d[0].length
+            }
+        })
+        texts.push(s.substr(offset))
+        return texts.join('')
+    }
     
     function guid() {
         var x = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -550,246 +775,4 @@ var sync7 = (typeof(module) != 'undefined') ? module.exports : {}
             return accum
         }
     }
-    
-
 })();
-
-
-
-
-
-
-function sync7_diff_merge_trans(a, b, a_factor, b_factor) {
-    var ret = []
-    var a_i = 0
-    var b_i = 0
-    var a_offset = 0
-    var b_offset = 0
-    var a_dumped_load = false
-    var b_dumped_load = false
-    function neg_idx(i) {
-        return i == 0 ? 1 : 0
-    }
-    function a_idx(i) {
-        return a_factor == -1 ? neg_idx(i) : i
-    }
-    function b_idx(i) {
-        return b_factor == -1 ? neg_idx(i) : i
-    }
-    while (a_i < a.length && b_i < b.length) {
-        var da = a[a_i]
-        var db = b[b_i]
-        if (typeof(da) == 'number' && typeof(db) == 'number') {
-            var a_len = da - a_offset
-            var b_len = db - b_offset
-            sync7_push_eq(ret, Math.min(a_len, b_len))
-        } else if (typeof(da) == 'number') {
-            var a_len = da - a_offset
-            var b_len = db[b_idx(0)].length - b_offset
-            sync7_push_rep(ret, db[b_idx(0)].substr(b_offset, Math.min(a_len, b_len)), !b_dumped_load ? db[b_idx(1)] : '')
-            b_dumped_load = true
-        } else if (typeof(db) == 'number') {
-            var a_len = da[a_idx(1)].length - a_offset
-            var b_len = db - b_offset
-            sync7_push_rep(ret, !a_dumped_load ? da[a_idx(0)] : '', da[a_idx(1)].substr(a_offset, Math.min(a_len, b_len)))
-            a_dumped_load = true
-        } else {
-            var a_len = da[a_idx(1)].length - a_offset
-            var b_len = db[b_idx(0)].length - b_offset
-            sync7_push_rep(ret, !a_dumped_load ? da[a_idx(0)] : '', !b_dumped_load ? db[b_idx(1)] : '')
-            a_dumped_load = b_dumped_load = true
-        }
-        if (a_len > b_len) {
-            a_offset += b_len
-        } else {
-            a_i++
-            a_offset = 0
-            a_dumped_load = false
-        }
-        if (a_len < b_len) {
-            b_offset += a_len
-        } else {
-            b_i++
-            b_offset = 0
-            b_dumped_load = false
-        }
-    }
-    while (a_i < a.length) {
-        var da = a[a_i]
-        if (typeof(da) == 'number') {
-            sync7_push_eq(ret, da)
-        } else {
-            sync7_push_rep(ret, !a_dumped_load ? da[a_idx(0)] : '', da[a_idx(1)].substr(a_offset))
-        }
-        a_i++
-        a_offset = 0
-        a_dumped_load = false
-    }
-    while (b_i < b.length) {
-        var db = b[b_i]
-        if (typeof(db) == 'number') {
-            sync7_push_eq(ret, db)
-        } else {
-            sync7_push_rep(ret, db[b_idx(0)].substr(b_offset), !b_dumped_load ? db[b_idx(1)] : '')
-        }
-        b_i++
-        b_offset = 0
-        b_dumped_load = false
-    }
-    return ret
-}
-
-function sync7_merge_path_up(s7, from, path) {
-    var diff = []
-    var prev = from
-    each(path, function (next) {
-        diff = sync7_diff_merge_trans(diff, s7.commits[prev].to_parents[next])
-        prev = next
-    })
-    return diff
-}
-
-
-function sync7_get_text(s7, id) {
-    var ls = sync7_get_leaves(sync7_intersection(sync7_get_ancestors(s7, s7.leaf, true), sync7_get_ancestors(s7, id, true)))
-    var lca = Object.keys(ls)[0]
-    var leaf_to_lca = sync7_get_path_to_ancestor(s7, s7.leaf, lca)
-    var lca_to_id = sync7_get_path_to_ancestor(s7, id, lca).reverse()
-    if (lca_to_id.length > 0) {
-        lca_to_id.shift()
-        lca_to_id.push(id)
-    }
-    
-    var diff = sync7_merge_path_up(s7, s7.leaf, leaf_to_lca)
-    var prev = lca
-    each(lca_to_id, function (next) {
-        diff = sync7_diff_merge_trans(diff, s7.commits[next].to_parents[prev], 1, -1)
-        prev = next
-    })
-    
-    return sync7_diff_apply(s7.text, diff)
-}
-    
-function sync7_get_leaves(commits, ignore) {
-    if (!ignore) ignore = {}
-    var leaves = {}
-    each(commits, function (_, id) {
-        if (ignore[id]) { return }
-        leaves[id] = true
-    })
-    each(commits, function (c, id) {
-        if (ignore[id]) { return }
-        each(c.to_parents, function (_, p) {
-            delete leaves[p]
-        })
-    })
-    return leaves
-}
-    
-function sync7_get_ancestors(s7, id, include_self) {
-    var frontier = [id]
-    var ancestors = {}
-    if (include_self)
-        ancestors[id] = s7.commits[id]
-    while (frontier.length > 0) {
-        var next = frontier.shift()
-        each(s7.commits[next].to_parents, function (_, p) {
-            if (!ancestors[p]) {
-                ancestors[p] = s7.commits[p]
-                frontier.push(p)
-            }
-        })
-    }
-    return ancestors
-}
-
-function sync7_get_path_to_ancestor(s7, a, b) {
-    if (a == b) { return [] }
-    var frontier = [a]
-    var backs = {}
-    while (frontier.length > 0) {
-        var next = frontier.shift()
-        if (next == b) {
-            var path = []
-            while (next && (next != a)) {
-                path.unshift(next)
-                next = backs[next]
-            }
-            return path
-        }
-        each(s7.commits[next].to_parents, function (_, p) {
-            if (!backs[p]) {
-                backs[p] = next
-                frontier.push(p)
-            }
-        })
-    }
-    throw 'no path found from ' + a + ' to ' + b
-}
-
-function sync7_intersection(a, b) {
-    var common = {}
-    each(a, function (_, x) {
-        if (b[x]) {
-            common[x] = a[x]
-        }
-    })
-    return common
-}
-
-function sync7_diff(a, b) {
-    var ret = []
-    var d = diff_main(a, b)
-    for (var i = 0; i < d.length; i++) {
-        var top = ret[ret.length - 1]
-        if (d[i][0] == 0) {
-            ret.push(d[i][1].length)
-        } else if (d[i][0] == 1) {
-            if (top && (typeof(top) != 'number'))
-                top[1] += d[i][1]
-            else
-                ret.push(['', d[i][1]])
-        } else {
-            if (top && (typeof(top) != 'number'))
-                top[0] += d[i][1]
-            else
-                ret.push([d[i][1], ''])
-        }
-    }
-    return ret
-}
-
-function sync7_push_eq(diffs, size) {
-    if (typeof(diffs[diffs.length - 1]) == 'number') {
-        diffs[diffs.length - 1] += size
-    } else diffs.push(size)
-}
-
-function sync7_push_rep(diffs, del, ins) {
-    if (del.length == 0 && ins.length == 0) { return }
-    if (diffs.length > 0) {
-        var top = diffs[diffs.length - 1]
-        if (typeof(top) != 'number') {
-            top[0] += del
-            top[1] += ins
-            return
-        }
-    }
-    diffs.push([del, ins])
-}
-
-function sync7_diff_apply(s, diff) {
-    var offset = 0
-    var texts = []
-    each(diff, function (d) {
-        if (typeof(d) == 'number') {
-            texts.push(s.substr(offset, d))
-            offset += d
-        } else {
-            texts.push(d[1])
-            offset += d[0].length
-        }
-    })
-    texts.push(s.substr(offset))
-    return texts.join('')
-}
