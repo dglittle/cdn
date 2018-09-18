@@ -951,6 +951,13 @@ for (var tests = 0; tests < 100; tests++) {
     var good = false
     
     for (var i = 0; i < 100; i++) {
+        
+        
+        if (tests == 84 && i == 99) {
+            debugger
+        }
+        
+        
         var res = apply_ops_to_test_repos(ops)
         if (res.same) {
             good = true
