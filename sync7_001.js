@@ -2,6 +2,223 @@
 var sync7 = (typeof(module) != 'undefined') ? module.exports : {}
 ;(function () {
 
+    sync7.version = 1001
+    sync7.port = 70407
+    
+    // var client = diffsync.create_client({
+    //     ws_url : 'ws://invisible.college:' + diffsync.port,
+    //     channel : 'the_cool_room',
+    //     get_text : function () {
+    //         return current_text_displayed_to_user
+    //     },
+    //     get_range : function () {
+    //         return [selection_start, selection_end]
+    //     },
+    //     on_text : function (text, range) {
+    //         current_text_displayed_to_user = text
+    //         set_selection(range[0], range[1])
+    //     },
+    //     on_ranges : function (peer_ranges) {
+    //.        for (peer in peer_ranges) {
+    //             set_peer_selection(peer_ranges[peer][0], peer_ranges[peer][1])
+    //         }
+    //     }
+    // })
+    //
+    // client.on_change() <-- call this when the user changes the text or cursor/selection position
+    //
+    diffsync.create_client = function (options) {
+        var self = {}
+        self.on_change = null
+        self.on_window_closing = null
+        self.get_channels = null
+    
+        var on_channels = null
+    
+        var uid = guid()
+        var minigit = diffsync.create_minigit()
+        var unacknowledged_commits = {}
+    
+        var prev_range = [-1, -1]
+        var peer_ranges = {}
+    
+        window.addEventListener('beforeunload', function () {
+            if (self.on_window_closing) self.on_window_closing()
+        })
+    
+        var connected = false
+        function reconnect() {
+            connected = false
+            console.log('connecting...')
+            var ws = new WebSocket(options.ws_url)
+    
+            function send(o) {
+                o.v = diffsync.version
+                o.uid = uid
+                o.channel = options.channel
+                try {
+                    ws.send(JSON.stringify(o))
+                } catch (e) {}
+            }
+    
+            self.on_window_closing = function () {
+                send({ close : true })
+            }
+    
+            self.get_channels = function (cb) {
+                on_channels = cb
+                send({ get_channels : true })
+            }
+        
+            ws.onopen = function () {
+                connected = true
+                send({ join : true })
+                on_pong()
+            }
+        
+            var pong_timer = null
+            function on_pong() {
+                clearTimeout(pong_timer)
+                setTimeout(function () {
+                    send({ ping : true })
+                    pong_timer = setTimeout(function () {
+                        console.log('no pong came!!')
+                        if (ws) {
+                            ws = null
+                            reconnect()
+                        }
+                    }, 4000)
+                }, 3000)
+            }
+    
+            ws.onclose = function () {
+                console.log('connection closed...')
+                if (ws) {
+                    ws = null
+                    reconnect()
+                }
+            }
+    
+            var sent_unacknowledged_commits = false
+    
+            function adjust_range(range, patch) {
+                return map_array(range, function (x) {
+                    each(patch, function (p) {
+                        if (p[0] < x) {
+                            if (p[0] + p[1] <= x) {
+                                x += -p[1] + p[2].length
+                            } else {
+                                x = p[0] + p[2].length
+                            }
+                        } else return false
+                    })
+                    return x
+                })
+            }
+        
+            ws.onmessage = function (event) {
+                if (!ws) { return }
+                var o = JSON.parse(event.data)
+                if (o.pong) { return on_pong() }
+    
+                console.log('message: ' + event.data)
+    
+                if (o.channels) {
+                    if (on_channels) on_channels(o.channels)
+                }
+                if (o.commits) {
+                    self.on_change()
+                    minigit.merge(o.commits)
+    
+                    var patch = get_diff_patch(options.get_text(), minigit.cache)
+                    each(peer_ranges, function (range, peer) {
+                        peer_ranges[peer] = adjust_range(range, patch)
+                    })
+    
+                    prev_range = adjust_range(options.get_range(), patch)
+                    options.on_text(minigit.cache, prev_range)
+    
+                    if (o.welcome) {
+                        each(extend(o.commits, minigit.get_ancestors(o.commits)), function (_, id) {
+                            delete unacknowledged_commits[id]
+                        })
+                        if (Object.keys(unacknowledged_commits).length > 0) {
+                            send({ commits : unacknowledged_commits })
+                        }
+                        sent_unacknowledged_commits = true
+                    }
+    
+                    send({ leaves : minigit.leaves })
+                }
+                if (o.may_delete) {
+                    each(o.may_delete, function (_, id) {
+                        delete unacknowledged_commits[id]
+                        minigit.remove(id)
+                    })
+                }
+                if (o.range) {
+                    peer_ranges[o.uid] = o.range
+                }
+                if (o.close) {
+                    delete peer_ranges[o.uid]
+                }
+                if ((o.range || o.close || o.commits) && options.on_ranges) {
+                    options.on_ranges(peer_ranges)
+                }
+            }
+    
+            self.on_change = function () {
+                if (!connected) { return }
+    
+                var old_cache = minigit.cache
+                var cs = minigit.commit(options.get_text())
+                if (cs) {
+                    extend(unacknowledged_commits, cs)
+    
+                    var patch = null
+                    var c = cs[Object.keys(cs)[0]]
+                    var parents = Object.keys(c.from_parents)
+                    if (parents.length == 1)
+                        patch = c.from_parents[parents[0]]
+                    else
+                        patch = get_diff_patch(old_cache, minigit.cache)
+    
+                    each(peer_ranges, function (range, peer) {
+                        peer_ranges[peer] = adjust_range(range, patch)
+                    })
+                    if (options.on_ranges) options.on_ranges(peer_ranges)
+                }
+    
+                if (!sent_unacknowledged_commits) { return }
+    
+                var range = options.get_range()
+                var range_changed = (range[0] != prev_range[0]) || (range[1] != prev_range[1])
+                prev_range = range
+    
+                var msg = {}
+                if (cs) msg.commits = cs
+    
+                if (range_changed) msg.range = range
+                if (cs || range_changed) send(msg)
+            }
+        }
+        reconnect()
+    
+        return self
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
     sync7.create = function () {
         return {
             commits : {
