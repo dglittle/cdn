@@ -815,6 +815,10 @@ function apply_ops_to_sync7(s7s, ops, debug) {
                 s7.buffer.push(JSON.parse(JSON.stringify(msg)))
             })
             
+            if (s7.cursor > s7.text.length) {
+                s7.cursor = s7.text.length
+            }
+            
             if (debug) {
                 console.log('OP COMMIT')
                 console.log('side: ' + op.side)
@@ -826,7 +830,7 @@ function apply_ops_to_sync7(s7s, ops, debug) {
         } else if (op.op == 'merge') {
             var x = s7.buffer.shift()
             if (x) {
-                sync7_merge(s7, x, my_custom_merge_func)
+                s7.cursor = sync7_merge(s7, x, my_custom_merge_func, s7.cursor)
             }
 
             if (debug) {
@@ -835,11 +839,37 @@ function apply_ops_to_sync7(s7s, ops, debug) {
             }
         } else if (op.op == 'cursor') {
             s7.cursor = Math.floor((s7.text.length + 1) * op.pos)
+            
+            if (debug) {
+                console.log('OP CURSOR')
+                console.log('side: ' + op.side)
+                console.log('pos: ' + s7.cursor)
+            }
         }
     })
 }
 
 function apply_ops_to_diffsync(dss, ops, debug) {
+    function map_array(a, f) {
+        var b = []
+        each(a, function (v, k) { b[k] = f(v) })
+        return b
+    }    
+    function adjust_range(range, patch) {
+        return map_array(range, function (x) {
+            each(patch, function (p) {
+                if (p[0] < x) {
+                    if (p[0] + p[1] <= x) {
+                        x += -p[1] + p[2].length
+                    } else {
+                        x = p[0] + p[2].length
+                    }
+                } else return false
+            })
+            return x
+        })
+    }
+
     if (!dss.a.buffer) dss.a.buffer = []
     if (!dss.b.buffer) dss.b.buffer = []
     if (!dss.c.buffer) dss.c.buffer = []
@@ -862,10 +892,22 @@ function apply_ops_to_diffsync(dss, ops, debug) {
             each(others, function (ds) {
                 ds.buffer.push(JSON.parse(JSON.stringify(msg)))
             })
+            
+            if (ds.cursor > ds.cache.length) {
+                ds.cursor = ds.cache.length
+            }
+            
         } else if (op.op == 'merge') {
             var x = ds.buffer.shift()
             if (x) {
+                var old = ds.cache
+                
                 ds.merge(x)
+                
+                var patch = get_diff_patch(old, ds.cache)
+                var range = [ds.cursor]
+                range = adjust_range(range, patch)
+                ds.cursor = range[0]
             }
         } else if (op.op == 'cursor') {
             ds.cursor = Math.floor((ds.cache.length + 1) * op.pos)
@@ -921,6 +963,9 @@ for (var tests = 0; tests < 1; tests++) {
         console.log('a: ' + res.sync7.a.text + ' == ' + res.diffsync.a.cache)
         console.log('b: ' + res.sync7.b.text + ' == ' + res.diffsync.b.cache)
         console.log('c: ' + res.sync7.c.text + ' == ' + res.diffsync.c.cache)
+        console.log('a: ' + res.sync7.a.cursor + ' == ' + res.diffsync.a.cursor)
+        console.log('b: ' + res.sync7.b.cursor + ' == ' + res.diffsync.b.cursor)
+        console.log('c: ' + res.sync7.c.cursor + ' == ' + res.diffsync.c.cursor)
     }
 }
 
