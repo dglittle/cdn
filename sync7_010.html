@@ -939,7 +939,7 @@ function apply_ops_to_test_repos(ops, debug) {
 
 Math.randomSeed(133)
 
-for (var tests = 0; tests < 1; tests++) {
+for (var tests = 0; tests < 3; tests++) {
     var ops = create_random_ops()
     var good = false
     for (var i = 0; i < 100; i++) {
@@ -957,6 +957,14 @@ for (var tests = 0; tests < 1; tests++) {
         console.log('Adi: ' + res.diffsync.a.cache)
         console.log('Bs7: ' + res.sync7.b.text)
         console.log('Bdi: ' + res.diffsync.b.cache)
+        console.log('Cs7: ' + res.sync7.c.text)
+        console.log('Cdi: ' + res.diffsync.c.cache)
+        console.log('As7c: ' + res.sync7.a.cursor)
+        console.log('Adic: ' + res.diffsync.a.cursor)
+        console.log('Bs7c: ' + res.sync7.b.cursor)
+        console.log('Bdic: ' + res.diffsync.b.cursor)
+        console.log('Cs7c: ' + res.sync7.c.cursor)
+        console.log('Cdic: ' + res.diffsync.c.cursor)
         throw 'stop7'
     } else {
         console.log('BLAR! ' + ops.length + ' i=' + i)
