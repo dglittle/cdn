@@ -106,54 +106,33 @@ function sync7_commit(s7, s) {
     return cs
 }
 
-function sync7_merge(s7, cs, custom_merge_func, cursors) {
-    var cursor_projections = {}
-    each(cursors, function (c, key) {
-        var projs = {}
-        projs[s7.leaf] = c
-        cursor_projections[key].push(projs)
-    })
-    function project_cursors_up(node) {
-        if (s7.temp_commits[node]) {
-            var cursor_array = []
-            each(cursor_projections, function (projs, key) {
-                cursor_array.push({
-                    key : key,
-                    proj : projs[node]
-                })
-            })
-            cursor_array.sort(function (a, b) {
-                return a.proj - b.proj
-            })
-            each(s7.commits[node].to_parents, function (d, p) {
-                var found_one = false
-                var ci = 0
-                var offset = 0
-                var poffset = 0
-                each(d, function (d) {
-                    if (typeof(d) == 'number') {
-                        while (cursor_array[ci] && cursor_array[ci].proj <= offset + d) {
-                            cursor_projections[cursor_array[ci].key][p] = cursor_array[ci].proj - offset + poffset
-                            found_one = true
-                            ci++
-                        }
-                        offset += d
-                        poffset += d
-                    } else {
-                        while (cursor_array[ci] && cursor_array[ci].proj < offset + d[0].length) {
-                            ci++
-                        }
-                        offset += d[0].length
-                        poffset += d[1].length
+function sync7_merge(s7, cs, custom_merge_func, cursor) {
+    var cursor_projection_node = s7.leaf
+    var cursor_projection_offset = cursor
+    while (s7.temp_commits[cursor_projection_node]) {
+        var old_node = cursor_projection_node
+        each(s7.commits[cursor_projection_node].to_parents, function (d, p) {
+            var offset = 0
+            var poffset = 0
+            each(d, function (d) {
+                if (typeof(d) == 'number') {
+                    if (cursor_projection_offset <= offset + d) {
+                        cursor_projection_offset = cursor_projection_offset - offset + poffset
+                        cursor_projection_node = p
+                        return false
                     }
-                })
-
-                if (found_one) project_cursors_up(p)
+                    offset += d
+                    poffset += d
+                } else {
+                    offset += d[0].length
+                    poffset += d[1].length
+                }
             })
-        }
+        })
+        if (old_node == cursor_projection_node)
+            throw 'failed to project cursor up'
     }
-    project_cursors_up(s7.leaf)
-        
+
     each(cs, function (c, id) {
         s7.commits[id] = c
         each(c.to_parents, function (d, p) {
@@ -491,49 +470,44 @@ function sync7_merge(s7, cs, custom_merge_func, cursors) {
     })
 
     
-    function project_cursors_down(node) {
-        if (s7.temp_commits[node]) {
-            var cursor_array = []
-            each(cursor_projections, function (projs, key) {
-                cursor_array.push({
-                    key : key,
-                    proj : projs[node]
-                })
-            })
-            cursor_array.sort(function (a, b) {
-                return a.proj - b.proj
-            })
-            each(s7.commits[node].to_parents, function (d, p) {
-                var ci = 0
-                var offset = 0
-                var poffset = 0
-                each(d, function (d) {
-                    if (typeof(d) == 'number') {
-                        while (cursor_array[ci] && cursor_array[ci].proj <= offset + d) {
-                            cursor_projections[cursor_array[ci].key][p] = cursor_array[ci].proj - offset + poffset
-                            offset += d
-                            poffset += d
-                            ci++
-                        }
-                    } else {
-                        while (cursor_array[ci] && cursor_array[ci].proj < offset + d[0].length) {
-                            cursor_projections[cursor_array[ci].key][p] = poffset
-                            offset += d[0].length
-                            poffset += d[1].length
-                            ci++
-                        }
+    
+    
+    
+    
+    var cursor_projection_node = s7.leaf
+    var cursor_projection_offset = cursor
+    
+    work here
+    function project_cursor_down() {
+        if (cursor_projection_node != s7.leaf) {
+            var kids = s7.commits[cursor_projection_node].from_kids
+            var kid = Object.keys(kids)[0]
+            var d = kids[kid]
+            
+            var offset = 0
+            var poffset = 0
+            each(d, function (d) {
+                if (typeof(d) == 'number') {
+                    if (cursor_projection_offset <= poffset + d) {
+                        cursor_projection_offset = cursor_projection_offset - poffset + offset
+                        return false
                     }
-                })
-                while (cursor_array[ci]) {
-                    cursor_projections[cursor_array[ci].key][p] = poffset
-                    ci++
+                    offset += d
+                    poffset += d
+                } else {
+                    if (cursor_projection_offset < poffset + d[1].length) {
+                        cursor_projection_offset = offset
+                        return false
+                    }
+                    offset += d
+                    poffset += d
                 }
-
-                project_cursors_up(p)
             })
+            
+            project_cursor_down()
         }
     }
-    project_cursors_up(s7.leaf)
+    project_cursor_down()
     
     
 }
