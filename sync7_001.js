@@ -1,21 +1,46 @@
 
+var sync7 = (typeof(module) != 'undefined') ? module.exports : {}
+;(function () {
+
+    
+    function each(o, cb) {
+        if (o instanceof Array) {
+            for (var i = 0; i < o.length; i++) {
+                if (cb(o[i], i, o) == false)
+                    return false
+            }
+        } else {
+            for (var k in o) {
+                if (o.hasOwnProperty(k)) {
+                    if (cb(o[k], k, o) == false)
+                        return false
+                }
+            }
+        }
+        return true
+    }
+
+    function map(o, func) {
+        if (o instanceof Array) {
+            var accum = []
+            for (var i = 0; i < o.length; i++)
+                accum[i] = func(o[i], i, o)
+            return accum
+        } else {
+            var accum = {}
+            for (var k in o)
+                if (o.hasOwnProperty(k))
+                    accum[k] = func(o[k], k, o)
+            return accum
+        }
+    }
+    
+
+})();
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-<script src="https://dglittle.github.io/cdn/random001.js"></script>
 <script src="https://dglittle.github.io/cdn/utils004.js"></script>
 <script src="https://invisible-college.github.io/universal-sync/diffsync.js"></script>
 <script>
