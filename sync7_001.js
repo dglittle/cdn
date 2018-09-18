@@ -31,6 +31,7 @@ var sync7 = (typeof(module) != 'undefined') ? module.exports : {}
     }
     
     sync7.merge = function (s7, cs, custom_merge_func, cursor) {
+        if (!custom_merge_func) custom_merge_func = default_custom_merge_func
         var cursor_projection_node = s7.leaf
         var cursor_projection_offset = cursor
         while (s7.temp_commits[cursor_projection_node]) {
