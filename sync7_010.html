@@ -151,7 +151,10 @@ function sync7_merge(s7, cs, custom_merge_func, cursor) {
         texts[leaf] = sync7_get_text(s7, leaf)
     })
 
-    each(s7.temp_commits, function (_, k) {
+    each(s7.temp_commits, function (c, k) {
+        each(c.to_parents, function (d, p) {
+            delete p.from_kids[k]
+        })
         delete s7.commits[k]
     })
     s7.temp_commits = {}
@@ -464,15 +467,6 @@ function sync7_merge(s7, cs, custom_merge_func, cursor) {
 
     while (cursor_projection_node != s7.leaf) {
         var old_node = cursor_projection_node
-        
-        
-        
-        if (!s7.commits[cursor_projection_node]) {
-            debugger
-        }
-        
-        
-        
         var kids = s7.commits[cursor_projection_node].from_kids
         var kid = Object.keys(kids)[0]
         var d = kids[kid]
