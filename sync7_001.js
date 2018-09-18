@@ -29,7 +29,402 @@ var sync7 = (typeof(module) != 'undefined') ? module.exports : {}
         s7.text = s
         return cs
     }
-
+    
+    sync7.merge = function (s7, cs, custom_merge_func, cursor) {
+        var cursor_projection_node = s7.leaf
+        var cursor_projection_offset = cursor
+        while (s7.temp_commits[cursor_projection_node]) {
+            var old_node = cursor_projection_node
+            each(s7.commits[cursor_projection_node].to_parents, function (d, p) {
+                var offset = 0
+                var poffset = 0
+                each(d, function (d) {
+                    if (typeof(d) == 'number') {
+                        if (cursor_projection_offset <= offset + d) {
+                            cursor_projection_offset = cursor_projection_offset - offset + poffset
+                            cursor_projection_node = p
+                            return false
+                        }
+                        offset += d
+                        poffset += d
+                    } else {
+                        offset += d[0].length
+                        poffset += d[1].length
+                    }
+                })
+                if (old_node != cursor_projection_node)
+                    return false
+            })
+            if (old_node == cursor_projection_node)
+                throw 'failed to project cursor up'
+        }
+    
+        each(cs, function (c, id) {
+            s7.commits[id] = c
+            each(c.to_parents, function (d, p) {
+                if (!cs[p] && s7.commits[p]) {
+                    s7.commits[p].from_kids[id] = d
+                }
+            })
+        })
+        var leaves = sync7_get_leaves(s7.commits, s7.temp_commits)
+        leaves = Object.keys(leaves).sort()
+        
+        var texts = {}
+        each(leaves, function (leaf) {
+            texts[leaf] = sync7_get_text(s7, leaf)
+        })
+    
+        each(s7.temp_commits, function (c, k) {
+            each(c.to_parents, function (d, p) {
+                if (!s7.temp_commits[p]) {
+                    delete s7.commits[p].from_kids[k]
+                }
+            })
+            delete s7.commits[k]
+        })
+        s7.temp_commits = {}
+        
+        var prev_merge_node = leaves[0]
+        var ancestors = sync7_get_ancestors(s7, prev_merge_node)
+        for (var i = 1; i < leaves.length; i++) {
+            var leaf = leaves[i]
+            var i_ancestors = sync7_get_ancestors(s7, leaf)
+            var CAs = sync7_intersection(ancestors, i_ancestors)
+            var LCAs = sync7_get_leaves(CAs)
+            each(i_ancestors, function (v, k) {
+                ancestors[k] = v
+            })
+            
+            function get_nodes_on_path_to_LCAs(node) {
+                var agg = {}
+                function helper(x) {
+                    var hit_LCA = LCAs[x]
+                    if (!CAs[x]) {
+                        each(s7.commits[x].to_parents, function (d, p) {
+                            hit_LCA = helper(p) || hit_LCA
+                        })
+                    }
+                    if (hit_LCA) {
+                        agg[x] = true
+                        return true
+                    }
+                }
+                helper(node)
+                return agg
+            }
+    
+            function calc_dividers_and_such_for_node(node, nodes_on_path_to_LCAs, dividers, untouched_regions_for_node) {
+                untouched_regions_for_node[node] = [[0, texts[node].length, 0]]
+                function helper(node) {
+                    if (untouched_regions_for_node[node]) return untouched_regions_for_node[node]
+                    var pur = {}
+                    each(s7.commits[node].from_kids, function (d, k) {
+                        if (!nodes_on_path_to_LCAs[k]) { return }
+                        var untouched = helper(k)
+                        
+                        var ui = 0
+                        var uo = 0
+                        var offset = 0
+                        var poffset = 0
+                        each(d, function (r) {
+                            var end_point = offset + ((typeof(r) == 'number') ? r : r[0].length)
+                            while (untouched[ui] && end_point >= untouched[ui][2] + untouched[ui][1]) {
+                                if (typeof(r) == 'number') {
+                                    var x = untouched[ui][2] + uo - offset + poffset
+                                    pur[x] = [untouched[ui][0] + uo, untouched[ui][1] - uo, x]
+                                }
+                                ui++
+                                uo = 0
+                            }
+                            if (!untouched[ui]) { return false }
+                            if (end_point > untouched[ui][2] + uo) {
+                                if (typeof(r) == 'number') {
+                                    var x = untouched[ui][2] + uo - offset + poffset
+                                    pur[x] = [untouched[ui][0] + uo, end_point - (untouched[ui][2] + uo), x]
+                                }
+                                uo = end_point - untouched[ui][2]
+                                dividers[untouched[ui][0] + uo] = untouched[ui][0] + uo
+                            }
+                            offset = end_point
+                            poffset += (typeof(r) == 'number') ? r : r[1].length
+                        })
+                    })
+                    return untouched_regions_for_node[node] = Object.values(pur).sort(function (a, b) { return a[2] - b[2] })
+                }
+                each(LCAs, function (_, lca) { helper(lca) })
+            }
+    
+            var prev_nodes_on_path_to_LCAs = get_nodes_on_path_to_LCAs(prev_merge_node)
+            var prev_dividers = {}
+            var prev_untouched_regions_for_node = {}
+            calc_dividers_and_such_for_node(prev_merge_node, prev_nodes_on_path_to_LCAs, prev_dividers, prev_untouched_regions_for_node)
+    
+            var leaf_nodes_on_path_to_LCAs = get_nodes_on_path_to_LCAs(leaf)
+            var leaf_dividers = {}
+            var leaf_untouched_regions_for_node = {}
+            calc_dividers_and_such_for_node(leaf, leaf_nodes_on_path_to_LCAs, leaf_dividers, leaf_untouched_regions_for_node)
+            
+            each(LCAs, function (_, lca) {
+                function do_one_against_the_other(a, b, dividers) {
+                    var bb, bi = 0
+                    each(a, function (aa) {
+                        while ((bb = b[bi]) && (bb[2] + bb[1] <= aa[2])) bi++
+                        if (bb && bb[2] < aa[2]) {
+                            var x = aa[2] - bb[2] + bb[0]
+                            dividers[x] = x
+                        }
+                        while ((bb = b[bi]) && (bb[2] + bb[1] <= aa[2] + aa[1])) bi++
+                        if (bb && bb[2] < aa[2] + aa[1]) {
+                            var x = aa[2] + aa[1] - bb[2] + bb[0]
+                            dividers[x] = x
+                        }
+                    })
+                }
+                
+                var a = prev_untouched_regions_for_node[lca]
+                var b = leaf_untouched_regions_for_node[lca]
+                do_one_against_the_other(a, b, leaf_dividers)
+                do_one_against_the_other(b, a, prev_dividers)
+            })
+            
+            function calc_endpoints(dividers, node) {
+                var endpoints = []
+                endpoints.push([0, 0, 0])
+                each(Object.values(dividers).sort(function (a, b) { return a - b }), function (offset) {
+                    endpoints.push([offset, 1, offset])
+                    endpoints.push([offset, 0, offset])
+                })
+                endpoints.push([texts[node].length, 1, texts[node].length])
+                
+                return endpoints
+            }
+            
+            var prev_endpoints = calc_endpoints(prev_dividers, prev_merge_node)
+            var leaf_endpoints = calc_endpoints(leaf_dividers, leaf)
+    
+            function project_endpoints_to_LCAs(endpoints, node, nodes_on_path_to_LCAs) {
+                var endpoints_for_node = {}
+                endpoints_for_node[node] = endpoints
+    
+                function helper(node) {
+                    if (endpoints_for_node[node]) return endpoints_for_node[node]
+                    var agg = {}
+                    function add_to_agg(endpoint, projected_pos) {
+                        var key = '[' + endpoint[0] + ',' + endpoint[1] + ']'
+                        if (endpoint[1] == 0)
+                            agg[key] = Math.min(agg[key] || Infinity, projected_pos)
+                        else
+                            agg[key] = Math.max(agg[key] || -Infinity, projected_pos)
+                    }
+                    each(s7.commits[node].from_kids, function (d, k) {
+                        if (!nodes_on_path_to_LCAs[k]) { return }
+                        
+                        var endpoints = helper(k)
+                        var ei = 0
+                        
+                        var offset = 0
+                        var poffset = 0
+                        each(d, function (d) {
+                            var end = offset + ((typeof(d) == 'number') ? d : d[0].length)
+                            while (endpoints[ei] && (endpoints[ei][2] < end || (endpoints[ei][1] == 1 && endpoints[ei][2] <= end))) {
+                                if (typeof(d) == 'number') {
+                                    add_to_agg(endpoints[ei], endpoints[ei][2] - offset + poffset)
+                                } else if (endpoints[ei][1] == 0) {
+                                    add_to_agg(endpoints[ei], poffset)
+                                } else {
+                                    add_to_agg(endpoints[ei], poffset + d[1].length)
+                                }
+                                ei++
+                            }
+                            offset = end
+                            poffset += (typeof(d) == 'number') ? d : d[1].length
+                        })
+                        while (endpoints[ei]) {
+                            add_to_agg(endpoints[ei], poffset)
+                            ei++
+                        }
+                    })
+                    
+                    var endpoints = []
+                    each(agg, function (v, k) {
+                        var kk = eval(k)
+                        endpoints.push([kk[0], kk[1], v])
+                    })
+                    
+                    return endpoints_for_node[node] = endpoints.sort(function (a, b) {
+                        if (a[2] != b[2])
+                            return a[2] - b[2]
+                        return b[1] - a[1]
+                    })
+                }
+    
+                var regions_for_node = {}
+    
+                var lookup_by_begin = {}
+                var lookup_by_end = {}
+                var base_regions = []
+                regions_for_node[node] = base_regions
+                for (var i = 0; i < endpoints.length; i += 2) {
+                    var e0 = endpoints[i][0]
+                    var e1 = endpoints[i + 1][0]
+                    base_regions.push([e0, e1 - e0])
+                    lookup_by_begin[e0] = base_regions.length - 1
+                    lookup_by_end[e1] = base_regions.length - 1
+                }
+                
+                each(LCAs, function (_, lca) {
+                    var endpoints = helper(lca)
+                    var regions = []
+                    regions_for_node[lca] = regions
+                    each(endpoints, function (e) {
+                        if (e[1] == 0) {
+                            var i = lookup_by_begin[e[0]];
+                            (regions[i] = regions[i] || [])[0] = e[2]
+                        } else {
+                            var i = lookup_by_end[e[0]];
+                            (regions[i] = regions[i] || [])[1] = e[2]
+                        }
+                    })
+                    each(regions, function (r) {
+                        r[1] = r[1] - r[0]
+                    })
+                })
+    
+                return regions_for_node
+            }
+            
+            var prev_regions_per_node = project_endpoints_to_LCAs(prev_endpoints, prev_merge_node, prev_nodes_on_path_to_LCAs)
+            var leaf_regions_per_node = project_endpoints_to_LCAs(leaf_endpoints, leaf, leaf_nodes_on_path_to_LCAs)
+            
+            var prev_regions = prev_regions_per_node[prev_merge_node]
+            var leaf_regions = leaf_regions_per_node[leaf]
+    
+            var prev_untouched_regions_for_LCA_by_position = {}
+            var leaf_untouched_regions_for_LCA_by_position = {}
+    
+            each(LCAs, function (_, lca) {
+                function process(base, regions, untouched, _by_position) {
+                    _by_position[lca] = {}
+                    var ri = 0
+                    var r
+                    each(untouched, function (u) {
+                        while ((r = regions[ri]) && r[0] + r[1] <= u[2]) { ri++ }
+                        while ((r = regions[ri]) && r[0] < u[2] + u[1]) {
+                            _by_position[lca][r[0]] = ri
+                            base[ri][2] = true
+                            r[2] = true
+                            ri++
+                        }
+                    })
+                }
+                process(prev_regions_per_node[prev_merge_node], prev_regions_per_node[lca], prev_untouched_regions_for_node[lca], prev_untouched_regions_for_LCA_by_position)
+                process(leaf_regions_per_node[leaf], leaf_regions_per_node[lca], leaf_untouched_regions_for_node[lca], leaf_untouched_regions_for_LCA_by_position)
+            })
+    
+            function mark_deletes_and_more(regions_for_node, node, other_untouched_for_LCA_by_position) {
+                each(regions_for_node[node], function (r, ri) {
+                    r[4] = r[5] = -1 // <-- the "more"
+                    if (r[2]) {
+                        r[3] = -1
+                        each(LCAs, function (_, lca) {
+                            var rr = regions_for_node[lca][ri]
+                            var other_ri = other_untouched_for_LCA_by_position[lca][rr[0]]
+                            if (rr[2] && (typeof(other_ri) == 'number')) {
+                                r[3] = other_ri
+                                return false
+                            }
+                        })
+                    }
+                })
+            }
+            mark_deletes_and_more(prev_regions_per_node, prev_merge_node, leaf_untouched_regions_for_LCA_by_position)
+            mark_deletes_and_more(leaf_regions_per_node, leaf, prev_untouched_regions_for_LCA_by_position)
+    
+            function is_definitely_before(a_regions, a_node, ai, b_regions, b_node, bi) {
+                var a_before_b = false
+                var b_before_a = false
+                each(LCAs, function (_, lca) {
+                    var ar = a_regions[lca][ai]
+                    var br = b_regions[lca][bi]
+                    
+                    if ((ar[1] || br[1]) && (ar[0] + ar[1] <= br[0]))
+                        a_before_b = true
+                    if ((!ar[1] && !br[1]) && (ar[0] < br[0]))
+                        a_before_b = true
+                        
+                    if ((ar[1] || br[1]) && (br[0] + br[1] <= ar[0]))
+                        b_before_a = true
+                    if ((!ar[1] && !br[1]) && (br[0] < ar[0]))
+                        b_before_a = true
+                })
+                return a_before_b && !b_before_a
+            }
+            
+            function calc_known_orderings(a_regions, a_node, b_regions, b_node) {
+                var bi = 0
+                each(a_regions[a_node], function (ar, ai) {
+                    for ( ; bi < b_regions[b_node].length; bi++) {
+                        if (is_definitely_before(a_regions, a_node, ai, b_regions, b_node, bi)) {
+                            ar[4] = bi
+                            b_regions[b_node][bi][5] = ai
+                            return
+                        }
+                    }
+                })
+            }
+            calc_known_orderings(prev_regions_per_node, prev_merge_node, leaf_regions_per_node, leaf)
+            calc_known_orderings(leaf_regions_per_node, leaf, prev_regions_per_node, prev_merge_node)
+    
+            var m = custom_merge_func(s7, prev_merge_node, leaf, texts[prev_merge_node], texts[leaf], prev_regions, leaf_regions)
+            
+            var id = guid()
+            var to_parents = {}
+            s7.commits[prev_merge_node].from_kids[id] = to_parents[prev_merge_node] = m.to_a
+            s7.commits[leaf].from_kids[id] = to_parents[leaf] = m.to_b
+            s7.commits[id] = s7.temp_commits[id] = { to_parents : to_parents, from_kids : {} }
+            
+            prev_merge_node = id
+            texts[prev_merge_node] = m.text
+        }
+    
+        s7.leaf = prev_merge_node
+        s7.text = texts[prev_merge_node]
+    
+        while (cursor_projection_node != s7.leaf) {
+            var old_node = cursor_projection_node
+            var kids = s7.commits[cursor_projection_node].from_kids
+            var kid = Object.keys(kids)[0]
+            var d = kids[kid]
+            
+            var offset = 0
+            var poffset = 0
+            each(d, function (d) {
+                if (typeof(d) == 'number') {
+                    if (cursor_projection_offset <= poffset + d) {
+                        cursor_projection_offset = cursor_projection_offset - poffset + offset
+                        cursor_projection_node = kid
+                        return false
+                    }
+                    offset += d
+                    poffset += d
+                } else {
+                    if (cursor_projection_offset <= poffset + d[1].length) {
+                        cursor_projection_offset = offset
+                        cursor_projection_node = kid
+                        return false
+                    }
+                    offset += d[0].length
+                    poffset += d[1].length
+                }
+            })
+            if (cursor_projection_node == old_node) {
+                cursor_projection_offset = offset
+                cursor_projection_node = kid
+            }
+        }
+        return cursor_projection_offset
+    }
 
     function default_custom_merge_func(s7, a, b, a_text, b_text, a_regions, b_regions) {
         // regions be like [pos, len, untouched?, index in other region array of this untouched or -1 if not present, index of first region in other array that this region is definitely before, index of last region in other array that this region is definitely after]
@@ -103,6 +498,25 @@ var sync7 = (typeof(module) != 'undefined') ? module.exports : {}
             to_b : b_diff
         }
     }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    function guid() {
+        var x = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        var s = []
+        for (var i = 0; i < 15; i++) {
+            s.push(x[Math.floor(Math.random() * x.length)])
+        }
+        return s.join('')
+    }
 
     function each(o, cb) {
         if (o instanceof Array) {
@@ -143,401 +557,6 @@ var sync7 = (typeof(module) != 'undefined') ? module.exports : {}
 
 
 
-function sync7_merge(s7, cs, custom_merge_func, cursor) {
-    var cursor_projection_node = s7.leaf
-    var cursor_projection_offset = cursor
-    while (s7.temp_commits[cursor_projection_node]) {
-        var old_node = cursor_projection_node
-        each(s7.commits[cursor_projection_node].to_parents, function (d, p) {
-            var offset = 0
-            var poffset = 0
-            each(d, function (d) {
-                if (typeof(d) == 'number') {
-                    if (cursor_projection_offset <= offset + d) {
-                        cursor_projection_offset = cursor_projection_offset - offset + poffset
-                        cursor_projection_node = p
-                        return false
-                    }
-                    offset += d
-                    poffset += d
-                } else {
-                    offset += d[0].length
-                    poffset += d[1].length
-                }
-            })
-            if (old_node != cursor_projection_node)
-                return false
-        })
-        if (old_node == cursor_projection_node)
-            throw 'failed to project cursor up'
-    }
-
-    each(cs, function (c, id) {
-        s7.commits[id] = c
-        each(c.to_parents, function (d, p) {
-            if (!cs[p] && s7.commits[p]) {
-                s7.commits[p].from_kids[id] = d
-            }
-        })
-    })
-    var leaves = sync7_get_leaves(s7.commits, s7.temp_commits)
-    leaves = Object.keys(leaves).sort()
-    
-    var texts = {}
-    each(leaves, function (leaf) {
-        texts[leaf] = sync7_get_text(s7, leaf)
-    })
-
-    each(s7.temp_commits, function (c, k) {
-        each(c.to_parents, function (d, p) {
-            if (!s7.temp_commits[p]) {
-                delete s7.commits[p].from_kids[k]
-            }
-        })
-        delete s7.commits[k]
-    })
-    s7.temp_commits = {}
-    
-    var prev_merge_node = leaves[0]
-    var ancestors = sync7_get_ancestors(s7, prev_merge_node)
-    for (var i = 1; i < leaves.length; i++) {
-        var leaf = leaves[i]
-        var i_ancestors = sync7_get_ancestors(s7, leaf)
-        var CAs = sync7_intersection(ancestors, i_ancestors)
-        var LCAs = sync7_get_leaves(CAs)
-        each(i_ancestors, function (v, k) {
-            ancestors[k] = v
-        })
-        
-        function get_nodes_on_path_to_LCAs(node) {
-            var agg = {}
-            function helper(x) {
-                var hit_LCA = LCAs[x]
-                if (!CAs[x]) {
-                    each(s7.commits[x].to_parents, function (d, p) {
-                        hit_LCA = helper(p) || hit_LCA
-                    })
-                }
-                if (hit_LCA) {
-                    agg[x] = true
-                    return true
-                }
-            }
-            helper(node)
-            return agg
-        }
-
-        function calc_dividers_and_such_for_node(node, nodes_on_path_to_LCAs, dividers, untouched_regions_for_node) {
-            untouched_regions_for_node[node] = [[0, texts[node].length, 0]]
-            function helper(node) {
-                if (untouched_regions_for_node[node]) return untouched_regions_for_node[node]
-                var pur = {}
-                each(s7.commits[node].from_kids, function (d, k) {
-                    if (!nodes_on_path_to_LCAs[k]) { return }
-                    var untouched = helper(k)
-                    
-                    var ui = 0
-                    var uo = 0
-                    var offset = 0
-                    var poffset = 0
-                    each(d, function (r) {
-                        var end_point = offset + ((typeof(r) == 'number') ? r : r[0].length)
-                        while (untouched[ui] && end_point >= untouched[ui][2] + untouched[ui][1]) {
-                            if (typeof(r) == 'number') {
-                                var x = untouched[ui][2] + uo - offset + poffset
-                                pur[x] = [untouched[ui][0] + uo, untouched[ui][1] - uo, x]
-                            }
-                            ui++
-                            uo = 0
-                        }
-                        if (!untouched[ui]) { return false }
-                        if (end_point > untouched[ui][2] + uo) {
-                            if (typeof(r) == 'number') {
-                                var x = untouched[ui][2] + uo - offset + poffset
-                                pur[x] = [untouched[ui][0] + uo, end_point - (untouched[ui][2] + uo), x]
-                            }
-                            uo = end_point - untouched[ui][2]
-                            dividers[untouched[ui][0] + uo] = untouched[ui][0] + uo
-                        }
-                        offset = end_point
-                        poffset += (typeof(r) == 'number') ? r : r[1].length
-                    })
-                })
-                return untouched_regions_for_node[node] = Object.values(pur).sort(function (a, b) { return a[2] - b[2] })
-            }
-            each(LCAs, function (_, lca) { helper(lca) })
-        }
-
-        var prev_nodes_on_path_to_LCAs = get_nodes_on_path_to_LCAs(prev_merge_node)
-        var prev_dividers = {}
-        var prev_untouched_regions_for_node = {}
-        calc_dividers_and_such_for_node(prev_merge_node, prev_nodes_on_path_to_LCAs, prev_dividers, prev_untouched_regions_for_node)
-
-        var leaf_nodes_on_path_to_LCAs = get_nodes_on_path_to_LCAs(leaf)
-        var leaf_dividers = {}
-        var leaf_untouched_regions_for_node = {}
-        calc_dividers_and_such_for_node(leaf, leaf_nodes_on_path_to_LCAs, leaf_dividers, leaf_untouched_regions_for_node)
-        
-        each(LCAs, function (_, lca) {
-            function do_one_against_the_other(a, b, dividers) {
-                var bb, bi = 0
-                each(a, function (aa) {
-                    while ((bb = b[bi]) && (bb[2] + bb[1] <= aa[2])) bi++
-                    if (bb && bb[2] < aa[2]) {
-                        var x = aa[2] - bb[2] + bb[0]
-                        dividers[x] = x
-                    }
-                    while ((bb = b[bi]) && (bb[2] + bb[1] <= aa[2] + aa[1])) bi++
-                    if (bb && bb[2] < aa[2] + aa[1]) {
-                        var x = aa[2] + aa[1] - bb[2] + bb[0]
-                        dividers[x] = x
-                    }
-                })
-            }
-            
-            var a = prev_untouched_regions_for_node[lca]
-            var b = leaf_untouched_regions_for_node[lca]
-            do_one_against_the_other(a, b, leaf_dividers)
-            do_one_against_the_other(b, a, prev_dividers)
-        })
-        
-        function calc_endpoints(dividers, node) {
-            var endpoints = []
-            endpoints.push([0, 0, 0])
-            each(Object.values(dividers).sort(function (a, b) { return a - b }), function (offset) {
-                endpoints.push([offset, 1, offset])
-                endpoints.push([offset, 0, offset])
-            })
-            endpoints.push([texts[node].length, 1, texts[node].length])
-            
-            return endpoints
-        }
-        
-        var prev_endpoints = calc_endpoints(prev_dividers, prev_merge_node)
-        var leaf_endpoints = calc_endpoints(leaf_dividers, leaf)
-
-        function project_endpoints_to_LCAs(endpoints, node, nodes_on_path_to_LCAs) {
-            var endpoints_for_node = {}
-            endpoints_for_node[node] = endpoints
-
-            function helper(node) {
-                if (endpoints_for_node[node]) return endpoints_for_node[node]
-                var agg = {}
-                function add_to_agg(endpoint, projected_pos) {
-                    var key = '[' + endpoint[0] + ',' + endpoint[1] + ']'
-                    if (endpoint[1] == 0)
-                        agg[key] = Math.min(agg[key] || Infinity, projected_pos)
-                    else
-                        agg[key] = Math.max(agg[key] || -Infinity, projected_pos)
-                }
-                each(s7.commits[node].from_kids, function (d, k) {
-                    if (!nodes_on_path_to_LCAs[k]) { return }
-                    
-                    var endpoints = helper(k)
-                    var ei = 0
-                    
-                    var offset = 0
-                    var poffset = 0
-                    each(d, function (d) {
-                        var end = offset + ((typeof(d) == 'number') ? d : d[0].length)
-                        while (endpoints[ei] && (endpoints[ei][2] < end || (endpoints[ei][1] == 1 && endpoints[ei][2] <= end))) {
-                            if (typeof(d) == 'number') {
-                                add_to_agg(endpoints[ei], endpoints[ei][2] - offset + poffset)
-                            } else if (endpoints[ei][1] == 0) {
-                                add_to_agg(endpoints[ei], poffset)
-                            } else {
-                                add_to_agg(endpoints[ei], poffset + d[1].length)
-                            }
-                            ei++
-                        }
-                        offset = end
-                        poffset += (typeof(d) == 'number') ? d : d[1].length
-                    })
-                    while (endpoints[ei]) {
-                        add_to_agg(endpoints[ei], poffset)
-                        ei++
-                    }
-                })
-                
-                var endpoints = []
-                each(agg, function (v, k) {
-                    var kk = eval(k)
-                    endpoints.push([kk[0], kk[1], v])
-                })
-                
-                return endpoints_for_node[node] = endpoints.sort(function (a, b) {
-                    if (a[2] != b[2])
-                        return a[2] - b[2]
-                    return b[1] - a[1]
-                })
-            }
-
-            var regions_for_node = {}
-
-            var lookup_by_begin = {}
-            var lookup_by_end = {}
-            var base_regions = []
-            regions_for_node[node] = base_regions
-            for (var i = 0; i < endpoints.length; i += 2) {
-                var e0 = endpoints[i][0]
-                var e1 = endpoints[i + 1][0]
-                base_regions.push([e0, e1 - e0])
-                lookup_by_begin[e0] = base_regions.length - 1
-                lookup_by_end[e1] = base_regions.length - 1
-            }
-            
-            each(LCAs, function (_, lca) {
-                var endpoints = helper(lca)
-                var regions = []
-                regions_for_node[lca] = regions
-                each(endpoints, function (e) {
-                    if (e[1] == 0) {
-                        var i = lookup_by_begin[e[0]];
-                        (regions[i] = regions[i] || [])[0] = e[2]
-                    } else {
-                        var i = lookup_by_end[e[0]];
-                        (regions[i] = regions[i] || [])[1] = e[2]
-                    }
-                })
-                each(regions, function (r) {
-                    r[1] = r[1] - r[0]
-                })
-            })
-
-            return regions_for_node
-        }
-        
-        var prev_regions_per_node = project_endpoints_to_LCAs(prev_endpoints, prev_merge_node, prev_nodes_on_path_to_LCAs)
-        var leaf_regions_per_node = project_endpoints_to_LCAs(leaf_endpoints, leaf, leaf_nodes_on_path_to_LCAs)
-        
-        var prev_regions = prev_regions_per_node[prev_merge_node]
-        var leaf_regions = leaf_regions_per_node[leaf]
-
-        var prev_untouched_regions_for_LCA_by_position = {}
-        var leaf_untouched_regions_for_LCA_by_position = {}
-
-        each(LCAs, function (_, lca) {
-            function process(base, regions, untouched, _by_position) {
-                _by_position[lca] = {}
-                var ri = 0
-                var r
-                each(untouched, function (u) {
-                    while ((r = regions[ri]) && r[0] + r[1] <= u[2]) { ri++ }
-                    while ((r = regions[ri]) && r[0] < u[2] + u[1]) {
-                        _by_position[lca][r[0]] = ri
-                        base[ri][2] = true
-                        r[2] = true
-                        ri++
-                    }
-                })
-            }
-            process(prev_regions_per_node[prev_merge_node], prev_regions_per_node[lca], prev_untouched_regions_for_node[lca], prev_untouched_regions_for_LCA_by_position)
-            process(leaf_regions_per_node[leaf], leaf_regions_per_node[lca], leaf_untouched_regions_for_node[lca], leaf_untouched_regions_for_LCA_by_position)
-        })
-
-        function mark_deletes_and_more(regions_for_node, node, other_untouched_for_LCA_by_position) {
-            each(regions_for_node[node], function (r, ri) {
-                r[4] = r[5] = -1 // <-- the "more"
-                if (r[2]) {
-                    r[3] = -1
-                    each(LCAs, function (_, lca) {
-                        var rr = regions_for_node[lca][ri]
-                        var other_ri = other_untouched_for_LCA_by_position[lca][rr[0]]
-                        if (rr[2] && (typeof(other_ri) == 'number')) {
-                            r[3] = other_ri
-                            return false
-                        }
-                    })
-                }
-            })
-        }
-        mark_deletes_and_more(prev_regions_per_node, prev_merge_node, leaf_untouched_regions_for_LCA_by_position)
-        mark_deletes_and_more(leaf_regions_per_node, leaf, prev_untouched_regions_for_LCA_by_position)
-
-        function is_definitely_before(a_regions, a_node, ai, b_regions, b_node, bi) {
-            var a_before_b = false
-            var b_before_a = false
-            each(LCAs, function (_, lca) {
-                var ar = a_regions[lca][ai]
-                var br = b_regions[lca][bi]
-                
-                if ((ar[1] || br[1]) && (ar[0] + ar[1] <= br[0]))
-                    a_before_b = true
-                if ((!ar[1] && !br[1]) && (ar[0] < br[0]))
-                    a_before_b = true
-                    
-                if ((ar[1] || br[1]) && (br[0] + br[1] <= ar[0]))
-                    b_before_a = true
-                if ((!ar[1] && !br[1]) && (br[0] < ar[0]))
-                    b_before_a = true
-            })
-            return a_before_b && !b_before_a
-        }
-        
-        function calc_known_orderings(a_regions, a_node, b_regions, b_node) {
-            var bi = 0
-            each(a_regions[a_node], function (ar, ai) {
-                for ( ; bi < b_regions[b_node].length; bi++) {
-                    if (is_definitely_before(a_regions, a_node, ai, b_regions, b_node, bi)) {
-                        ar[4] = bi
-                        b_regions[b_node][bi][5] = ai
-                        return
-                    }
-                }
-            })
-        }
-        calc_known_orderings(prev_regions_per_node, prev_merge_node, leaf_regions_per_node, leaf)
-        calc_known_orderings(leaf_regions_per_node, leaf, prev_regions_per_node, prev_merge_node)
-
-        var m = custom_merge_func(s7, prev_merge_node, leaf, texts[prev_merge_node], texts[leaf], prev_regions, leaf_regions)
-        
-        var id = guid()
-        var to_parents = {}
-        s7.commits[prev_merge_node].from_kids[id] = to_parents[prev_merge_node] = m.to_a
-        s7.commits[leaf].from_kids[id] = to_parents[leaf] = m.to_b
-        s7.commits[id] = s7.temp_commits[id] = { to_parents : to_parents, from_kids : {} }
-        
-        prev_merge_node = id
-        texts[prev_merge_node] = m.text
-    }
-
-    s7.leaf = prev_merge_node
-    s7.text = texts[prev_merge_node]
-
-    while (cursor_projection_node != s7.leaf) {
-        var old_node = cursor_projection_node
-        var kids = s7.commits[cursor_projection_node].from_kids
-        var kid = Object.keys(kids)[0]
-        var d = kids[kid]
-        
-        var offset = 0
-        var poffset = 0
-        each(d, function (d) {
-            if (typeof(d) == 'number') {
-                if (cursor_projection_offset <= poffset + d) {
-                    cursor_projection_offset = cursor_projection_offset - poffset + offset
-                    cursor_projection_node = kid
-                    return false
-                }
-                offset += d
-                poffset += d
-            } else {
-                if (cursor_projection_offset <= poffset + d[1].length) {
-                    cursor_projection_offset = offset
-                    cursor_projection_node = kid
-                    return false
-                }
-                offset += d[0].length
-                poffset += d[1].length
-            }
-        })
-        if (cursor_projection_node == old_node) {
-            cursor_projection_offset = offset
-            cursor_projection_node = kid
-        }
-    }
-    return cursor_projection_offset
-}
 
 function sync7_diff_merge_trans(a, b, a_factor, b_factor) {
     var ret = []
@@ -772,17 +791,4 @@ function sync7_diff_apply(s, diff) {
     })
     texts.push(s.substr(offset))
     return texts.join('')
-}
-
-function sync7_pretty_print(s7) {
-    var output = []
-    function helper(node, indent) {
-        output.push('- '.repeat(indent) + node + ':' + sync7_get_text(s7, node))
-        each(s7.commits[node].from_kids, function (_, kid) {
-            if (s7.commits[kid])
-                helper(kid, indent + 1)
-        })
-    }
-    helper('root', 0)
-    console.log(output.join('\n'))
 }
