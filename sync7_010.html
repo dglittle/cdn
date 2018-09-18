@@ -798,7 +798,7 @@ function create_random_ops() {
     return ops
 }
 
-function apply_ops_to_sync7(s7s, ops, debug) {
+function apply_ops_to_sync7(s7s, ops, debug_print_buffer) {
     if (!s7s.a.buffer) s7s.a.buffer = []
     if (!s7s.b.buffer) s7s.b.buffer = []
     if (!s7s.c.buffer) s7s.c.buffer = []
@@ -826,12 +826,12 @@ function apply_ops_to_sync7(s7s, ops, debug) {
                 s7.cursor = s7.text.length
             }
             
-            if (debug) {
-                console.log('OP COMMIT')
-                console.log('side: ' + op.side)
-                console.log('pos: ' + pos)
-                console.log('del: ' + del)
-                console.log('txt: ' + op.text)
+            if (debug_print_buffer) {
+                debug_print_buffer.push('OP COMMIT')
+                debug_print_buffer.push('side: ' + op.side)
+                debug_print_buffer.push('pos: ' + pos)
+                debug_print_buffer.push('del: ' + del)
+                debug_print_buffer.push('txt: ' + op.text)
             }
             
         } else if (op.op == 'merge') {
@@ -840,23 +840,23 @@ function apply_ops_to_sync7(s7s, ops, debug) {
                 s7.cursor = sync7_merge(s7, x, my_custom_merge_func, s7.cursor)
             }
 
-            if (debug) {
-                console.log('OP MERGE')
-                console.log('side: ' + op.side)
+            if (debug_print_buffer) {
+                debug_print_buffer.push('OP MERGE')
+                debug_print_buffer.push('side: ' + op.side)
             }
         } else if (op.op == 'cursor') {
             s7.cursor = Math.floor((s7.text.length + 1) * op.pos)
             
-            if (debug) {
-                console.log('OP CURSOR')
-                console.log('side: ' + op.side)
-                console.log('pos: ' + s7.cursor)
+            if (debug_print_buffer) {
+                debug_print_buffer.push('OP CURSOR')
+                debug_print_buffer.push('side: ' + op.side)
+                debug_print_buffer.push('pos: ' + s7.cursor)
             }
         }
     })
 }
 
-function apply_ops_to_diffsync(dss, ops, debug) {
+function apply_ops_to_diffsync(dss, ops, debug_print_buffer) {
     function map_array(a, f) {
         var b = []
         each(a, function (v, k) { b[k] = f(v) })
@@ -922,7 +922,7 @@ function apply_ops_to_diffsync(dss, ops, debug) {
     })
 }
 
-function apply_ops_to_test_repos(ops, debug) {
+function apply_ops_to_test_repos(ops, debug_print_buffer) {
     var test_repos = {
         sync7 : {
             a : create_sync7_repo(),
@@ -936,9 +936,9 @@ function apply_ops_to_test_repos(ops, debug) {
         },
     }
     
-    apply_ops_to_sync7(test_repos.sync7, ops, debug)
+    apply_ops_to_sync7(test_repos.sync7, ops, debug_print_buffer)
 
-    apply_ops_to_diffsync(test_repos.diffsync, ops, debug)
+    apply_ops_to_diffsync(test_repos.diffsync, ops, debug_print_buffer)
 
     test_repos.same = (test_repos.sync7.a.text == test_repos.diffsync.a.cache) && (test_repos.sync7.b.text == test_repos.diffsync.b.cache) && (test_repos.sync7.c.text == test_repos.diffsync.c.cache) && (test_repos.sync7.a.cursor == test_repos.diffsync.a.cursor) && (test_repos.sync7.b.cursor == test_repos.diffsync.b.cursor) && (test_repos.sync7.c.cursor == test_repos.diffsync.c.cursor)
     return test_repos
@@ -962,7 +962,7 @@ for (var tests = 0; tests < 100; tests++) {
     if (!good) {
         print_stuff.push('BLOOP:')
         //console.log('ops: ' + JSON.stringify(ops, null, '  '))
-        apply_ops_to_test_repos(ops, true)
+        apply_ops_to_test_repos(ops, print_stuff)
         print_stuff.push('As7: ' + res.sync7.a.text)
         print_stuff.push('Adi: ' + res.diffsync.a.cache)
         print_stuff.push('Bs7: ' + res.sync7.b.text)
