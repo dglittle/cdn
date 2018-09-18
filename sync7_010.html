@@ -876,14 +876,10 @@ function apply_ops_to_test_repos(ops, debug) {
         },
     }
     
-    var begin_time = Date.now()
     apply_ops_to_sync7(test_repos.sync7, ops, debug)
-    sync7_time_agg += Date.now() - begin_time
 
-    var begin_time = Date.now()
-    //apply_ops_to_diffsync(test_repos.diffsync, ops, debug)
-    diffsync_time_agg += Date.now() - begin_time
-    
+    apply_ops_to_diffsync(test_repos.diffsync, ops, debug)
+
     test_repos.same = (test_repos.sync7.a.text == test_repos.diffsync.a.cache) && (test_repos.sync7.b.text == test_repos.diffsync.b.cache) && (test_repos.sync7.c.text == test_repos.diffsync.c.cache) && (test_repos.sync7.a.cursor == test_repos.diffsync.a.cursor) && (test_repos.sync7.b.cursor == test_repos.diffsync.b.cursor) && (test_repos.sync7.c.cursor == test_repos.diffsync.c.cursor)
     return test_repos
 }
