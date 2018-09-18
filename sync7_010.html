@@ -975,6 +975,7 @@ for (var tests = 0; tests < 100; tests++) {
         print_stuff.push('Bdic: ' + res.diffsync.b.cursor)
         print_stuff.push('Cs7c: ' + res.sync7.c.cursor)
         print_stuff.push('Cdic: ' + res.diffsync.c.cursor)
+        console.log(print_stuff.join('\n'))
         throw 'stop7'
     } else {
         print_stuff.push('BLAR! ' + ops.length + ' i=' + i)
