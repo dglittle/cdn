@@ -106,7 +106,54 @@ function sync7_commit(s7, s) {
     return cs
 }
 
-function sync7_merge(s7, cs, custom_merge_func) {
+function sync7_merge(s7, cs, custom_merge_func, cursors) {
+    var cursor_projections = {}
+    each(cursors, function (c, key) {
+        var projs = {}
+        projs[s7.leaf] = c
+        cursor_projections[key].push(projs)
+    })
+    function project_cursors_up(node) {
+        if (s7.temp_commits[node]) {
+            var cursor_array = []
+            each(cursor_projections, function (projs, key) {
+                cursor_array.push({
+                    key : key,
+                    proj : projs[node]
+                })
+            })
+            cursor_array.sort(function (a, b) {
+                return a.proj - b.proj
+            })
+            each(s7.commits[node].to_parents, function (d, p) {
+                var found_one = false
+                var ci = 0
+                var offset = 0
+                var poffset = 0
+                each(d, function (d) {
+                    if (typeof(d) == 'number') {
+                        while (cursor_array[ci] && cursor_array[ci].proj <= offset + d) {
+                            cursor_projections[cursor_array[ci].key][p] = cursor_array[ci].proj - offset + poffset
+                            found_one = true
+                            ci++
+                        }
+                        offset += d
+                        poffset += d
+                    } else {
+                        while (cursor_array[ci] && cursor_array[ci].proj < offset + d[0].length) {
+                            ci++
+                        }
+                        offset += d[0].length
+                        poffset += d[1].length
+                    }
+                })
+
+                if (found_one) project_cursors_up(p)
+            })
+        }
+    }
+    project_cursors_up(s7.leaf)
+        
     each(cs, function (c, id) {
         s7.commits[id] = c
         each(c.to_parents, function (d, p) {
@@ -433,6 +480,62 @@ function sync7_merge(s7, cs, custom_merge_func) {
 
     s7.leaf = prev_merge_node
     s7.text = texts[prev_merge_node]
+    
+    
+    var cursors_projected_onto = {}
+    each(cursor_projections, function () {
+        
+        
+        work here
+        
+    })
+
+    
+    function project_cursors_down(node) {
+        if (s7.temp_commits[node]) {
+            var cursor_array = []
+            each(cursor_projections, function (projs, key) {
+                cursor_array.push({
+                    key : key,
+                    proj : projs[node]
+                })
+            })
+            cursor_array.sort(function (a, b) {
+                return a.proj - b.proj
+            })
+            each(s7.commits[node].to_parents, function (d, p) {
+                var ci = 0
+                var offset = 0
+                var poffset = 0
+                each(d, function (d) {
+                    if (typeof(d) == 'number') {
+                        while (cursor_array[ci] && cursor_array[ci].proj <= offset + d) {
+                            cursor_projections[cursor_array[ci].key][p] = cursor_array[ci].proj - offset + poffset
+                            offset += d
+                            poffset += d
+                            ci++
+                        }
+                    } else {
+                        while (cursor_array[ci] && cursor_array[ci].proj < offset + d[0].length) {
+                            cursor_projections[cursor_array[ci].key][p] = poffset
+                            offset += d[0].length
+                            poffset += d[1].length
+                            ci++
+                        }
+                    }
+                })
+                while (cursor_array[ci]) {
+                    cursor_projections[cursor_array[ci].key][p] = poffset
+                    ci++
+                }
+
+                project_cursors_up(p)
+            })
+        }
+    }
+    project_cursors_up(s7.leaf)
+    
+    
 }
 
 function sync7_diff_merge_trans(a, b, a_factor, b_factor) {
