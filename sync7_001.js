@@ -13,7 +13,6 @@ var sync7 = (typeof(module) != 'undefined') ? module.exports : {}
         }
     }
 
-
     sync7.commit = function (s7, s) {
         if (s == s7.text) { return }
         
