@@ -94,35 +94,21 @@ var sync7 = (typeof(module) != 'undefined') ? module.exports : {}
             }
     
             var sent_unacknowledged_commits = false
-    
-            function adjust_range(range, patch) {
-                return map_array(range, function (x) {
-                    each(patch, function (p) {
-                        if (p[0] < x) {
-                            if (p[0] + p[1] <= x) {
-                                x += -p[1] + p[2].length
-                            } else {
-                                x = p[0] + p[2].length
-                            }
-                        } else return false
-                    })
-                    return x
-                })
-            }
-        
+
             ws.onmessage = function (event) {
                 if (!ws) { return }
                 var o = JSON.parse(event.data)
-                if (o.pong) { return on_pong() }
-    
-                console.log('message: ' + event.data)
-    
+                if (o.pong) {
+                    on_pong()
+                } else {
+                    console.log('message: ' + event.data)
+                }
                 if (o.channels) {
                     if (on_channels) on_channels(o.channels)
                 }
                 if (o.commits) {
                     self.on_change()
-                    minigit.merge(o.commits)
+                    s7.merge(o.commits, work here)
     
                     var patch = get_diff_patch(options.get_text(), minigit.cache)
                     each(peer_ranges, function (range, peer) {
@@ -240,7 +226,7 @@ var sync7 = (typeof(module) != 'undefined') ? module.exports : {}
         return cs
     }
     
-    sync7.merge = function (s7, cs, custom_merge_func, cursor) {
+    sync7.merge = function (s7, cs, cursor, custom_merge_func) {
         if (!custom_merge_func) custom_merge_func = default_custom_merge_func
         var cursor_projection_node = s7.leaf
         var cursor_projection_offset = cursor
