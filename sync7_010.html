@@ -462,6 +462,15 @@ function sync7_merge(s7, cs, custom_merge_func, cursor) {
 
     while (cursor_projection_node != s7.leaf) {
         var old_node = cursor_projection_node
+        
+        
+        
+        if (!s7.commits[cursor_projection_node]) {
+            debugger
+        }
+        
+        
+        
         var kids = s7.commits[cursor_projection_node].from_kids
         var kid = Object.keys(kids)[0]
         var d = kids[kid]
@@ -939,7 +948,7 @@ function apply_ops_to_test_repos(ops, debug) {
 
 Math.randomSeed(133)
 
-for (var tests = 0; tests < 10; tests++) {
+for (var tests = 0; tests < 100; tests++) {
     var ops = create_random_ops()
     var good = false
     for (var i = 0; i < 10; i++) {
@@ -950,7 +959,7 @@ for (var tests = 0; tests < 10; tests++) {
         }
     }
     
-    var print_stuff = []
+    var print_stuff = ['TEST NUM ' + tests]
     if (!good) {
         print_stuff.push('BLOOP:')
         //console.log('ops: ' + JSON.stringify(ops, null, '  '))
