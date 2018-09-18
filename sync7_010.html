@@ -459,57 +459,38 @@ function sync7_merge(s7, cs, custom_merge_func, cursor) {
 
     s7.leaf = prev_merge_node
     s7.text = texts[prev_merge_node]
-    
-    
-    var cursors_projected_onto = {}
-    each(cursor_projections, function () {
-        
-        
-        work here
-        
-    })
 
-    
-    
-    
-    
-    
-    var cursor_projection_node = s7.leaf
-    var cursor_projection_offset = cursor
-    
-    work here
-    function project_cursor_down() {
-        if (cursor_projection_node != s7.leaf) {
-            var kids = s7.commits[cursor_projection_node].from_kids
-            var kid = Object.keys(kids)[0]
-            var d = kids[kid]
-            
-            var offset = 0
-            var poffset = 0
-            each(d, function (d) {
-                if (typeof(d) == 'number') {
-                    if (cursor_projection_offset <= poffset + d) {
-                        cursor_projection_offset = cursor_projection_offset - poffset + offset
-                        return false
-                    }
-                    offset += d
-                    poffset += d
-                } else {
-                    if (cursor_projection_offset < poffset + d[1].length) {
-                        cursor_projection_offset = offset
-                        return false
-                    }
-                    offset += d
-                    poffset += d
+    while (cursor_projection_node != s7.leaf) {
+        var old_node = cursor_projection_node
+        var kids = s7.commits[cursor_projection_node].from_kids
+        var kid = Object.keys(kids)[0]
+        var d = kids[kid]
+        
+        var offset = 0
+        var poffset = 0
+        each(d, function (d) {
+            if (typeof(d) == 'number') {
+                if (cursor_projection_offset <= poffset + d) {
+                    cursor_projection_offset = cursor_projection_offset - poffset + offset
+                    cursor_projection_node = kid
+                    return false
                 }
-            })
-            
-            project_cursor_down()
-        }
+                offset += d
+                poffset += d
+            } else {
+                if (cursor_projection_offset < poffset + d[1].length) {
+                    cursor_projection_offset = offset
+                    cursor_projection_node = kid
+                    return false
+                }
+                offset += d[0].length
+                poffset += d[1].length
+            }
+        })
+        if (old_node == cursor_projection_node)
+            throw 'failed to project cursor down'
     }
-    project_cursor_down()
-    
-    
+    return cursor_projection_offset
 }
 
 function sync7_diff_merge_trans(a, b, a_factor, b_factor) {
@@ -873,21 +854,24 @@ function apply_ops_to_diffsync(dss, ops, debug) {
     })
 }
 
-var sync7_time_agg = 0
-var diffsync_time_agg = 0
-
 function apply_ops_to_test_repos(ops, debug) {
     var test_repos = {
         sync7 : {
             a : create_sync7_repo(),
             b : create_sync7_repo(),
-            c : create_sync7_repo()
+            c : create_sync7_repo(),
+            a_cursor : 0,
+            b_cursor : 0,
+            c_cursor : 0,
         },
         diffsync : {
             a : diffsync.create_minigit(),
             b : diffsync.create_minigit(),
-            c : diffsync.create_minigit()
-        }
+            c : diffsync.create_minigit(),
+            a_cursor : 0,
+            b_cursor : 0,
+            c_cursor : 0,
+        },
     }
     
     var begin_time = Date.now()
@@ -898,7 +882,7 @@ function apply_ops_to_test_repos(ops, debug) {
     //apply_ops_to_diffsync(test_repos.diffsync, ops, debug)
     diffsync_time_agg += Date.now() - begin_time
     
-    test_repos.same = (test_repos.sync7.a.text == test_repos.diffsync.a.cache) && (test_repos.sync7.b.text == test_repos.diffsync.b.cache) && (test_repos.sync7.c.text == test_repos.diffsync.c.cache)
+    test_repos.same = (test_repos.sync7.a.text == test_repos.diffsync.a.cache) && (test_repos.sync7.b.text == test_repos.diffsync.b.cache) && (test_repos.sync7.c.text == test_repos.diffsync.c.cache) && (test_repos.sync7.a_cursor == test_repos.diffsync.a_cursor) && (test_repos.sync7.b_cursor == test_repos.diffsync.b_cursor) && (test_repos.sync7.c_cursor == test_repos.diffsync.c_cursor)
     return test_repos
 }
 
