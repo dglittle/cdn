@@ -2,7 +2,108 @@
 var sync7 = (typeof(module) != 'undefined') ? module.exports : {}
 ;(function () {
 
+    sync7.create = function () {
+        return {
+            commits : {
+                'root' : { to_parents : {}, from_kids : {} }
+            },
+            temp_commits : {},
+            leaf : 'root',
+            text : ''
+        }
+    }
+
+
+    sync7.commit = function (s7, s) {
+        if (s == s7.text) { return }
+        
+        var cs = s7.temp_commits
+        s7.temp_commits = {}
     
+        var id = guid()
+        var to_parents = {}
+        s7.commits[s7.leaf].from_kids[id] = to_parents[s7.leaf] = sync7_diff(s, s7.text)
+        s7.commits[id] = cs[id] = { to_parents : to_parents, from_kids : {} }
+        s7.leaf = id
+        
+        s7.text = s
+        return cs
+    }
+
+
+    function default_custom_merge_func(s7, a, b, a_text, b_text, a_regions, b_regions) {
+        // regions be like [pos, len, untouched?, index in other region array of this untouched or -1 if not present, index of first region in other array that this region is definitely before, index of last region in other array that this region is definitely after]
+        
+        // console.log('HI!!')
+        // console.log(a)
+        // console.log(b)
+        // console.log(a_text)
+        // console.log(b_text)
+        // console.log(a_regions)
+        // console.log(b_regions)
+    
+        var text = []
+        var a_diff = []
+        var b_diff = []
+        var on_a = true
+        var ai = 0
+        var bi = 0
+        while (true) {
+            var aa = a_regions[ai]
+            var bb = b_regions[bi]
+            if (!aa && !bb) break
+            if (!aa) on_a = false
+            if (!bb) on_a = true
+            
+            var ci = on_a ? ai : bi
+            var di = on_a ? bi : ai
+            var cc = on_a ? aa : bb
+            var dd = on_a ? bb : aa
+            var c_text = on_a ? a_text : b_text
+            var d_text = on_a ? b_text : a_text
+            var c_diff = on_a ? a_diff : b_diff
+            var d_diff = on_a ? b_diff : a_diff
+    
+            if (cc[5] < di) {
+                var t = c_text.substr(cc[0], cc[1])
+                if (cc[2]) {
+                    if (cc[3] < di) {
+                        c_diff.push(['', t])
+                    } else if (cc[3] == di) {
+                        text.push(t)
+                        sync7_push_eq(c_diff, cc[1])
+                        sync7_push_eq(d_diff, cc[1])
+                        if (on_a) { bi++ } else { ai++ }
+                    } else {
+                        text.push(t)
+                        sync7_push_eq(c_diff, cc[1])
+                        d_diff.push([t, ''])
+                    }
+                } else {
+                    text.push(t)
+                    sync7_push_eq(c_diff, cc[1])
+                    d_diff.push([t, ''])
+                }
+                if (on_a) { ai++ } else { bi++ }
+            } else if (dd && dd[5] < ci) {
+                on_a = !on_a
+            } else {
+                throw 'failure'
+            }
+        }
+    
+        // console.log('HI!!!!!!')
+        // console.log(text)
+        // console.log(a_diff)
+        // console.log(b_diff)
+    
+        return {
+            text : text.join(''),
+            to_a : a_diff,
+            to_b : b_diff
+        }
+    }
+
     function each(o, cb) {
         if (o instanceof Array) {
             for (var i = 0; i < o.length; i++) {
@@ -41,111 +142,6 @@ var sync7 = (typeof(module) != 'undefined') ? module.exports : {}
 
 
 
-<script src="https://dglittle.github.io/cdn/utils004.js"></script>
-<script src="https://invisible-college.github.io/universal-sync/diffsync.js"></script>
-<script>
-
-Math.randomSeed(7)
-
-function my_custom_merge_func(s7, a, b, a_text, b_text, a_regions, b_regions) {
-    // regions be like [pos, len, untouched?, index in other region array of this untouched or -1 if not present, index of first region in other array that this region is definitely before, index of last region in other array that this region is definitely after]
-    
-    // console.log('HI!!')
-    // console.log(a)
-    // console.log(b)
-    // console.log(a_text)
-    // console.log(b_text)
-    // console.log(a_regions)
-    // console.log(b_regions)
-
-    var text = []
-    var a_diff = []
-    var b_diff = []
-    var on_a = true
-    var ai = 0
-    var bi = 0
-    while (true) {
-        var aa = a_regions[ai]
-        var bb = b_regions[bi]
-        if (!aa && !bb) break
-        if (!aa) on_a = false
-        if (!bb) on_a = true
-        
-        var ci = on_a ? ai : bi
-        var di = on_a ? bi : ai
-        var cc = on_a ? aa : bb
-        var dd = on_a ? bb : aa
-        var c_text = on_a ? a_text : b_text
-        var d_text = on_a ? b_text : a_text
-        var c_diff = on_a ? a_diff : b_diff
-        var d_diff = on_a ? b_diff : a_diff
-
-        if (cc[5] < di) {
-            var t = c_text.substr(cc[0], cc[1])
-            if (cc[2]) {
-                if (cc[3] < di) {
-                    c_diff.push(['', t])
-                } else if (cc[3] == di) {
-                    text.push(t)
-                    sync7_push_eq(c_diff, cc[1])
-                    sync7_push_eq(d_diff, cc[1])
-                    if (on_a) { bi++ } else { ai++ }
-                } else {
-                    text.push(t)
-                    sync7_push_eq(c_diff, cc[1])
-                    d_diff.push([t, ''])
-                }
-            } else {
-                text.push(t)
-                sync7_push_eq(c_diff, cc[1])
-                d_diff.push([t, ''])
-            }
-            if (on_a) { ai++ } else { bi++ }
-        } else if (dd && dd[5] < ci) {
-            on_a = !on_a
-        } else {
-            throw 'failure'
-        }
-    }
-
-    // console.log('HI!!!!!!')
-    // console.log(text)
-    // console.log(a_diff)
-    // console.log(b_diff)
-
-    return {
-        text : text.join(''),
-        to_a : a_diff,
-        to_b : b_diff
-    }
-}
-
-function create_sync7_repo() {
-    return {
-        commits : {
-            'root' : { to_parents : {}, from_kids : {} }
-        },
-        temp_commits : {},
-        leaf : 'root',
-        text : ''
-    }
-}
-
-function sync7_commit(s7, s) {
-    if (s == s7.text) { return }
-    
-    var cs = s7.temp_commits
-    s7.temp_commits = {}
-
-    var id = guid()
-    var to_parents = {}
-    s7.commits[s7.leaf].from_kids[id] = to_parents[s7.leaf] = sync7_diff(s, s7.text)
-    s7.commits[id] = cs[id] = { to_parents : to_parents, from_kids : {} }
-    s7.leaf = id
-    
-    s7.text = s
-    return cs
-}
 
 function sync7_merge(s7, cs, custom_merge_func, cursor) {
     var cursor_projection_node = s7.leaf
@@ -790,259 +786,3 @@ function sync7_pretty_print(s7) {
     helper('root', 0)
     console.log(output.join('\n'))
 }
-
-
-
-
-
-
-
-
-function create_random_text() {
-    var random_text = ''
-    function add_char() {
-        random_text += String.fromCharCode(97 + Math.floor(Math.random() * 26))
-    }
-    while (Math.random() < 0.5) add_char()
-    return random_text
-}
-
-function create_random_ops() {
-    var ops = []
-    function add_random_ops() {
-        if (Math.random() < 0.33) {
-            ops.push({
-                op : 'commit',
-                side : Math.random() < 0.33 ? 'a' :
-                    Math.random() < 0.5 ? 'b' : 'c',
-                pos : Math.random(),
-                del : Math.random(),
-                text : create_random_text()
-            })
-        } else if (Math.random() < 0.5) {
-            ops.push({
-                op : 'merge',
-                side : Math.random() < 0.33 ? 'a' :
-                    Math.random() < 0.5 ? 'b' : 'c'
-            })
-        } else {
-            ops.push({
-                op : 'cursor',
-                side : Math.random() < 0.33 ? 'a' :
-                    Math.random() < 0.5 ? 'b' : 'c',
-                pos : Math.random()
-            })
-        }
-    }
-    add_random_ops()
-    while (Math.random() < 0.8) add_random_ops()
-    return ops
-}
-
-function apply_ops_to_sync7(s7s, ops, debug_print_buffer) {
-    if (!s7s.a.buffer) s7s.a.buffer = []
-    if (!s7s.b.buffer) s7s.b.buffer = []
-    if (!s7s.c.buffer) s7s.c.buffer = []
-    if (typeof(s7s.a.cursor) != 'number') s7s.a.cursor = 0
-    if (typeof(s7s.b.cursor) != 'number') s7s.b.cursor = 0
-    if (typeof(s7s.c.cursor) != 'number') s7s.c.cursor = 0
-    each(ops, function (op, opi) {
-        var s7 = s7s[op.side]
-        var other_s7s = []
-        each(s7s, function (s7, key) {
-            if (key != op.side)
-                other_s7s.push(s7)
-        })
-        if (op.op == 'commit') {
-            var t = s7.text
-            var pos = Math.floor((t.length + 1) * op.pos)
-            var del = Math.floor((t.length - pos) * op.del)
-            var msg = sync7_commit(s7, t.slice(0, pos) + op.text + t.slice(pos + del))
-            if (!msg) msg = null
-            each(other_s7s, function (s7) {
-                s7.buffer.push(JSON.parse(JSON.stringify(msg)))
-            })
-            
-            if (s7.cursor > s7.text.length) {
-                s7.cursor = s7.text.length
-            }
-            
-            if (debug_print_buffer) {
-                debug_print_buffer.push('OP COMMIT')
-                debug_print_buffer.push('side: ' + op.side)
-                debug_print_buffer.push('pos: ' + pos)
-                debug_print_buffer.push('del: ' + del)
-                debug_print_buffer.push('txt: ' + op.text)
-            }
-            
-        } else if (op.op == 'merge') {
-            var x = s7.buffer.shift()
-            if (x) {
-                s7.cursor = sync7_merge(s7, x, my_custom_merge_func, s7.cursor)
-            }
-
-            if (debug_print_buffer) {
-                debug_print_buffer.push('OP MERGE')
-                debug_print_buffer.push('side: ' + op.side)
-            }
-        } else if (op.op == 'cursor') {
-            s7.cursor = Math.floor((s7.text.length + 1) * op.pos)
-            
-            if (debug_print_buffer) {
-                debug_print_buffer.push('OP CURSOR')
-                debug_print_buffer.push('side: ' + op.side)
-                debug_print_buffer.push('pos: ' + s7.cursor)
-            }
-        }
-    })
-}
-
-function apply_ops_to_diffsync(dss, ops, debug_print_buffer) {
-    function map_array(a, f) {
-        var b = []
-        each(a, function (v, k) { b[k] = f(v) })
-        return b
-    }    
-    function adjust_range(range, patch) {
-        return map_array(range, function (x) {
-            each(patch, function (p) {
-                if (p[0] < x) {
-                    if (p[0] + p[1] <= x) {
-                        x += -p[1] + p[2].length
-                    } else {
-                        x = p[0] + p[2].length
-                    }
-                } else return false
-            })
-            return x
-        })
-    }
-
-    if (!dss.a.buffer) dss.a.buffer = []
-    if (!dss.b.buffer) dss.b.buffer = []
-    if (!dss.c.buffer) dss.c.buffer = []
-    if (typeof(dss.a.cursor) != 'number') dss.a.cursor = 0
-    if (typeof(dss.b.cursor) != 'number') dss.b.cursor = 0
-    if (typeof(dss.c.cursor) != 'number') dss.c.cursor = 0
-    each(ops, function (op) {
-        var ds = dss[op.side]
-        var others = []
-        each(dss, function (ds, key) {
-            if (key != op.side)
-                others.push(ds)
-        })
-        if (op.op == 'commit') {
-            var t = ds.cache
-            var pos = Math.floor((t.length + 1) * op.pos)
-            var del = Math.floor((t.length - pos) * op.del)
-            var msg = ds.commit(t.slice(0, pos) + op.text + t.slice(pos + del))
-            if (!msg) msg = null
-            each(others, function (ds) {
-                ds.buffer.push(JSON.parse(JSON.stringify(msg)))
-            })
-            
-            if (ds.cursor > ds.cache.length) {
-                ds.cursor = ds.cache.length
-            }
-            
-        } else if (op.op == 'merge') {
-            var x = ds.buffer.shift()
-            if (x) {
-                var old = ds.cache
-                
-                ds.merge(x)
-                
-                var patch = get_diff_patch(old, ds.cache)
-                var range = [ds.cursor]
-                range = adjust_range(range, patch)
-                ds.cursor = range[0]
-            }
-        } else if (op.op == 'cursor') {
-            ds.cursor = Math.floor((ds.cache.length + 1) * op.pos)
-        }
-    })
-}
-
-function apply_ops_to_test_repos(ops, debug_print_buffer) {
-    var test_repos = {
-        sync7 : {
-            a : create_sync7_repo(),
-            b : create_sync7_repo(),
-            c : create_sync7_repo(),
-        },
-        diffsync : {
-            a : diffsync.create_minigit(),
-            b : diffsync.create_minigit(),
-            c : diffsync.create_minigit(),
-        },
-    }
-    
-    apply_ops_to_sync7(test_repos.sync7, ops, debug_print_buffer)
-
-    apply_ops_to_diffsync(test_repos.diffsync, ops, debug_print_buffer)
-
-    test_repos.same = (test_repos.sync7.a.text == test_repos.diffsync.a.cache) && (test_repos.sync7.b.text == test_repos.diffsync.b.cache) && (test_repos.sync7.c.text == test_repos.diffsync.c.cache) && (test_repos.sync7.a.cursor == test_repos.diffsync.a.cursor) && (test_repos.sync7.b.cursor == test_repos.diffsync.b.cursor) && (test_repos.sync7.c.cursor == test_repos.diffsync.c.cursor)
-    return test_repos
-}
-
-Math.randomSeed(133)
-
-for (var tests = 0; tests < 100; tests++) {
-    var ops = create_random_ops()
-    var good = false
-    
-    
-    
-    
-    
-    for (var i = 0; i < 100; i++) {
-        
-        
-        if (tests == 84 && i == 99) {
-            debugger
-        }
-        
-        
-        var res = apply_ops_to_test_repos(ops)
-        if (res.same) {
-            good = true
-            break
-        }
-    }
-    
-    
-    
-    
-    
-    var print_stuff = ['TEST NUM ' + tests]
-    if (!good) {
-        print_stuff.push('BLOOP:')
-        //console.log('ops: ' + JSON.stringify(ops, null, '  '))
-        apply_ops_to_test_repos(ops, print_stuff)
-        print_stuff.push('As7: ' + res.sync7.a.text)
-        print_stuff.push('Adi: ' + res.diffsync.a.cache)
-        print_stuff.push('Bs7: ' + res.sync7.b.text)
-        print_stuff.push('Bdi: ' + res.diffsync.b.cache)
-        print_stuff.push('Cs7: ' + res.sync7.c.text)
-        print_stuff.push('Cdi: ' + res.diffsync.c.cache)
-        print_stuff.push('As7c: ' + res.sync7.a.cursor)
-        print_stuff.push('Adic: ' + res.diffsync.a.cursor)
-        print_stuff.push('Bs7c: ' + res.sync7.b.cursor)
-        print_stuff.push('Bdic: ' + res.diffsync.b.cursor)
-        print_stuff.push('Cs7c: ' + res.sync7.c.cursor)
-        print_stuff.push('Cdic: ' + res.diffsync.c.cursor)
-        console.log(print_stuff.join('\n'))
-        throw 'stop7'
-    } else {
-        print_stuff.push('BLAR! ' + ops.length + ' i=' + i)
-        print_stuff.push('a: ' + res.sync7.a.text + ' == ' + res.diffsync.a.cache)
-        print_stuff.push('b: ' + res.sync7.b.text + ' == ' + res.diffsync.b.cache)
-        print_stuff.push('c: ' + res.sync7.c.text + ' == ' + res.diffsync.c.cache)
-        print_stuff.push('a: ' + res.sync7.a.cursor + ' == ' + res.diffsync.a.cursor)
-        print_stuff.push('b: ' + res.sync7.b.cursor + ' == ' + res.diffsync.b.cursor)
-        print_stuff.push('c: ' + res.sync7.c.cursor + ' == ' + res.diffsync.c.cursor)
-    }
-    console.log(print_stuff.join('\n'))
-}
-
-</script>
