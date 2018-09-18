@@ -108,7 +108,16 @@ var sync7 = (typeof(module) != 'undefined') ? module.exports : {}
                 }
                 if (o.commits) {
                     self.on_change()
-                    s7.merge(o.commits, work here)
+                    sync7.merge(s7, o.commits, work here)
+                    
+                    
+                    
+    sync7.merge = function (s7, cs, cursor, custom_merge_func) {
+                    
+                    
+                    
+                    
+                    
     
                     var patch = get_diff_patch(options.get_text(), minigit.cache)
                     each(peer_ranges, function (range, peer) {
