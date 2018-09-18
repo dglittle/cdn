@@ -762,7 +762,7 @@ function create_random_text() {
 function create_random_ops() {
     var ops = []
     function add_random_ops() {
-        if (Math.random() < 0.5) {
+        if (Math.random() < 0.33) {
             ops.push({
                 op : 'commit',
                 side : Math.random() < 0.33 ? 'a' :
@@ -771,11 +771,18 @@ function create_random_ops() {
                 del : Math.random(),
                 text : create_random_text()
             })
-        } else {
+        } else if (Math.random() < 0.5) {
             ops.push({
                 op : 'merge',
                 side : Math.random() < 0.33 ? 'a' :
                     Math.random() < 0.5 ? 'b' : 'c'
+            })
+        } else {
+            ops.push({
+                op : 'cursor',
+                side : Math.random() < 0.33 ? 'a' :
+                    Math.random() < 0.5 ? 'b' : 'c',
+                pos : Math.random()
             })
         }
     }
@@ -816,7 +823,7 @@ function apply_ops_to_sync7(s7s, ops, debug) {
                 console.log('txt: ' + op.text)
             }
             
-        } else {
+        } else if (op.op == 'merge') {
             var x = s7.buffer.shift()
             if (x) {
                 sync7_merge(s7, x, my_custom_merge_func)
@@ -826,6 +833,8 @@ function apply_ops_to_sync7(s7s, ops, debug) {
                 console.log('OP MERGE')
                 console.log('side: ' + op.side)
             }
+        } else if (op.op == 'cursor') {
+            s7.cursor = Math.floor((s7.text.length + 1) * op.pos)
         }
     })
 }
@@ -853,11 +862,13 @@ function apply_ops_to_diffsync(dss, ops, debug) {
             each(others, function (ds) {
                 ds.buffer.push(JSON.parse(JSON.stringify(msg)))
             })
-        } else {
+        } else if (op.op == 'merge') {
             var x = ds.buffer.shift()
             if (x) {
                 ds.merge(x)
             }
+        } else if (op.op == 'cursor') {
+            ds.cursor = Math.floor((ds.cache.length + 1) * op.pos)
         }
     })
 }
