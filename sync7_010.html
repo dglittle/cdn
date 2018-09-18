@@ -487,8 +487,10 @@ function sync7_merge(s7, cs, custom_merge_func, cursor) {
                 poffset += d[1].length
             }
         })
-        if (old_node == cursor_projection_node)
-            throw 'failed to project cursor down'
+        if (cursor_projection_node == old_node) {
+            cursor_projection_offset = offset
+            cursor_projection_node = kid
+        }
     }
     return cursor_projection_offset
 }
