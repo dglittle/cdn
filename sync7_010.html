@@ -153,7 +153,9 @@ function sync7_merge(s7, cs, custom_merge_func, cursor) {
 
     each(s7.temp_commits, function (c, k) {
         each(c.to_parents, function (d, p) {
-            delete p.from_kids[k]
+            if (!s7.temp_commits[p]) {
+                delete s7.commits[p].from_kids[k]
+            }
         })
         delete s7.commits[k]
     })
