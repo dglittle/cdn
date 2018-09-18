@@ -952,7 +952,8 @@ for (var tests = 0; tests < 3; tests++) {
     
     if (!good) {
         console.log('BLOOP:')
-        console.log('ops: ' + JSON.stringify(ops, null, '  '))
+        //console.log('ops: ' + JSON.stringify(ops, null, '  '))
+        apply_ops_to_test_repos(ops, true)
         console.log('As7: ' + res.sync7.a.text)
         console.log('Adi: ' + res.diffsync.a.cache)
         console.log('Bs7: ' + res.sync7.b.text)
