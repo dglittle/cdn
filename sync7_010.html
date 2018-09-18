@@ -939,7 +939,7 @@ function apply_ops_to_test_repos(ops, debug) {
 
 Math.randomSeed(133)
 
-for (var tests = 0; tests < 3; tests++) {
+for (var tests = 0; tests < 10; tests++) {
     var ops = create_random_ops()
     var good = false
     for (var i = 0; i < 10; i++) {
@@ -950,32 +950,34 @@ for (var tests = 0; tests < 3; tests++) {
         }
     }
     
+    var print_stuff = []
     if (!good) {
-        console.log('BLOOP:')
+        print_stuff.push('BLOOP:')
         //console.log('ops: ' + JSON.stringify(ops, null, '  '))
         apply_ops_to_test_repos(ops, true)
-        console.log('As7: ' + res.sync7.a.text)
-        console.log('Adi: ' + res.diffsync.a.cache)
-        console.log('Bs7: ' + res.sync7.b.text)
-        console.log('Bdi: ' + res.diffsync.b.cache)
-        console.log('Cs7: ' + res.sync7.c.text)
-        console.log('Cdi: ' + res.diffsync.c.cache)
-        console.log('As7c: ' + res.sync7.a.cursor)
-        console.log('Adic: ' + res.diffsync.a.cursor)
-        console.log('Bs7c: ' + res.sync7.b.cursor)
-        console.log('Bdic: ' + res.diffsync.b.cursor)
-        console.log('Cs7c: ' + res.sync7.c.cursor)
-        console.log('Cdic: ' + res.diffsync.c.cursor)
+        print_stuff.push('As7: ' + res.sync7.a.text)
+        print_stuff.push('Adi: ' + res.diffsync.a.cache)
+        print_stuff.push('Bs7: ' + res.sync7.b.text)
+        print_stuff.push('Bdi: ' + res.diffsync.b.cache)
+        print_stuff.push('Cs7: ' + res.sync7.c.text)
+        print_stuff.push('Cdi: ' + res.diffsync.c.cache)
+        print_stuff.push('As7c: ' + res.sync7.a.cursor)
+        print_stuff.push('Adic: ' + res.diffsync.a.cursor)
+        print_stuff.push('Bs7c: ' + res.sync7.b.cursor)
+        print_stuff.push('Bdic: ' + res.diffsync.b.cursor)
+        print_stuff.push('Cs7c: ' + res.sync7.c.cursor)
+        print_stuff.push('Cdic: ' + res.diffsync.c.cursor)
         throw 'stop7'
     } else {
-        console.log('BLAR! ' + ops.length + ' i=' + i)
-        console.log('a: ' + res.sync7.a.text + ' == ' + res.diffsync.a.cache)
-        console.log('b: ' + res.sync7.b.text + ' == ' + res.diffsync.b.cache)
-        console.log('c: ' + res.sync7.c.text + ' == ' + res.diffsync.c.cache)
-        console.log('a: ' + res.sync7.a.cursor + ' == ' + res.diffsync.a.cursor)
-        console.log('b: ' + res.sync7.b.cursor + ' == ' + res.diffsync.b.cursor)
-        console.log('c: ' + res.sync7.c.cursor + ' == ' + res.diffsync.c.cursor)
+        print_stuff.push('BLAR! ' + ops.length + ' i=' + i)
+        print_stuff.push('a: ' + res.sync7.a.text + ' == ' + res.diffsync.a.cache)
+        print_stuff.push('b: ' + res.sync7.b.text + ' == ' + res.diffsync.b.cache)
+        print_stuff.push('c: ' + res.sync7.c.text + ' == ' + res.diffsync.c.cache)
+        print_stuff.push('a: ' + res.sync7.a.cursor + ' == ' + res.diffsync.a.cursor)
+        print_stuff.push('b: ' + res.sync7.b.cursor + ' == ' + res.diffsync.b.cursor)
+        print_stuff.push('c: ' + res.sync7.c.cursor + ' == ' + res.diffsync.c.cursor)
     }
+    console.log(print_stuff.join('\n'))
 }
 
 </script>
