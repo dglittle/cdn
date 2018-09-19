@@ -949,7 +949,7 @@ function apply_ops_to_test_repos(ops, debug_print_buffer) {
 
     apply_ops_to_diffsync(test_repos.diffsync, ops, debug_print_buffer)
 
-    test_repos.same = (test_repos.sync7.a.text == test_repos.diffsync.a.cache) && (test_repos.sync7.b.text == test_repos.diffsync.b.cache) && (test_repos.sync7.c.text == test_repos.diffsync.c.cache) && (test_repos.sync7.a.cursor == test_repos.diffsync.a.cursor) && (test_repos.sync7.b.cursor == test_repos.diffsync.b.cursor) && (test_repos.sync7.c.cursor == test_repos.diffsync.c.cursor)
+    test_repos.same = (test_repos.sync7.a.text == test_repos.diffsync.a.cache) && (test_repos.sync7.b.text == test_repos.diffsync.b.cache) && (test_repos.sync7.c.text == test_repos.diffsync.c.cache) && (test_repos.sync7.a.cursors[0] == test_repos.diffsync.a.cursors[0]) && (test_repos.sync7.b.cursors[0] == test_repos.diffsync.b.cursors[0]) && (test_repos.sync7.c.cursors[0] == test_repos.diffsync.c.cursors[0]) && (test_repos.sync7.a.cursors[1] == test_repos.diffsync.a.cursors[1]) && (test_repos.sync7.b.cursors[1] == test_repos.diffsync.b.cursors[1]) && (test_repos.sync7.c.cursors[1] == test_repos.diffsync.c.cursors[1])
     return test_repos
 }
 
