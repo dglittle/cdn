@@ -807,9 +807,9 @@ function apply_ops_to_sync7(s7s, ops, debug_print_buffer) {
     if (!s7s.a.buffer) s7s.a.buffer = []
     if (!s7s.b.buffer) s7s.b.buffer = []
     if (!s7s.c.buffer) s7s.c.buffer = []
-    if (typeof(s7s.a.cursor) != 'number') s7s.a.cursor = 0
-    if (typeof(s7s.b.cursor) != 'number') s7s.b.cursor = 0
-    if (typeof(s7s.c.cursor) != 'number') s7s.c.cursor = 0
+    if (typeof(s7s.a.cursor) != 'number') s7s.a.cursors = 0
+    if (typeof(s7s.b.cursor) != 'number') s7s.b.cursors = 0
+    if (typeof(s7s.c.cursor) != 'number') s7s.c.cursors = 0
     each(ops, function (op, opi) {
         var s7 = s7s[op.side]
         var other_s7s = []
@@ -850,7 +850,10 @@ function apply_ops_to_sync7(s7s, ops, debug_print_buffer) {
                 debug_print_buffer.push('side: ' + op.side)
             }
         } else if (op.op == 'cursor') {
-            s7.cursor = Math.floor((s7.text.length + 1) * op.pos)
+            s7.cursors = [
+                Math.floor((s7.text.length + 1) * op.pos0),
+                Math.floor((s7.text.length + 1) * op.pos1)
+            ]
             
             if (debug_print_buffer) {
                 debug_print_buffer.push('OP CURSOR')
@@ -885,9 +888,9 @@ function apply_ops_to_diffsync(dss, ops, debug_print_buffer) {
     if (!dss.a.buffer) dss.a.buffer = []
     if (!dss.b.buffer) dss.b.buffer = []
     if (!dss.c.buffer) dss.c.buffer = []
-    if (typeof(dss.a.cursor) != 'number') dss.a.cursor = 0
-    if (typeof(dss.b.cursor) != 'number') dss.b.cursor = 0
-    if (typeof(dss.c.cursor) != 'number') dss.c.cursor = 0
+    if (typeof(dss.a.cursor) != 'number') dss.a.cursors = 0
+    if (typeof(dss.b.cursor) != 'number') dss.b.cursors = 0
+    if (typeof(dss.c.cursor) != 'number') dss.c.cursors = 0
     each(ops, function (op) {
         var ds = dss[op.side]
         var others = []
@@ -922,7 +925,10 @@ function apply_ops_to_diffsync(dss, ops, debug_print_buffer) {
                 ds.cursor = range[0]
             }
         } else if (op.op == 'cursor') {
-            ds.cursor = Math.floor((ds.cache.length + 1) * op.pos)
+            ds.cursors = [
+                Math.floor((ds.cache.length + 1) * op.pos0),
+                Math.floor((ds.cache.length + 1) * op.pos1)
+            ]
         }
     })
 }
