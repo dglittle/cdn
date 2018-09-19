@@ -33,8 +33,6 @@ var sync7 = (typeof(module) != 'undefined') ? module.exports : {}
         var uid = guid()
         var s7 = sync7.create()
         var unacknowledged_commits = {}
-    
-        var prev_range = [-1, -1]
 
         window.addEventListener('beforeunload', function () {
             if (self.on_window_closing) self.on_window_closing()
@@ -108,27 +106,23 @@ var sync7 = (typeof(module) != 'undefined') ? module.exports : {}
                 }
                 if (o.commits) {
                     self.on_change()
-                    sync7.merge(s7, o.commits, work here)
-                    
-                    
-                    
-    sync7.merge = function (s7, cs, cursor, custom_merge_func) {
-                    
-                    
-                    
-                    
-                    
-    
-                    var patch = get_diff_patch(options.get_text(), minigit.cache)
-                    each(peer_ranges, function (range, peer) {
-                        peer_ranges[peer] = adjust_range(range, patch)
-                    })
-    
-                    prev_range = adjust_range(options.get_range(), patch)
-                    options.on_text(minigit.cache, prev_range)
+                    var new_range = sync7.merge(s7, o.commits, options.get_range())
+                    options.on_text(s7.text, new_range)
     
                     if (o.welcome) {
-                        each(extend(o.commits, minigit.get_ancestors(o.commits)), function (_, id) {
+                        each(Object.assign(o.commits, sync7_get_ancestors
+                        
+                        
+                        
+                        
+                        work here
+                        
+                        
+                        
+                        (o.commits))
+                        
+                        
+                        extend(, minigit.get_ancestors(o.commits)), function (_, id) {
                             delete unacknowledged_commits[id]
                         })
                         if (Object.keys(unacknowledged_commits).length > 0) {
