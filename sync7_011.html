@@ -106,7 +106,49 @@ function sync7_commit(s7, s) {
     return cs
 }
 
-function sync7_merge(s7, cs, custom_merge_func, cursor) {
+function sync7_merge(s7, cs, cursors, custom_merge_func) {
+    
+    
+    
+    
+    
+    
+    
+    function project_cursor_up(cursor) {
+        var node = s7.leaf
+        while (s7.temp_commits[node]) {
+            var old_node = node
+            each(s7.commits[node].to_parents, function (d, p) {
+                var offset = 0
+                var poffset = 0
+                each(d, function (d) {
+                    if (typeof(d) == 'number') {
+                        if (cursor <= offset + d) {
+                            cursor = cursor - offset + poffset
+                            node = p
+                            return false
+                        }
+                        offset += d
+                        poffset += d
+                    } else {
+                        offset += d[0].length
+                        poffset += d[1].length
+                    }
+                })
+                if (old_node != node) return false
+            })
+            if (old_node == node) throw 'failed to project cursor up'
+        }
+        return [cursor, node]
+    }
+    
+    
+    
+    
+    
+    
+    
+    
     var cursor_projection_node = s7.leaf
     var cursor_projection_offset = cursor
     while (s7.temp_commits[cursor_projection_node]) {
@@ -134,6 +176,15 @@ function sync7_merge(s7, cs, custom_merge_func, cursor) {
         if (old_node == cursor_projection_node)
             throw 'failed to project cursor up'
     }
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
     each(cs, function (c, id) {
         s7.commits[id] = c
