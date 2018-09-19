@@ -234,37 +234,37 @@ var sync7 = (typeof(module) != 'undefined') ? module.exports : {}
         s7.text = s
         return cs
     }
-    
-    sync7.merge = function (s7, cs, cursor, custom_merge_func) {
+
+    sync7.merge = function (s7, cs, cursors, custom_merge_func) {
         if (!custom_merge_func) custom_merge_func = default_custom_merge_func
-        var cursor_projection_node = s7.leaf
-        var cursor_projection_offset = cursor
-        while (s7.temp_commits[cursor_projection_node]) {
-            var old_node = cursor_projection_node
-            each(s7.commits[cursor_projection_node].to_parents, function (d, p) {
-                var offset = 0
-                var poffset = 0
-                each(d, function (d) {
-                    if (typeof(d) == 'number') {
-                        if (cursor_projection_offset <= offset + d) {
-                            cursor_projection_offset = cursor_projection_offset - offset + poffset
-                            cursor_projection_node = p
-                            return false
+        var projected_cursors = cursors.map(function (cursor) {
+            var node = s7.leaf
+            while (s7.temp_commits[node]) {
+                var old_node = node
+                each(s7.commits[node].to_parents, function (d, p) {
+                    var offset = 0
+                    var poffset = 0
+                    each(d, function (d) {
+                        if (typeof(d) == 'number') {
+                            if (cursor <= offset + d) {
+                                cursor = cursor - offset + poffset
+                                node = p
+                                return false
+                            }
+                            offset += d
+                            poffset += d
+                        } else {
+                            offset += d[0].length
+                            poffset += d[1].length
                         }
-                        offset += d
-                        poffset += d
-                    } else {
-                        offset += d[0].length
-                        poffset += d[1].length
-                    }
+                    })
+                    if (old_node != node) return false
                 })
-                if (old_node != cursor_projection_node)
-                    return false
-            })
-            if (old_node == cursor_projection_node)
-                throw 'failed to project cursor up'
-        }
-    
+                if (old_node == node) throw 'failed to project cursor up'
+            }
+            return [cursor, node]
+        })
+
         each(cs, function (c, id) {
             s7.commits[id] = c
             each(c.to_parents, function (d, p) {
