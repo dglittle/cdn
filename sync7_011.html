@@ -842,7 +842,7 @@ function apply_ops_to_sync7(s7s, ops, debug_print_buffer) {
         } else if (op.op == 'merge') {
             var x = s7.buffer.shift()
             if (x) {
-                s7.cursors = sync7_merge(s7, x, my_custom_merge_func, s7.cursors)
+                s7.cursors = sync7_merge(s7, x, s7.cursors, my_custom_merge_func)
             }
 
             if (debug_print_buffer) {
