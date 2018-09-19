@@ -869,7 +869,7 @@ function apply_ops_to_diffsync(dss, ops, debug_print_buffer) {
         var b = []
         each(a, function (v, k) { b[k] = f(v) })
         return b
-    }    
+    }
     function adjust_range(range, patch) {
         return map_array(range, function (x) {
             each(patch, function (p) {
