@@ -998,9 +998,9 @@ for (var tests = 0; tests < 100; tests++) {
         print_stuff.push('a: ' + res.sync7.a.text + ' == ' + res.diffsync.a.cache)
         print_stuff.push('b: ' + res.sync7.b.text + ' == ' + res.diffsync.b.cache)
         print_stuff.push('c: ' + res.sync7.c.text + ' == ' + res.diffsync.c.cache)
-        print_stuff.push('a: ' + res.sync7.a.cursor + ' == ' + res.diffsync.a.cursor)
-        print_stuff.push('b: ' + res.sync7.b.cursor + ' == ' + res.diffsync.b.cursor)
-        print_stuff.push('c: ' + res.sync7.c.cursor + ' == ' + res.diffsync.c.cursor)
+        print_stuff.push('a: ' + res.sync7.a.cursors + ' == ' + res.diffsync.a.cursors)
+        print_stuff.push('b: ' + res.sync7.b.cursors + ' == ' + res.diffsync.b.cursors)
+        print_stuff.push('c: ' + res.sync7.c.cursors + ' == ' + res.diffsync.c.cursors)
     }
     console.log(print_stuff.join('\n'))
 }
