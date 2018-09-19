@@ -842,7 +842,7 @@ function apply_ops_to_sync7(s7s, ops, debug_print_buffer) {
         } else if (op.op == 'merge') {
             var x = s7.buffer.shift()
             if (x) {
-                s7.cursor = sync7_merge(s7, x, my_custom_merge_func, s7.cursor)
+                s7.cursors = sync7_merge(s7, x, my_custom_merge_func, s7.cursors)
             }
 
             if (debug_print_buffer) {
@@ -920,9 +920,7 @@ function apply_ops_to_diffsync(dss, ops, debug_print_buffer) {
                 ds.merge(x)
                 
                 var patch = get_diff_patch(old, ds.cache)
-                var range = [ds.cursor]
-                range = adjust_range(range, patch)
-                ds.cursor = range[0]
+                ds.cursors = adjust_range(ds.cursors, patch)
             }
         } else if (op.op == 'cursor') {
             ds.cursors = [
