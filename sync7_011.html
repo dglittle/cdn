@@ -107,14 +107,7 @@ function sync7_commit(s7, s) {
 }
 
 function sync7_merge(s7, cs, cursors, custom_merge_func) {
-    
-    
-    
-    
-    
-    
-    
-    function project_cursor_up(cursor) {
+    var projected_cursors = cursors.map(function (cursor) {
         var node = s7.leaf
         while (s7.temp_commits[node]) {
             var old_node = node
@@ -140,51 +133,7 @@ function sync7_merge(s7, cs, cursors, custom_merge_func) {
             if (old_node == node) throw 'failed to project cursor up'
         }
         return [cursor, node]
-    }
-    
-    
-    
-    
-    
-    
-    
-    
-    var cursor_projection_node = s7.leaf
-    var cursor_projection_offset = cursor
-    while (s7.temp_commits[cursor_projection_node]) {
-        var old_node = cursor_projection_node
-        each(s7.commits[cursor_projection_node].to_parents, function (d, p) {
-            var offset = 0
-            var poffset = 0
-            each(d, function (d) {
-                if (typeof(d) == 'number') {
-                    if (cursor_projection_offset <= offset + d) {
-                        cursor_projection_offset = cursor_projection_offset - offset + poffset
-                        cursor_projection_node = p
-                        return false
-                    }
-                    offset += d
-                    poffset += d
-                } else {
-                    offset += d[0].length
-                    poffset += d[1].length
-                }
-            })
-            if (old_node != cursor_projection_node)
-                return false
-        })
-        if (old_node == cursor_projection_node)
-            throw 'failed to project cursor up'
-    }
-    
-    
-    
-    
-    
-    
-    
-    
-    
+    })
 
     each(cs, function (c, id) {
         s7.commits[id] = c
@@ -518,39 +467,43 @@ function sync7_merge(s7, cs, cursors, custom_merge_func) {
     s7.leaf = prev_merge_node
     s7.text = texts[prev_merge_node]
 
-    while (cursor_projection_node != s7.leaf) {
-        var old_node = cursor_projection_node
-        var kids = s7.commits[cursor_projection_node].from_kids
-        var kid = Object.keys(kids)[0]
-        var d = kids[kid]
-        
-        var offset = 0
-        var poffset = 0
-        each(d, function (d) {
-            if (typeof(d) == 'number') {
-                if (cursor_projection_offset <= poffset + d) {
-                    cursor_projection_offset = cursor_projection_offset - poffset + offset
-                    cursor_projection_node = kid
-                    return false
+    return projected_cursors.map(function (projected_cursor) {
+        var cursor = projected_cursor[0]
+        var node = projected_cursor[1]
+        while (node != s7.leaf) {
+            var old_node = node
+            var kids = s7.commits[node].from_kids
+            var kid = Object.keys(kids)[0]
+            var d = kids[kid]
+            
+            var offset = 0
+            var poffset = 0
+            each(d, function (d) {
+                if (typeof(d) == 'number') {
+                    if (cursor <= poffset + d) {
+                        cursor = cursor - poffset + offset
+                        node = kid
+                        return false
+                    }
+                    offset += d
+                    poffset += d
+                } else {
+                    if (cursor <= poffset + d[1].length) {
+                        cursor = offset
+                        node = kid
+                        return false
+                    }
+                    offset += d[0].length
+                    poffset += d[1].length
                 }
-                offset += d
-                poffset += d
-            } else {
-                if (cursor_projection_offset <= poffset + d[1].length) {
-                    cursor_projection_offset = offset
-                    cursor_projection_node = kid
-                    return false
-                }
-                offset += d[0].length
-                poffset += d[1].length
+            })
+            if (node == old_node) {
+                cursor = offset
+                node = kid
             }
-        })
-        if (cursor_projection_node == old_node) {
-            cursor_projection_offset = offset
-            cursor_projection_node = kid
         }
-    }
-    return cursor_projection_offset
+        return cursor
+    })
 }
 
 function sync7_diff_merge_trans(a, b, a_factor, b_factor) {
