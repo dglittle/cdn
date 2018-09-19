@@ -110,7 +110,7 @@ var sync7 = (typeof(module) != 'undefined') ? module.exports : {}
                     options.on_text(s7.text, new_range)
     
                     if (o.welcome) {
-                        each(Object.assign(o.commits, sync7_get_ancestors
+                        each(Object.assign(o.commits, sync7_get_ancestors(s7, )
                         
                         
                         
@@ -826,11 +826,11 @@ var sync7 = (typeof(module) != 'undefined') ? module.exports : {}
         return leaves
     }
         
-    function sync7_get_ancestors(s7, id, include_self) {
-        var frontier = [id]
+    function sync7_get_ancestors(s7, id_or_set, include_self) {
+        var frontier = (typeof(id_or_set) == 'object') ? Object.keys(id_or_set) : [id_or_set]
         var ancestors = {}
         if (include_self)
-            ancestors[id] = s7.commits[id]
+            ancestors[id_or_set] = s7.commits[id_or_set]
         while (frontier.length > 0) {
             var next = frontier.shift()
             each(s7.commits[next].to_parents, function (_, p) {
