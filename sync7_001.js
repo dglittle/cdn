@@ -120,56 +120,16 @@ var sync7 = (typeof(module) != 'undefined') ? module.exports : {}
                     }
                     send({ leaves : s7.real_leaves })
                 }
-                if (o.may_delete) {
-                    each(o.may_delete, function (_, id) {
-                        delete unacknowledged_commits[id]
-                        minigit.remove(id)
-                    })
-                }
-                if (o.range) {
-                    peer_ranges[o.uid] = o.range
-                }
-                if (o.close) {
-                    delete peer_ranges[o.uid]
-                }
-                if ((o.range || o.close || o.commits) && options.on_ranges) {
-                    options.on_ranges(peer_ranges)
-                }
             }
     
             self.on_change = function () {
                 if (!connected) { return }
-    
-                var old_cache = minigit.cache
-                var cs = minigit.commit(options.get_text())
-                if (cs) {
-                    extend(unacknowledged_commits, cs)
-    
-                    var patch = null
-                    var c = cs[Object.keys(cs)[0]]
-                    var parents = Object.keys(c.from_parents)
-                    if (parents.length == 1)
-                        patch = c.from_parents[parents[0]]
-                    else
-                        patch = get_diff_patch(old_cache, minigit.cache)
-    
-                    each(peer_ranges, function (range, peer) {
-                        peer_ranges[peer] = adjust_range(range, patch)
-                    })
-                    if (options.on_ranges) options.on_ranges(peer_ranges)
-                }
-    
+                
+                var cs = sync7.commit(s7, options.get_text())
+                
+                if (cs) Object.assign(unacknowledged_commits, cs)
                 if (!sent_unacknowledged_commits) { return }
-    
-                var range = options.get_range()
-                var range_changed = (range[0] != prev_range[0]) || (range[1] != prev_range[1])
-                prev_range = range
-    
-                var msg = {}
-                if (cs) msg.commits = cs
-    
-                if (range_changed) msg.range = range
-                if (cs || range_changed) send(msg)
+                if (cs) send({ commits : cs })
             }
         }
         reconnect()
@@ -257,10 +217,10 @@ var sync7 = (typeof(module) != 'undefined') ? module.exports : {}
             })
         })
         s7.real_leaves = sync7_get_leaves(s7.commits, s7.temp_commits)
-        s7.real_leaves = Object.keys(s7.real_leaves).sort()
+        var leaves = Object.keys(s7.real_leaves).sort()
         
         var texts = {}
-        each(s7.real_leaves, function (leaf) {
+        each(leaves, function (leaf) {
             texts[leaf] = sync7_get_text(s7, leaf)
         })
     
@@ -274,10 +234,10 @@ var sync7 = (typeof(module) != 'undefined') ? module.exports : {}
         })
         s7.temp_commits = {}
         
-        var prev_merge_node = s7.real_leaves[0]
+        var prev_merge_node = leaves[0]
         var ancestors = sync7_get_ancestors(s7, prev_merge_node)
-        for (var i = 1; i < s7.real_leaves.length; i++) {
-            var leaf = s7.real_leaves[i]
+        for (var i = 1; i < leaves.length; i++) {
+            var leaf = leaves[i]
             var i_ancestors = sync7_get_ancestors(s7, leaf)
             var CAs = sync7_intersection(ancestors, i_ancestors)
             var LCAs = sync7_get_leaves(CAs)
