@@ -110,22 +110,7 @@ var sync7 = (typeof(module) != 'undefined') ? module.exports : {}
                     options.on_text(s7.text, new_range)
     
                     if (o.welcome) {
-                        each(Object.assign(o.commits, sync7_get_ancestors(s7, o.commits)
-                        
-                        
-                        work here
-                        
-                        
-                        
-                        
-                        work here
-                        
-                        
-                        
-                        (o.commits))
-                        
-                        
-                        extend(, minigit.get_ancestors(o.commits)), function (_, id) {
+                        each(sync7_get_ancestors(s7, o.commits, true), function (_, id) {
                             delete unacknowledged_commits[id]
                         })
                         if (Object.keys(unacknowledged_commits).length > 0) {
@@ -134,6 +119,15 @@ var sync7 = (typeof(module) != 'undefined') ? module.exports : {}
                         sent_unacknowledged_commits = true
                     }
     
+    
+
+
+
+
+                    work here
+    
+    
+                    work here
                     send({ leaves : minigit.leaves })
                 }
                 if (o.may_delete) {
@@ -211,6 +205,7 @@ var sync7 = (typeof(module) != 'undefined') ? module.exports : {}
                 'root' : { to_parents : {}, from_kids : {} }
             },
             temp_commits : {},
+            real_leaves : ['root'],
             leaf : 'root',
             text : ''
         }
@@ -227,6 +222,7 @@ var sync7 = (typeof(module) != 'undefined') ? module.exports : {}
         s7.commits[s7.leaf].from_kids[id] = to_parents[s7.leaf] = sync7_diff(s, s7.text)
         s7.commits[id] = cs[id] = { to_parents : to_parents, from_kids : {} }
         s7.leaf = id
+        s7.real_leaves = [id]
         
         s7.text = s
         return cs
@@ -270,11 +266,11 @@ var sync7 = (typeof(module) != 'undefined') ? module.exports : {}
                 }
             })
         })
-        var leaves = sync7_get_leaves(s7.commits, s7.temp_commits)
-        leaves = Object.keys(leaves).sort()
+        s7.real_leaves = sync7_get_leaves(s7.commits, s7.temp_commits)
+        s7.real_leaves = Object.keys(s7.real_leaves).sort()
         
         var texts = {}
-        each(leaves, function (leaf) {
+        each(s7.real_leaves, function (leaf) {
             texts[leaf] = sync7_get_text(s7, leaf)
         })
     
@@ -288,10 +284,10 @@ var sync7 = (typeof(module) != 'undefined') ? module.exports : {}
         })
         s7.temp_commits = {}
         
-        var prev_merge_node = leaves[0]
+        var prev_merge_node = s7.real_leaves[0]
         var ancestors = sync7_get_ancestors(s7, prev_merge_node)
-        for (var i = 1; i < leaves.length; i++) {
-            var leaf = leaves[i]
+        for (var i = 1; i < s7.real_leaves.length; i++) {
+            var leaf = s7.real_leaves[i]
             var i_ancestors = sync7_get_ancestors(s7, leaf)
             var CAs = sync7_intersection(ancestors, i_ancestors)
             var LCAs = sync7_get_leaves(CAs)
