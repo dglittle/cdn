@@ -118,17 +118,7 @@ var sync7 = (typeof(module) != 'undefined') ? module.exports : {}
                         }
                         sent_unacknowledged_commits = true
                     }
-    
-    
-
-
-
-
-                    work here
-    
-    
-                    work here
-                    send({ leaves : minigit.leaves })
+                    send({ leaves : s7.real_leaves })
                 }
                 if (o.may_delete) {
                     each(o.may_delete, function (_, id) {
