@@ -137,17 +137,120 @@ var sync7 = (typeof(module) != 'undefined') ? module.exports : {}
         return self
     }
 
+    // options is an object like this: {
+    //     wss : a websocket server from the 'ws' module,
+    // }
+    //
+    sync7.create_server = function (options) {
+        var self = {}
+        self.channels = {}
+    
+        function new_channel(name) {
+            return self.channels[name] = {
+                name : name,
+                s7 : sync7.create(),
+                members : {}
+            }
+        }
+        function get_channel(name) {
+            return self.channels[name] || new_channel(name)
+        }
+    
+        var users_to_sockets = {}
 
+        options.wss.on('connection', function connection(ws) {
+            console.log('new connection')
+            var uid = null
+            var channel_name = null
+    
+            function myClose() {
+                if (!uid) { return }
+                delete users_to_sockets[uid]
+                each(users_to_sockets, function (_ws, _uid) {
+                    try {
+                        _ws.send(JSON.stringify({
+                            v : sync7.version,
+                            uid : uid,
+                            channel : channel_name,
+                            close : true
+                        }))
+                    } catch (e) {}
+                })
+            }
+    
+            ws.on('close', myClose)
+            ws.on('error', myClose)
+            
+            function try_send(ws, message) {
+                try {
+                    ws.send(message)
+                } catch (e) {}
+            }
+    
+            ws.on('message', function (message) {
+                var o = JSON.parse(message)
+                if (o.v != sync7.version) { return }
+                if (o.ping) { return try_send(ws, JSON.stringify({ pong : true })) }
+    
+                console.log('message: ' + message)
+    
+                uid = o.uid
+                var channel = get_channel(o.channel)
+                channel_name = channel.name
+                users_to_sockets[uid] = ws
+                
+                if (!channel.members[uid]) channel.members[uid] = { last_sent : 0 }
+                channel.members[uid].last_seen = Date.now()
 
+                function send_to_all_but_me(message) {
+                    each(channel.members, function (_, them) {
+                        if (them != uid) {
+                            try_send(users_to_sockets[them], message)
+                        }
+                    })
+                }
+    
+                if (o.get_channels) {
+                    try_send(ws, JSON.stringify({ channels : Object.keys(self.channels) }))
+                }
+                if (o.join) {
+                    try_send(ws, JSON.stringify({ commits : channel.s7.commits, welcome : true }))
+                }
+                if (o.commits) {
+                    var new_commits = {}
+                    each(o.commits, function (c, id) {
+                        if (!channel.s7.commits[id]) {
+                            new_commits[id] = c
+                        }
+                    })
+                    sync7.merge(channel.s7, new_commits)
 
-
-
-
-
-
-
-
-
+                    var new_message = {
+                        channel : channel.name,
+                        commits : new_commits
+                    }
+                    new_message = JSON.stringify(new_message)
+    
+                    var now = Date.now()
+                    each(channel.members, function (m, them) {
+                        if (them != uid) {
+                            if (m.last_seen > m.last_sent) {
+                                m.last_sent = now
+                            } else if (m.last_sent < now - 3000) {
+                                return
+                            }
+                            try_send(users_to_sockets[them], new_message)
+                        }
+                    })
+                }
+                if (o.close) {
+                    delete channel.members[uid]
+                }
+            })
+        })
+    
+        return self
+    }
 
     sync7.create = function () {
         return {
