@@ -1,0 +1,853 @@
+
+<script src="https://dglittle.github.io/cdn/random001.js"></script>
+<script src="https://dglittle.github.io/cdn/utils004.js"></script>
+<script src="https://invisible-college.github.io/universal-sync/diffsync.js"></script>
+<body style="margin:0px"></body>
+<script>
+
+Math.randomSeed(7)
+
+document.body.append(sync7_create_visualization(get_example_sync7()))
+
+function sync7_create_visualization(s7) {
+    var CHAR_BOX_SIZE = 20
+    
+    var commit_extras = {
+        "root": {
+            text : '',
+            x : CHAR_BOX_SIZE * 3.5,
+            y : CHAR_BOX_SIZE * 0.5
+        },
+        "4eMjrYIsYjxgv54": {
+            text : 'x',
+            x : CHAR_BOX_SIZE * 3,
+            y : CHAR_BOX_SIZE * 2
+        },
+        "qg0uwGRNkno4FhF": {
+            text : 'xz',
+            x : CHAR_BOX_SIZE * 1,
+            y : CHAR_BOX_SIZE * 4
+        },
+        "UHdlsVVg1KBfWQe": {
+            text : 'y',
+            x : CHAR_BOX_SIZE * 4.5,
+            y : CHAR_BOX_SIZE * 4
+        },
+        "ayNUW8rwnKmFbt6": {
+            text : 'yz',
+            x : CHAR_BOX_SIZE * 1,
+            y : CHAR_BOX_SIZE * 7
+        },
+        "IppZUNblJiqvqCD": {
+            text : 'yzA',
+            x : CHAR_BOX_SIZE * 1,
+            y : CHAR_BOX_SIZE * 11
+        },
+        "ctuCnWtlmhPrLXj": {
+            text : 'q',
+            x : CHAR_BOX_SIZE * 6,
+            y : CHAR_BOX_SIZE * 6.5
+        },
+        "bz8h5sxljEhmVsq": {
+            text : 'qz',
+            x : CHAR_BOX_SIZE * 5,
+            y : CHAR_BOX_SIZE * 9
+        },
+        "Ewgpp0F5rHMwGHJ": {
+            text : 'qzB',
+            x : CHAR_BOX_SIZE * 5,
+            y : CHAR_BOX_SIZE * 12
+        },
+        "rQEtFQP8xj2s5JN": {
+            text : 'qzBA',
+            x : CHAR_BOX_SIZE * 2,
+            y : CHAR_BOX_SIZE * 14
+        }
+    }
+    
+    var selected = {}
+    
+    var d = document.createElement('div')
+    
+    var button = document.createElement('button')
+    button.textContent = '+'
+    button.style.display = 'block'
+    button.onclick = function () {
+        var sel = Object.keys(selected)
+        if (sel.length == 1) {
+            var s = prompt('create new version', commit_extras[sel[0]].text)
+            if (s) {
+                
+            }
+        }
+    }
+    d.append(button)
+
+    var svg_div = document.createElement('div')
+    svg_div.style.cursor = 'pointer'
+    d.append(svg_div)
+
+    function create_line(x1, y1, x2, y2, stroke) {
+        var line = document.createElementNS('http://www.w3.org/2000/svg', 'line')
+        line.setAttribute('x1', x1)
+        line.setAttribute('y1', y1)
+        line.setAttribute('x2', x2)
+        line.setAttribute('y2', y2)
+        line.setAttribute('stroke', stroke)
+        return line
+    }
+    
+    function create_char_boxes(x, y, size, text, selected) {
+        var stroke = 'black'
+        var g = document.createElementNS('http://www.w3.org/2000/svg', 'g')
+        
+        if (selected) {
+            var rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
+            rect.style.fill = 'yellow'
+            rect.setAttribute('x', x)
+            rect.setAttribute('y', y)
+            rect.setAttribute('width', text.length * size)
+            rect.setAttribute('height', size)
+            g.append(rect)
+        }
+        
+        g.append(create_line(x, y + 0.5, x + size * text.length, y + 0.5, stroke))
+        g.append(create_line(x, y + size - 0.5, x + size * text.length, y + size - 0.5, stroke))
+        for (var i = 0; i <= text.length; i++) {
+            g.append(create_line(x + i * size + 0.5, y + 0.5, x + i * size + 0.5, y + size - 0.5, stroke))
+        }
+        for (var i = 0; i < text.length; i++) {
+            var char = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+            char.style.fill = stroke
+            char.style.fontSize = size
+            char.setAttribute('x', x + i*size + size/2)
+            char.setAttribute('y', y + size*0.9)
+            char.setAttribute('text-anchor', 'middle')
+            char.setAttribute('alignment-baseline', 'baseline')
+            
+            var textNode = document.createTextNode(text[i])
+            char.appendChild(textNode)
+            
+            g.append(char)
+        }
+        return g
+    }
+    
+    function create_polygon(points, fill) {
+        var poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
+        poly.style.fill = fill
+        
+        var points_text = []
+        for (var i = 0; i < points.length; i++) {
+            points_text.push((i == 0 ? '' : ' ') + points[i][0])
+            points_text.push(',' + points[i][1])
+        }
+        poly.setAttribute('points', points_text.join(''))
+        
+        return poly
+    }
+    
+    function create_diff_lines(x1, y1, x2, y2, size, diff) {
+        var stroke = 'black'
+        var g = document.createElementNS('http://www.w3.org/2000/svg', 'g')
+
+        var child_offset = 0
+        var parent_offset = 0
+        each(diff, function (d) {
+            var points = []
+            points.push([x1 + child_offset, y1])
+            points.push([x2 + parent_offset, y2 + size])
+            if (typeof(d) == 'number') {
+                child_offset += d * size
+                parent_offset += d * size
+            } else {
+                child_offset += d[0].length * size
+                parent_offset += d[1].length * size
+            }
+            points.push([x2 + parent_offset, y2 + size])
+            points.push([x1 + child_offset, y1])
+
+            if (typeof(d) != 'number') {
+                g.append(create_polygon(points, 'rgba(100, 255, 30, 0.5)'))
+            }
+        })
+
+        var child_offset = 0
+        var parent_offset = 0
+        g.append(create_line(x1 + child_offset, y1, x2 + parent_offset, y2 + size, stroke))
+        each(diff, function (d) {
+            if (typeof(d) == 'number') {
+                child_offset += d * size
+                parent_offset += d * size
+            } else {
+                child_offset += d[0].length * size
+                parent_offset += d[1].length * size
+            }
+            g.append(create_line(x1 + child_offset, y1, x2 + parent_offset, y2 + size, stroke))
+        })
+
+        return g
+    }
+
+    var svg = null
+    function redraw() {
+        if (svg) svg.remove()
+        svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+        svg_div.append(svg)
+        svg.setAttribute('width', '500')
+        svg.setAttribute('height', '500')
+        
+        each(s7.commits, function (c, id) {
+            each(c.to_parents, function (d, pid) {
+                svg.append(create_diff_lines(commit_extras[id].x, commit_extras[id].y, commit_extras[pid].x, commit_extras[pid].y, CHAR_BOX_SIZE, d))
+            })
+        })
+    
+        each(s7.commits, function (c, id) {
+            svg.append(create_char_boxes(commit_extras[id].x, commit_extras[id].y, CHAR_BOX_SIZE, commit_extras[id].text, selected[id]))
+        })
+    }
+    redraw()
+
+    function getPos(e) {
+        var x = 0, y = 0
+        while (e != null) {
+            x += e.offsetLeft
+            y += e.offsetTop
+            e = e.offsetParent
+        }
+        return {x : x, y : y}
+    }
+    
+    function getRelPos(to, positionedObject) {
+        var pos = getPos(to)
+        return {
+            x : positionedObject.pageX - pos.x,
+            y : positionedObject.pageY - pos.y
+        }
+    }    
+    
+    svg_div.onmousedown = function (e) {
+        e.preventDefault()
+        var pos = getRelPos(svg_div, e)
+        
+        var grabbed = null
+        each(commit_extras, function (extra, id) {
+            if (pos.x >= extra.x && pos.x < extra.x + extra.text.length * CHAR_BOX_SIZE && pos.y >= extra.y && pos.y < extra.y + CHAR_BOX_SIZE) {
+                if (!e.metaKey)
+                    selected = {}
+                selected[id] = true
+                grabbed = {
+                    id : id,
+                    hot_x : pos.x - extra.x,
+                    hot_y : pos.y - extra.y
+                }
+                redraw()
+                return false
+            }
+        })
+        if (!grabbed) {
+            selected = {}
+            redraw()
+        }
+
+        var oldMove = document.onmousemove
+        document.onmousemove = function (e) {
+            var pos = getRelPos(svg_div, e)
+            if (grabbed) {
+                commit_extras[grabbed.id].x = pos.x - grabbed.hot_x
+                commit_extras[grabbed.id].y = pos.y - grabbed.hot_y
+                redraw()
+            }
+        }
+        
+        var oldUp = document.onmouseup
+        document.onmouseup = function (e) {
+            document.onmousemove = oldMove
+            document.onmouseup = oldUp
+        }
+    }    
+
+    return d
+}
+
+function get_example_sync7() {
+    return {
+    "commits": {
+        "root": {
+            "to_parents": {}
+        },
+        "4eMjrYIsYjxgv54": {
+            "to_parents": {
+                "root": [
+                    [
+                        "x",
+                        ""
+                    ]
+                ]
+            }
+        },
+        "qg0uwGRNkno4FhF": {
+            "to_parents": {
+                "4eMjrYIsYjxgv54": [
+                    1,
+                    [
+                        "z",
+                        ""
+                    ]
+                ]
+            }
+        },
+        "UHdlsVVg1KBfWQe": {
+            "to_parents": {
+                "4eMjrYIsYjxgv54": [
+                    [
+                        "y",
+                        "x"
+                    ]
+                ]
+            }
+        },
+        "ayNUW8rwnKmFbt6": {
+            "to_parents": {
+                "UHdlsVVg1KBfWQe": [
+                    1,
+                    [
+                        "z",
+                        ""
+                    ]
+                ],
+                "qg0uwGRNkno4FhF": [
+                    [
+                        "y",
+                        "x"
+                    ],
+                    1
+                ]
+            }
+        },
+        "IppZUNblJiqvqCD": {
+            "to_parents": {
+                "ayNUW8rwnKmFbt6": [
+                    2,
+                    [
+                        "A",
+                        ""
+                    ]
+                ]
+            }
+        },
+        "ctuCnWtlmhPrLXj": {
+            "to_parents": {
+                "UHdlsVVg1KBfWQe": [
+                    [
+                        "q",
+                        "y"
+                    ]
+                ]
+            }
+        },
+        "bz8h5sxljEhmVsq": {
+            "to_parents": {
+                "ctuCnWtlmhPrLXj": [
+                    1,
+                    [
+                        "z",
+                        ""
+                    ]
+                ],
+                "qg0uwGRNkno4FhF": [
+                    [
+                        "q",
+                        "x"
+                    ],
+                    1
+                ]
+            }
+        },
+        "Ewgpp0F5rHMwGHJ": {
+            "to_parents": {
+                "bz8h5sxljEhmVsq": [
+                    2,
+                    [
+                        "B",
+                        ""
+                    ]
+                ]
+            }
+        },
+        "rQEtFQP8xj2s5JN": {
+            "to_parents": {
+                "Ewgpp0F5rHMwGHJ": [
+                    3,
+                    [
+                        "A",
+                        ""
+                    ]
+                ],
+                "IppZUNblJiqvqCD": [
+                    [
+                        "q",
+                        "y"
+                    ],
+                    1,
+                    [
+                        "B",
+                        ""
+                    ],
+                    1
+                ]
+            }
+        }
+    },
+    "temp_commits": {
+        "rQEtFQP8xj2s5JN": true
+    },
+    "leaf": "rQEtFQP8xj2s5JN",
+    "text": "qzBA"
+}
+}
+
+////////////////////
+
+function my_custom_merge_func(a, b, diffs_to_ancestors) {
+    var texts = []
+    var to_a = []
+    var to_b = []
+    var a_i = 0
+    var b_i = 0
+    while (a_i < a.length || b_i < b.length) {
+        var a_first = b_i >= b.length
+        var b_first = a_i >= a.length
+        var both_equal = false
+        var a_replaced = false
+        var b_replaced = false
+        each(diffs_to_ancestors, function (anc) {
+            if (!anc.extra) {
+                anc.extra = {
+                    adi : 0, // a's diff index
+                    bdi : 0,
+                    adco : 0, // a's diff's child-offset
+                    bdco : 0,
+                    adao : 0, // a's diff's anc-offset
+                    bdao : 0
+                }
+            }
+            
+            var ad = anc[0][anc.extra.adi]
+            while (ad && typeof(ad) != 'number' && ad[0] == '') {
+                anc.extra.adao += ad[1].length
+                anc.extra.adi++
+                ad = anc[0][anc.extra.adi]
+            }
+            
+            var bd = anc[1][anc.extra.bdi]
+            while (bd && typeof(bd) != 'number' && bd[0] == '') {
+                anc.extra.bdao += bd[1].length
+                anc.extra.bdi++
+                bd = anc[1][anc.extra.bdi]
+            }
+            
+            if ((ad && typeof(ad) == 'number') &&
+                (bd && typeof(bd) == 'number') &&
+                (anc.extra.adao == anc.extra.bdao))
+                both_equal = true
+            if ((ad && typeof(ad) == 'number') &&
+                (!bd || typeof(bd) != 'number' || anc.extra.adao != anc.extra.bdao))
+                a_replaced = true
+            if ((!ad || typeof(ad) != 'number' || anc.extra.adao != anc.extra.bdao) &&
+                (bd && typeof(bd) == 'number'))
+                b_replaced = true
+
+            if (!ad) {
+                b_first = true
+            } else if (!bd) {
+                a_first = true
+            } else if (anc.extra.adao < anc.extra.bdao) {
+                a_first = true
+            } else if (anc.extra.adao > anc.extra.bdao) {
+                b_first = true
+            } else {
+                if ((typeof(ad) != 'number' && ad[1] == '') &&
+                    (typeof(bd) == 'number' || bd[1] != '')) {
+                    a_first = true
+                } else if ((typeof(ad) == 'number' || ad[1] != '') &&
+                    (typeof(bd) != 'number' && bd[1] == '')) {
+                    b_first = true
+                }
+            }
+        })
+
+        var inc_a = false
+        var inc_b = false
+        
+        if (both_equal) {
+            texts.push(a[a_i])
+            sync7_push_eq(to_a, 1)
+            sync7_push_eq(to_b, 1)
+            inc_a = true
+            inc_b = true
+        } else if (a_first || !b_first) {
+            if (!a_replaced) {
+                texts.push(a[a_i])
+                sync7_push_eq(to_a, 1)
+                sync7_push_rep(to_b, a[a_i], '')
+            } else {
+                sync7_push_rep(to_a, '', a[a_i])
+            }
+            inc_a = true
+        } else {
+            if (!b_replaced) {
+                texts.push(b[b_i])
+                sync7_push_eq(to_b, 1)
+                sync7_push_rep(to_a, b[b_i], '')
+            } else {
+                sync7_push_rep(to_b, '', b[b_i])
+            }
+            inc_b = true
+        }
+
+        if (inc_a) {
+            a_i++
+            each(diffs_to_ancestors, function (anc) {
+                var ad = anc[0][anc.extra.adi]
+                anc.extra.adco++
+                if (typeof(ad) == 'number')
+                    anc.extra.adao++
+                if (anc.extra.adco >= (typeof(ad) == 'number' ? ad : ad[0].length)) {
+                    if (typeof(ad) != 'number')
+                        anc.extra.adao += ad[1].length
+                    anc.extra.adi++
+                    anc.extra.adco = 0
+                }
+            })
+        }
+        if (inc_b) {
+            b_i++
+            each(diffs_to_ancestors, function (anc) {
+                var bd = anc[1][anc.extra.bdi]
+                anc.extra.bdco++
+                if (typeof(bd) == 'number')
+                    anc.extra.bdao++
+                if (anc.extra.bdco >= (typeof(bd) == 'number' ? bd : bd[0].length)) {
+                    if (typeof(bd) != 'number')
+                        anc.extra.bdao += bd[1].length
+                    anc.extra.bdi++
+                    anc.extra.bdco = 0
+                }
+            })
+        }
+    }
+
+    return {
+        text : texts.join(''),
+        to_a : to_a,
+        to_b : to_b
+    }
+}
+
+function sync7_diff(a, b) {
+    var ret = []
+    var d = diff_main(a, b)
+    for (var i = 0; i < d.length; i++) {
+        if (d[i][0] == 0) {
+            sync7_push_eq(ret, d[i][1].length)
+        } else if (d[i][0] == 1) {
+            sync7_push_rep(ret, '', d[i][1])
+        } else {
+            sync7_push_rep(ret, d[i][1], '')
+        }
+    }
+    return ret
+}
+
+function sync7_diff_apply(s, diff) {
+    var offset = 0
+    var texts = []
+    each(diff, function (d) {
+        if (typeof(d) == 'number') {
+            texts.push(s.substr(offset, d))
+            offset += d
+        } else {
+            texts.push(d[1])
+            offset += d[0].length
+        }
+    })
+    texts.push(s.substr(offset))
+    return texts.join('')
+}
+
+function sync7_push_eq(diffs, size) {
+    if (typeof(diffs[diffs.length - 1]) == 'number') {
+        diffs[diffs.length - 1] += size
+    } else diffs.push(size)
+}
+function sync7_push_rep(diffs, del, ins) {
+    if (del.length == 0 && ins.length == 0) return
+    if (diffs.length > 0) {
+        var top = diffs[diffs.length - 1]
+        if (typeof(top) != 'number') {
+            top[0] += del
+            top[1] += ins
+            return
+        }
+    }
+    diffs.push([del, ins])
+}
+
+function sync7_diff_merge_trans(a, b, a_factor, b_factor) {
+    var ret = []
+    var a_i = 0
+    var b_i = 0
+    var a_offset = 0
+    var b_offset = 0
+    function neg_idx(i) {
+        return i == 0 ? 1 : 0
+    }
+    function a_idx(i) {
+        return a_factor == -1 ? neg_idx(i) : i
+    }
+    function b_idx(i) {
+        return b_factor == -1 ? neg_idx(i) : i
+    }
+    while (a_i < a.length && b_i < b.length) {
+        var da = a[a_i]
+        var db = b[b_i]
+        if (typeof(da) == 'number' && typeof(db) == 'number') {
+            var a_len = da - a_offset
+            var b_len = db - b_offset
+            sync7_push_eq(ret, Math.min(a_len, b_len))
+        } else if (typeof(da) == 'number') {
+            var a_len = da - a_offset
+            var b_len = db[b_idx(0)].length - b_offset
+            sync7_push_rep(ret, db[b_idx(0)].substr(b_offset, Math.min(a_len, b_len)), b_offset == 0 ? db[b_idx(1)] : '')
+        } else if (typeof(db) == 'number') {
+            var a_len = da[a_idx(1)].length - a_offset
+            var b_len = db - b_offset
+            sync7_push_rep(ret, a_offset == 0 ? da[a_idx(0)] : '', da[a_idx(1)].substr(a_offset, Math.min(a_len, b_len)))
+        } else {
+            var a_len = da[a_idx(1)].length - a_offset
+            var b_len = db[b_idx(0)].length - b_offset
+            sync7_push_rep(ret, a_offset == 0 ? da[a_idx(0)] : '', b_offset == 0 ? db[b_idx(1)] : '')
+        }
+        if (a_len > b_len) {
+            a_offset += b_len
+        } else {
+            a_i++
+            a_offset = 0
+        }
+        if (a_len < b_len) {
+            b_offset += a_len
+        } else {
+            b_i++
+            b_offset = 0
+        }
+    }
+    while (a_i < a.length) {
+        var da = a[a_i]
+        if (typeof(da) == 'number') {
+            sync7_push_eq(ret, da)
+        } else {
+            sync7_push_rep(ret, a_offset == 0 ? da[a_idx(0)] : '', da[a_idx(1)].substr(a_offset))
+        }
+        a_i++
+        a_offset = 0
+    }
+    while (b_i < b.length) {
+        var db = b[b_i]
+        if (typeof(db) == 'number') {
+            sync7_push_eq(ret, db)
+        } else {
+            sync7_push_rep(ret, db[b_idx(0)].substr(b_offset), b_offset == 0 ? db[b_idx(1)] : '')
+        }
+        b_i++
+        b_offset = 0
+    }
+    return ret
+}
+
+function create_sync7_repo() {
+    return {
+        commits : {
+            'root' : { to_parents : {} }
+        },
+        temp_commits : {},
+        leaf : 'root',
+        text : ''
+    }
+}
+
+function sync7_commit(self, s) {
+    if (s == self.text) { return }
+    var cs = {}
+    
+    each(self.temp_commits, function (_, k) {
+        cs[k] = self.commits[k]
+    })
+    self.temp_commits = {}
+
+    var id = guid()
+    var to_parents = {}
+    to_parents[self.leaf] = sync7_diff(s, self.text)
+    self.commits[id] = cs[id] = { to_parents : to_parents }
+    self.leaf = id
+    
+    self.text = s
+    return cs
+}
+
+function sync7_merge(self, cs, custom_merge_func) {
+    each(cs, function (c, id) {
+        self.commits[id] = c
+    })
+    var leaves = sync7_get_leaves(self.commits, self.temp_commits)
+    var leaves = Object.keys(leaves).sort()
+
+    var texts = {}
+    each(leaves, function (leaf) {
+        texts[leaf] = sync7_get_text(self, leaf)
+    })
+
+    each(self.temp_commits, function (_, k) {
+        delete self.commits[k]
+    })
+    self.temp_commits = {}
+
+    var prev_merge_node = leaves[0]
+    var prev_merge_node_text = texts[prev_merge_node]
+    var ancestors = sync7_get_ancestors(self, prev_merge_node)
+    for (var i = 1; i < leaves.length; i++) {
+        var i_ancestors = sync7_get_ancestors(self, leaves[i])
+        var LCAs = sync7_get_leaves(intersection(ancestors, i_ancestors))
+        each(i_ancestors, function (v, k) {
+            ancestors[k] = v
+        })
+        
+        var m = custom_merge_func(prev_merge_node_text, texts[leaves[i]], sync7_calc_diffs_to_ancestors(self, prev_merge_node, leaves[i], LCAs))
+        var id = guid()
+        self.temp_commits[id] = true
+        self.commits[id] = { to_parents : {} }
+        self.commits[id].to_parents[prev_merge_node] = m.to_a
+        self.commits[id].to_parents[leaves[i]] = m.to_b
+        
+        prev_merge_node = id
+        prev_merge_node_text = m.text
+    }
+    self.leaf = prev_merge_node
+    self.text = prev_merge_node_text
+}
+    
+function sync7_calc_diffs_to_ancestors(self, a, b, LCAs) {
+    var diffs = []
+    each(LCAs, function (_, lca) {
+        diffs.push([
+            sync7_calc_diff_to_ancestor(self, a, lca),
+            sync7_calc_diff_to_ancestor(self, b, lca)
+        ])
+    })
+    return diffs
+}
+
+function sync7_calc_diff_to_ancestor(self, x, ancestor) {
+    var diff = []
+    var prev = x
+    each(sync7_get_path_to_ancestor(self, x, ancestor), function (next) {
+        diff = sync7_diff_merge_trans(diff, self.commits[prev].to_parents[next])
+        prev = next
+    })
+    return diff
+}
+    
+function sync7_get_text(self, id) {
+    var ls = sync7_get_leaves(sync7_intersection(sync7_get_ancestors(self, self.leaf, true), sync7_get_ancestors(self, id, true)))
+    var lca = Object.keys(ls)[0]
+    var leaf_to_lca = sync7_get_path_to_ancestor(self, self.leaf, lca)
+    var lca_to_id = sync7_get_path_to_ancestor(self, id, lca).reverse()
+    if (lca_to_id.length > 0) {
+        lca_to_id.shift()
+        lca_to_id.push(id)
+    }
+    
+    var diff = []
+    var prev = self.leaf
+    each(leaf_to_lca, function (next) {
+        diff = sync7_diff_merge_trans(diff, self.commits[prev].to_parents[next])
+        prev = next
+    })
+    each(lca_to_id, function (next) {
+        diff = sync7_diff_merge_trans(diff, self.commits[next].to_parents[prev], 1, -1)
+        prev = next
+    })
+    
+    return sync7_diff_apply(self.text, diff)
+}
+
+    
+function sync7_get_leaves(commits, ignore) {
+    if (!ignore) ignore = {}
+    var leaves = {}
+    each(commits, function (_, id) {
+        if (ignore[id]) { return }
+        leaves[id] = true
+    })
+    each(commits, function (c, id) {
+        if (ignore[id]) { return }
+        each(c.to_parents, function (_, p) {
+            delete leaves[p]
+        })
+    })
+    return leaves
+}
+    
+function sync7_get_ancestors(self, id, include_self) {
+    var frontier = [id]
+    var ancestors = {}
+    if (include_self)
+        ancestors[id] = self.commits[id]
+    while (frontier.length > 0) {
+        var next = frontier.shift()
+        each(self.commits[next].to_parents, function (_, p) {
+            if (!ancestors[p]) {
+                ancestors[p] = self.commits[p]
+                frontier.push(p)
+            }
+        })
+    }
+    return ancestors
+}
+    
+function sync7_get_path_to_ancestor(self, a, b) {
+    if (a == b) { return [] }
+    var frontier = [a]
+    var backs = {}
+    while (frontier.length > 0) {
+        var next = frontier.shift()
+        if (next == b) {
+            var path = []
+            while (next && (next != a)) {
+                path.unshift(next)
+                next = backs[next]
+            }
+            return path
+        }
+        each(self.commits[next].to_parents, function (_, p) {
+            if (!backs[p]) {
+                backs[p] = next
+                frontier.push(p)
+            }
+        })
+    }
+    throw 'no path found from ' + a + ' to ' + b
+}
+
+function sync7_intersection(a, b) {
+    var common = {}
+    each(a, function (_, x) {
+        if (b[x]) {
+            common[x] = a[x]
+        }
+    })
+    return common
+}
+
+</script>
