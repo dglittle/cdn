@@ -8,10 +8,8 @@
 Math.randomSeed(7)
 
 var s7 = get_example_sync7()
-var diff = sync7_merge_path_up(s7, 'HBJKPvM1ZkyeJMo', sync7_get_path_to_ancestor(s7, 'HBJKPvM1ZkyeJMo', 'root'))
-
-
-console.log(diff)
+s7.leaf = 'HBJKPvM1ZkyeJMo'
+s7.text = sync7_merge_path_up(s7, 'HBJKPvM1ZkyeJMo', sync7_get_path_to_ancestor(s7, 'HBJKPvM1ZkyeJMo', 'root'))[0][0]
 
 
 document.body.append(sync7_create_visualization(s7))
