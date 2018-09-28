@@ -11,9 +11,11 @@ var s7 = get_example_sync7()
 s7.leaf = 'HBJKPvM1ZkyeJMo'
 s7.text = sync7_merge_path_up(s7, 'HBJKPvM1ZkyeJMo', sync7_get_path_to_ancestor(s7, 'HBJKPvM1ZkyeJMo', 'root'))[0][0]
 
+var i = 0
 each(s7.commits, function (c, id) {
+    c.y = (i++) * 40
     c.text = sync7_get_text(s7, id)
-    console.log('c.text = ' + c.text)
+    console.log('c.text = ' + c.text + ' == ' + c.y)
 })
 
 
@@ -146,8 +148,21 @@ function sync7_create_visualization(s7) {
             })
         })
     
+    
+        // work here
+        var i = 0
+    
+    
         each(s7.commits, function (c, id) {
-            svg.append(create_char_boxes(c.x || 0, c.y || 0, CHAR_BOX_SIZE, c.text || 'Q!?', selected[id]))
+            
+            
+            // work here
+            svg.append(create_char_boxes(c.x || 0, c.y || 0, CHAR_BOX_SIZE, c.text || '', selected[id]))
+            
+            
+            console.log((i++) + ':' + c.y)
+            svg.append(create_char_boxes(200, c.y, CHAR_BOX_SIZE, 'bloo', true))
+            
         })
     }
     redraw()
