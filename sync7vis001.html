@@ -1,13 +1,20 @@
 
 <script src="https://dglittle.github.io/cdn/random001.js"></script>
 <script src="https://dglittle.github.io/cdn/utils004.js"></script>
-<script src="https://invisible-college.github.io/universal-sync/diffsync.js"></script>
+<script src="https://invisible-college.github.io/universal-sync/sync7.js"></script>
 <body style="margin:0px"></body>
 <script>
 
 Math.randomSeed(7)
 
-document.body.append(sync7_create_visualization(get_example_sync7()))
+var s7 = get_example_sync7()
+var diff = sync7_merge_path_up(s7, 'HBJKPvM1ZkyeJMo', sync7_get_path_to_ancestor(s7, 'HBJKPvM1ZkyeJMo', 'root'))
+
+
+console.log(diff)
+
+
+document.body.append(sync7_create_visualization(s7))
 
 function sync7_create_visualization(s7) {
     var CHAR_BOX_SIZE = 20
@@ -132,7 +139,7 @@ function sync7_create_visualization(s7) {
         
         each(s7.commits, function (c, id) {
             each(c.to_parents, function (d, pid) {
-                svg.append(create_diff_lines(c.x || 0, c.y || 0, s7.commits[pid].x || 0, s7.commits[pid].y, CHAR_BOX_SIZE, d))
+                svg.append(create_diff_lines(c.x || 0, c.y || 0, s7.commits[pid].x || 0, s7.commits[pid].y || 0, CHAR_BOX_SIZE, d))
             })
         })
     
@@ -203,6 +210,305 @@ function sync7_create_visualization(s7) {
 
     return d
 }
+
+
+
+
+
+
+
+
+
+
+
+    function sync7_diff_merge_trans(a, b, a_factor, b_factor) {
+        var ret = []
+        var a_i = 0
+        var b_i = 0
+        var a_offset = 0
+        var b_offset = 0
+        var a_dumped_load = false
+        var b_dumped_load = false
+        function neg_idx(i) {
+            return i == 0 ? 1 : 0
+        }
+        function a_idx(i) {
+            return a_factor == -1 ? neg_idx(i) : i
+        }
+        function b_idx(i) {
+            return b_factor == -1 ? neg_idx(i) : i
+        }
+        while (a_i < a.length && b_i < b.length) {
+            var da = a[a_i]
+            var db = b[b_i]
+            if (typeof(da) == 'number' && typeof(db) == 'number') {
+                var a_len = da - a_offset
+                var b_len = db - b_offset
+                sync7_push_eq(ret, Math.min(a_len, b_len))
+            } else if (typeof(da) == 'number') {
+                var a_len = da - a_offset
+                var b_len = db[b_idx(0)].length - b_offset
+                sync7_push_rep(ret, db[b_idx(0)].substr(b_offset, Math.min(a_len, b_len)), !b_dumped_load ? db[b_idx(1)] : '')
+                b_dumped_load = true
+            } else if (typeof(db) == 'number') {
+                var a_len = da[a_idx(1)].length - a_offset
+                var b_len = db - b_offset
+                sync7_push_rep(ret, !a_dumped_load ? da[a_idx(0)] : '', da[a_idx(1)].substr(a_offset, Math.min(a_len, b_len)))
+                a_dumped_load = true
+            } else {
+                var a_len = da[a_idx(1)].length - a_offset
+                var b_len = db[b_idx(0)].length - b_offset
+                sync7_push_rep(ret, !a_dumped_load ? da[a_idx(0)] : '', !b_dumped_load ? db[b_idx(1)] : '')
+                a_dumped_load = b_dumped_load = true
+            }
+            if (a_len > b_len) {
+                a_offset += b_len
+            } else {
+                a_i++
+                a_offset = 0
+                a_dumped_load = false
+            }
+            if (a_len < b_len) {
+                b_offset += a_len
+            } else {
+                b_i++
+                b_offset = 0
+                b_dumped_load = false
+            }
+        }
+        while (a_i < a.length) {
+            var da = a[a_i]
+            if (typeof(da) == 'number') {
+                sync7_push_eq(ret, da)
+            } else {
+                sync7_push_rep(ret, !a_dumped_load ? da[a_idx(0)] : '', da[a_idx(1)].substr(a_offset))
+            }
+            a_i++
+            a_offset = 0
+            a_dumped_load = false
+        }
+        while (b_i < b.length) {
+            var db = b[b_i]
+            if (typeof(db) == 'number') {
+                sync7_push_eq(ret, db)
+            } else {
+                sync7_push_rep(ret, db[b_idx(0)].substr(b_offset), !b_dumped_load ? db[b_idx(1)] : '')
+            }
+            b_i++
+            b_offset = 0
+            b_dumped_load = false
+        }
+        return ret
+    }
+
+
+    
+    function sync7_merge_path_up(s7, from, path) {
+        var diff = []
+        var prev = from
+        each(path, function (next) {
+            diff = sync7_diff_merge_trans(diff, s7.commits[prev].to_parents[next])
+            prev = next
+        })
+        return diff
+    }
+    
+    
+    function sync7_get_text(s7, id) {
+        var ls = sync7_get_leaves(sync7_intersection(sync7_get_ancestors(s7, s7.leaf, true), sync7_get_ancestors(s7, id, true)))
+        var lca = Object.keys(ls)[0]
+        var leaf_to_lca = sync7_get_path_to_ancestor(s7, s7.leaf, lca)
+        var lca_to_id = sync7_get_path_to_ancestor(s7, id, lca).reverse()
+        if (lca_to_id.length > 0) {
+            lca_to_id.shift()
+            lca_to_id.push(id)
+        }
+        
+        var diff = sync7_merge_path_up(s7, s7.leaf, leaf_to_lca)
+        var prev = lca
+        each(lca_to_id, function (next) {
+            diff = sync7_diff_merge_trans(diff, s7.commits[next].to_parents[prev], 1, -1)
+            prev = next
+        })
+        
+        return sync7_diff_apply(s7.text, diff)
+    }
+        
+    function sync7_get_leaves(commits, ignore) {
+        if (!ignore) ignore = {}
+        var leaves = {}
+        each(commits, function (_, id) {
+            if (ignore[id]) { return }
+            leaves[id] = true
+        })
+        each(commits, function (c, id) {
+            if (ignore[id]) { return }
+            each(c.to_parents, function (_, p) {
+                delete leaves[p]
+            })
+        })
+        return leaves
+    }
+    
+    function sync7_get_ancestors(s7, id_or_set, include_self) {
+        var frontier = null
+        var ancestors = {}
+        if (typeof(id_or_set) == 'object') {
+            frontier = Object.keys(id_or_set)
+            if (include_self) each(id_or_set, function (_, id) {
+                ancestors[id] = s7.commits[id]
+            })
+        } else {
+            frontier = [id_or_set]
+            if (include_self) ancestors[id_or_set] = s7.commits[id_or_set]
+        }
+        while (frontier.length > 0) {
+            var next = frontier.shift()
+            each(s7.commits[next].to_parents, function (_, p) {
+                if (!ancestors[p]) {
+                    ancestors[p] = s7.commits[p]
+                    frontier.push(p)
+                }
+            })
+        }
+        return ancestors
+    }
+    
+    function sync7_get_path_to_ancestor(s7, a, b) {
+        if (a == b) { return [] }
+        var frontier = [a]
+        var backs = {}
+        while (frontier.length > 0) {
+            var next = frontier.shift()
+            if (next == b) {
+                var path = []
+                while (next && (next != a)) {
+                    path.unshift(next)
+                    next = backs[next]
+                }
+                return path
+            }
+            each(s7.commits[next].to_parents, function (_, p) {
+                if (!backs[p]) {
+                    backs[p] = next
+                    frontier.push(p)
+                }
+            })
+        }
+        throw 'no path found from ' + a + ' to ' + b
+    }
+    
+    function sync7_intersection(a, b) {
+        var common = {}
+        each(a, function (_, x) {
+            if (b[x]) {
+                common[x] = a[x]
+            }
+        })
+        return common
+    }
+    
+    function sync7_diff(a, b) {
+        var ret = []
+        var d = diff_main(a, b)
+        for (var i = 0; i < d.length; i++) {
+            var top = ret[ret.length - 1]
+            if (d[i][0] == 0) {
+                ret.push(d[i][1].length)
+            } else if (d[i][0] == 1) {
+                if (top && (typeof(top) != 'number'))
+                    top[1] += d[i][1]
+                else
+                    ret.push(['', d[i][1]])
+            } else {
+                if (top && (typeof(top) != 'number'))
+                    top[0] += d[i][1]
+                else
+                    ret.push([d[i][1], ''])
+            }
+        }
+        return ret
+    }
+    
+    function sync7_push_eq(diffs, size) {
+        if (typeof(diffs[diffs.length - 1]) == 'number') {
+            diffs[diffs.length - 1] += size
+        } else diffs.push(size)
+    }
+    
+    function sync7_push_rep(diffs, del, ins) {
+        if (del.length == 0 && ins.length == 0) { return }
+        if (diffs.length > 0) {
+            var top = diffs[diffs.length - 1]
+            if (typeof(top) != 'number') {
+                top[0] += del
+                top[1] += ins
+                return
+            }
+        }
+        diffs.push([del, ins])
+    }
+    
+    function sync7_diff_apply(s, diff) {
+        var offset = 0
+        var texts = []
+        each(diff, function (d) {
+            if (typeof(d) == 'number') {
+                texts.push(s.substr(offset, d))
+                offset += d
+            } else {
+                texts.push(d[1])
+                offset += d[0].length
+            }
+        })
+        texts.push(s.substr(offset))
+        return texts.join('')
+    }
+    
+    function guid() {
+        var x = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        var s = []
+        for (var i = 0; i < 15; i++) {
+            s.push(x[Math.floor(Math.random() * x.length)])
+        }
+        return s.join('')
+    }
+
+    function each(o, cb) {
+        if (o instanceof Array) {
+            for (var i = 0; i < o.length; i++) {
+                if (cb(o[i], i, o) == false)
+                    return false
+            }
+        } else {
+            for (var k in o) {
+                if (o.hasOwnProperty(k)) {
+                    if (cb(o[k], k, o) == false)
+                        return false
+                }
+            }
+        }
+        return true
+    }
+
+    function map(o, func) {
+        if (o instanceof Array) {
+            var accum = []
+            for (var i = 0; i < o.length; i++)
+                accum[i] = func(o[i], i, o)
+            return accum
+        } else {
+            var accum = {}
+            for (var k in o)
+                if (o.hasOwnProperty(k))
+                    accum[k] = func(o[k], k, o)
+            return accum
+        }
+    }
+
+
+
+
 
 function get_example_sync7() {
     return {"commits":{"root":{"to_parents":{},"from_kids":{"KIshfjKlRmobUJT":[["x",""]]}},"KIshfjKlRmobUJT":{"to_parents":{"root":[["x",""]]},"from_kids":{"SN7eHyoBVXXCoFn":[1,["y",""]]}},"SN7eHyoBVXXCoFn":{"to_parents":{"KIshfjKlRmobUJT":[1,["y",""]]},"from_kids":{"iwZL9fDqczMsTPN":[1,["Z",""],1]}},"iwZL9fDqczMsTPN":{"to_parents":{"SN7eHyoBVXXCoFn":[1,["Z",""],1]},"from_kids":{"UWCOfRCf9QFihYh":[2,["Z",""],1]}},"UWCOfRCf9QFihYh":{"to_parents":{"iwZL9fDqczMsTPN":[2,["Z",""],1]},"from_kids":{"zh4MSBVsV9VnZAG":[1,["X",""],3]}},"zh4MSBVsV9VnZAG":{"to_parents":{"UWCOfRCf9QFihYh":[1,["X",""],3]},"from_kids":{"lkSuqQ8Vtba1Smt":[1,["H",""],4]}},"lkSuqQ8Vtba1Smt":{"to_parents":{"zh4MSBVsV9VnZAG":[1,["H",""],4]},"from_kids":{"88s7f7XU1ceNzY3":[5,["Z",""],1]}},"88s7f7XU1ceNzY3":{"to_parents":{"lkSuqQ8Vtba1Smt":[5,["Z",""],1]},"from_kids":{"QGK1Y0bDcwtN38E":[7,["\n",""]]}},"QGK1Y0bDcwtN38E":{"to_parents":{"88s7f7XU1ceNzY3":[7,["\n",""]]},"from_kids":{"RsEA5iWFJQC9Z6t":[8,["b",""]]}},"RsEA5iWFJQC9Z6t":{"to_parents":{"QGK1Y0bDcwtN38E":[8,["b",""]]},"from_kids":{"nplyaqSWLQq8Xep":[9,["l",""]]}},"nplyaqSWLQq8Xep":{"to_parents":{"RsEA5iWFJQC9Z6t":[9,["l",""]]},"from_kids":{"2YeFHoHbtN9YiNg":[10,["o",""]]}},"2YeFHoHbtN9YiNg":{"to_parents":{"nplyaqSWLQq8Xep":[10,["o",""]]},"from_kids":{"mdDgy9PmeagG0H4":[11,["op",""]]}},"mdDgy9PmeagG0H4":{"to_parents":{"2YeFHoHbtN9YiNg":[11,["op",""]]},"from_kids":{"o2RR6COZFpJ835P":[4,["H",""],9]}},"o2RR6COZFpJ835P":{"to_parents":{"mdDgy9PmeagG0H4":[4,["H",""],9]},"from_kids":{"0fjK7blB1CCksat":[5,["I",""],9]}},"0fjK7blB1CCksat":{"to_parents":{"o2RR6COZFpJ835P":[5,["I",""],9]},"from_kids":{"NSxvbndEjGr3oRs":[15,["!",""]]}},"NSxvbndEjGr3oRs":{"to_parents":{"0fjK7blB1CCksat":[15,["!",""]]},"from_kids":{"AJ0fAfWG1oqVwRt":[["b",""],16]}},"AJ0fAfWG1oqVwRt":{"to_parents":{"NSxvbndEjGr3oRs":[["b",""],16]},"from_kids":{"7MRFNR2OBdNfEkJ":[1,["l",""],16]}},"7MRFNR2OBdNfEkJ":{"to_parents":{"AJ0fAfWG1oqVwRt":[1,["l",""],16]},"from_kids":{"H2awdiH4BTvfZ03":[2,["o",""],16]}},"H2awdiH4BTvfZ03":{"to_parents":{"7MRFNR2OBdNfEkJ":[2,["o",""],16]},"from_kids":{"0EAjpntHsEtl2bL":[3,["op",""],16]}},"0EAjpntHsEtl2bL":{"to_parents":{"H2awdiH4BTvfZ03":[3,["op",""],16]},"from_kids":{"ljokl4JwmjullBk":[5,["!",""],16]}},"ljokl4JwmjullBk":{"to_parents":{"0EAjpntHsEtl2bL":[5,["!",""],16]},"from_kids":{"HLMdjB3XpIDZEGl":[6,["\n",""],16]}},"HLMdjB3XpIDZEGl":{"to_parents":{"ljokl4JwmjullBk":[6,["\n",""],16]},"from_kids":{"5NDykGyT65Wpskz":[23,["b",""]]}},"5NDykGyT65Wpskz":{"to_parents":{"HLMdjB3XpIDZEGl":[23,["b",""]]},"from_kids":{"sUGD409dODkQDQL":[24,["la",""]]}},"sUGD409dODkQDQL":{"to_parents":{"5NDykGyT65Wpskz":[24,["la",""]]},"from_kids":{"IxdJ2giwIlEPq0Q":[26,["h",""]]}},"IxdJ2giwIlEPq0Q":{"to_parents":{"sUGD409dODkQDQL":[26,["h",""]]},"from_kids":{"y4HlXgTgJlIV0GI":[13,[" ",""],14]}},"y4HlXgTgJlIV0GI":{"to_parents":{"IxdJ2giwIlEPq0Q":[13,[" ",""],14]},"from_kids":{"p7ADN8xMIwflDtH":[14,["-",""],14]}},"p7ADN8xMIwflDtH":{"to_parents":{"y4HlXgTgJlIV0GI":[14,["-",""],14]},"from_kids":{"1eObHEzxFkz6kp1":[15,["b",""],14]}},"1eObHEzxFkz6kp1":{"to_parents":{"p7ADN8xMIwflDtH":[15,["b",""],14]},"from_kids":{"AYXRX2IxcFOh38Z":[16,["l",""],14]}},"AYXRX2IxcFOh38Z":{"to_parents":{"1eObHEzxFkz6kp1":[16,["l",""],14]},"from_kids":{"8ZNdzL7BDH7ELtI":[17,["o",""],14]}},"8ZNdzL7BDH7ELtI":{"to_parents":{"AYXRX2IxcFOh38Z":[17,["o",""],14]},"from_kids":{"suj45XXc6aDvgHT":[18,["op",""],14]}},"suj45XXc6aDvgHT":{"to_parents":{"8ZNdzL7BDH7ELtI":[18,["op",""],14]},"from_kids":{"ygScEPOFBqmcgJ8":[20,[" -",""],14]}},"ygScEPOFBqmcgJ8":{"to_parents":{"suj45XXc6aDvgHT":[20,[" -",""],14]},"from_kids":{"cV3EHJhWjLbkXsf":[22,[" ",""],14]}},"cV3EHJhWjLbkXsf":{"to_parents":{"ygScEPOFBqmcgJ8":[22,[" ",""],14]},"from_kids":{"oXlQ5QNBVyUvewu":[23,["\n",""],14]}},"oXlQ5QNBVyUvewu":{"to_parents":{"cV3EHJhWjLbkXsf":[23,["\n",""],14]},"from_kids":{"kYkFME3K7Q4nR04":[23,["","\n"],14]}},"kYkFME3K7Q4nR04":{"to_parents":{"oXlQ5QNBVyUvewu":[23,["","\n"],14]},"from_kids":{"HBJKPvM1ZkyeJMo":[37,["j",""]]}},"HBJKPvM1ZkyeJMo":{"to_parents":{"kYkFME3K7Q4nR04":[37,["j",""]]},"from_kids":{}}}}
