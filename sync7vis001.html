@@ -12,26 +12,10 @@ document.body.append(sync7_create_visualization(get_example_sync7()))
 function sync7_create_visualization(s7) {
     var CHAR_BOX_SIZE = 20
     
-    var commit_extras = {}
-    
     var selected = {}
     
     var d = document.createElement('div')
     
-    var button = document.createElement('button')
-    button.textContent = '+'
-    button.style.display = 'block'
-    button.onclick = function () {
-        var sel = Object.keys(selected)
-        if (sel.length == 1) {
-            var s = prompt('create new version', commit_extras[sel[0]].text)
-            if (s) {
-                
-            }
-        }
-    }
-    d.append(button)
-
     var svg_div = document.createElement('div')
     svg_div.style.cursor = 'pointer'
     d.append(svg_div)
@@ -148,12 +132,12 @@ function sync7_create_visualization(s7) {
         
         each(s7.commits, function (c, id) {
             each(c.to_parents, function (d, pid) {
-                svg.append(create_diff_lines(commit_extras[id].x, commit_extras[id].y, commit_extras[pid].x, commit_extras[pid].y, CHAR_BOX_SIZE, d))
+                svg.append(create_diff_lines(c.x || 0, c.y || 0, s7.commits[pid].x || 0, s7.commits[pid].y, CHAR_BOX_SIZE, d))
             })
         })
     
         each(s7.commits, function (c, id) {
-            svg.append(create_char_boxes(commit_extras[id].x, commit_extras[id].y, CHAR_BOX_SIZE, commit_extras[id].text, selected[id]))
+            svg.append(create_char_boxes(c.x || 0, c.y || 0, CHAR_BOX_SIZE, c.text || 'Q!?', selected[id]))
         })
     }
     redraw()
@@ -181,15 +165,15 @@ function sync7_create_visualization(s7) {
         var pos = getRelPos(svg_div, e)
         
         var grabbed = null
-        each(commit_extras, function (extra, id) {
-            if (pos.x >= extra.x && pos.x < extra.x + extra.text.length * CHAR_BOX_SIZE && pos.y >= extra.y && pos.y < extra.y + CHAR_BOX_SIZE) {
+        each(s7.commits, function (c, id) {
+            if (pos.x >= (c.x || 0) && pos.x < (c.x || 0) + (c.text || 'Q!?').length * CHAR_BOX_SIZE && pos.y >= (c.y || 0) && pos.y < (c.y || 0) + CHAR_BOX_SIZE) {
                 if (!e.metaKey)
                     selected = {}
                 selected[id] = true
                 grabbed = {
                     id : id,
-                    hot_x : pos.x - extra.x,
-                    hot_y : pos.y - extra.y
+                    hot_x : pos.x - (c.x || 0),
+                    hot_y : pos.y - (c.y || 0)
                 }
                 redraw()
                 return false
@@ -204,8 +188,8 @@ function sync7_create_visualization(s7) {
         document.onmousemove = function (e) {
             var pos = getRelPos(svg_div, e)
             if (grabbed) {
-                commit_extras[grabbed.id].x = pos.x - grabbed.hot_x
-                commit_extras[grabbed.id].y = pos.y - grabbed.hot_y
+                s7.commits[grabbed.id].x = pos.x - grabbed.hot_x
+                s7.commits[grabbed.id].y = pos.y - grabbed.hot_y
                 redraw()
             }
         }
