@@ -139,8 +139,8 @@ function sync7_create_visualization(s7) {
         if (svg) svg.remove()
         svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
         svg_div.append(svg)
-        svg.setAttribute('width', '500')
-        svg.setAttribute('height', '500')
+        svg.setAttribute('width', window.innerWidth * 3)
+        svg.setAttribute('height', window.innerHeight * 3)
         
         each(s7.commits, function (c, id) {
             each(c.to_parents, function (d, pid) {
@@ -148,21 +148,8 @@ function sync7_create_visualization(s7) {
             })
         })
     
-    
-        // work here
-        var i = 0
-    
-    
         each(s7.commits, function (c, id) {
-            
-            
-            // work here
             svg.append(create_char_boxes(c.x || 0, c.y || 0, CHAR_BOX_SIZE, c.text || '', selected[id]))
-            
-            
-            console.log((i++) + ':' + c.y)
-            svg.append(create_char_boxes(200, c.y, CHAR_BOX_SIZE, 'bloo', true))
-            
         })
     }
     redraw()
