@@ -1116,32 +1116,36 @@ function apply_ops_to_sync7(s7s, ops, debug_print_buffer) {
     })
 }
 
-function apply_ops_to_test_repos(ops, debug_print_buffer) {
-    var test_repos = {
-        sync7 : {
-            a : sync7.create(),
-            b : sync7.create(),
-            c : sync7.create(),
-        }
+// Math.randomSeed(133)
+while (true) {
+    var s7s = {
+        a : sync7.create(),
+        b : sync7.create(),
+        c : sync7.create(),
+    }
+    var ops = create_random_ops()
+    var buf = []
+    apply_ops_to_sync7(s7s, ops, buf)
+    
+    var s7 = s7s.a
+    if (Object.keys(s7.commits).length < 3) {
+        console.log('trying again.. ' + Object.keys(s7.commits).length)
+        continue
+    } else {
+        console.log('buf = ' + buf.join('\n'))
+        
+        var i = 0
+        each(s7.commits, function (c, id) {
+            c.y = (i++) * 40
+            c.text = sync7_get_text(s7, id)
+            console.log('c.text = ' + c.text + ' == ' + c.y)
+        })
+        
+        document.body.append(sync7_create_visualization(s7))
+        
+        break
     }
     
-    apply_ops_to_sync7(test_repos.sync7, ops, debug_print_buffer)
-    
-    var s7 = test_repos.sync7.a
-    var i = 0
-    each(s7.commits, function (c, id) {
-        c.y = (i++) * 40
-        c.text = sync7_get_text(s7, id)
-        console.log('c.text = ' + c.text + ' == ' + c.y)
-    })
-
-    document.body.append(sync7_create_visualization(s7))
 }
-
-// Math.randomSeed(133)
-var ops = create_random_ops()
-var buf = []
-apply_ops_to_test_repos(ops, buf)
-console.log('buf = ' + buf.join('\n'))
 
 </script>
