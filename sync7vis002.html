@@ -1112,7 +1112,7 @@ function apply_ops_to_sync7(s7s, ops, debug_print_buffer) {
         } else if (op.op == 'merge') {
             var x = s7.buffer.shift()
             if (x) {
-                s7.cursor = sync7_merge(s7, x, my_custom_merge_func, s7.cursor)
+                s7.cursor = sync7.merge(s7, x, null, default_custom_merge_func)
             }
 
             if (debug_print_buffer) {
@@ -1155,6 +1155,8 @@ function apply_ops_to_test_repos(ops, debug_print_buffer) {
 
 // Math.randomSeed(133)
 var ops = create_random_ops()
-apply_ops_to_test_repos(ops)
+var buf = []
+apply_ops_to_test_repos(ops, buf)
+console.log('buf = ' + buf.join('\n'))
 
 </script>
