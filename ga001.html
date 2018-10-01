@@ -1,5 +1,55 @@
+<body></body>
 <script>
 
+function get_biased_random_index(n, bias) {
+    var low = 0
+    var high = n
+    while ((high - low) > 1) {
+        if (Math.random() < bias)
+            high = (low + high) / 2
+        else
+            low = (low + high) / 2
+    }
+}
+
+function run_ga(pop_size, gens, bias, create_guy, score_guy, create_kid) {
+    var pop = new Array(pop_size)
+    for (var i = 0; i < pop_size; i++)
+        pop[i] = { guy : create_guy() }
+    for (var g = 0; g < gens; g++) {
+        for (var i = 0; i < pop_size; i++)
+            pop[i].score = score_guy(pop[i].guy)
+        pop.sort(function (a, b) {
+            return b.score - a.score
+        })
+        
+        var new_pop = new Array(pop_size)
+        for (var i = 0; i < pop_size; i++)
+            new_pop[i] = create_kid(pop[random], pop[random])
+    }
+}
+
 console.log('hi!')
+
+
+
+function testy() {
+    var c = document.createElement('canvas')
+    c.width = 500
+    c.height = 500
+    document.body.append(c)
+    var g = c.getContext('2d')
+
+    g.beginPath()
+    g.moveTo(0, 0)
+    g.lineTo(500, 200)
+    g.strokeStyle = 'green'
+    g.stroke()
+    
+}
+
+testy()
+
+
 
 </script>
