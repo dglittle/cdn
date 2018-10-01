@@ -25,21 +25,15 @@ function run_ga(pop_size, gens, apply_bias, create_guy, score_guy, create_kid) {
     }
     
     for (var g = 0; g < gens; g++) {
-    
-    console.log(JSON.stringify(pop, null, '  '))
-        
-        
         score_sort()
         have_kids()
     }
     score_sort()
-    
-    console.log(pop)
-    
-    return pop[0]
+
+    return pop[0].guy
 }
 
-run_ga(10, 10, function (x) {
+var x = run_ga(10, 10, function (x) {
     return x * x * x
 }, function () {
     return [Math.random(), Math.random()]
@@ -51,5 +45,7 @@ run_ga(10, 10, function (x) {
     kid.push(Math.random() < 0.5 ? mom[1] : dad[1])
     return kid
 })
+
+console.log(x)
 
 </script>
