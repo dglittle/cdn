@@ -19,7 +19,7 @@ function run_ga(pop_size, gens, apply_bias, create_guy, score_guy, create_kid) {
         for (var i = 0; i < pop_size; i++) {
             var mom = Math.floor(apply_bias(Math.random()) * pop_size)
             var dad = Math.floor(apply_bias(Math.random()) * pop_size)
-            new_pop[i] = create_kid(pop[mom], pop[dad])
+            new_pop[i] = { guy : create_kid(pop[mom], pop[dad]) }
         }
         pop = new_pop
     }
