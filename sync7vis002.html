@@ -1091,7 +1091,7 @@ function apply_ops_to_sync7(s7s, ops, debug_print_buffer) {
             var t = s7.text
             var pos = Math.floor((t.length + 1) * op.pos)
             var del = Math.floor((t.length - pos) * op.del)
-            var msg = sync7_commit(s7, t.slice(0, pos) + op.text + t.slice(pos + del))
+            var msg = sync7.commit(s7, t.slice(0, pos) + op.text + t.slice(pos + del))
             if (!msg) msg = null
             each(other_s7s, function (s7) {
                 s7.buffer.push(JSON.parse(JSON.stringify(msg)))
