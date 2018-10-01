@@ -1,55 +1,51 @@
 <body></body>
 <script>
 
-function get_biased_random_index(n, bias) {
-    var low = 0
-    var high = n
-    while ((high - low) > 1) {
-        if (Math.random() < bias)
-            high = (low + high) / 2
-        else
-            low = (low + high) / 2
-    }
-}
-
-function run_ga(pop_size, gens, bias, create_guy, score_guy, create_kid) {
+function run_ga(pop_size, gens, apply_bias, create_guy, score_guy, create_kid) {
     var pop = new Array(pop_size)
     for (var i = 0; i < pop_size; i++)
         pop[i] = { guy : create_guy() }
-    for (var g = 0; g < gens; g++) {
+        
+    function score_sort() {
         for (var i = 0; i < pop_size; i++)
             pop[i].score = score_guy(pop[i].guy)
         pop.sort(function (a, b) {
             return b.score - a.score
         })
-        
-        var new_pop = new Array(pop_size)
-        for (var i = 0; i < pop_size; i++)
-            new_pop[i] = create_kid(pop[random], pop[random])
     }
-}
-
-console.log('hi!')
-
-
-
-function testy() {
-    var c = document.createElement('canvas')
-    c.width = 500
-    c.height = 500
-    document.body.append(c)
-    var g = c.getContext('2d')
-
-    g.beginPath()
-    g.moveTo(0, 0)
-    g.lineTo(500, 200)
-    g.strokeStyle = 'green'
-    g.stroke()
     
+    function have_kids() {
+        var new_pop = new Array(pop_size)
+        for (var i = 0; i < pop_size; i++) {
+            var mom = Math.floor(apply_bias(Math.random()) * pop_size)
+            var dad = Math.floor(apply_bias(Math.random()) * pop_size)
+            new_pop[i] = create_kid(pop[mom], pop[dad])
+        }
+        pop = new_pop
+    }
+    
+    for (var g = 0; g < gens; g++) {
+        score_sort()
+        have_kids()
+    }
+    score_sort()
+    
+    console.log(pop)
+    
+    return pop[0]
 }
 
-testy()
-
-
+run_ga(10, 10, function (x) {
+    return x * x * x
+}, function () {
+    return [Math.random(), Math.random()]
+}, function (guy) {
+    return guy[0] + guy[1]
+}, function (mom, dad) {
+    var kid = []
+    kid.push(Math.random() < 0.5 ? mom[0] : dad[0])
+    kid.push(Math.random() < 0.5 ? mom[1] : dad[1])
+    return kid
+})
 
 </script>
