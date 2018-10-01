@@ -1053,18 +1053,11 @@ function create_random_ops() {
                 del : Math.random(),
                 text : create_random_text()
             })
-        } else if (Math.random() < 0.5) {
+        } else {
             ops.push({
                 op : 'merge',
                 side : Math.random() < 0.33 ? 'a' :
                     Math.random() < 0.5 ? 'b' : 'c'
-            })
-        } else {
-            ops.push({
-                op : 'cursor',
-                side : Math.random() < 0.33 ? 'a' :
-                    Math.random() < 0.5 ? 'b' : 'c',
-                pos : Math.random()
             })
         }
     }
@@ -1118,14 +1111,6 @@ function apply_ops_to_sync7(s7s, ops, debug_print_buffer) {
             if (debug_print_buffer) {
                 debug_print_buffer.push('OP MERGE')
                 debug_print_buffer.push('side: ' + op.side)
-            }
-        } else if (op.op == 'cursor') {
-            s7.cursor = Math.floor((s7.text.length + 1) * op.pos)
-            
-            if (debug_print_buffer) {
-                debug_print_buffer.push('OP CURSOR')
-                debug_print_buffer.push('side: ' + op.side)
-                debug_print_buffer.push('pos: ' + s7.cursor)
             }
         }
     })
