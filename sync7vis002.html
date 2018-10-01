@@ -1134,9 +1134,9 @@ function apply_ops_to_sync7(s7s, ops, debug_print_buffer) {
 function apply_ops_to_test_repos(ops, debug_print_buffer) {
     var test_repos = {
         sync7 : {
-            a : create_sync7_repo(),
-            b : create_sync7_repo(),
-            c : create_sync7_repo(),
+            a : sync7.create(),
+            b : sync7.create(),
+            c : sync7.create(),
         }
     }
     
