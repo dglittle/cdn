@@ -42,7 +42,24 @@ function sync7_create_visualization(s7) {
         return line
     }
     
-    function create_char_boxes(x, y, size, text, selected) {
+    function calc_specials(id) {
+        var specials = {}
+        each(s7.commits[id].to_parents, function (d, p) {
+            var offset = 0
+            each(d, function (d) {
+                if (typeof(d) == 'number') {
+                    offset += d
+                } else {
+                    for (var i = 0; i < d[0].length; i++) {
+                        specials[offset++] = true
+                    }
+                }
+            })
+        })
+        return specials
+    }
+    
+    function create_char_boxes(x, y, size, text, selected, specials) {
         var stroke = 'black'
         var g = document.createElementNS('http://www.w3.org/2000/svg', 'g')
         
@@ -54,6 +71,18 @@ function sync7_create_visualization(s7) {
             rect.setAttribute('width', text.length * size)
             rect.setAttribute('height', size)
             g.append(rect)
+        }
+        
+        for (var i = 0; i < text.length; i++) {
+            if (i == 0) { // work here : i in specials
+                var rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
+                rect.style.fill = 'rgba(100, 255, 30, 0.5)'
+                rect.setAttribute('x', x + i*size)
+                rect.setAttribute('y', y)
+                rect.setAttribute('width', size)
+                rect.setAttribute('height', size)
+                g.append(rect)
+            }
         }
         
         g.append(create_line(x, y + 0.5, x + size * text.length, y + 0.5, stroke))
@@ -149,7 +178,7 @@ function sync7_create_visualization(s7) {
         })
     
         each(s7.commits, function (c, id) {
-            svg.append(create_char_boxes(c.x || 0, c.y || 0, CHAR_BOX_SIZE, c.text || '', selected[id]))
+            svg.append(create_char_boxes(c.x || 0, c.y || 0, CHAR_BOX_SIZE, c.text || '', selected[id], calc_specials(id)))
         })
     }
     redraw()
