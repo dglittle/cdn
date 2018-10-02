@@ -9,7 +9,7 @@
 <body style="margin:0px"></body>
 <script>
 
-Math.randomSeed(141)
+Math.randomSeed(144)
     
 var CHAR_BOX_SIZE = 20
 
@@ -1226,28 +1226,31 @@ while (true) {
         console.log(JSON.stringify(dag))
         
         d3.sugiyama()(dag);
+
+        console.log('BLAH!')
+        console.log(dag)
         
         const links = dag.links()
         const descendants = dag.descendants();
         
         
-        console.log('links: ' + JSON.stringify(links, null, '    '))
-        console.log('descendants: ' + JSON.stringify(descendants, null, '    '))
+        // console.log('links: ' + JSON.stringify(links, null, '    '))
+        // console.log('descendants: ' + JSON.stringify(descendants, null, '    '))
               
         
 
         
         
         each(descendants, function (descendant) {
-            s7.commits[id].x = descendant.x * 500
-            s7.commits[id].y = descendant.y * 500
+            s7.commits[descendant.id].x = descendant.x * 500
+            s7.commits[descendant.id].y = descendant.y * 500
         })
 
         
         
         
         
-        console.log('buf = ' + buf.join('\n'))
+        //console.log('buf = ' + buf.join('\n'))
         each(s7.commits, function (c, id) {
             c.text = sync7_get_text(s7, id)
         })
