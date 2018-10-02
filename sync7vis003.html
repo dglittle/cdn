@@ -106,7 +106,11 @@ function layout_versions(s7) {
         var polys = []
         each(s7.commits, function (c, id) {
             var pos = guy[id]
+            try {
             polys.push([[pos[0], pos[1]], [pos[0] + c.text.length * CHAR_BOX_SIZE, pos[1]], [pos[0] + c.text.length * CHAR_BOX_SIZE, pos[1] + CHAR_BOX_SIZE], [pos[0], pos[1] + CHAR_BOX_SIZE]])
+            } catch (e) {
+                debugger
+            }
             each(c.to_parents, function (d, p) {
                 var ppos = guy[p]
                 polys.push([[pos[0], pos[1]], [ppos[0], ppos[1] + CHAR_BOX_SIZE], [ppos[0] + s7.commits[p].text.length * CHAR_BOX_SIZE, ppos[1] + CHAR_BOX_SIZE], [pos[0] + c.text.length * CHAR_BOX_SIZE, pos[1]]])
