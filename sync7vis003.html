@@ -1293,8 +1293,6 @@ function run_layout_ga(s7, pop, gens) {
     return pop
 }
 
-throw 'stop'
-
 while (true) {
     var s7s = {
         a : sync7.create(),
@@ -1306,7 +1304,7 @@ while (true) {
     apply_ops_to_sync7(s7s, ops, buf)
     
     var s7 = s7s.a
-    if (Object.keys(s7.commits).length < 15) {
+    if (Object.keys(s7.commits).length < 6) {
         console.log('trying again.. ' + Object.keys(s7.commits).length)
         continue
     } else {
