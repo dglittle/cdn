@@ -4,41 +4,141 @@
 <script src="https://invisible-college.github.io/universal-sync/diffsync.js"></script>
 <body style="margin:0px"></body>
 <script>
+    
+var CHAR_BOX_SIZE = 20
+
+function run_ga(pop_size, gens, apply_bias, create_guy, score_guy, create_kid) {
+    var pop = new Array(pop_size)
+    for (var i = 0; i < pop_size; i++)
+        pop[i] = { guy : create_guy() }
+        
+    function score_sort() {
+        for (var i = 0; i < pop_size; i++)
+            pop[i].score = score_guy(pop[i].guy)
+        pop.sort(function (a, b) {
+            return b.score - a.score
+        })
+    }
+    
+    function have_kids() {
+        var new_pop = new Array(pop_size)
+        for (var i = 0; i < pop_size; i++) {
+            var mom = Math.floor(apply_bias(Math.random()) * pop_size)
+            var dad = Math.floor(apply_bias(Math.random()) * pop_size)
+            new_pop[i] = { guy : create_kid(pop[mom].guy, pop[dad].guy) }
+        }
+        pop = new_pop
+    }
+    
+    for (var g = 0; g < gens; g++) {
+        score_sort()
+        have_kids()
+    }
+    score_sort()
+
+    return pop[0].guy
+}
+
+function clip (subjectPolygon, clipPolygon) {
+    var cp1, cp2, s, e;
+    var inside = function (p) {
+        return (cp2[0]-cp1[0])*(p[1]-cp1[1]) > (cp2[1]-cp1[1])*(p[0]-cp1[0]);
+    };
+    var intersection = function () {
+        var dc = [ cp1[0] - cp2[0], cp1[1] - cp2[1] ],
+            dp = [ s[0] - e[0], s[1] - e[1] ],
+            n1 = cp1[0] * cp2[1] - cp1[1] * cp2[0],
+            n2 = s[0] * e[1] - s[1] * e[0], 
+            n3 = 1.0 / (dc[0] * dp[1] - dc[1] * dp[0]);
+        return [(n1*dp[0] - n2*dc[0]) * n3, (n1*dp[1] - n2*dc[1]) * n3];
+    };
+    var outputList = subjectPolygon;
+    cp1 = clipPolygon[clipPolygon.length-1];
+    for (j in clipPolygon) {
+        var cp2 = clipPolygon[j];
+        var inputList = outputList;
+        outputList = [];
+        s = inputList[inputList.length - 1]; //last on the input list
+        for (i in inputList) {
+            var e = inputList[i];
+            if (inside(e)) {
+                if (!inside(s)) {
+                    outputList.push(intersection());
+                }
+                outputList.push(e);
+            }
+            else if (inside(s)) {
+                outputList.push(intersection());
+            }
+            s = e;
+        }
+        cp1 = cp2;
+    }
+    return outputList
+}
+
+function calcPolygonArea(vertices) {
+    var total = 0
+
+    for (var i = 0, l = vertices.length; i < l; i++) {
+        var addX = vertices[i][0]
+        var addY = vertices[i == vertices.length - 1 ? 0 : i + 1][1]
+        var subX = vertices[i == vertices.length - 1 ? 0 : i + 1][0]
+        var subY = vertices[i][1]
+        
+        total += (addX * addY * 0.5)
+        total -= (subX * subY * 0.5)
+    }
+
+    return Math.abs(total)
+}
 
 function layout_versions(s7) {
+    var guy = run_ga(10, 10, function (x) {
+        return Math.pow(x, 3)
+    }, function () {
+        var guy = {}
+        each(s7.commits, function (c, id) {
+            guy[id] = [Math.random() * 500, Math.random() * 500]
+        })
+        return guy
+    }, function (guy) {
+        var polys = []
+        each(s7.commits, function (c, id) {
+            var pos = guy[id]
+            polys += [[pos[0], pos[1]], [pos[0] + c.text.length * CHAR_BOX_SIZE, pos[1]], [pos[0] + c.text.length * CHAR_BOX_SIZE, pos[1] + CHAR_BOX_SIZE], [pos[0], pos[1] + CHAR_BOX_SIZE]]
+            each(c.to_parents, function (d, p) {
+                var ppos = guy[p]
+                polys += [[pos[0], pos[1]], [ppos[0], ppos[1] + CHAR_BOX_SIZE], [ppos[0] + s7.commits[p].text.length * CHAR_BOX_SIZE, ppos[1] + CHAR_BOX_SIZE], [pos[0] + c.text.length * CHAR_BOX_SIZE, pos[1]]]
+            })
+        })
+        
+        var score = 0
+        for (var i = 0; i < polys.length; i++) {
+            for (var ii = i + 1; ii < polys.length; ii++) {
+                score -= calcPolygonArea(clip(polys[i], polys[ii]))
+            }
+        }
+        return score
+    }, function (mom, dad) {
+        var kid = []
+        each(mom, function (mom, id) {
+            kid[id] = Math.random() < 0.5 ? mom : dad[id]
+        })
+        return kid
+    })
+    each(guy, function (pos, id) {
+        s7.commits[id].x = pos[0]
+        s7.commits[id].y = pos[1]
+    })
+}
+
+function sync7_create_visualization(s7) {
     each(s7.commits, function (c, id) {
         c.text = sync7_get_text(s7, id)
     })
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    var i = 0
-    each(s7.commits, function (c, id) {
-        c.x = i * 20
-        c.y = (i++) * 40
-    })
-    
-    
-    
-    
-    
-    
-    
-    
-    
-}
-
-function sync7_create_visualization(s7) {
-    var CHAR_BOX_SIZE = 20
+    layout_versions(s7)
     
     var selected = {}
     
@@ -1165,13 +1265,9 @@ while (true) {
         continue
     } else {
         console.log('buf = ' + buf.join('\n'))
-        
-        layout_versions(s7)
         document.body.append(sync7_create_visualization(s7))
-        
         break
     }
-    
 }
 
 </script>
