@@ -5,7 +5,7 @@
 <body style="margin:0px"></body>
 <script>
 
-Math.randomSeed(137)
+Math.randomSeed(141)
     
 var CHAR_BOX_SIZE = 20
 
@@ -1136,7 +1136,7 @@ function create_random_text() {
     function add_char() {
         random_text += String.fromCharCode(97 + Math.floor(Math.random() * 26))
     }
-    while (Math.random() < 0.5) add_char()
+    while (Math.random() < 0.75) add_char()
     return random_text
 }
 
@@ -1304,7 +1304,7 @@ while (true) {
     apply_ops_to_sync7(s7s, ops, buf)
     
     var s7 = s7s.a
-    if (Object.keys(s7.commits).length < 4) {
+    if (Object.keys(s7.commits).length < 25) {
         console.log('trying again.. ' + Object.keys(s7.commits).length)
         continue
     } else {
@@ -1312,7 +1312,7 @@ while (true) {
         each(s7.commits, function (c, id) {
             c.text = sync7_get_text(s7, id)
         })
-        var pop = 50
+        var pop = 100
         function refine_it() {
             
             console.log('bloop!')
