@@ -1217,32 +1217,31 @@ while (true) {
         
         
         
-var grafo = [{"id":"0","parentIds":[]},{"id":"1","parentIds":["0"]},{"id":"2","parentIds":["0"]}]
-
-grafo = grapho
- 
-  const dag = d3.dratify()(grafo)
-  
-  console.log(JSON.stringify(dag))
-
-  d3.sugiyama()(dag);
-
-  const links = dag.links()
-  const descendants = dag.descendants();
-  
-  
-  console.log('links: ' + JSON.stringify(links, null, '    '))
-  console.log('descendants: ' + JSON.stringify(descendants, null, '    '))
-          
-
-throw 'stop'        
+        var grafo = [{"id":"0","parentIds":[]},{"id":"1","parentIds":["0"]},{"id":"2","parentIds":["0"]}]
+        
+        grafo = grapho
+        
+        const dag = d3.dratify()(grafo)
+        
+        console.log(JSON.stringify(dag))
+        
+        d3.sugiyama()(dag);
+        
+        const links = dag.links()
+        const descendants = dag.descendants();
         
         
+        console.log('links: ' + JSON.stringify(links, null, '    '))
+        console.log('descendants: ' + JSON.stringify(descendants, null, '    '))
+              
         
-            each(descendants, function (descendant) {
-        s7.commits[id].x = descendant.x * 500
-        s7.commits[id].y = descendant.y * 500
-    })
+
+        
+        
+        each(descendants, function (descendant) {
+            s7.commits[id].x = descendant.x * 500
+            s7.commits[id].y = descendant.y * 500
+        })
 
         
         
@@ -1253,8 +1252,8 @@ throw 'stop'
             c.text = sync7_get_text(s7, id)
         })
 
-            document.body.innerHTML = ''
-            document.body.append(sync7_create_visualization(s7
+        document.body.innerHTML = ''
+        document.body.append(sync7_create_visualization(s7))
         break
     }
 }
