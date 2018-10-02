@@ -1182,84 +1182,6 @@ function apply_ops_to_sync7(s7s, ops, debug_print_buffer) {
     })
 }
 
-function run_layout_ga(s7, pop, gens) {
-    pop = run_ga(pop, gens, function (x) {
-        return Math.pow(x, 3)
-    }, function () {
-        var guy = {}
-        each(s7.commits, function (c, id) {
-            guy[id] = [Math.random() * 500, Math.random() * 500]
-        })
-        return guy
-    }, function (guy) {
-        var score = 0
-        
-        var boxes = []
-        var traps = []
-        each(s7.commits, function (c, id) {
-            var pos = guy[id]
-            boxes.push([[pos[0], pos[1]], [pos[0] + c.text.length * CHAR_BOX_SIZE, pos[1]], [pos[0] + c.text.length * CHAR_BOX_SIZE, pos[1] + CHAR_BOX_SIZE], [pos[0], pos[1] + CHAR_BOX_SIZE]])
-            each(c.to_parents, function (d, p) {
-                var ppos = guy[p]
-                traps.push([[pos[0], pos[1]], [ppos[0], ppos[1] + CHAR_BOX_SIZE], [ppos[0] + s7.commits[p].text.length * CHAR_BOX_SIZE, ppos[1] + CHAR_BOX_SIZE], [pos[0] + c.text.length * CHAR_BOX_SIZE, pos[1]]])
-            })
-        })
-        for (var i = 0; i < boxes.length; i++) {
-            for (var ii = i + 1; ii < boxes.length; ii++) {
-                score -= calcPolygonArea(clip(boxes[i], boxes[ii]))
-            }
-            for (var ii = 0; ii < traps.length; ii++) {
-                score -= calcPolygonArea(clip(boxes[i], traps[ii]))
-            }
-        }
-        
-        each(s7.commits, function (c, id) {
-            var y = guy[id][1]
-            each(c.to_parents, function (d, p) {
-                var py = guy[p][1]
-                if (y < py + CHAR_BOX_SIZE*2) {
-                    score -= (py + CHAR_BOX_SIZE*2 - y) * 500
-                } else {
-                    score -= (y - (py + CHAR_BOX_SIZE*2)) * 10
-                }
-            })
-        })
-        
-        each(s7.commits, function (c, id) {
-            var x = guy[id][0]
-            var has_parent = false
-            each(c.to_parents, function (d, p) {
-                var px = guy[p][0]
-                score -= Math.abs(px - x)
-                has_parent = true
-            })
-            if (!has_parent)
-                score -= Math.abs(250 - x)
-        })
-        
-        return score
-    }, function (mom, dad) {
-        var kid = {}
-        each(mom, function (mom, id) {
-            kid[id] = []
-            kid[id][0] = Math.random() < 0.5 ? mom[0] : dad[id][0]
-            kid[id][1] = Math.random() < 0.5 ? mom[1] : dad[id][1]
-            if (Math.random() < 0.1) {
-                kid[id][0] = random_normal((mom[0] + dad[id][0])/2, (Math.abs(mom[0] - dad[id][0]) + CHAR_BOX_SIZE)/2)
-            }
-            if (Math.random() < 0.1) {
-                kid[id][1] = random_normal((mom[1] + dad[id][1])/2, (Math.abs(mom[1] - dad[id][1]) + CHAR_BOX_SIZE)/2)
-            }
-        })
-        return kid
-    })
-    each(pop[0].guy, function (pos, id) {
-        s7.commits[id].x = pos[0]
-        s7.commits[id].y = pos[1]
-    })
-    return pop
-}
-
 while (true) {
     var s7s = {
         a : sync7.create(),
@@ -1279,7 +1201,25 @@ while (true) {
         
         
         
+        
+        
+        // All we need to do then is to plug our dag into this grapho phormat -- s7.commits
+        
+        
+        var grapho = []
+        each(s7.commits, function (c, id) {
+            grapho.push({
+                id : id,
+                parentIds : Object.keys(c.to_parents)
+            })
+        })
+        
+        
+        
+        
 var grafo = [{"id":"0","parentIds":[]},{"id":"1","parentIds":["0"]},{"id":"2","parentIds":["0"]}]
+
+grafo = grapho
  
   const dag = d3.dratify()(grafo)
   
@@ -1299,6 +1239,12 @@ throw 'stop'
         
         
         
+            each(descendants, function (descendant) {
+        s7.commits[id].x = descendant.x * 500
+        s7.commits[id].y = descendant.y * 500
+    })
+
+        
         
         
         
@@ -1306,18 +1252,9 @@ throw 'stop'
         each(s7.commits, function (c, id) {
             c.text = sync7_get_text(s7, id)
         })
-        var pop = 50
-        function refine_it() {
-            
-            console.log('bloop!')
-            
-            pop = run_layout_ga(s7, pop, 5)
 
             document.body.innerHTML = ''
-            document.body.append(sync7_create_visualization(s7))
-            setTimeout(refine_it, 100)
-        }
-        refine_it()
+            document.body.append(sync7_create_visualization(s7
         break
     }
 }
