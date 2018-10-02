@@ -26,6 +26,14 @@ function run_ga(pop_size, gens, apply_bias, create_guy, score_guy, create_kid) {
             var mom = Math.floor(apply_bias(Math.random()) * pop_size)
             var dad = Math.floor(apply_bias(Math.random()) * pop_size)
             new_pop[i] = { guy : create_kid(pop[mom].guy, pop[dad].guy) }
+            
+            
+            // work here
+            if (new_pop[i][Object.keys(new_pop[i])[0]].length == 0) {
+                debugger
+            }
+            
+            
         }
         pop = new_pop
     }
@@ -113,7 +121,11 @@ function layout_versions(s7) {
             }
             each(c.to_parents, function (d, p) {
                 var ppos = guy[p]
+                try {
                 polys.push([[pos[0], pos[1]], [ppos[0], ppos[1] + CHAR_BOX_SIZE], [ppos[0] + s7.commits[p].text.length * CHAR_BOX_SIZE, ppos[1] + CHAR_BOX_SIZE], [pos[0] + c.text.length * CHAR_BOX_SIZE, pos[1]]])
+                } catch (e) {
+                    debugger
+                }
             })
         })
         
@@ -129,6 +141,13 @@ function layout_versions(s7) {
         each(mom, function (mom, id) {
             kid[id] = Math.random() < 0.5 ? mom : dad[id]
         })
+        
+        
+        if (kid.length == 0) {
+            debugger
+        }
+        
+        
         return kid
     })
     each(guy, function (pos, id) {
