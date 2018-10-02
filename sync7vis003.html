@@ -175,12 +175,11 @@ function sync7_create_visualization(s7) {
         }
         for (var i = 0; i < text.length; i++) {
             var char = document.createElementNS('http://www.w3.org/2000/svg', 'text')
-            char.style.fill = stroke
+            char.style.fill = specials[i] ? 'rgb(0,130,0)' : 'darkgrey'
             char.style.fontSize = size
-            char.setAttribute('x', x + i*size + size/2)
+            char.setAttribute('x', Math.floor(x + i*size + size/2))
             char.setAttribute('y', y + size*0.9)
             char.setAttribute('text-anchor', 'middle')
-            char.style.stroke = specials[i] ? 'rgb(0,130,0)' : 'darkgrey'
             char.setAttribute('alignment-baseline', 'baseline')
             
             var textNode = document.createTextNode(text[i])
