@@ -1293,7 +1293,7 @@ function run_layout_ga(s7, pop, gens) {
     return pop
 }
 
-// throw 'stop'
+throw 'stop'
 
 while (true) {
     var s7s = {
@@ -1336,6 +1336,9 @@ while (true) {
 // we want to time to flow down
 // keep things from being too close (repel)
 // black letter -> dark green (just the ones in the green spots)
+// borders of diff-patch-things should be consistent with the colors of the letters
+// get rid of interior walls, expect where there are patch boundaries (and get rid of ceilings)
+// make floors of versions dotted (and thin)
 
 
 </script>
