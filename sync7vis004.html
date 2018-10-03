@@ -142,11 +142,14 @@ function sync7_create_visualization(s7) {
         
         
         
-        
+
+        var lines_to_draw = {}
+        lines_to_draw[0] = true
+        lines_to_draw[text.length] = true
         each(commit.to_parents, function (d, pid) {
             var i = 0
             each(d, function (d) {
-                g.append(create_line(x + i * size + 0.5, y + 0.5, x + i * size + 0.5, y + size - 0.5, stroke))
+                lines_to_draw[i] = true
                 if (typeof(d) == 'number') {
                     i += d
                 } else {
@@ -154,9 +157,13 @@ function sync7_create_visualization(s7) {
                 }
             })
         })
-
-        g.append(create_line(x + text.length * size + 0.5, y + 0.5, x + text.length * size + 0.5, y + size - 0.5, stroke))
         
+        
+        each(lines_to_draw, function (_, i) {
+            i = 1*i
+            g.append(create_line(x + i * size + 0.5, y + 0.5, x + i * size + 0.5, y + size - 0.5, merge_node ? '#AEAEAE' : 'darkgreen'))
+        })
+
         
         // for (var i = 0; i <= text.length; i++) {
         //     if ((specials[i - 1] != specials[i]) || (i == 0) || (i == text.length)) {
