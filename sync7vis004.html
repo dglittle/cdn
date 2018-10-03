@@ -109,7 +109,7 @@ function sync7_create_visualization(s7) {
         return specials
     }
     
-    function create_char_boxes(x, y, size, text, selected, specials, merge_node) {
+    function create_char_boxes(x, y, size, text, selected, specials, merge_node, commit) {
         var stroke = 'black'
         var g = document.createElementNS('http://www.w3.org/2000/svg', 'g')
         
@@ -135,12 +135,39 @@ function sync7_create_visualization(s7) {
             }
         }
         
-        g.append(create_line(x, y + size - 0.5, x + size * text.length, y + size - 0.5, stroke))
-        for (var i = 0; i <= text.length; i++) {
-            if ((specials[i - 1] != specials[i]) || (i == 0) || (i == text.length)) {
+        g.append(create_line(x, Math.floor(y + size) - 0.5, x + size * text.length, y + size - 0.5, stroke))
+        
+        
+        
+        
+        
+        
+        
+        each(commit.to_parents, function (d, pid) {
+            var i = 0
+            each(d, function (d) {
                 g.append(create_line(x + i * size + 0.5, y + 0.5, x + i * size + 0.5, y + size - 0.5, stroke))
-            }
-        }
+                if (typeof(d) == 'number') {
+                    i += d
+                } else {
+                    i += d[0].length
+                }
+            })
+        })
+
+        
+        
+        // for (var i = 0; i <= text.length; i++) {
+        //     if ((specials[i - 1] != specials[i]) || (i == 0) || (i == text.length)) {
+        //         g.append(create_line(x + i * size + 0.5, y + 0.5, x + i * size + 0.5, y + size - 0.5, stroke))
+        //     }
+        // }
+        
+        
+        
+        
+        
+        
         for (var i = 0; i < text.length; i++) {
             var char = document.createElementNS('http://www.w3.org/2000/svg', 'text')
             char.style.fill = specials[i] ? (merge_node ? 'darkgrey' : 'rgb(0,130,0)') : 'darkgrey'
@@ -231,7 +258,7 @@ function sync7_create_visualization(s7) {
     
         each(s7.commits, function (c, id) {
             var merge_node = Object.keys(c.to_parents).length > 1
-            svg.append(create_char_boxes(c.x || 0, c.y || 0, CHAR_BOX_SIZE, c.text || '', selected[id], calc_specials(id), merge_node))
+            svg.append(create_char_boxes(c.x || 0, c.y || 0, CHAR_BOX_SIZE, c.text || '', selected[id], calc_specials(id), merge_node, c))
         })
     }
     redraw()
