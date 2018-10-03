@@ -1261,7 +1261,7 @@ while (true) {
             layer.agg += text_len * CHAR_BOX_SIZE + (!layer.first ? CHAR_BOX_SIZE * 2.7 : 0)
             layer.first = false
             if (layer.agg > max_x)
-                max_x = offset
+                max_x = layer.agg
         })
 
         each(layers, function (layer, i) {
