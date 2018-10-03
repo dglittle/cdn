@@ -171,7 +171,7 @@ function sync7_create_visualization(s7) {
         return poly
     }
     
-    function create_diff_lines(x1, y1, x2, y2, size, diff) {
+    function create_diff_lines(x1, y1, x2, y2, size, diff, merge_node) {
         var stroke = 'black'
         var g = document.createElementNS('http://www.w3.org/2000/svg', 'g')
 
@@ -192,7 +192,7 @@ function sync7_create_visualization(s7) {
             points.push([x1 + child_offset + 0.5, y1])
 
             if (typeof(d) != 'number') {
-                g.append(create_polygon(points, 'rgba(100, 255, 30, 0.5)'))
+                g.append(create_polygon(points, merge_node ? 'rgba(180, 180, 180, 0.5)' : 'rgba(100, 255, 30, 0.5)'))
             }
         })
 
@@ -222,8 +222,9 @@ function sync7_create_visualization(s7) {
         svg.setAttribute('height', s7.height)
         
         each(s7.commits, function (c, id) {
+            var merge_node = Object.keys(c.to_parents).length > 1
             each(c.to_parents, function (d, pid) {
-                svg.append(create_diff_lines(c.x || 0, c.y || 0, s7.commits[pid].x || 0, s7.commits[pid].y || 0, CHAR_BOX_SIZE, d))
+                svg.append(create_diff_lines(c.x || 0, c.y || 0, s7.commits[pid].x || 0, s7.commits[pid].y || 0, CHAR_BOX_SIZE, d, merge_node))
             })
         })
     
