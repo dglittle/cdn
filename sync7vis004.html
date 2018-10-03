@@ -1282,7 +1282,7 @@ while (true) {
                 
                 
                 e.node.x = offset
-                offset += e.size * CHAR_BOX_SIZE + CHAR_BOX_SIZE
+                offset += e.size * CHAR_BOX_SIZE + CHAR_BOX_SIZE * 2.7
             })
             
         })
@@ -1309,6 +1309,7 @@ while (true) {
     }
 }
 
+// make mousing over a node transparentize everything else
 // make it faster and better at laying out
 // try edits coming from merges to be grey
 // different colors for different peers
