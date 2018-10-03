@@ -137,7 +137,9 @@ function sync7_create_visualization(s7) {
         
         g.append(create_line(x, y + size - 0.5, x + size * text.length, y + size - 0.5, stroke))
         for (var i = 0; i <= text.length; i++) {
-            g.append(create_line(x + i * size + 0.5, y + 0.5, x + i * size + 0.5, y + size - 0.5, stroke))
+            if (specials[i - 1] != specials[i]) {
+                g.append(create_line(x + i * size + 0.5, y + 0.5, x + i * size + 0.5, y + size - 0.5, stroke))
+            }
         }
         for (var i = 0; i < text.length; i++) {
             var char = document.createElementNS('http://www.w3.org/2000/svg', 'text')
