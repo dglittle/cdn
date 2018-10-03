@@ -1276,6 +1276,11 @@ while (true) {
             
             var offset = 0
             each(elements, function (e) {
+                
+                
+                console.log('offset = ' + offset)
+                
+                
                 e.node.x = offset
                 offset += e.size * CHAR_BOX_SIZE + CHAR_BOX_SIZE
             })
@@ -1287,8 +1292,11 @@ while (true) {
         
         
         each(descendants, function (descendant) {
-            s7.commits[descendant.id].x = descendant.x * 500
+            s7.commits[descendant.id].x = descendant.x
             s7.commits[descendant.id].y = descendant.y * 500
+            
+            
+            console.log('descendant: ' + descendant.x + ',' + descendant.y)
         })
 
         
