@@ -1243,7 +1243,7 @@ while (true) {
 
 
 
-        for layers = {}
+        var layers = {}
         each(descendants, function (d) {
             var layer = layers[d.layer] || { agg : 0, members : {} }
             layers[d.layer] = layer
