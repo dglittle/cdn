@@ -109,7 +109,7 @@ function sync7_create_visualization(s7) {
         return specials
     }
     
-    function create_char_boxes(x, y, size, text, selected, specials) {
+    function create_char_boxes(x, y, size, text, selected, specials, merge_node) {
         var stroke = 'black'
         var g = document.createElementNS('http://www.w3.org/2000/svg', 'g')
         
@@ -126,7 +126,7 @@ function sync7_create_visualization(s7) {
         for (var i = 0; i < text.length; i++) {
             if (specials[i]) {
                 var rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
-                rect.style.fill = 'rgba(100, 255, 30, 0.5)'
+                rect.style.fill = merge_node ? 'rgba(180, 180, 180, 0.5)' : 'rgba(100, 255, 30, 0.5)'
                 rect.setAttribute('x', x + i*size)
                 rect.setAttribute('y', y)
                 rect.setAttribute('width', size)
@@ -1266,9 +1266,6 @@ while (true) {
         })
 
         each(layers, function (layer, i) {
-            
-            console.log('layer i = ' + i)
-            
             var elements = []
             each(layer.members, function (member, id) {
                 elements.push(member)
@@ -1279,11 +1276,6 @@ while (true) {
             
             var offset = (max_x - layer.agg) / 2
             each(elements, function (e) {
-                
-                
-                console.log('offset = ' + offset)
-                
-                
                 e.node.x = offset
                 offset += e.size * CHAR_BOX_SIZE + CHAR_BOX_SIZE * 2.7
             })
