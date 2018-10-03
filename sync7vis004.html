@@ -1239,6 +1239,44 @@ while (true) {
               
         
 
+
+
+
+
+        for layers = {}
+        each(descendants, function (d) {
+            var layer = layers[d.layer] || { agg : 0, members : {} }
+            layers[d.layer] = layer
+            var text_len = s7.commits[d.id].text.length
+            layer.members[d.id] = {
+                size : text_len,
+                node : d
+            }
+            layer.agg += text_len
+        })
+
+
+
+        each(layers, function (layer) {
+            
+            var elements = []
+            each(layer.members, function (member, id) {
+                elements.push(member)
+            })
+            elements.sort(function (a, b) {
+                return a.node.x - b.node.x
+            })
+            
+            var offset = 0
+            each(elements, function (e) {
+                e.node.x = offset
+                offset += e.size * CHAR_BOX_SIZE + CHAR_BOX_SIZE
+            })
+            
+        })
+
+
+
         
         
         each(descendants, function (descendant) {
