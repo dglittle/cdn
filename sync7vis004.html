@@ -218,8 +218,8 @@ function sync7_create_visualization(s7) {
         if (svg) svg.remove()
         svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
         svg_div.append(svg)
-        svg.setAttribute('width', window.innerWidth * 3)
-        svg.setAttribute('height', window.innerHeight * 3)
+        svg.setAttribute('width', s7.width)
+        svg.setAttribute('height', s7.height)
         
         each(s7.commits, function (c, id) {
             each(c.to_parents, function (d, pid) {
@@ -1244,7 +1244,8 @@ while (true) {
               
         
 
-
+        var max_x = 0
+        var max_y = 0
 
 
 
@@ -1283,9 +1284,14 @@ while (true) {
                 
                 e.node.x = offset
                 offset += e.size * CHAR_BOX_SIZE + CHAR_BOX_SIZE * 2.7
+                if (offset > max_x)
+                    max_x = offset
             })
             
         })
+        
+        s7.width = max_x
+        s7.height = max_y
 
 
 
@@ -1295,8 +1301,8 @@ while (true) {
             s7.commits[descendant.id].x = descendant.x
             s7.commits[descendant.id].y = descendant.y * 500
             
-            
-            console.log('descendant: ' + descendant.x + ',' + descendant.y)
+                if (s7.commits[descendant.id].y > max_y)
+                    max_y = s7.commits[descendant.id].y + CHAR_BOX_SIZE
         })
 
         
