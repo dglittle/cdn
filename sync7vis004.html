@@ -236,7 +236,7 @@ function sync7_create_visualization(s7) {
                 child_offset += d[0].length * size
                 parent_offset += d[1].length * size
             }
-            g.append(create_line(x1 + child_offset + 0.5, y1, x2 + parent_offset + 0.5, y2 + size, stroke))
+            g.append(create_line(x1 + child_offset + 0.5, y1, x2 + parent_offset + 0.5, y2 + size, merge_node ? '#AEAEAE' : stroke))
         })
 
         return g
