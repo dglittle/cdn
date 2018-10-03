@@ -135,7 +135,6 @@ function sync7_create_visualization(s7) {
             }
         }
         
-        g.append(create_line(x, y + 0.5, x + size * text.length, y + 0.5, stroke))
         g.append(create_line(x, y + size - 0.5, x + size * text.length, y + size - 0.5, stroke))
         for (var i = 0; i <= text.length; i++) {
             g.append(create_line(x + i * size + 0.5, y + 0.5, x + i * size + 0.5, y + size - 0.5, stroke))
@@ -1304,12 +1303,16 @@ while (true) {
 }
 
 
+
+// get rid of interior walls, expect where there are patch boundaries
+
+// merge "insert" patches are grey, and should have grey borders too (grey background #EFEFEF, border stroke: #AEAEAE, grey text: #AEAEAE)
+
 // borders of diff-patch-things should be consistent with the colors of the letters
 
 // different colors for different peers
 // make mousing over a node transparentize everything else
 
-// get rid of interior walls, expect where there are patch boundaries (and get rid of ceilings)
 // make floors of versions dotted (and thin)
 // sans serif font
 // want to see bottoms of letters inside boxes
@@ -1325,6 +1328,7 @@ while (true) {
 
 // Done........ done-dy done done done........
 
+// (and get rid of ceilings)
 // black letter -> dark green (just the ones in the green spots)
 // keep things from being too close (repel)
 // try edits coming from merges to be grey
