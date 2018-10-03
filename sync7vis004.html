@@ -1200,6 +1200,11 @@ while (true) {
         
         
         
+        //console.log('buf = ' + buf.join('\n'))
+        each(s7.commits, function (c, id) {
+            c.text = sync7_get_text(s7, id)
+        })
+        
         
         
         
@@ -1287,11 +1292,6 @@ while (true) {
         
         
         
-        
-        //console.log('buf = ' + buf.join('\n'))
-        each(s7.commits, function (c, id) {
-            c.text = sync7_get_text(s7, id)
-        })
 
         document.body.innerHTML = ''
         document.body.append(sync7_create_visualization(s7))
