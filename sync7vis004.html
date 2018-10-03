@@ -155,6 +155,7 @@ function sync7_create_visualization(s7) {
             })
         })
 
+        g.append(create_line(x + text.length * size + 0.5, y + 0.5, x + text.length * size + 0.5, y + size - 0.5, stroke))
         
         
         // for (var i = 0; i <= text.length; i++) {
@@ -1332,10 +1333,9 @@ while (true) {
 }
 
 
-// get rid of interior walls, expect where there are patch boundaries
-    // I got rid of too much, bring back some of those boundaries!
 
 // merge "insert" patches are grey, and should have grey borders too (grey background #EFEFEF, border stroke: #AEAEAE, grey text: #AEAEAE)
+    // let's make the borders of the merge patches #AEAEAE
 
 // borders of diff-patch-things should be consistent with the colors of the letters
 
@@ -1357,6 +1357,8 @@ while (true) {
 
 // Done........ done-dy done done done........
 
+// get rid of interior walls, expect where there are patch boundaries
+    // I got rid of too much, bring back some of those boundaries!
 // (and get rid of ceilings)
 // black letter -> dark green (just the ones in the green spots)
 // keep things from being too close (repel)
