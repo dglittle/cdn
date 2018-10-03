@@ -229,7 +229,8 @@ function sync7_create_visualization(s7) {
         })
     
         each(s7.commits, function (c, id) {
-            svg.append(create_char_boxes(c.x || 0, c.y || 0, CHAR_BOX_SIZE, c.text || '', selected[id], calc_specials(id)))
+            var merge_node = Object.keys(c.to_parents).length > 1
+            svg.append(create_char_boxes(c.x || 0, c.y || 0, CHAR_BOX_SIZE, c.text || '', selected[id], calc_specials(id), merge_node))
         })
     }
     redraw()
