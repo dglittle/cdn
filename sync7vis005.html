@@ -130,7 +130,12 @@ function sync7_create_visualization(s7) {
 
         for (var i = 0; i < text.length; i++) {
             var char = document.createElementNS('http://www.w3.org/2000/svg', 'text')
-            char.style.fill = specials[i] ? (merge_node ? '#AEAEAE' : 'rgb(0,130,0)') : '#AEAEAE'
+            var foreground = merge_node ? '#AEAEAE' :
+                uid == 'a' ? '#F15E5E' :
+                uid == 'b' ? '#0167FF' :
+                uid == 'c' ? '#24B04B' :
+                'rgba(255, 0, 255, 0.75)'
+            char.style.fill = specials[i] ? foreground : '#AEAEAE'
             char.style.fontSize = 19
             char.style.fontFamily = 'avenir, sans-serif'
             char.setAttribute('x', Math.floor(x + i*BOX_X + BOX_X/2))
@@ -206,9 +211,9 @@ function sync7_create_visualization(s7) {
                     uid == 'c' ? '#24B04B' :
                     'rgba(255, 0, 255, 0.75)'
                 var background = merge_node ? '#EFEFEF80' :
-                    uid == 'a' ? '#FFEFEB80' :
-                    uid == 'b' ? '#C5E8FF80' :
-                    uid == 'c' ? '#CAE9CF80' :
+                    uid == 'a' ? '#FFEFEBA0' :
+                    uid == 'b' ? '#C5E8FFA0' :
+                    uid == 'c' ? '#CAE9CFA0' :
                     'rgba(255, 0, 255, 0.75)'
                 g.append(create_polygon(points, background))
                 g.append(create_polyline(points.slice(0, 3), foreground))
