@@ -11,7 +11,8 @@
 
 Math.randomSeed(144)
     
-var CHAR_BOX_SIZE = 20
+var BOX_X = 20
+var BOX_Y = 30
 
 function random_normal(mean, std_dev) {
     var x0 = 1.0 - Math.random()
@@ -111,7 +112,7 @@ function sync7_create_visualization(s7) {
         return specials
     }
     
-    function create_char_boxes(x, y, size, text, selected, specials, merge_node, commit) {
+    function create_char_boxes(x, y, text, selected, specials, merge_node, commit) {
         var stroke = 'grey'
         var g = document.createElementNS('http://www.w3.org/2000/svg', 'g')
         
@@ -120,20 +121,20 @@ function sync7_create_visualization(s7) {
             rect.style.fill = 'rgba(255, 255, 0, 0.5)'
             rect.setAttribute('x', x)
             rect.setAttribute('y', y)
-            rect.setAttribute('width', text.length * size)
-            rect.setAttribute('height', size)
+            rect.setAttribute('width', text.length * BOX_X)
+            rect.setAttribute('height', BOX_Y)
             g.append(rect)
         }
 
-        g.append(create_line(x, Math.floor(y + size) + 0.5, x + size * text.length, Math.floor(y + size) + 0.5, '#AEAEAE', '3'))
+        g.append(create_line(x, Math.floor(y + BOX_Y) + 0.5, x + BOX_X * text.length, Math.floor(y + BOX_Y) + 0.5, '#AEAEAE', '3'))
 
         for (var i = 0; i < text.length; i++) {
             var char = document.createElementNS('http://www.w3.org/2000/svg', 'text')
             char.style.fill = specials[i] ? (merge_node ? '#AEAEAE' : 'rgb(0,130,0)') : '#AEAEAE'
-            char.style.fontSize = size - 1
+            char.style.fontSize = 19
             char.style.fontFamily = 'avenir, sans-serif'
-            char.setAttribute('x', Math.floor(x + i*size + size/2))
-            char.setAttribute('y', y + size*0.9)
+            char.setAttribute('x', Math.floor(x + i*BOX_X + BOX_X/2))
+            char.setAttribute('y', y + BOX_Y*0.7)
             char.setAttribute('text-anchor', 'middle')
             char.setAttribute('alignment-baseline', 'baseline')
             
@@ -176,7 +177,7 @@ function sync7_create_visualization(s7) {
         return poly
     }
     
-    function create_diff_lines(x1, y1, x2, y2, size, diff, merge_node) {
+    function create_diff_lines(x1, y1, x2, y2, diff, merge_node) {
         var stroke = 'black'
         var g = document.createElementNS('http://www.w3.org/2000/svg', 'g')
 
@@ -184,19 +185,19 @@ function sync7_create_visualization(s7) {
         var parent_offset = 0
         each(diff, function (d) {
             var points = []
-            points.push([x1 + child_offset + 0.5, y1 + size])
+            points.push([x1 + child_offset + 0.5, y1 + BOX_Y])
             points.push([x1 + child_offset + 0.5, y1])
-            points.push([x2 + parent_offset + 0.5, y2 + size])
+            points.push([x2 + parent_offset + 0.5, y2 + BOX_Y])
             if (typeof(d) == 'number') {
-                child_offset += d * size
-                parent_offset += d * size
+                child_offset += d * BOX_X
+                parent_offset += d * BOX_X
             } else {
-                child_offset += d[0].length * size
-                parent_offset += d[1].length * size
+                child_offset += d[0].length * BOX_X
+                parent_offset += d[1].length * BOX_X
             }
-            points.push([x2 + parent_offset + 0.5, y2 + size])
+            points.push([x2 + parent_offset + 0.5, y2 + BOX_Y])
             points.push([x1 + child_offset + 0.5, y1])
-            points.push([x1 + child_offset + 0.5, y1 + size])
+            points.push([x1 + child_offset + 0.5, y1 + BOX_Y])
 
             if (typeof(d) != 'number') {
                 g.append(create_polygon(points, merge_node ? '#EFEFEF80' : 'rgba(100, 255, 30, 0.5)'))
@@ -219,13 +220,13 @@ function sync7_create_visualization(s7) {
         each(s7.commits, function (c, id) {
             var merge_node = Object.keys(c.to_parents).length > 1
             each(c.to_parents, function (d, pid) {
-                svg.append(create_diff_lines(c.x || 0, c.y || 0, s7.commits[pid].x || 0, s7.commits[pid].y || 0, CHAR_BOX_SIZE, d, merge_node))
+                svg.append(create_diff_lines(c.x || 0, c.y || 0, s7.commits[pid].x || 0, s7.commits[pid].y || 0, d, merge_node))
             })
         })
     
         each(s7.commits, function (c, id) {
             var merge_node = Object.keys(c.to_parents).length > 1
-            svg.append(create_char_boxes(c.x || 0, c.y || 0, CHAR_BOX_SIZE, c.text || '', selected[id], calc_specials(id), merge_node, c))
+            svg.append(create_char_boxes(c.x || 0, c.y || 0, c.text || '', selected[id], calc_specials(id), merge_node, c))
         })
     }
     redraw()
@@ -254,7 +255,7 @@ function sync7_create_visualization(s7) {
         
         var grabbed = null
         each(s7.commits, function (c, id) {
-            if (pos.x >= (c.x || 0) && pos.x < (c.x || 0) + (c.text || 'Q!?').length * CHAR_BOX_SIZE && pos.y >= (c.y || 0) && pos.y < (c.y || 0) + CHAR_BOX_SIZE) {
+            if (pos.x >= (c.x || 0) && pos.x < (c.x || 0) + (c.text || 'Q!?').length * BOX_X && pos.y >= (c.y || 0) && pos.y < (c.y || 0) + BOX_Y) {
                 if (!e.metaKey)
                     selected = {}
                 selected[id] = true
@@ -1255,7 +1256,7 @@ while (true) {
                 size : text_len,
                 node : d
             }
-            layer.agg += text_len * CHAR_BOX_SIZE + (!layer.first ? CHAR_BOX_SIZE * 2.7 : 0)
+            layer.agg += text_len * BOX_X + (!layer.first ? BOX_X * 2.7 : 0)
             layer.first = false
             if (layer.agg > max_x)
                 max_x = layer.agg
@@ -1273,7 +1274,7 @@ while (true) {
             var offset = (max_x - layer.agg) / 2
             each(elements, function (e) {
                 e.node.x = offset
-                offset += e.size * CHAR_BOX_SIZE + CHAR_BOX_SIZE * 2.7
+                offset += e.size * BOX_X + BOX_X * 2.7
             })
             
         })
@@ -1283,7 +1284,7 @@ while (true) {
             s7.commits[descendant.id].y = descendant.y * 750
             
                 if (s7.commits[descendant.id].y > max_y)
-                    max_y = s7.commits[descendant.id].y + CHAR_BOX_SIZE
+                    max_y = s7.commits[descendant.id].y + BOX_Y
         })
 
         
