@@ -199,16 +199,10 @@ function sync7_create_visualization(s7) {
 
             if (typeof(d) != 'number') {
                 g.append(create_polygon(points, merge_node ? 'rgba(240, 240, 240, 0.5)' : 'rgba(100, 255, 30, 0.5)'))
-                g.append(create_polyline(points, merge_node ? '#AEAEAE' : '#24B04B'))
-                
-                
-                create_polyline
+                g.append(create_polyline(points.slice(0, 3), merge_node ? '#AEAEAE' : '#24B04B'))
+                g.append(create_polyline(points.slice(3), merge_node ? '#AEAEAE' : '#24B04B'))
             }
         })
-
-    // work here : some colors in this comment..
-        //     g.append(create_line(x1 + child_offset + 0.5, y1, x2 + parent_offset + 0.5, y2 + size, merge_node ? '#AEAEAE' : '#24B04B'))
-        // })
 
         return g
     }
