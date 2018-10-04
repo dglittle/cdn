@@ -116,7 +116,7 @@ function sync7_create_visualization(s7) {
         
         if (selected) {
             var rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
-            rect.style.fill = 'yellow'
+            rect.style.fill = 'rgba(255, 255, 0, 0.5)'
             rect.setAttribute('x', x)
             rect.setAttribute('y', y)
             rect.setAttribute('width', text.length * size)
@@ -128,7 +128,7 @@ function sync7_create_visualization(s7) {
 
         for (var i = 0; i < text.length; i++) {
             var char = document.createElementNS('http://www.w3.org/2000/svg', 'text')
-            char.style.fill = specials[i] ? (merge_node ? 'darkgrey' : 'rgb(0,130,0)') : 'darkgrey'
+            char.style.fill = specials[i] ? (merge_node ? '#AEAEAE' : 'rgb(0,130,0)') : '#AEAEAE'
             char.style.fontSize = size - 1
             char.style.fontFamily = 'avenir, sans-serif'
             char.setAttribute('x', Math.floor(x + i*size + size/2))
@@ -198,7 +198,7 @@ function sync7_create_visualization(s7) {
             points.push([x1 + child_offset + 0.5, y1 + size])
 
             if (typeof(d) != 'number') {
-                g.append(create_polygon(points, merge_node ? 'rgba(240, 240, 240, 0.5)' : 'rgba(100, 255, 30, 0.5)'))
+                g.append(create_polygon(points, merge_node ? '#EFEFEF80' : 'rgba(100, 255, 30, 0.5)'))
                 g.append(create_polyline(points.slice(0, 3), merge_node ? '#AEAEAE' : '#24B04B'))
                 g.append(create_polyline(points.slice(3), merge_node ? '#AEAEAE' : '#24B04B'))
             }
@@ -1299,8 +1299,6 @@ while (true) {
 
 
 
-// merge "insert" patches are grey, and should have grey borders too (grey background #EFEFEF, border stroke: #AEAEAE, grey text: #AEAEAE)
-    // let's make the borders of the merge patches #AEAEAE
 
 // borders of diff-patch-things should be consistent with the colors of the letters
 
@@ -1322,6 +1320,8 @@ while (true) {
 
 // Done........ done-dy done done done........
 
+// merge "insert" patches are grey, and should have grey borders too (grey background #EFEFEF, border stroke: #AEAEAE, grey text: #AEAEAE)
+    // let's make the borders of the merge patches #AEAEAE
 // get rid of interior walls, expect where there are patch boundaries
     // I got rid of too much, bring back some of those boundaries!
 // (and get rid of ceilings)
