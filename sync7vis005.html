@@ -74,6 +74,165 @@ function calcPolygonArea(vertices) {
     return Math.abs(total)
 }
 
+function sync7_create_simple_dag(s7) {
+    var selected = {}
+    
+    var d = document.createElement('div')
+    
+    var svg_div = document.createElement('div')
+    svg_div.style.cursor = 'pointer'
+    d.append(svg_div)
+
+    function create_line(x1, y1, x2, y2, stroke, dasharray) {
+        var line = document.createElementNS('http://www.w3.org/2000/svg', 'line')
+        line.setAttribute('x1', x1)
+        line.setAttribute('y1', y1)
+        line.setAttribute('x2', x2)
+        line.setAttribute('y2', y2)
+        line.style['stroke-width'] = 1
+        line.setAttribute('stroke', stroke)
+        if (dasharray) line.setAttribute('stroke-dasharray', dasharray)
+        return line
+    }
+
+    function create_char_boxes(x, y, text, selected, specials, merge_node, commit) {
+        var stroke = 'grey'
+        var g = document.createElementNS('http://www.w3.org/2000/svg', 'g')
+        
+        if (selected) {
+            var rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
+            rect.style.fill = 'rgba(255, 255, 0, 0.5)'
+            rect.setAttribute('x', x)
+            rect.setAttribute('y', y)
+            rect.setAttribute('width', text.length * BOX_X)
+            rect.setAttribute('height', BOX_Y)
+            g.append(rect)
+        }
+
+        g.append(create_line(x, Math.floor(y + BOX_Y) + 0.5, x + BOX_X * text.length, Math.floor(y + BOX_Y) + 0.5, '#AEAEAE', '3'))
+
+        return g
+    }
+    
+    function create_polygon(points, fill) {
+        var poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
+        poly.style.fill = fill
+        
+        var points_text = []
+        for (var i = 0; i < points.length; i++) {
+            points_text.push((i == 0 ? '' : ' ') + points[i][0])
+            points_text.push(',' + points[i][1])
+        }
+        poly.setAttribute('points', points_text.join(''))
+        
+        return poly
+    }
+
+    function create_polyline(points, stroke) {
+        var poly = document.createElementNS('http://www.w3.org/2000/svg', 'polyline')
+
+        poly.style.fill = 'none'
+        poly.style.stroke = stroke
+        poly.style['stroke-width'] = 1
+        
+        var points_text = []
+        for (var i = 0; i < points.length; i++) {
+            points_text.push((i == 0 ? '' : ' ') + points[i][0])
+            points_text.push(',' + points[i][1])
+        }
+        poly.setAttribute('points', points_text.join(''))
+        
+        return poly
+    }
+    
+    function create_diff_lines(x1, y1, x2, y2, diff, merge_node, uid) {
+        var stroke = 'black'
+        var g = document.createElementNS('http://www.w3.org/2000/svg', 'g')
+
+        var child_offset = 0
+        var parent_offset = 0
+        each(diff, function (d) {
+            var points = []
+            points.push([x1 + child_offset + 0.5, y1 + BOX_Y])
+            points.push([x1 + child_offset + 0.5, y1])
+            points.push([x2 + parent_offset + 0.5, y2 + BOX_Y])
+            if (typeof(d) == 'number') {
+                child_offset += d * BOX_X
+                parent_offset += d * BOX_X
+            } else {
+                child_offset += d[0].length * BOX_X
+                parent_offset += d[1].length * BOX_X
+            }
+            points.push([x2 + parent_offset + 0.5, y2 + BOX_Y])
+            points.push([x1 + child_offset + 0.5, y1])
+            points.push([x1 + child_offset + 0.5, y1 + BOX_Y])
+
+            if (typeof(d) != 'number') {
+                var foreground = merge_node ? '#AEAEAE' :
+                    uid == 'a' ? '#F15E5E' :
+                    uid == 'b' ? '#0167FF' :
+                    uid == 'c' ? '#24B04B' :
+                    'rgba(255, 0, 255, 0.75)'
+                var background = merge_node ? '#EFEFEF80' :
+                    uid == 'a' ? '#FFEFEBA0' :
+                    uid == 'b' ? '#C5E8FFA0' :
+                    uid == 'c' ? '#CAE9CFA0' :
+                    'rgba(255, 0, 255, 0.75)'
+                g.append(create_polygon(points, background))
+                g.append(create_polyline(points.slice(0, 3), foreground))
+                g.append(create_polyline(points.slice(3), foreground))
+            }
+        })
+
+        return g
+    }
+
+    var svg = null
+    function redraw() {
+        if (svg) svg.remove()
+        svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+        svg_div.append(svg)
+        svg.setAttribute('width', s7.width)
+        svg.setAttribute('height', s7.height)
+        
+        each(s7.commits, function (c, id) {
+            var merge_node = Object.keys(c.to_parents).length > 1
+            var uid = c.uid
+            var foreground = merge_node ? '#AEAEAE' :
+                uid == 'a' ? '#F15E5E' :
+                uid == 'b' ? '#0167FF' :
+                uid == 'c' ? '#24B04B' :
+                'rgba(255, 0, 255, 0.75)'
+                    
+            each(c.to_parents, function (d, pid) {
+
+                svg.append(create_line(c.x || 0, c.y || 0, s7.commits[pid].x || 0, s7.commits[pid].y || 0, foreground, '4'))
+            })
+        })
+    
+        each(s7.commits, function (c, id) {
+            var merge_node = Object.keys(c.to_parents).length > 1
+            var uid = c.uid
+            var foreground = merge_node ? '#AEAEAE' :
+                uid == 'a' ? '#F15E5E' :
+                uid == 'b' ? '#0167FF' :
+                uid == 'c' ? '#24B04B' :
+                'rgba(255, 0, 255, 0.75)'
+
+            var dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
+            dot.style.fill = foreground
+            dot.setAttribute('cx', c.x || 0)
+            dot.setAttribute('cy', c.y || 0)
+            dot.setAttribute('r', '10')
+
+            svg.append(dot)
+        })
+    }
+    redraw()
+
+    return d    
+}
+
 function sync7_create_visualization(s7) {
     var selected = {}
     
@@ -1245,9 +1404,6 @@ while (true) {
         grafo = grapho
         
         const dag = d3.dratify()(grafo)
-        
-        console.log(JSON.stringify(dag))
-        
         d3.sugiyama()(dag);
 
         console.log('BLAH!')
@@ -1256,6 +1412,19 @@ while (true) {
         const links = dag.links()
         const descendants = dag.descendants();
         
+        
+        
+        
+        
+        
+        
+        
+        const dag2 = d3.dratify()(grapho)
+        d3.sugiyama()(dag2);
+        const links2 = dag2.links()
+        const descendants2 = dag2.descendants();
+        
+
         
         // console.log('links: ' + JSON.stringify(links, null, '    '))
         // console.log('descendants: ' + JSON.stringify(descendants, null, '    '))
@@ -1299,22 +1468,61 @@ while (true) {
             
         })
 
-        each(descendants, function (descendant) {
-            s7.commits[descendant.id].x = descendant.x
-            s7.commits[descendant.id].y = descendant.y * 750
-            
-                if (s7.commits[descendant.id].y > max_y)
-                    max_y = s7.commits[descendant.id].y + BOX_Y
-        })
-
-        
-        s7.width = max_x
-        s7.height = max_y
         
         
 
         document.body.innerHTML = ''
-        document.body.append(sync7_create_visualization(s7))
+        
+        var d = document.createElement('div')
+        d.style.display = 'grid'
+        d.style['grid-template-columns'] = 'auto auto'
+        document.body.append(d)
+        
+        
+        
+        
+        
+        
+        var max_x2 = 0
+        var max_y2 = 0
+        
+        each(descendants2, function (descendant2) {
+            s7.commits[descendant2.id].x = descendant2.x * 200
+            s7.commits[descendant2.id].y = descendant2.y * 750
+            
+            if (s7.commits[descendant2.id].x + 20 > max_x2)
+                max_x2 = s7.commits[descendant2.id].x + 20
+            if (s7.commits[descendant2.id].y > max_y2)
+                max_y2 = s7.commits[descendant2.id].y
+        })
+
+        s7.width = max_x2
+        s7.height = max_y2
+        
+        d.append(sync7_create_simple_dag(s7))
+        
+        
+        
+        
+        
+        
+        each(descendants, function (descendant) {
+            s7.commits[descendant.id].x = descendant.x
+            s7.commits[descendant.id].y = descendant.y * 750
+            
+            if (s7.commits[descendant.id].y + BOX_Y > max_y)
+                max_y = s7.commits[descendant.id].y + BOX_Y
+        })
+
+        s7.width = max_x
+        s7.height = max_y
+
+        d.append(sync7_create_visualization(s7))
+        
+        
+        
+        
+
         break
     }
 }
