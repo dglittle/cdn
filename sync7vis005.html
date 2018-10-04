@@ -177,7 +177,7 @@ function sync7_create_visualization(s7) {
         return poly
     }
     
-    function create_diff_lines(x1, y1, x2, y2, diff, merge_node) {
+    function create_diff_lines(x1, y1, x2, y2, diff, merge_node, uid) {
         var stroke = 'black'
         var g = document.createElementNS('http://www.w3.org/2000/svg', 'g')
 
@@ -200,9 +200,19 @@ function sync7_create_visualization(s7) {
             points.push([x1 + child_offset + 0.5, y1 + BOX_Y])
 
             if (typeof(d) != 'number') {
-                g.append(create_polygon(points, merge_node ? '#EFEFEF80' : 'rgba(100, 255, 30, 0.5)'))
-                g.append(create_polyline(points.slice(0, 3), merge_node ? '#AEAEAE' : '#24B04B'))
-                g.append(create_polyline(points.slice(3), merge_node ? '#AEAEAE' : '#24B04B'))
+                var foreground = merge_node ? '#AEAEAE' :
+                    uid == 'a' ? '#F15E5E' :
+                    uid == 'b' ? '#0167FF' :
+                    uid == 'c' ? '#24B04B' :
+                    'rgba(255, 0, 255, 0.75)'
+                var background = merge_node ? '#EFEFEF80' :
+                    uid == 'a' ? '#FFEFEB80' :
+                    uid == 'b' ? '#C5E8FF80' :
+                    uid == 'c' ? '#CAE9CF80' :
+                    'rgba(255, 0, 255, 0.75)'
+                g.append(create_polygon(points, background))
+                g.append(create_polyline(points.slice(0, 3), foreground))
+                g.append(create_polyline(points.slice(3), foreground))
             }
         })
 
@@ -220,7 +230,7 @@ function sync7_create_visualization(s7) {
         each(s7.commits, function (c, id) {
             var merge_node = Object.keys(c.to_parents).length > 1
             each(c.to_parents, function (d, pid) {
-                svg.append(create_diff_lines(c.x || 0, c.y || 0, s7.commits[pid].x || 0, s7.commits[pid].y || 0, d, merge_node))
+                svg.append(create_diff_lines(c.x || 0, c.y || 0, s7.commits[pid].x || 0, s7.commits[pid].y || 0, d, merge_node, c.uid))
             })
         })
     
@@ -1150,6 +1160,9 @@ function apply_ops_to_sync7(s7s, ops, debug_print_buffer) {
             var del = Math.floor((t.length - pos) * op.del)
             var msg = sync7.commit(s7, t.slice(0, pos) + op.text + t.slice(pos + del))
             if (!msg) msg = null
+            if (msg) {
+                s7.commits[s7.leaf].uid = op.side
+            }
             each(other_s7s, function (s7) {
                 s7.buffer.push(JSON.parse(JSON.stringify(msg)))
             })
