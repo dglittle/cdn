@@ -88,6 +88,7 @@ function sync7_create_visualization(s7) {
         line.setAttribute('y1', y1)
         line.setAttribute('x2', x2)
         line.setAttribute('y2', y2)
+        line.style['stroke-width'] = 1
         line.setAttribute('stroke', stroke)
         if (dasharray) line.setAttribute('stroke-dasharray', dasharray)
         return line
@@ -124,7 +125,7 @@ function sync7_create_visualization(s7) {
             g.append(rect)
         }
 
-        g.append(create_line(x, Math.floor(y + size), x + size * text.length, y + size, stroke, '3'))
+        g.append(create_line(x, Math.floor(y + size) + 0.5, x + size * text.length, Math.floor(y + size) + 0.5, '#AEAEAE', '3'))
 
         for (var i = 0; i < text.length; i++) {
             var char = document.createElementNS('http://www.w3.org/2000/svg', 'text')
@@ -1299,12 +1300,11 @@ while (true) {
 
 
 
+// want to see bottoms of letters inside boxes
+
 // different colors for different peers
 // make mousing over a node transparentize everything else
 
-// make floors of versions dotted (and thin)
-// sans serif font
-// want to see bottoms of letters inside boxes
 // colored ones bold, and unchanged regions 
 
 // optimize for test environment to be fun/interating
@@ -1317,6 +1317,8 @@ while (true) {
 
 // Done........ done-dy done done done........
 
+// sans serif font
+// make floors of versions dotted (and thin)
 // borders of diff-patch-things should be consistent with the colors of the letters
 // merge "insert" patches are grey, and should have grey borders too (grey background #EFEFEF, border stroke: #AEAEAE, grey text: #AEAEAE)
     // let's make the borders of the merge patches #AEAEAE
