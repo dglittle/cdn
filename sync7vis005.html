@@ -138,6 +138,8 @@ function sync7_create_visualization(s7) {
             char.style.fill = specials[i] ? foreground : '#AEAEAE'
             char.style.fontSize = 19
             char.style.fontFamily = 'avenir, sans-serif'
+            if (specials[i])
+                char.style.fontWeight = 'bold'
             char.setAttribute('x', Math.floor(x + i*BOX_X + BOX_X/2))
             char.setAttribute('y', y + BOX_Y*0.75)
             char.setAttribute('text-anchor', 'middle')
@@ -1318,7 +1320,6 @@ while (true) {
 }
 
 
-// colored ones bold, and unchanged regions 
 // make mousing over a node transparentize everything else
 // optimize for test environment to be fun/interating
 // have nice way for people to play with it
@@ -1326,6 +1327,7 @@ while (true) {
 
 // Done........ done-dy done done done........
 
+// colored ones bold, and unchanged regions 
 // different colors for different peers
 // want to see bottoms of letters inside boxes
 // sans serif font
