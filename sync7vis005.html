@@ -131,9 +131,9 @@ function sync7_create_visualization(s7) {
         for (var i = 0; i < text.length; i++) {
             var char = document.createElementNS('http://www.w3.org/2000/svg', 'text')
             var foreground = merge_node ? '#AEAEAE' :
-                uid == 'a' ? '#F15E5E' :
-                uid == 'b' ? '#0167FF' :
-                uid == 'c' ? '#24B04B' :
+                commit.uid == 'a' ? '#F15E5E' :
+                commit.uid == 'b' ? '#0167FF' :
+                commit.uid == 'c' ? '#24B04B' :
                 'rgba(255, 0, 255, 0.75)'
             char.style.fill = specials[i] ? foreground : '#AEAEAE'
             char.style.fontSize = 19
@@ -1318,7 +1318,6 @@ while (true) {
 }
 
 
-// different colors for different peers
 // make mousing over a node transparentize everything else
 // colored ones bold, and unchanged regions 
 // optimize for test environment to be fun/interating
@@ -1327,6 +1326,7 @@ while (true) {
 
 // Done........ done-dy done done done........
 
+// different colors for different peers
 // want to see bottoms of letters inside boxes
 // sans serif font
 // make floors of versions dotted (and thin)
