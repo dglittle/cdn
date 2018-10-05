@@ -96,22 +96,23 @@ function sync7_create_simple_dag(s7) {
         return line
     }
     
-    function create_arrow(x1, y1, x2, y2, stroke, dasharray) {
+    function create_arrow(x1, y1, x2, y2, stroke, dasharray, uid) {
         var line = document.createElementNS('http://www.w3.org/2000/svg', 'line')
         
-        var end = vec3.fromValues(x2, y2, 0)
         var start = vec3.fromValues(x1, y1, 0)
+        var end = vec3.fromValues(x2, y2, 0)
         var to_end = vec3.subtract(vec3.create(), end, start)
         var len = vec3.length(to_end)
-        var arrow = vec3.scale(to_end, 1.0 / len * (len - 15))
+        var arrow = vec3.scale(vec3.create(), to_end, 1.0 / len * (len - 21))
 
-        line.setAttribute('marker-end', 'url(#head)')
+        line.setAttribute('marker-end', 'url(#head' + uid + ')')
+
 
         line.setAttribute('x1', x1)
         line.setAttribute('y1', y1)
         line.setAttribute('x2', x1 + arrow[0])
         line.setAttribute('y2', y1 + arrow[1])
-        line.style['stroke-width'] = 1
+        line.style['stroke-width'] = 2
         line.setAttribute('stroke', stroke)
         if (dasharray) line.setAttribute('stroke-dasharray', dasharray)
         return line
@@ -217,27 +218,32 @@ function sync7_create_simple_dag(s7) {
         svg.setAttribute('width', s7.width)
         svg.setAttribute('height', s7.height)
         
-        
-        
+
         
         var defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs')
         svg.append(defs)
         
-        var marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker')
-        marker.setAttribute('id', 'head')
-        marker.setAttribute('orient', 'auto')
-        marker.setAttribute('markerWidth', '10')
-        marker.setAttribute('markerHeight', '10')
-        marker.setAttribute('refX', '0')
-        marker.setAttribute('refY', '5')
-        defs.append(marker)
-        
-        var path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
-        path.setAttribute('d', 'M0,0 L10,5 L0,10 Z')
-        path.setAttribute('fill', 'red')
-        marker.append(path)
+        each(['m', 'a', 'b', 'c'], function (user) {
+            var marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker')
+            marker.setAttribute('id', 'head' + user)
+            marker.setAttribute('orient', 'auto')
+            marker.setAttribute('markerWidth', '10')
+            marker.setAttribute('markerHeight', '10')
+            marker.setAttribute('refX', '0')
+            marker.setAttribute('refY', '5')
+            defs.append(marker)
+            
+            var path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+            path.setAttribute('d', 'M0,3 L5,5 L0,7 Z')
+            path.setAttribute('fill', user == 'm' ? '#AEAEAE' :
+                user == 'a' ? '#F15E5E' :
+                user == 'b' ? '#0167FF' :
+                user == 'c' ? '#24B04B' : 'red')
+            marker.append(path)
+        })
 
-        
+
+
         each(s7.commits, function (c, id) {
             var merge_node = Object.keys(c.to_parents).length > 1
             var uid = c.uid
@@ -249,17 +255,17 @@ function sync7_create_simple_dag(s7) {
                     
             each(c.to_parents, function (d, pid) {
 
-                svg.append(create_arrow(s7.commits[pid].x || 0, s7.commits[pid].y || 0, c.x || 0, c.y || 0, foreground))
+                svg.append(create_arrow(s7.commits[pid].x || 0, s7.commits[pid].y || 0, c.x || 0, c.y || 0, foreground, null, merge_node ? 'm' : uid))
             })
         })
     
         each(s7.commits, function (c, id) {
             var merge_node = Object.keys(c.to_parents).length > 1
             var uid = c.uid
-            var foreground = merge_node ? '#AEAEAE80' :
-                uid == 'a' ? '#F15E5E80' :
-                uid == 'b' ? '#0167FF80' :
-                uid == 'c' ? '#24B04B80' :
+            var foreground = merge_node ? '#AEAEAE' :
+                uid == 'a' ? '#F15E5E' :
+                uid == 'b' ? '#0167FF' :
+                uid == 'c' ? '#24B04B' :
                 'rgba(255, 0, 255, 0.75)'
 
             var dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
@@ -1572,15 +1578,13 @@ while (true) {
 
 
 // make mousing over a node transparentize everything else
-
-// add version dag to the side
-
 // optimize for test environment to be fun/interating
 // have nice way for people to play with it
 // add pruning and time collapse
 
 // Done........ done-dy done done done........
 
+// add version dag to the side
 // colored ones bold, (and unchanged regions ?)
 // different colors for different peers
 // want to see bottoms of letters inside boxes
