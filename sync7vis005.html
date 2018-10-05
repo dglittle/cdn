@@ -434,6 +434,12 @@ function sync7_create_visualization(s7) {
                 g.append(create_polygon(points, background))
                 g.append(create_polyline(points.slice(0, 3), foreground))
                 g.append(create_polyline(points.slice(3), foreground))
+            } else if (!merge_node && typeof(d) == 'number') {
+                var foreground = '#AEAEAE'
+                var background = '#EFEFEF80'
+                g.append(create_polygon(points, background))
+                g.append(create_polyline(points.slice(0, 3), foreground))
+                g.append(create_polyline(points.slice(3), foreground))
             }
         })
 
