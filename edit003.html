@@ -67,16 +67,16 @@ $(function () {
     db.repo = (m && m[2]) || 'cdn'
     db.path = (m && m[3]) || 'test.html'
     
-    if (window.location.hash)
+    if (window.location.hash.substr(1))
+        db.path = window.location.hash.substr(1)
         
-  
-  
-  
-  
-  work here
-  
-  
-    
+    window.addEventListener('hashchange', function () {
+        if (window.location.hash.substr(1)) {
+            db.path = window.location.hash.substr(1)
+            openFile(main)
+        }
+    }, false)
+
     openFile(main)
 })
 
