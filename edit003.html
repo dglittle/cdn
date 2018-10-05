@@ -67,6 +67,16 @@ $(function () {
     db.repo = (m && m[2]) || 'cdn'
     db.path = (m && m[3]) || 'test.html'
     
+    if (window.location.hash)
+        
+  
+  
+  
+  
+  work here
+  
+  
+    
     openFile(main)
 })
 
@@ -139,7 +149,7 @@ function main() {
         enableLiveAutocompletion: true
     })
     
-    editor.commands.bindKeys({"cmd-l":null, "left":null})
+    editor.commands.bindKeys({"cmd-l" : null})
 
     editor.getSession().setMode(db.path.endsWith('.js') ? 'ace/mode/javascript' : 'ace/mode/html')
     var onChange = function () {}
