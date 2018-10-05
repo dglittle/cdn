@@ -15,64 +15,11 @@ Math.randomSeed(42)
 var BOX_X = 20
 var BOX_Y = 30
 
-function random_normal(mean, std_dev) {
-    var x0 = 1.0 - Math.random()
-    var x1 = 1.0 - Math.random()
-    return Math.sqrt(-2.0 * Math.log(x0)) * Math.cos(2.0 * Math.PI * x1) * std_dev + mean
-}
-
-function clip (subjectPolygon, clipPolygon) {
-    var cp1, cp2, s, e;
-    var inside = function (p) {
-        return (cp2[0]-cp1[0])*(p[1]-cp1[1]) > (cp2[1]-cp1[1])*(p[0]-cp1[0]);
-    };
-    var intersection = function () {
-        var dc = [ cp1[0] - cp2[0], cp1[1] - cp2[1] ],
-            dp = [ s[0] - e[0], s[1] - e[1] ],
-            n1 = cp1[0] * cp2[1] - cp1[1] * cp2[0],
-            n2 = s[0] * e[1] - s[1] * e[0], 
-            n3 = 1.0 / (dc[0] * dp[1] - dc[1] * dp[0]);
-        return [(n1*dp[0] - n2*dc[0]) * n3, (n1*dp[1] - n2*dc[1]) * n3];
-    };
-    var outputList = subjectPolygon;
-    cp1 = clipPolygon[clipPolygon.length-1];
-    for (j in clipPolygon) {
-        var cp2 = clipPolygon[j];
-        var inputList = outputList;
-        outputList = [];
-        s = inputList[inputList.length - 1]; //last on the input list
-        for (i in inputList) {
-            var e = inputList[i];
-            if (inside(e)) {
-                if (!inside(s)) {
-                    outputList.push(intersection());
-                }
-                outputList.push(e);
-            }
-            else if (inside(s)) {
-                outputList.push(intersection());
-            }
-            s = e;
-        }
-        cp1 = cp2;
-    }
-    return outputList
-}
-
-function calcPolygonArea(vertices) {
-    var total = 0
-
-    for (var i = 0, l = vertices.length; i < l; i++) {
-        var addX = vertices[i][0]
-        var addY = vertices[i == vertices.length - 1 ? 0 : i + 1][1]
-        var subX = vertices[i == vertices.length - 1 ? 0 : i + 1][0]
-        var subY = vertices[i][1]
-        
-        total += (addX * addY * 0.5)
-        total -= (subX * subY * 0.5)
-    }
-
-    return Math.abs(total)
+var FOREGROUNDS = {
+    m : '#AEAEAE',
+    a : '#F15E5E',
+    b : '#0167FF',
+    c : '#24B04B'
 }
 
 function sync7_create_simple_dag(s7) {
@@ -84,18 +31,6 @@ function sync7_create_simple_dag(s7) {
     svg_div.style.cursor = 'pointer'
     d.append(svg_div)
 
-    function create_line(x1, y1, x2, y2, stroke, dasharray) {
-        var line = document.createElementNS('http://www.w3.org/2000/svg', 'line')
-        line.setAttribute('x1', x1)
-        line.setAttribute('y1', y1)
-        line.setAttribute('x2', x2)
-        line.setAttribute('y2', y2)
-        line.style['stroke-width'] = 1
-        line.setAttribute('stroke', stroke)
-        if (dasharray) line.setAttribute('stroke-dasharray', dasharray)
-        return line
-    }
-    
     function create_arrow(x1, y1, x2, y2, stroke, dasharray, uid) {
         var line = document.createElementNS('http://www.w3.org/2000/svg', 'line')
         
@@ -105,8 +40,7 @@ function sync7_create_simple_dag(s7) {
         var len = vec3.length(to_end)
         var arrow = vec3.scale(vec3.create(), to_end, 1.0 / len * (len - 21))
 
-        line.setAttribute('marker-end', 'url(#head' + uid + ')')
-
+        line.setAttribute('marker-end', 'url(#marker_id_' + uid + ')')
 
         line.setAttribute('x1', x1)
         line.setAttribute('y1', y1)
@@ -118,98 +52,6 @@ function sync7_create_simple_dag(s7) {
         return line
     }
 
-    function create_char_boxes(x, y, text, selected, specials, merge_node, commit) {
-        var stroke = 'grey'
-        var g = document.createElementNS('http://www.w3.org/2000/svg', 'g')
-        
-        if (selected) {
-            var rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
-            rect.style.fill = 'rgba(255, 255, 0, 0.5)'
-            rect.setAttribute('x', x)
-            rect.setAttribute('y', y)
-            rect.setAttribute('width', text.length * BOX_X)
-            rect.setAttribute('height', BOX_Y)
-            g.append(rect)
-        }
-
-        g.append(create_line(x, Math.floor(y + BOX_Y) + 0.5, x + BOX_X * text.length, Math.floor(y + BOX_Y) + 0.5, '#AEAEAE', '3'))
-
-        return g
-    }
-    
-    function create_polygon(points, fill) {
-        var poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
-        poly.style.fill = fill
-        
-        var points_text = []
-        for (var i = 0; i < points.length; i++) {
-            points_text.push((i == 0 ? '' : ' ') + points[i][0])
-            points_text.push(',' + points[i][1])
-        }
-        poly.setAttribute('points', points_text.join(''))
-        
-        return poly
-    }
-
-    function create_polyline(points, stroke) {
-        var poly = document.createElementNS('http://www.w3.org/2000/svg', 'polyline')
-
-        poly.style.fill = 'none'
-        poly.style.stroke = stroke
-        poly.style['stroke-width'] = 1
-        
-        var points_text = []
-        for (var i = 0; i < points.length; i++) {
-            points_text.push((i == 0 ? '' : ' ') + points[i][0])
-            points_text.push(',' + points[i][1])
-        }
-        poly.setAttribute('points', points_text.join(''))
-        
-        return poly
-    }
-    
-    function create_diff_lines(x1, y1, x2, y2, diff, merge_node, uid) {
-        var stroke = 'black'
-        var g = document.createElementNS('http://www.w3.org/2000/svg', 'g')
-
-        var child_offset = 0
-        var parent_offset = 0
-        each(diff, function (d) {
-            var points = []
-            points.push([x1 + child_offset + 0.5, y1 + BOX_Y])
-            points.push([x1 + child_offset + 0.5, y1])
-            points.push([x2 + parent_offset + 0.5, y2 + BOX_Y])
-            if (typeof(d) == 'number') {
-                child_offset += d * BOX_X
-                parent_offset += d * BOX_X
-            } else {
-                child_offset += d[0].length * BOX_X
-                parent_offset += d[1].length * BOX_X
-            }
-            points.push([x2 + parent_offset + 0.5, y2 + BOX_Y])
-            points.push([x1 + child_offset + 0.5, y1])
-            points.push([x1 + child_offset + 0.5, y1 + BOX_Y])
-
-            if (typeof(d) != 'number') {
-                var foreground = merge_node ? '#AEAEAE' :
-                    uid == 'a' ? '#F15E5E' :
-                    uid == 'b' ? '#0167FF' :
-                    uid == 'c' ? '#24B04B' :
-                    'rgba(255, 0, 255, 0.75)'
-                var background = merge_node ? '#EFEFEF80' :
-                    uid == 'a' ? '#FFEFEBA0' :
-                    uid == 'b' ? '#C5E8FFA0' :
-                    uid == 'c' ? '#CAE9CFA0' :
-                    'rgba(255, 0, 255, 0.75)'
-                g.append(create_polygon(points, background))
-                g.append(create_polyline(points.slice(0, 3), foreground))
-                g.append(create_polyline(points.slice(3), foreground))
-            }
-        })
-
-        return g
-    }
-
     var svg = null
     function redraw() {
         if (svg) svg.remove()
@@ -217,15 +59,13 @@ function sync7_create_simple_dag(s7) {
         svg_div.append(svg)
         svg.setAttribute('width', s7.width)
         svg.setAttribute('height', s7.height)
-        
 
-        
         var defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs')
         svg.append(defs)
         
-        each(['m', 'a', 'b', 'c'], function (user) {
+        each(FOREGROUNDS, function (color, user) {
             var marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker')
-            marker.setAttribute('id', 'head' + user)
+            marker.setAttribute('id', 'marker_id_' + user)
             marker.setAttribute('orient', 'auto')
             marker.setAttribute('markerWidth', '10')
             marker.setAttribute('markerHeight', '10')
@@ -235,45 +75,32 @@ function sync7_create_simple_dag(s7) {
             
             var path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
             path.setAttribute('d', 'M0,3 L5,5 L0,7 Z')
-            path.setAttribute('fill', user == 'm' ? '#AEAEAE' :
-                user == 'a' ? '#F15E5E' :
-                user == 'b' ? '#0167FF' :
-                user == 'c' ? '#24B04B' : 'red')
+            path.setAttribute('fill', color)
             marker.append(path)
         })
 
-
-
         each(s7.commits, function (c, id) {
-            var merge_node = Object.keys(c.to_parents).length > 1
-            var uid = c.uid
-            var foreground = merge_node ? '#AEAEAE' :
-                uid == 'a' ? '#F15E5E' :
-                uid == 'b' ? '#0167FF' :
-                uid == 'c' ? '#24B04B' :
-                'rgba(255, 0, 255, 0.75)'
-                    
-            each(c.to_parents, function (d, pid) {
+            var parents = Object.keys(c.to_parents).length
+            var merge_node = parents == 0 || parents > 1
+            var uid = merge_node ? 'm' : c.uid
+            var foreground = FOREGROUNDS[uid]
 
-                svg.append(create_arrow(s7.commits[pid].x || 0, s7.commits[pid].y || 0, c.x || 0, c.y || 0, foreground, null, merge_node ? 'm' : uid))
+            each(c.to_parents, function (d, pid) {
+                svg.append(create_arrow(s7.commits[pid].x || 0, s7.commits[pid].y || 0, c.x || 0, c.y || 0, foreground, null, uid))
             })
         })
     
         each(s7.commits, function (c, id) {
-            var merge_node = Object.keys(c.to_parents).length > 1
-            var uid = c.uid
-            var foreground = merge_node ? '#AEAEAE' :
-                uid == 'a' ? '#F15E5E' :
-                uid == 'b' ? '#0167FF' :
-                uid == 'c' ? '#24B04B' :
-                '#AEAEAE'
-
+            var parents = Object.keys(c.to_parents).length
+            var merge_node = parents == 0 || parents > 1
+            var uid = merge_node ? 'm' : c.uid
+            var foreground = FOREGROUNDS[uid]
+            
             var dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
             dot.style.fill = foreground
             dot.setAttribute('cx', c.x || 0)
             dot.setAttribute('cy', c.y || 0)
             dot.setAttribute('r', '10')
-
             svg.append(dot)
         })
     }
