@@ -150,6 +150,7 @@ function main() {
     })
     
     editor.commands.bindKeys({"cmd-l" : null})
+    editor.setBehavioursEnabled(false)
 
     editor.getSession().setMode(db.path.endsWith('.js') ? 'ace/mode/javascript' : 'ace/mode/html')
     var onChange = function () {}
