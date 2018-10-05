@@ -227,44 +227,43 @@ function sync7_create_visualization(s7) {
         
         var child_offset = 0
         var parent_offset = 0
-        each(diff, function (d) {
-            var points = []
-            points.push([x1 + child_offset + 0.5, y1 + BOX_Y])
-            points.push([x1 + child_offset + 0.5, y1])
-            points.push([x2 + parent_offset + 0.5, y2 + BOX_Y])
-            if (typeof(d) == 'number') {
-                child_offset += d * BOX_X
-                parent_offset += d * BOX_X
-            } else {
-                child_offset += d[0].length * BOX_X
-                parent_offset += d[1].length * BOX_X
-            }
-            points.push([x2 + parent_offset + 0.5, y2 + BOX_Y])
-            points.push([x1 + child_offset + 0.5, y1])
-            points.push([x1 + child_offset + 0.5, y1 + BOX_Y])
-
-            if (merge_node && typeof(d) == 'number') {
-                var foreground = FOREGROUNDS.m
-                var background = BACKGROUNDS.m
+        for (var pass = 0; pass <= 1; pass++) {
+            each(diff, function (d) {
+                var points = []
+                points.push([x1 + child_offset + 0.5, y1 + BOX_Y])
+                points.push([x1 + child_offset + 0.5, y1])
+                points.push([x2 + parent_offset + 0.5, y2 + BOX_Y])
+                if (typeof(d) == 'number') {
+                    child_offset += d * BOX_X
+                    parent_offset += d * BOX_X
+                } else {
+                    child_offset += d[0].length * BOX_X
+                    parent_offset += d[1].length * BOX_X
+                }
+                points.push([x2 + parent_offset + 0.5, y2 + BOX_Y])
+                points.push([x1 + child_offset + 0.5, y1])
+                points.push([x1 + child_offset + 0.5, y1 + BOX_Y])
                 
-                g.append(create_polygon(points, background))
-                g.append(create_polyline(points.slice(0, 3), foreground))
-                g.append(create_polyline(points.slice(3), foreground))
-            } else if (!merge_node && typeof(d) != 'number') {
-                var foreground = FOREGROUNDS[uid]
-                var background = BACKGROUNDS[uid]
-                g.append(create_polygon(points, background))
-                g.append(create_polyline(points.slice(0, 3), foreground))
-                g.append(create_polyline(points.slice(3), foreground))
-            } else if (!merge_node && typeof(d) == 'number') {
-                var foreground = FOREGROUNDS.m
-                var background = BACKGROUNDS.m
+                var foreground = null
+                var background = null
+                if (pass == 0 && merge_node && typeof(d) == 'number') {
+                    foreground = FOREGROUNDS.m
+                    background = BACKGROUNDS.m
+                } else if (pass == 1 && !merge_node && typeof(d) != 'number') {
+                    foreground = FOREGROUNDS[uid]
+                    background = BACKGROUNDS[uid]
+                } else if (pass == 0 && !merge_node && typeof(d) == 'number') {
+                    foreground = FOREGROUNDS.m
+                    background = BACKGROUNDS.m
+                }
                 
-                g.append(create_polygon(points, background))
-                g.append(create_polyline(points.slice(0, 3), foreground))
-                g.append(create_polyline(points.slice(3), foreground))
-            }
-        })
+                if (foreground) {
+                    g.append(create_polygon(points, background))
+                    g.append(create_polyline(points.slice(0, 3), foreground))
+                    g.append(create_polyline(points.slice(3), foreground))
+                }
+            })
+        }
 
         return g
     }
