@@ -22,6 +22,13 @@ var FOREGROUNDS = {
     c : '#24B04B'
 }
 
+var BACKGROUNDS = {
+    m : '#EFEFEF80',
+    a : '#FFEFEBA0',
+    b : '#C5E8FFA0',
+    c : '#CAE9CFA0'
+}
+
 function sync7_create_simple_dag(s7) {
     var selected = {}
     
@@ -160,18 +167,13 @@ function sync7_create_visualization(s7) {
             g.append(rect)
         }
 
-
-work here
-        g.append(create_line(x, Math.floor(y + BOX_Y) + 0.5, x + BOX_X * text.length, Math.floor(y + BOX_Y) + 0.5, '#AEAEAE', '3'))
+        g.append(create_line(x, Math.floor(y + BOX_Y) + 0.5, x + BOX_X * text.length, Math.floor(y + BOX_Y) + 0.5, FOREGROUNDS.m, '3'))
 
         for (var i = 0; i < text.length; i++) {
             var char = document.createElementNS('http://www.w3.org/2000/svg', 'text')
-            var foreground = merge_node ? '#AEAEAE' :
-                commit.uid == 'a' ? '#F15E5E' :
-                commit.uid == 'b' ? '#0167FF' :
-                commit.uid == 'c' ? '#24B04B' :
-                'rgba(255, 0, 255, 0.75)'
-            char.style.fill = specials[i] ? foreground : '#AEAEAE'
+            var uid = merge_node ? 'm' : commit.uid
+            var foreground = FOREGROUNDS[uid]
+            char.style.fill = specials[i] ? foreground : FOREGROUNDS.m
             char.style.fontSize = 19
             char.style.fontFamily = 'avenir, sans-serif'
             if (specials[i] && !merge_node)
@@ -221,9 +223,8 @@ work here
     }
     
     function create_diff_lines(x1, y1, x2, y2, diff, merge_node, uid) {
-        var stroke = 'black'
         var g = document.createElementNS('http://www.w3.org/2000/svg', 'g')
-
+        
         var child_offset = 0
         var parent_offset = 0
         each(diff, function (d) {
@@ -243,28 +244,22 @@ work here
             points.push([x1 + child_offset + 0.5, y1 + BOX_Y])
 
             if (merge_node && typeof(d) == 'number') {
-                var foreground = '#AEAEAE'
-                var background = '#EFEFEF80'
+                var foreground = FOREGROUNDS.m
+                var background = BACKGROUNDS.m
+                
                 g.append(create_polygon(points, background))
                 g.append(create_polyline(points.slice(0, 3), foreground))
                 g.append(create_polyline(points.slice(3), foreground))
             } else if (!merge_node && typeof(d) != 'number') {
-                var foreground = merge_node ? '#AEAEAE' :
-                    uid == 'a' ? '#F15E5E' :
-                    uid == 'b' ? '#0167FF' :
-                    uid == 'c' ? '#24B04B' :
-                    'rgba(255, 0, 255, 0.75)'
-                var background = merge_node ? '#EFEFEF80' :
-                    uid == 'a' ? '#FFEFEBA0' :
-                    uid == 'b' ? '#C5E8FFA0' :
-                    uid == 'c' ? '#CAE9CFA0' :
-                    'rgba(255, 0, 255, 0.75)'
+                var foreground = FOREGROUNDS[uid]
+                var background = BACKGROUNDS[uid]
                 g.append(create_polygon(points, background))
                 g.append(create_polyline(points.slice(0, 3), foreground))
                 g.append(create_polyline(points.slice(3), foreground))
             } else if (!merge_node && typeof(d) == 'number') {
-                var foreground = '#AEAEAE'
-                var background = '#EFEFEF80'
+                var foreground = FOREGROUNDS.m
+                var background = BACKGROUNDS.m
+                
                 g.append(create_polygon(points, background))
                 g.append(create_polyline(points.slice(0, 3), foreground))
                 g.append(create_polyline(points.slice(3), foreground))
@@ -284,8 +279,9 @@ work here
         
         each(s7.commits, function (c, id) {
             var merge_node = Object.keys(c.to_parents).length > 1
+            var uid = merge_node ? 'm' : c.uid
             each(c.to_parents, function (d, pid) {
-                svg.append(create_diff_lines(c.x || 0, c.y || 0, s7.commits[pid].x || 0, s7.commits[pid].y || 0, d, merge_node, c.uid))
+                svg.append(create_diff_lines(c.x || 0, c.y || 0, s7.commits[pid].x || 0, s7.commits[pid].y || 0, d, merge_node, uid))
             })
         })
     
