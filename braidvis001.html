@@ -10,7 +10,7 @@
 <body style="margin:0px"></body>
 <script>
 
-Math.randomSeed(45)
+Math.randomSeed(46)
     
 var BOX_X = 20
 var BOX_Y = 30
@@ -1262,6 +1262,7 @@ while (true) {
             c.text = sync7_get_text(s7, id)
         })
         
+        var column_max_widths = { a : 0, b : 0, c : 0 }
         each(s7.commits, function (c, id) {
             var cc = c
             var column = cc.uid
@@ -1273,6 +1274,10 @@ while (true) {
                 } else column = 'a'
             }
             c.column = column
+            
+            var width = c.text.length * BOX_X
+            if (width > column_max_widths[column])
+                column_max_widths[column] = width
         })
 
         function get_layer(c) {
@@ -1284,19 +1289,69 @@ while (true) {
             return c.layer = max_layer + 1
         }
         each(s7.commits, function (c, id) {
-            
+            get_layer(c)
         })
         
+        var max_width = 0
+        var max_height = 0
         each(s7.commits, function (c, id) {
-            c.y = c.layer * BOX_Y * 2
-            c.x = (c.column.charCodeAt(0) - 'a'.charCodeAt(0)) * 200
+            c.y = c.layer * BOX_Y * 3
+            if (c.y + BOX_Y > max_height)
+                max_height = c.y + BOX_Y
+            
+            c.x = 0
+            each(column_max_widths, function (w, column) {
+                if (column == c.column) return false
+                c.x += w + 2.7 * BOX_X
+            })
+            if (c.x + column_max_widths[c.column] > max_width)
+                max_width = c.x + column_max_widths[c.column]
         })
         
-        s7.width = 1000
-        s7.height = 1000
+        s7.width = max_width
+        s7.height = max_height
 
         document.body.innerHTML = ''
-        document.body.append(sync7_create_visualization(s7))
+        
+        var d = document.createElement('div')
+        d.style.display = 'grid'
+        d.style['grid-template-columns'] = 'auto auto'
+        document.body.append(d)
+        
+        var B = sync7_create_visualization(s7)
+        
+        var s72 = { commits : {} }
+        each(s7.commits, function (c, id) {
+            s72.commits[id] = {
+                x : c.x,
+                y : c.y,
+                uid : c.uid,
+                column : c.column,
+                to_parents : c.to_parents
+            }
+        })
+        
+        var max_width = 0
+        var column_max_widths = { a : 100, b : 100, c : 100 }
+        each(s72.commits, function (c, id) {
+            c.x = 0
+            each(column_max_widths, function (w, column) {
+                if (column == c.column) return false
+                c.x += w
+            })
+            if (c.x + column_max_widths[c.column] > max_width)
+                max_width = c.x + column_max_widths[c.column]
+            c.x += 50
+        })
+        
+        s72.width = max_width
+        s72.height = max_height
+        
+        var A = sync7_create_simple_dag(s72)
+        
+        d.append(A)
+        d.append(B)
+        
         
         // var grapho = []
         // each(s7.commits, function (c, id) {
@@ -1400,7 +1455,6 @@ while (true) {
 
 
 // make some 3d coolishness (inspired from paralax) -- reason: to help reveal the structure
-// try lining columns up
 // space-dag
 
 // make mousing over a node transparentize everything else
@@ -1410,6 +1464,8 @@ while (true) {
 
 // Done........ done-dy done done done........
 
+// try lining columns up
+    // find and use the column widths
 // deal with overlap on right side of colored patches (need to draw the colored patches after the grey patches)
 // make all grey lighter
     // incorporate FOREGROUNDS into sync7_create_visualization
