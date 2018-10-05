@@ -148,7 +148,6 @@ function sync7_create_visualization(s7) {
     }
     
     function create_char_boxes(x, y, text, selected, specials, merge_node, commit) {
-        var stroke = 'grey'
         var g = document.createElementNS('http://www.w3.org/2000/svg', 'g')
         
         if (selected) {
@@ -161,6 +160,8 @@ function sync7_create_visualization(s7) {
             g.append(rect)
         }
 
+
+work here
         g.append(create_line(x, Math.floor(y + BOX_Y) + 0.5, x + BOX_X * text.length, Math.floor(y + BOX_Y) + 0.5, '#AEAEAE', '3'))
 
         for (var i = 0; i < text.length; i++) {
@@ -1424,6 +1425,7 @@ while (true) {
 // make all grey lighter
     // incorporate FOREGROUNDS into sync7_create_visualization
 // make some 3d coolishness (inspired from paralax) -- reason: to help reveal the structure
+// deal with overlap on right side of colored patches (need to draw the colored patches after the grey patches)
 
 // try lining columns up
 // space-dag
