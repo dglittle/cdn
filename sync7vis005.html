@@ -10,7 +10,7 @@
 <body style="margin:0px"></body>
 <script>
 
-Math.randomSeed(146)
+Math.randomSeed(149)
     
 var BOX_X = 20
 var BOX_Y = 30
@@ -414,7 +414,13 @@ function sync7_create_visualization(s7) {
             points.push([x1 + child_offset + 0.5, y1])
             points.push([x1 + child_offset + 0.5, y1 + BOX_Y])
 
-            if (typeof(d) != 'number') {
+            if (merge_node && typeof(d) == 'number') {
+                var foreground = '#AEAEAE'
+                var background = '#EFEFEF80'
+                g.append(create_polygon(points, background))
+                g.append(create_polyline(points.slice(0, 3), foreground))
+                g.append(create_polyline(points.slice(3), foreground))
+            } else if (!merge_node && typeof(d) != 'number') {
                 var foreground = merge_node ? '#AEAEAE' :
                     uid == 'a' ? '#F15E5E' :
                     uid == 'b' ? '#0167FF' :
