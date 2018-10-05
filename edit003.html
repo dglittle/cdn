@@ -93,8 +93,7 @@ function main() {
     var openButton = $('<button/>').text('open').click(function () {
         var newPath = prompt('open file named:')
         if (newPath) {
-            db.path = newPath
-            openFile(main)
+            window.location.hash = '#' + newPath
         }
     })
     var currentFile = $('<span/>').text(db.path)
