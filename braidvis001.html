@@ -1258,6 +1258,12 @@ while (true) {
         console.log('trying again.. ' + Object.keys(s7.commits).length)
         continue
     } else {
+        var columns = {
+            a : {},
+            b : {},
+            c : {}
+        }
+        
         each(s7.commits, function (c, id) {
             c.text = sync7_get_text(s7, id)
         })
