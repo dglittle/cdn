@@ -1,0 +1,171 @@
+<html>
+<head>
+<meta charset='utf-8'>
+<title>editor</title>
+<meta name="viewport" content="width=device-width, user-scalable=no">
+</head>
+<body>
+<script src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+<script src="https://dglittle.github.io/gl519/index.js"></script>
+<script src="https://dglittle.github.io/gl519/tab.js"></script>
+<script src="https://dglittle.github.io/gl519/aes.js"></script>
+<script src="https://dglittle.github.io/github-oauth/index.js"></script>
+<script src="https://cdn.jsdelivr.net/ace/1.1.8/min/ace.js"></script>
+<script src="https://cdn.jsdelivr.net/ace/1.1.8/min/ext-language_tools.js"></script>
+<script>
+
+var db = {}
+
+function ensureAccessToken(cb) {
+    if (db.access_token) cb()
+    else github_oauth('repo', function (x) {
+        db.access_token = x
+        cb()
+    })
+}
+
+function openFile(cb) {
+    $.get('https://api.github.com/repos/' + db.user + '/' + db.repo + '/contents/' + db.path, function (x) {
+        db.sha = x.sha
+        db.text = Base64.decode(x.content.replace(/\s/g, ''))
+        cb()
+    }).fail(function () {
+        db.text = 'there was no file called that, so you are seeing this..'
+        cb()
+    })
+    
+}
+        
+function saveFile(cb) {
+    ensureAccessToken(function () {
+        $.ajax({
+            type : 'PUT',
+            url : 'https://api.github.com/repos/' + db.user + '/' + db.repo + '/contents/' + db.path + '?access_token=' + db.access_token,
+            data : _.json({
+                path : '/' + db.path,
+                message : 'my commit message',
+                content : Base64.encode(db.text),
+                sha : db.sha
+            }),
+            success : function (x) {
+                db.sha = x.content.sha
+                cb()
+            }
+        })
+    })
+}
+
+$(function () {
+    $('head').append($('<style> html { box-sizing: border-box; } *, *:before, *:after { box-sizing: inherit; } body { margin: 0px } table { border-collapse: collapse; } th, td { padding: 0px; } </style>'))
+    
+    $(document).ajaxError(function () {
+        console.log('oh no, AJAX badness happened!')
+    })
+
+    var m = window.location.href.match(/\/\/(.*?)\.github\.io\/(.*?)\/([^\?#]*)/)
+    db.user = (m && m[1]) || 'dglittle'
+    db.repo = (m && m[2]) || 'cdn'
+    db.path = (m && m[3]) || 'test.html'
+    
+    openFile(main)
+})
+
+function main() {
+    $('body').empty()
+    
+    var input = $('<div id="input" style="width:100%;height:100%"/>')
+
+    var saveButton = $('<button/>').text('save (ctrl-s)').click(function () {
+        saveFile(function () {
+            alert('saved!')
+        })
+    })
+    var openButton = $('<button/>').text('open').click(function () {
+        var newPath = prompt('open file named:')
+        if (newPath) {
+            db.path = newPath
+            openFile(main)
+        }
+    })
+    var currentFile = $('<span/>').text(db.path)
+
+    var reloadButton = $('<button/>').text('reload (ctrl-enter)').click(function () {
+        if ($('#useDataUrl:checked').length) {
+            bottomRight.empty().append($('<iframe style="width:100%;height:100%" frameBorder="0"/>').attr('src', 'data:text/html;base64,' + Base64.encode(db.text)))
+        } else {
+            bottomRight.empty().append('saving...')
+            saveFile(function () {
+                bottomRight.empty().append('loading...')
+                var url = 'http://' + db.user + '.github.io/' + db.repo + '/' + db.path
+                function done() {
+                    bottomRight.empty().append($('<iframe style="width:100%;height:100%" frameBorder="0"/>').attr('src', url))
+                }
+                var lastWaitTime = 100
+                function wait() {
+                    $.get(url, function (s) {
+                        if (s == db.text) done()
+                        else {
+                            lastWaitTime *= 1.5
+                            bottomRight.empty().append('waiting for github to publish.. ' + (lastWaitTime/1000) + 's till next retry')
+                            setTimeout(wait, lastWaitTime)
+                        }
+                    })
+                }
+                wait()
+            })
+        }
+    })
+    
+    var useDataUrl = $('<label><input id="useDataUrl" type="checkbox" checked>use data url</label>')
+
+    var topLeft = $('<div/>').append(saveButton).append(openButton).append(currentFile)
+    var topRight = $('<div/>').append(reloadButton).append(useDataUrl)
+    var bottomLeft = $('<div style="width:100%;height:100%"/>').append(input)
+    var bottomRight = $('<div style="width:100%;height:100%"/>')
+
+    $('body').append(_.splitVert(2, 1, _.splitHorz(.5, .5, topLeft, topRight), _.splitHorz(.5, .5, bottomLeft, bottomRight)))
+
+    ace.require("ace/ext/language_tools")
+    var editor = ace.edit("input")
+    editor.setTheme("ace/theme/monokai")
+    // editor.renderer.setShowGutter(false)
+    editor.setShowPrintMargin(false)
+    editor.setShowFoldWidgets(false)
+    editor.setOptions({
+        fontFamily: 'Menlo,monospace',
+        fontSize: '9pt',
+        wrap: true,
+        enableBasicAutocompletion: true,
+        enableLiveAutocompletion: true
+    })
+    
+    editor.commands.bindKeys({"ctrl-l":null, "left":null})
+
+    editor.getSession().setMode(db.path.endsWith('.js') ? 'ace/mode/javascript' : 'ace/mode/html')
+    var onChange = function () {}
+    editor.on('input', function () {
+        onChange(editor.getSession().getValue())
+    })
+    
+    onChange = function (x) { db.text = x }
+    editor.getSession().setValue(db.text)
+
+    $('body').keydown(function (e) {
+        if (e.metaKey) {
+            if (e.keyCode == 83) { // s
+                e.preventDefault()
+                saveButton.click()
+            }
+            if (e.keyCode == 82 || e.keyCode == 13) { // r or enter
+                e.preventDefault()
+                reloadButton.click()
+            }
+        }
+    })
+
+    // reloadButton.click()
+}
+
+</script>
+</body>
+</html>
