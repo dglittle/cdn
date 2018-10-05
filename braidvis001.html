@@ -225,9 +225,9 @@ function sync7_create_visualization(s7) {
     function create_diff_lines(x1, y1, x2, y2, diff, merge_node, uid) {
         var g = document.createElementNS('http://www.w3.org/2000/svg', 'g')
         
-        var child_offset = 0
-        var parent_offset = 0
         for (var pass = 0; pass <= 1; pass++) {
+            var child_offset = 0
+            var parent_offset = 0
             each(diff, function (d) {
                 var points = []
                 points.push([x1 + child_offset + 0.5, y1 + BOX_Y])
@@ -1415,10 +1415,8 @@ while (true) {
     }
 }
 
-// deal with overlap on right side of colored patches (need to draw the colored patches after the grey patches)
 
 // make some 3d coolishness (inspired from paralax) -- reason: to help reveal the structure
-
 // try lining columns up
 // space-dag
 
@@ -1429,6 +1427,7 @@ while (true) {
 
 // Done........ done-dy done done done........
 
+// deal with overlap on right side of colored patches (need to draw the colored patches after the grey patches)
 // make all grey lighter
     // incorporate FOREGROUNDS into sync7_create_visualization
 // make merge nodes not bold
