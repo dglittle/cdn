@@ -139,7 +139,7 @@ function main() {
         enableLiveAutocompletion: true
     })
     
-    editor.commands.bindKeys({"ctrl-l":null, "left":null})
+    editor.commands.bindKeys({"cmd-l":null, "left":null})
 
     editor.getSession().setMode(db.path.endsWith('.js') ? 'ace/mode/javascript' : 'ace/mode/html')
     var onChange = function () {}
