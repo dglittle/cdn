@@ -1258,19 +1258,9 @@ while (true) {
         console.log('trying again.. ' + Object.keys(s7.commits).length)
         continue
     } else {
-        
-        
-        
-        //console.log('buf = ' + buf.join('\n'))
         each(s7.commits, function (c, id) {
             c.text = sync7_get_text(s7, id)
         })
-        
-        
-        
-        
-        // All we need to do then is to plug our dag into this grapho phormat -- s7.commits
-        
         
         var grapho = []
         each(s7.commits, function (c, id) {
@@ -1279,45 +1269,18 @@ while (true) {
                 parentIds : Object.keys(c.to_parents)
             })
         })
-        
-        
-        
-        
-        var grafo = [{"id":"0","parentIds":[]},{"id":"1","parentIds":["0"]},{"id":"2","parentIds":["0"]}]
-        
-        grafo = grapho
-        
-        const dag = d3.dratify()(grafo)
-        d3.sugiyama()(dag);
-
-        console.log('BLAH!')
-        console.log(dag)
-        
+        const dag = d3.dratify()(grapho)
+        d3.sugiyama()(dag)
         const links = dag.links()
-        const descendants = dag.descendants();
-        
-        
-        
-        
-        
-        
-        
+        const descendants = dag.descendants()
         
         const dag2 = d3.dratify()(grapho)
-        d3.sugiyama()(dag2);
+        d3.sugiyama()(dag2)
         const links2 = dag2.links()
-        const descendants2 = dag2.descendants();
+        const descendants2 = dag2.descendants()
         
-
-        
-        // console.log('links: ' + JSON.stringify(links, null, '    '))
-        // console.log('descendants: ' + JSON.stringify(descendants, null, '    '))
-              
-        
-
         var max_x = 0
         var max_y = 0
-
 
         var max_layer = 0
 
@@ -1353,11 +1316,7 @@ while (true) {
                 e.node.x = offset
                 offset += e.size * BOX_X + BOX_X * 2.7
             })
-            
         })
-
-        
-        
 
         document.body.innerHTML = ''
         
@@ -1365,11 +1324,6 @@ while (true) {
         d.style.display = 'grid'
         d.style['grid-template-columns'] = 'auto auto'
         document.body.append(d)
-        
-        
-        
-        
-        
         
         var max_x2 = 0
         var max_y2 = 0
@@ -1390,10 +1344,6 @@ while (true) {
         d.append(sync7_create_simple_dag(s7))
         
         
-        
-        
-        
-        
         each(descendants, function (descendant) {
             s7.commits[descendant.id].x = descendant.x
             s7.commits[descendant.id].y = descendant.y * max_layer * BOX_Y * 2
@@ -1406,9 +1356,6 @@ while (true) {
         s7.height = max_y
 
         d.append(sync7_create_visualization(s7))
-        
-        
-        
         
 
         break
