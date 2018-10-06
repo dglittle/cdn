@@ -54,7 +54,8 @@ function update_space_dag(merge_info) {
     svg.setAttribute('width', 1000)
     svg.setAttribute('height', BOX_Y * 3)
     
-    svg.append(create_line(BOX_X, BOX_Y, BOX_X, BOX_Y * 2, FOREGROUNDS.m, 3))
+    svg.append(create_line(BOX_X, BOX_Y, BOX_X, BOX_Y * 2, FOREGROUNDS.m))
+    svg.append(create_line(BOX_X, BOX_Y + BOX_Y/2, BOX_X + BOX_X, BOX_Y + BOX_Y/2, FOREGROUNDS.m))
 
     
     // var d = document.createElement('div')
