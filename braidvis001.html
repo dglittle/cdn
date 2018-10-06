@@ -743,7 +743,17 @@ var sync7 = {}
             var to_parents = {}
             s7.commits[prev_merge_node].from_kids[id] = to_parents[prev_merge_node] = m.to_a
             s7.commits[leaf].from_kids[id] = to_parents[leaf] = m.to_b
-            s7.commits[id] = s7.temp_commits[id] = { to_parents : to_parents, from_kids : {} }
+            s7.commits[id] = s7.temp_commits[id] = {
+                to_parents : to_parents,
+                from_kids : {},
+                
+                merge_info : {
+                    a_text : texts[prev_merge_node],
+                    b_text : texts[leaf],
+                    a_regions : prev_regions,
+                    b_regions : leaf_regions
+                }
+            }
             
             prev_merge_node = id
             texts[prev_merge_node] = m.text
