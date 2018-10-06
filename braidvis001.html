@@ -29,6 +29,19 @@ var BACKGROUNDS = {
     c : '#CAE9CFA0'
 }
 
+var space_dag_div = null
+function update_space_dag(merge_info) {
+    if (!space_dag_div) {
+        space_dag_div = document.createElement('div')
+        document.body.append(space_dag_div)
+    }
+    
+    space_dag_div.innerHTML = ''
+    var d = document.createElement('div')
+    d.textContent = JSON.stringify(merge_info, null, '    ')
+    space_dag_div.append(d)
+}
+
 function sync7_create_simple_dag(s7) {
     var selected = {}
     
@@ -334,11 +347,7 @@ function sync7_create_visualization(s7) {
         }
         if (grabbed) {
             var commit = s7.commits[grabbed.id]
-                        
-            
-            console.log('MERGE_INFO2:')
-            console.log(commit.merge_info)
-
+            update_space_dag(commit.merge_info)
         }
 
         var oldMove = document.onmousemove
