@@ -332,6 +332,14 @@ function sync7_create_visualization(s7) {
             selected = {}
             redraw()
         }
+        if (grabbed) {
+            var commit = s7.commits[grabbed.id]
+                        
+            
+            console.log('MERGE_INFO2:')
+            console.log(commit.merge_info)
+
+        }
 
         var oldMove = document.onmousemove
         document.onmousemove = function (e) {
