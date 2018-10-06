@@ -29,6 +29,18 @@ var BACKGROUNDS = {
     c : '#CAE9CFA0'
 }
 
+function create_line(x1, y1, x2, y2, stroke, dasharray) {
+    var line = document.createElementNS('http://www.w3.org/2000/svg', 'line')
+    line.setAttribute('x1', x1)
+    line.setAttribute('y1', y1)
+    line.setAttribute('x2', x2)
+    line.setAttribute('y2', y2)
+    line.style['stroke-width'] = 1
+    line.setAttribute('stroke', stroke)
+    if (dasharray) line.setAttribute('stroke-dasharray', dasharray)
+    return line
+}
+
 var space_dag_div = null
 function update_space_dag(merge_info) {
     if (!space_dag_div) {
@@ -37,9 +49,17 @@ function update_space_dag(merge_info) {
     }
     
     space_dag_div.innerHTML = ''
-    var d = document.createElement('div')
-    d.textContent = JSON.stringify(merge_info, null, '    ')
-    space_dag_div.append(d)
+    svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+    space_dag_div.append(svg)
+    svg.setAttribute('width', 1000)
+    svg.setAttribute('height', BOX_Y * 3)
+    
+    svg.append(create_line(BOX_X, BOX_Y, BOX_X, BOX_Y * 2, FOREGROUNDS.m, 3))
+
+    
+    // var d = document.createElement('div')
+    // d.textContent = JSON.stringify(merge_info, null, '    ')
+    // space_dag_div.append(d)
 }
 
 function sync7_create_simple_dag(s7) {
@@ -137,18 +157,6 @@ function sync7_create_visualization(s7) {
     var svg_div = document.createElement('div')
     svg_div.style.cursor = 'pointer'
     d.append(svg_div)
-
-    function create_line(x1, y1, x2, y2, stroke, dasharray) {
-        var line = document.createElementNS('http://www.w3.org/2000/svg', 'line')
-        line.setAttribute('x1', x1)
-        line.setAttribute('y1', y1)
-        line.setAttribute('x2', x2)
-        line.setAttribute('y2', y2)
-        line.style['stroke-width'] = 1
-        line.setAttribute('stroke', stroke)
-        if (dasharray) line.setAttribute('stroke-dasharray', dasharray)
-        return line
-    }
     
     function calc_specials(id) {
         var specials = {}
