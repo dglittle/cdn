@@ -53,7 +53,7 @@ function create_rect(x, y, w, h, stroke) {
     return rect
 }
 
-function create_char(x, y, char, fill, bold) {
+function create_char(x, y, text, fill, bold) {
     var char = document.createElementNS('http://www.w3.org/2000/svg', 'text')
     char.style.fill = fill
     char.style.fontSize = 19
@@ -63,7 +63,7 @@ function create_char(x, y, char, fill, bold) {
     char.setAttribute('y', y)
     char.setAttribute('text-anchor', 'middle')
     char.setAttribute('alignment-baseline', 'baseline')
-    char.appendChild(document.createTextNode(char))
+    char.appendChild(document.createTextNode(text))
     return char
 }
 
@@ -87,6 +87,7 @@ function update_space_dag(merge_info) {
     svg.append(create_line(size*2, size*1.5, size*2.5, size*0.75, FOREGROUNDS.m))
     for (var i = 0; i < merge_info.a_text.length; i++) {
         svg.append(create_rect(size * 2.5 + i * size, size/4, size, size, FOREGROUNDS.m))
+        svg.append(create_char(size * 2.5 + i * size + size/2, size/4 + size*0.75, merge_info.a_text[i], 'black', false))
     }
     
     svg.append(create_line(size*2, size*1.5, size*2.5, size*2.25, FOREGROUNDS.m))
