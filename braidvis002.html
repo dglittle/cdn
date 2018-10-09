@@ -53,6 +53,20 @@ function create_rect(x, y, w, h, stroke) {
     return rect
 }
 
+function create_char(x, y, char, fill, bold) {
+    var char = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+    char.style.fill = fill
+    char.style.fontSize = 19
+    char.style.fontFamily = 'avenir, sans-serif'
+    if (bold) char.style.fontWeight = 'bold'
+    char.setAttribute('x', x)
+    char.setAttribute('y', y)
+    char.setAttribute('text-anchor', 'middle')
+    char.setAttribute('alignment-baseline', 'baseline')
+    char.appendChild(document.createTextNode(char))
+    return char
+}
+
 var space_dag_div = null
 function update_space_dag(merge_info) {
     if (!space_dag_div) {
@@ -70,11 +84,15 @@ function update_space_dag(merge_info) {
     svg.append(create_line(size, size, size, size * 2, FOREGROUNDS.m))
     svg.append(create_line(size, size + size/2, size * 2, size * 1.5, FOREGROUNDS.m))
     
-    
+    svg.append(create_line(size*2, size*1.5, size*2.5, size*0.75, FOREGROUNDS.m))
     for (var i = 0; i < merge_info.a_text.length; i++) {
-        svg.append(create_rect(size * 2 + i * size, size/4, size, size, FOREGROUNDS.m))
+        svg.append(create_rect(size * 2.5 + i * size, size/4, size, size, FOREGROUNDS.m))
     }
     
+    svg.append(create_line(size*2, size*1.5, size*2.5, size*2.25, FOREGROUNDS.m))
+    for (var i = 0; i < merge_info.b_text.length; i++) {
+        svg.append(create_rect(size * 2.5 + i * size, size*2 - size/4, size, size, FOREGROUNDS.m))
+    }
     
     console.log('merge_info: ' + JSON.stringify(merge_info, null, 4))
 
@@ -213,23 +231,9 @@ function sync7_create_visualization(s7) {
         g.append(create_line(x, Math.floor(y + BOX_Y) + 0.5, x + BOX_X * text.length, Math.floor(y + BOX_Y) + 0.5, FOREGROUNDS.m, '3'))
 
         for (var i = 0; i < text.length; i++) {
-            var char = document.createElementNS('http://www.w3.org/2000/svg', 'text')
             var uid = merge_node ? 'm' : commit.uid
             var foreground = FOREGROUNDS[uid]
-            char.style.fill = specials[i] ? foreground : FOREGROUNDS.m
-            char.style.fontSize = 19
-            char.style.fontFamily = 'avenir, sans-serif'
-            if (specials[i] && !merge_node)
-                char.style.fontWeight = 'bold'
-            char.setAttribute('x', Math.floor(x + i*BOX_X + BOX_X/2))
-            char.setAttribute('y', y + BOX_Y*0.75)
-            char.setAttribute('text-anchor', 'middle')
-            char.setAttribute('alignment-baseline', 'baseline')
-            
-            var textNode = document.createTextNode(text[i])
-            char.appendChild(textNode)
-            
-            g.append(char)
+            g.append(create_char(Math.floor(x + i*BOX_X + BOX_X/2), y + BOX_Y*0.75, text[i], specials[i] ? foreground : FOREGROUNDS.m, specials[i] && !merge_node))
         }
         return g
     }
