@@ -2,34 +2,80 @@
 <body></body>
 <script>
 
-window.addEventListener('load', function() {
-
-  // Checking if Web3 has been injected by the browser (Mist/MetaMask)
-  if (typeof web3 !== 'undefined') {
-      console.log('got here!1111')
-    // Use Mist/MetaMask's provider
-    var provider = web3.currentProvider
-    var myWeb3 = new Web3(provider)
-
-    myWeb3.eth.getCompilers(function (x) {
-        console.log('bloooooop!')
+function sort_stuff(query, strings) {
+    
+    
+    
+    
+    
+    strings.sort(function (a, b) {
+        var as_thing = for a, figure out which of the four thigns it's in
+        var bs_thing = for b, figure out which of the four thigns it's in
         
-        console.log(x)
+        if (as_thing < bs_thing) return -1
+        if (bs_thing < as_thing) return 1
         
+        return a > b ? -1 : 1
     })
     
-  } else {
-    console.log('No web3? You should consider trying MetaMask!')
-    // fallback - use your fallback strategy (local node / hosted node + in-dapp id mgmt / fail)
-    web3js = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
-  }
-      console.log('got here!1222')
+    
+    
+    
+    for (var i = strings.length - 1; i >= 0; i--) {
+        var s = strings[i]
+        var re = new RegExp('\\b' + query + '\\b')
+        var m = s.match(re)
+        if () {
+            
+            
+        } else if () {
+            
+        } else if () {
+            
+        } else {
+            
+        }
+    }
+    
+    
+    
+    
+    for (var i = strings.length - 1; i >= 0; i--) {
+        var s = strings[i]
+        if (s == query) {
+            perfect_matches.push(s)
+            strings.splice(i, 1)
+        }
+    }
+    
+    var substring_matches = []
+    
+    for (var i = strings.length - 1; i >= 0; i--) {
+        var s = strings[i]
+        var re = new RegExp('\\b' + query + '\\b')
+        if (s.match(re)) {
+            substring_matches.push(s)
+            strings.splice(i, 1)
+        }
+    }
+    
+    var prefix_matches = []
+    
+    for (var i = strings.length - 1; i >= 0; i--) {
+        var s = strings[i]
+        if (s.startsWith(query)) {
+            prefix_matches.push(s)
+            strings.splice(i, 1)
+        }
+    }
+    
+    console.log(perfect_matches.sort().join('\n'))
+    console.log(substring_matches.sort().join('\n'))
+    console.log(prefix_matches.sort().join('\n'))
+    console.log(strings.sort().join('\n'))
+}
 
-  // Now you can start your app & access web3 freely:
-//  startApp()
-
-})
-
+sort_stuff('a', ['an', 'a', 'b', 'c', 'ab', 'ab a'])
 
 </script>
 
