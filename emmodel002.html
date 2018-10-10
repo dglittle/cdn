@@ -31,6 +31,16 @@ cc.style.margin = '4px'
 document.body.append(cc)
 var gg = cc.getContext('2d')
 
+var ccc = document.createElement('canvas')
+ccc.width = n
+ccc.height = n
+ccc.style.imageRendering = 'pixelated'
+ccc.style.width = n * zoom
+ccc.style.height = n * zoom
+ccc.style.margin = '4px'
+document.body.append(ccc)
+var ggg = ccc.getContext('2d')
+
 var img_data = g.createImageData(n, n)
 
 var E = []
@@ -38,11 +48,19 @@ var M = []
 
 for (var y = 0; y < n; y++) {
     for (var x = 0; x < n; x++) {
-        E.push(vec3.random(vec3.create()))
-        M.push(vec3.random(vec3.create()))
+        if (Math.random() < 0.998) {
+            E.push(vec3.create())
+            M.push(vec3.create())
+        } else {
+            var v = vec3.random(vec3.create())
+            E.push(vec3.scale(vec3.create(), v, 5))
+            M.push(vec3.create())
+        }
+        // E.push(vec3.random(vec3.create()))
+        // M.push(vec3.random(vec3.create()))
     }
 }
-// E[E.length / 2][2] = 1
+// E[Math.floor(E.length / 2)][2] = 10
 
 function get_index(x, y) {
     return fmod(y, n) * n + fmod(x, n)
@@ -57,10 +75,25 @@ function step_physics() {
                 var c2 = vec3.cross(vec3.create(), F1[get_index(x, y + 1)], vec3.fromValues(0, -1, 0))
                 var c3 = vec3.cross(vec3.create(), F1[get_index(x - 1, y)], vec3.fromValues(1, 0, 0))
                 var c4 = vec3.cross(vec3.create(), F1[get_index(x + 1, y)], vec3.fromValues(-1, 0, 0))
+                
+                var sq = Math.sqrt(0.5)
+                var c5 = vec3.cross(vec3.create(), F1[get_index(x - 1, y - 1)], vec3.fromValues(sq, sq, 0))
+                var c6 = vec3.cross(vec3.create(), F1[get_index(x - 1, y + 1)], vec3.fromValues(sq, -sq, 0))
+                var c7 = vec3.cross(vec3.create(), F1[get_index(x + 1, y - 1)], vec3.fromValues(-sq, sq, 0))
+                var c8 = vec3.cross(vec3.create(), F1[get_index(x + 1, y + 1)], vec3.fromValues(-sq, -sq, 0))
+                
+                
                 var total = vec3.create()
                 vec3.add(total, c1, c2)
                 vec3.add(total, total, c3)
                 vec3.add(total, total, c4)
+                
+                var scale = 1 / Math.sqrt(2)
+                vec3.add(total, total, vec3.scale(vec3.create(), c5, scale))
+                vec3.add(total, total, vec3.scale(vec3.create(), c6, scale))
+                vec3.add(total, total, vec3.scale(vec3.create(), c7, scale))
+                vec3.add(total, total, vec3.scale(vec3.create(), c8, scale))
+                
                 vec3.scale(total, total, factor)
                 
                 vec3.add(F2[get_index(x, y)], F2[get_index(x, y)], total)
@@ -68,8 +101,8 @@ function step_physics() {
         }
     }
     
-    curl_effects_other_field(E, M, 0.01)
-    curl_effects_other_field(M, E, -0.01)
+    curl_effects_other_field(E, M, 0.03)
+    curl_effects_other_field(M, E, -0.03)
 }
 
 function get_color_for_vec3(v3) {
@@ -134,6 +167,16 @@ function draw_everything() {
     }
     
     gg.putImageData(img_data, 0, 0)
+    
+    for (var i = 0; i < E.length; i++) {
+        var c = Math.min(255, Math.floor(vec3.length(E[i]) / 3 * 256))
+        img_data.data[i * 4 + 0] = c
+        img_data.data[i * 4 + 1] = c
+        img_data.data[i * 4 + 2] = c
+        img_data.data[i * 4 + 3] = 255
+    }
+    
+    ggg.putImageData(img_data, 0, 0)
 }
 
 var stop = false
@@ -142,7 +185,7 @@ function loop() {
     if (stop) { return }
     step_physics()
     draw_everything()
-    setTimeout(loop, 100)
+    setTimeout(loop, 30)
 }
 loop()
 
