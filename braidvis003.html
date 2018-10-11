@@ -93,6 +93,7 @@ function update_space_dag(merge_info) {
     svg.append(create_line(size*2, size*1.5, size*2.5, size*2.25, FOREGROUNDS.m))
     for (var i = 0; i < merge_info.b_text.length; i++) {
         svg.append(create_rect(size * 2.5 + i * size, size*2 - size/4, size, size, FOREGROUNDS.m))
+        svg.append(create_char(size * 2.5 + i * size + size/2, size*2 - size/4 + size*0.75, merge_info.b_text[i], 'black', false))
     }
     
     console.log('merge_info: ' + JSON.stringify(merge_info, null, 4))
