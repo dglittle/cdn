@@ -1297,6 +1297,10 @@ function apply_ops_to_sync7(s7s, ops, debug_print_buffer) {
             var x = s7.buffer.shift()
             if (x) {
                 s7.cursor = sync7.merge(s7, x, null, default_custom_merge_func)
+                each(s7.commits, function (c, id) {
+                    if (!c.column)
+                        c.column = op.side
+                })
             }
 
             if (debug_print_buffer) {
