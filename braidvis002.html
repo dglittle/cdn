@@ -10,7 +10,7 @@
 <body style="margin:0px"></body>
 <script>
 
-Math.randomSeed(46)
+Math.randomSeed(55)
     
 var BOX_X = 20
 var BOX_Y = 30
@@ -183,6 +183,9 @@ function sync7_create_simple_dag(s7) {
             dot.setAttribute('cy', c.y || 0)
             dot.setAttribute('r', '10')
             svg.append(dot)
+            
+            // work here
+            svg.append(create_char(c.x + 10, c.y, c.column, 'black', true))
         })
     }
     redraw()
@@ -1259,6 +1262,11 @@ function apply_ops_to_sync7(s7s, ops, debug_print_buffer) {
     if (typeof(s7s.a.cursor) != 'number') s7s.a.cursor = 0
     if (typeof(s7s.b.cursor) != 'number') s7s.b.cursor = 0
     if (typeof(s7s.c.cursor) != 'number') s7s.c.cursor = 0
+    
+    if (testy == 3) {
+        // debugger
+    }
+    
     each(ops, function (op, opi) {
         var s7 = s7s[op.side]
         var other_s7s = []
@@ -1274,6 +1282,7 @@ function apply_ops_to_sync7(s7s, ops, debug_print_buffer) {
             if (!msg) msg = null
             if (msg) {
                 s7.commits[s7.leaf].uid = op.side
+                s7.commits[s7.leaf].column = op.side
             }
             each(other_s7s, function (s7) {
                 s7.buffer.push(JSON.parse(JSON.stringify(msg)))
@@ -1295,6 +1304,21 @@ function apply_ops_to_sync7(s7s, ops, debug_print_buffer) {
             var x = s7.buffer.shift()
             if (x) {
                 s7.cursor = sync7.merge(s7, x, null, default_custom_merge_func)
+                
+                // work here
+                var found = false
+                each(s7.commits, function (c, id) {
+                    if (!c.column) {
+                        c.column = op.side
+                        
+                        if (op.side == 'a')
+                            console.log('found = ' + id)
+                        found = true
+                    }
+                })
+                if (found && op.side == 'a') {
+                    console.log('MERGE: ' + op.side)
+                }
             }
 
             if (debug_print_buffer) {
@@ -1305,41 +1329,51 @@ function apply_ops_to_sync7(s7s, ops, debug_print_buffer) {
     })
 }
 
+// work here
+var testy = 0
+
 while (true) {
     var s7s = {
         a : sync7.create(),
         b : sync7.create(),
         c : sync7.create(),
     }
+    
+    // work here
+    console.log('testy: ' + testy)
     var ops = create_random_ops()
+    
+    
     var buf = []
     apply_ops_to_sync7(s7s, ops, buf)
     
     var s7 = s7s.a
     if (Object.keys(s7.commits).length < 6) {
         console.log('trying again.. ' + Object.keys(s7.commits).length)
+        
+        // work here
+        testy++
+        
         continue
     } else {
+        
+        
+        
+        // work here
+        console.log('ops: ')
+        console.log(JSON.stringify(ops, null, 2))
+        
+        
+        
         each(s7.commits, function (c, id) {
             c.text = sync7_get_text(s7, id)
         })
         
         var column_max_widths = { a : 0, b : 0, c : 0 }
         each(s7.commits, function (c, id) {
-            var cc = c
-            var column = cc.uid
-            while (!column) {
-                var kid = Object.keys(cc.from_kids)[0]
-                if (kid) {
-                    cc = s7.commits[kid]
-                    column = cc.uid
-                } else column = 'a'
-            }
-            c.column = column
-            
             var width = c.text.length * BOX_X
-            if (width > column_max_widths[column])
-                column_max_widths[column] = width
+            if (width > column_max_widths[c.column])
+                column_max_widths[c.column] = width
         })
 
         function get_layer(c) {
