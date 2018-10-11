@@ -1260,10 +1260,6 @@ function apply_ops_to_sync7(s7s, ops, debug_print_buffer) {
     if (typeof(s7s.b.cursor) != 'number') s7s.b.cursor = 0
     if (typeof(s7s.c.cursor) != 'number') s7s.c.cursor = 0
     
-    if (testy == 3) {
-        // debugger
-    }
-    
     each(ops, function (op, opi) {
         var s7 = s7s[op.side]
         var other_s7s = []
