@@ -81,20 +81,94 @@ function update_space_dag(merge_info) {
     svg.setAttribute('height', BOX_Y * 3)
     
     var size = BOX_Y
+    
     svg.append(create_line(size, size, size, size * 2, FOREGROUNDS.m))
     svg.append(create_line(size, size + size/2, size * 2, size * 1.5, FOREGROUNDS.m))
     
-    svg.append(create_line(size*2, size*1.5, size*2.5, size*0.75, FOREGROUNDS.m))
-    for (var i = 0; i < merge_info.a_text.length; i++) {
-        svg.append(create_rect(size * 2.5 + i * size, size/4, size, size, FOREGROUNDS.m))
-        svg.append(create_char(size * 2.5 + i * size + size/2, size/4 + size*0.75, merge_info.a_text[i], 'black', false))
+    function draw_char_box(x, y, char, deleted) {
+        svg.append(create_rect(x, y, size, size, FOREGROUNDS.m))
+        svg.append(create_char(x + size/2, y + size*0.75, char, deleted ? FOREGROUNDS.m : 'black', false))
     }
     
-    svg.append(create_line(size*2, size*1.5, size*2.5, size*2.25, FOREGROUNDS.m))
-    for (var i = 0; i < merge_info.b_text.length; i++) {
-        svg.append(create_rect(size * 2.5 + i * size, size*2 - size/4, size, size, FOREGROUNDS.m))
-        svg.append(create_char(size * 2.5 + i * size + size/2, size*2 - size/4 + size*0.75, merge_info.b_text[i], 'black', false))
+    function draw_char_boxes(x, y, text, deleted) {
+        for (var i = 0; i < text.length; i++) {
+            draw_char_box(x + i * size, y, text[i], deleted)
+        }
     }
+    
+    var next_top_x = size * 2
+    var next_bottom_x = size * 2
+
+    var on_a = true
+    var ai = 0
+    var bi = 0
+    var a_text = merge_info.a_text
+    var b_text = merge_info.b_text
+    var a_regions = merge_info.a_regions
+    var b_regions = merge_info.b_regions
+    function draw_t(t, deleted, middle) {
+        if (middle) {
+            draw_char_boxes(Math.max(next_top_x, next_bottom_x), size*(1.5 - 0.5), t, deleted)
+            next_top_x = next_bottom_x = Math.max(next_top_x, next_bottom_x) + t.length * size
+        } else if (on_a) {
+            draw_char_boxes(next_top_x, size*0.25, t, deleted)
+            next_top_x += t.length * size
+        } else {
+            draw_char_boxes(next_bottom_x, size*1.75, t, deleted)
+            next_bottom_x += t.length * size
+        }
+    }
+    while (true) {
+        var aa = a_regions[ai]
+        var bb = b_regions[bi]
+        if (!aa && !bb) break
+        if (!aa) on_a = false
+        if (!bb) on_a = true
+        
+        var ci = on_a ? ai : bi
+        var di = on_a ? bi : ai
+        var cc = on_a ? aa : bb
+        var dd = on_a ? bb : aa
+        var c_text = on_a ? a_text : b_text
+        var d_text = on_a ? b_text : a_text
+
+        if (cc[5] < di) {
+            var t = c_text.substr(cc[0], cc[1])
+            if (cc[2]) {
+                if (cc[3] < di) {
+                    draw_t(t, true)
+                } else if (cc[3] == di) {
+                    draw_t(t, false, true)
+                    if (on_a) { bi++ } else { ai++ }
+                } else {
+                    draw_t(t)
+                }
+            } else {
+                draw_t(t)
+            }
+            if (on_a) { ai++ } else { bi++ }
+        } else if (dd && dd[5] < ci) {
+            on_a = !on_a
+        } else {
+            throw 'failure'
+        }
+    }    
+    
+
+    
+    // svg.append(create_line(size*2, size*1.5, size*2.5, size*0.75, FOREGROUNDS.m))
+    // for (var i = 0; i < merge_info.a_text.length; i++) {
+    //     svg.append(create_rect(size * 2.5 + i * size, size/4, size, size, FOREGROUNDS.m))
+    //     svg.append(create_char(size * 2.5 + i * size + size/2, size/4 + size*0.75, merge_info.a_text[i], 'black', false))
+    // }
+    
+    // svg.append(create_line(size*2, size*1.5, size*2.5, size*2.25, FOREGROUNDS.m))
+    // for (var i = 0; i < merge_info.b_text.length; i++) {
+    //     svg.append(create_rect(size * 2.5 + i * size, size*2 - size/4, size, size, FOREGROUNDS.m))
+    //     svg.append(create_char(size * 2.5 + i * size + size/2, size*2 - size/4 + size*0.75, merge_info.b_text[i], 'black', false))
+    // }
+    
+    
     
     console.log('merge_info: ' + JSON.stringify(merge_info, null, 4))
 
