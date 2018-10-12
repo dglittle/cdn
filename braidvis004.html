@@ -1498,7 +1498,7 @@ function create_side_text_boxes(n) {
         var buttons = document.createElement('div')
         grid.append(buttons)
         
-        function style_merge_button(b, stars) {
+        function style_merge_button(b, i, stars) {
             b.innerHTML = 'M' + (i + 1) + '*'.repeat(stars)
             b.style.color = stars > 0 ? 'green' : 'inherit'
             b.style.fontWeight = stars > 0 ? 'bold' : 'inherit'
@@ -1510,7 +1510,7 @@ function create_side_text_boxes(n) {
                 for (var ii = 0; ii < n; ii++) {
                     if (ii != i) {
                         s7s[ii].buffers[i].push(msg)
-                        style_merge_button(s7s[ii].buttons[i], s7s[ii].buffers[i].length)
+                        style_merge_button(s7s[ii].buttons[i], i, s7s[ii].buffers[i].length)
                     }
                 }
             }
@@ -1540,7 +1540,7 @@ function create_side_text_boxes(n) {
                     
                     msg.innerHTML = Object.keys(s7.waiting_commits).length > 0 ? 'pending commits' : ''
                 }
-                style_merge_button(s7.buttons[iiii - 1], s7.buffers[iiii - 1].length)
+                style_merge_button(s7.buttons[iiii - 1], iiii - 1, s7.buffers[iiii - 1].length)
             }
             buttons.append(b)
             s7.buttons[iiii - 1] = b
