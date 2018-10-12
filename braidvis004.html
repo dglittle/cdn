@@ -321,7 +321,7 @@ function sync7_create_simple_dag(s7) {
     return d    
 }
 
-function sync7_create_visualization(s7) {
+function sync7_create_fancy_dag(s7) {
     var selected = {}
     
     var d = document.createElement('div')
@@ -1487,6 +1487,89 @@ function apply_ops_to_sync7(s7s, ops, debug_print_buffer) {
     })
 }
 
+function sync7_create_visualization(s7) {
+    each(s7.commits, function (c, id) {
+        c.text = sync7_get_text(s7, id)
+    })
+    
+    var column_max_widths = []
+    each(s7.commits, function (c, id) {
+        var width = c.text.length * BOX_X
+        if (width > (column_max_widths[c.column] || 0))
+            column_max_widths[c.column] = width
+    })
+
+    function get_layer(c) {
+        if (c.layer != null) return c.layer
+        var max_layer = 0
+        each(c.to_parents, function (d, p) {
+            max_layer = Math.max(max_layer, get_layer(s7.commits[p]))
+        })
+        return c.layer = max_layer + 1
+    }
+    each(s7.commits, function (c, id) {
+        get_layer(c)
+    })
+    
+    var max_width = 0
+    var max_height = 0
+    each(s7.commits, function (c, id) {
+        c.y = c.layer * BOX_Y * 3
+        if (c.y + BOX_Y > max_height)
+            max_height = c.y + BOX_Y
+        
+        c.x = 0
+        each(column_max_widths, function (w, column) {
+            if (column == c.column) return false
+            c.x += w + 2.7 * BOX_X
+        })
+        if (c.x + column_max_widths[c.column] > max_width)
+            max_width = c.x + column_max_widths[c.column]
+    })
+    
+    s7.width = max_width
+    s7.height = max_height
+
+    var d = document.createElement('div')
+    d.style.display = 'grid'
+    d.style['grid-template-columns'] = 'auto auto'
+    
+    var B = sync7_create_fancy_dag(s7)
+    
+    var s72 = { commits : {} }
+    each(s7.commits, function (c, id) {
+        s72.commits[id] = {
+            x : c.x,
+            y : c.y,
+            uid : c.uid,
+            column : c.column,
+            to_parents : c.to_parents
+        }
+    })
+    
+    var max_width = 0
+    each(s72.commits, function (c, id) {
+        c.x = 0
+        each(column_max_widths, function (w, column) {
+            if (column == c.column) return false
+            c.x += 100
+        })
+        if (c.x + 100 > max_width)
+            max_width = c.x + 100
+        c.x += 50
+    })
+    
+    s72.width = max_width
+    s72.height = max_height
+    
+    var A = sync7_create_simple_dag(s72)
+    
+    d.append(A)
+    d.append(B)
+    
+    return d
+}
+
 function create_side_text_boxes(n) {
     var grid = document.createElement('div')
     grid.style.display = 'grid'
@@ -1516,6 +1599,11 @@ function create_side_text_boxes(n) {
         function commit() {
             var msg = sync7.commit(s7, t.value)
             if (msg) {
+                s7.commits[s7.leaf].uid =
+                    s7.commits[s7.leaf].column =
+                    msg[s7.leaf].uid =
+                    msg[s7.leaf].column = i
+                
                 for (var ii = 0; ii < n; ii++) {
                     if (ii != i) {
                         s7s[ii].buffers[i].push(msg)
@@ -1524,9 +1612,8 @@ function create_side_text_boxes(n) {
                 }
                 
                 if (i == 0) {
-                    work here : sync7_create_visualization
-                    
-                    
+                    right.innerHTML = ''
+                    right.append(sync7_create_visualization(s7))
                 }
             }
         }
@@ -1551,11 +1638,20 @@ function create_side_text_boxes(n) {
                 var x = s7.buffers[iiii - 1].shift()
                 if (x) {
                     sync7.merge(s7, x, null, default_custom_merge_func)
+                    each(s7.commits, function (c, id) {
+                        if (!c.column)
+                            c.column = i
+                    })
                     t.value = s7.text
                     
                     msg.innerHTML = Object.keys(s7.waiting_commits).length > 0 ? ('pend\'n' + '*'.repeat(Object.keys(s7.waiting_commits).length)) : ''
                 }
                 style_merge_button(s7.buttons[iiii - 1], iiii - 1, s7.buffers[iiii - 1].length)
+                
+                if (i == 0) {
+                    right.innerHTML = ''
+                    right.append(sync7_create_visualization(s7))
+                }
             }
             buttons.append(b)
             s7.buttons[iiii - 1] = b
