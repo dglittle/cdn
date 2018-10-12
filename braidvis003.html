@@ -104,7 +104,8 @@ function update_space_dag(merge_info) {
     
     var next_top_x = size * 2
     var next_bottom_x = size * 2
-    var last_was_middle = true
+    var last_top_was_middle = true
+    var last_bottom_was_middle = true
 
     var on_a = true
     var ai = 0
@@ -116,30 +117,35 @@ function update_space_dag(merge_info) {
     function draw_t(t, deleted, middle) {
         if (middle) {
             var x = Math.max(next_top_x, next_bottom_x)
-            if (last_was_middle) {
-                svg.append(create_line(x, size*1.5 + 0.5, x + size/2 + 0.5, size*1.5 + 0.5, 'black'))
-                x += size/2
-            } else {
-                if (next_top_x < x) {
+            if (!last_top_was_middle) {
+                if (next_top_x < x)
                     svg.append(create_line(next_top_x, size*0.75, x, size*0.75, 'black'))
-                } else if (next_bottom_x < x) {
-                    svg.append(create_line(next_bottom_x, size*2.25, x, size*2.25, 'black'))
-                }
                 svg.append(create_line(x, size*0.75, x + size/2 + 0.5, size*1.5 + 0.5, 'black'))
-                svg.append(create_line(x, size*2.25, x + size/2 + 0.5, size*1.5 + 0.5, 'black'))
-                x += size/2
             }
+            if (!last_bottom_was_middle) {
+                if (next_bottom_x < x)
+                    svg.append(create_line(next_bottom_x, size*2.25, x, size*2.25, 'black'))
+                svg.append(create_line(x, size*2.25, x + size/2 + 0.5, size*1.5 + 0.5, 'black'))
+            }
+            if (last_top_was_middle && last_bottom_was_middle) {
+                svg.append(create_line(x, size*1.5 + 0.5, x + size/2 + 0.5, size*1.5 + 0.5, 'black'))
+            }
+            
+            x += size/2
             
             draw_char_boxes(x + 0.5, size + 0.5, t, deleted)
             next_top_x = next_bottom_x = Math.max(next_top_x, next_bottom_x) + t.length * size
-            last_was_middle = true
+            last_top_was_middle = true
+            last_bottom_was_middle = true
         } else if (on_a) {
-            draw_char_boxes(next_top_x + 0.5, size*0.25, t, deleted)
-            next_top_x += t.length * size
+            svg.append(create_line(next_top_x, size*0.75, next_top_x + size/2 + 0.5, size*0.75, 'black'))
+            draw_char_boxes(next_top_x + size/2 + 0.5, size*0.25, t, deleted)
+            next_top_x += size/2 + t.length * size
             last_was_middle = false
         } else {
-            draw_char_boxes(next_bottom_x + 0.5, size*1.75, t, deleted)
-            next_bottom_x += t.length * size
+            svg.append(create_line(next_bottom_x, size*2.25, next_bottom_x + size/2 + 0.5, size*2.25, 'black'))
+            draw_char_boxes(next_bottom_x + size/2 + 0.5, size*1.75, t, deleted)
+            next_bottom_x += size/2 + t.length * size
             last_was_middle = false
         }
     }
