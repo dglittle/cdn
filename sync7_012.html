@@ -301,6 +301,40 @@ var sync7 = (typeof(module) != 'undefined') ? module.exports : {}
     sync7.merge = function (s7, cs, cursors, custom_merge_func) {
         if (!cursors) cursors = {}
         if (!custom_merge_func) custom_merge_func = default_custom_merge_func
+        
+        var cant_add_these = {}
+        function find_commit(id) {
+            return s7.commits[id] || cs[id] || s7.waiting_commits[id]
+        }
+        function mark_this_and_kids_as_unaddable(c, id) {
+            if (!cant_add_these[id]) {
+                cant_add_these[id] = true
+                each(c.from_kids, function (d, kid) {
+                    var kidc = find_commit(kid)
+                    if (kidc)
+                        mark_this_and_kids_as_unaddable(kidc, kid)
+                })
+            }
+        }
+        function process_commit(c, id) {
+            var missing_parent = false
+            each(c.to_parents, function (d, p) {
+                if (!find_commit(p)) {
+                    missing_parent = true
+                    return false
+                }
+            })
+            if (missing_parent)
+                mark_this_and_kids_as_unaddable(c, id)
+        }        
+        each(cs, process_commit)
+        each(s7.waiting_commits, process_commit)
+        
+        if (Object.keys(cs).length + Object.keys(s7.waiting_commits).length - Object.keys(cant_add_these).length <= 0) {
+            Object.assign(s7.waiting_commits, cs)
+            return cursors
+        }
+        
         var projected_cursors = map(cursors, function (cursor) {
             var node = s7.leaf
             while (s7.temp_commits[node]) {
@@ -329,14 +363,19 @@ var sync7 = (typeof(module) != 'undefined') ? module.exports : {}
             return [cursor, node]
         })
 
-        each(cs, function (c, id) {
-            s7.commits[id] = c
-            each(c.to_parents, function (d, p) {
-                if (!cs[p] && s7.commits[p]) {
-                    s7.commits[p].from_kids[id] = d
-                }
-            })
-        })
+        function process_commit2(c, id) {
+            if (!cant_add_these[id]) {
+                s7.commits[id] = c
+                each(c.to_parents, function (d, p) {
+                    if (s7.commits[p]) {
+                        s7.commits[p].from_kids[id] = d
+                    }
+                })
+            }
+        }
+        each(cs, process_commit2)
+        each(s7.waiting_commits, process_commit2)
+        
         s7.real_leaves = sync7_get_leaves(s7.commits, s7.temp_commits)
         var leaves = Object.keys(s7.real_leaves).sort()
         
