@@ -11,7 +11,7 @@
 <script>
 
 // 55
-Math.randomSeed(46)
+Math.randomSeed(12)
     
 var BOX_X = 20
 var BOX_Y = 30
@@ -106,6 +106,7 @@ function update_space_dag(merge_info) {
     var next_bottom_x = size * 2
     var last_top_was_middle = true
     var last_bottom_was_middle = true
+    var very_first = true
 
     var on_a = true
     var ai = 0
@@ -128,7 +129,7 @@ function update_space_dag(merge_info) {
                 svg.append(create_line(x, size*2.25, x + size/2 + 0.5, size*1.5 + 0.5, 'black'))
             }
             if (!last_top_was_middle || !last_bottom_was_middle) x += size/2
-            if (last_top_was_middle && last_bottom_was_middle && t) {
+            if (last_top_was_middle && last_bottom_was_middle && t && !very_first) {
                 svg.append(create_line(x, size*1.5 + 0.5, x + size/2 + 0.5, size*1.5 + 0.5, 'black'))
                 x += size/2
             }
@@ -161,6 +162,7 @@ function update_space_dag(merge_info) {
             next_bottom_x += size/2 + t.length * size
             last_bottom_was_middle = false
         }
+        very_first = false
     }
     while (true) {
         var aa = a_regions[ai]
