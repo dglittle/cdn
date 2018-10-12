@@ -1538,7 +1538,7 @@ function create_side_text_boxes(n) {
                     sync7.merge(s7, x, null, default_custom_merge_func)
                     t.value = s7.text
                     
-                    msg.innerHTML = Object.keys(s7.waiting_commits).length > 0 ? 'pending commits' : ''
+                    msg.innerHTML = Object.keys(s7.waiting_commits).length > 0 ? ('pend\'n' + '*'.repeat(Object.keys(s7.waiting_commits).length)) : ''
                 }
                 style_merge_button(s7.buttons[iiii - 1], iiii - 1, s7.buffers[iiii - 1].length)
             }
