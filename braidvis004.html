@@ -1501,6 +1501,7 @@ function create_side_text_boxes(n) {
         function style_merge_button(b, stars) {
             b.innerHTML = 'M' + (i + 1) + '*'.repeat(stars)
             b.style.color = stars > 0 ? 'green' : 'inherit'
+            b.style.fontWeight = stars > 0 ? 'bold' : 'inherit'
         }
         
         function commit() {
