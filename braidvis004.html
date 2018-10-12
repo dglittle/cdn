@@ -1434,28 +1434,58 @@ function apply_ops_to_sync7(s7s, ops, debug_print_buffer) {
 }
 
 function create_side_text_boxes(n) {
-    var d = document.createElement('div')
-    d.style.display = 'grid'
-    d.style['grid-template-columns'] = '200px'
+    var grid = document.createElement('div')
+    grid.style.display = 'grid'
+    grid.style['grid-template-columns'] = '200px'
+    document.body.append(grid)
     
-    for (var i = 0; i < n; i++) {
+    var s7s = new Array(n)
+    each(s7s, function (_, i) {
+        var s7 = s7s[i] = sync7.create()
+        s7.buffers = new Array(n)
+        s7.buttons = new Array(n)
+        for (var ii = 0; ii < n; ii++)
+            s7.buffers[ii] = []
+        
+        var d = document.createElement('div')
+        d.textContent = i + 1
+        grid.append(d)
+        
         var t = document.createElement('textarea')
-        d.append(t)
+        grid.append(t)
         
         var buttons = document.createElement('div')
-        d.append(buttons)
+        grid.append(buttons)
         
         var b = document.createElement('button')
         b.innerHTML = 'C'
-        buttons.append(b)
-        for (var ii = 0; ii < n - 1; ii++) {
-            var b = document.createElement('button')
-            b.innerHTML = 'M'
-            buttons.append(b)
+        b.onclick = function () {
+            var msg = sync7.commit(s7, t.value)
+            if (msg) {
+                for (var ii = 0; ii < n; ii++) {
+                    if (ii != i) {
+                        s7s[ii].buffers[i].push(msg)
+                        s7s[ii].buttons[i].innerHTML = 'M' + (i + 1) + '*'.repeat(s7s[ii].buffers[i].length)
+                    }
+                }
+            }
         }
-    }
-    
-    document.body.append(d)
+        buttons.append(b)
+        
+        var iii = 1
+        for (var ii = 0; ii < n - 1; ii++) {
+            if (ii == i) iii++
+            var b = document.createElement('button')
+            b.innerHTML = 'M' + iii++
+            buttons.append(b)
+            s7.buttons[ii] = b
+        }
+        
+        var d = document.createElement('div')
+        d.style.width = '10px'
+        d.style.height = '20px'
+        grid.append(d)
+    })
 }
 
 create_side_text_boxes(3)
