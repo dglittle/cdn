@@ -1433,12 +1433,31 @@ function apply_ops_to_sync7(s7s, ops, debug_print_buffer) {
     })
 }
 
-function create_side_text_boxes() {
+function create_side_text_boxes(n) {
     var d = document.createElement('div')
-    d.textContent = 'hi!'
+    d.style.display = 'grid'
+    d.style['grid-template-columns'] = '200px'
+    
+    for (var i = 0; i < n; i++) {
+        var t = document.createElement('textarea')
+        d.append(t)
+        
+        var buttons = document.createElement('div')
+        d.append(buttons)
+        
+        var b = document.createElement('button')
+        b.innerHTML = 'C'
+        buttons.append(b)
+        for (var ii = 0; ii < n - 1; ii++) {
+            var b = document.createElement('button')
+            b.innerHTML = 'M'
+            buttons.append(b)
+        }
+    }
+    
     document.body.append(d)
 }
 
-create_side_text_boxes()
+create_side_text_boxes(3)
 
 </script>
