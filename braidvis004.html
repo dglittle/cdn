@@ -1453,9 +1453,7 @@ function create_side_text_boxes(n) {
         var buttons = document.createElement('div')
         grid.append(buttons)
         
-        var b = document.createElement('button')
-        b.innerHTML = 'C' + (i + 1)
-        b.onclick = function () {
+        function commit() {
             var msg = sync7.commit(s7, t.value)
             if (msg) {
                 for (var ii = 0; ii < n; ii++) {
@@ -1465,6 +1463,12 @@ function create_side_text_boxes(n) {
                     }
                 }
             }
+        }
+        
+        var b = document.createElement('button')
+        b.innerHTML = 'C' + (i + 1)
+        b.onclick = function () {
+            commit()
         }
         buttons.append(b)
         
@@ -1477,6 +1481,7 @@ function create_side_text_boxes(n) {
             var b = document.createElement('button')
             b.innerHTML = 'M' + iiii
             b.onclick = function () {
+                commit()
                 var x = s7.buffers[iiii - 1].shift()
                 if (x) {
                     sync7.merge(s7, x, null, default_custom_merge_func)
