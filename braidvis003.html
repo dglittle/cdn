@@ -138,15 +138,23 @@ function update_space_dag(merge_info) {
             last_top_was_middle = true
             last_bottom_was_middle = true
         } else if (on_a) {
-            svg.append(create_line(next_top_x, size*0.75, next_top_x + size/2 + 0.5, size*0.75, 'black'))
+            if (last_top_was_middle) {
+                svg.append(create_line(next_top_x, size*1.5 + 0.5, next_top_x + size/2 + 0.5, size*0.75, 'black'))
+            } else {
+                svg.append(create_line(next_top_x, size*0.75, next_top_x + size/2 + 0.5, size*0.75, 'black'))
+            }
             draw_char_boxes(next_top_x + size/2 + 0.5, size*0.25, t, deleted)
             next_top_x += size/2 + t.length * size
-            last_was_middle = false
+            last_top_was_middle = false
         } else {
-            svg.append(create_line(next_bottom_x, size*2.25, next_bottom_x + size/2 + 0.5, size*2.25, 'black'))
+            if (last_bottom_was_middle) {
+                svg.append(create_line(next_bottom_x, size*1.5 + 0.5, next_bottom_x + size/2 + 0.5, size*2.25, 'black'))
+            } else {
+                svg.append(create_line(next_bottom_x, size*2.25, next_bottom_x + size/2 + 0.5, size*2.25, 'black'))
+            }
             draw_char_boxes(next_bottom_x + size/2 + 0.5, size*1.75, t, deleted)
             next_bottom_x += size/2 + t.length * size
-            last_was_middle = false
+            last_bottom_was_middle = false
         }
     }
     while (true) {
