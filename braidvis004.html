@@ -30,6 +30,15 @@ var BACKGROUNDS = {
     c : '#CAE9CFA0'
 }
 
+var top_grid = document.createElement('div')
+document.body.append(top_grid)
+top_grid.style.display = 'grid'
+top_grid.style['grid-template-columns'] = 'auto auto'
+var left = document.createElement('div')
+top_grid.append(left)
+var right = document.createElement('div')
+top_grid.append(right)
+
 function create_line(x1, y1, x2, y2, stroke, dasharray) {
     var line = document.createElementNS('http://www.w3.org/2000/svg', 'line')
     line.setAttribute('x1', x1)
@@ -1482,7 +1491,7 @@ function create_side_text_boxes(n) {
     var grid = document.createElement('div')
     grid.style.display = 'grid'
     grid.style['grid-template-columns'] = '200px'
-    document.body.append(grid)
+    left.append(grid)
     
     var s7s = new Array(n)
     each(s7s, function (_, i) {
@@ -1512,6 +1521,12 @@ function create_side_text_boxes(n) {
                         s7s[ii].buffers[i].push(msg)
                         style_merge_button(s7s[ii].buttons[i], i, s7s[ii].buffers[i].length)
                     }
+                }
+                
+                if (i == 0) {
+                    work here : sync7_create_visualization
+                    
+                    
                 }
             }
         }
