@@ -324,15 +324,6 @@ function sync7_create_simple_dag(s7) {
 }
 
 function sync7_create_fancy_dag(s7) {
-    
-    
-    
-    // work here
-    console.log(s7)
-    
-    
-    
-    
     var selected = {}
     
     var d = document.createElement('div')
@@ -1506,7 +1497,7 @@ function sync7_create_visualization(s7) {
     var column_max_widths = []
     each(s7.commits, function (c, id) {
         var width = c.text.length * BOX_X
-        if (width > (column_max_widths[c.column] || 0))
+        if (width > (column_max_widths[c.column] || -1))
             column_max_widths[c.column] = width
     })
 
