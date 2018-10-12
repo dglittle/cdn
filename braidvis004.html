@@ -630,8 +630,13 @@ var sync7 = {}
         })
         
         function process_commit2(c, id) {
-            if (!cant_add_these[id]) {
+            if (cant_add_these[id]) {
+                if (cs[id])
+                    s7.waiting_commits[id] = c
+            } else {
                 s7.commits[id] = c
+                if (s7.waiting_commits[id])
+                    delete s7.waiting_commits[id]
                 each(c.to_parents, function (d, p) {
                     if (s7.commits[p]) {
                         s7.commits[p].from_kids[id] = d
@@ -1526,12 +1531,17 @@ function create_side_text_boxes(n) {
                 if (x) {
                     sync7.merge(s7, x, null, default_custom_merge_func)
                     t.value = s7.text
+                    
+                    msg.innerHTML = Object.keys(s7.waiting_commits).length > 0 ? 'pending commits' : ''
                 }
                 s7.buttons[iiii - 1].innerHTML = 'M' + iiii + '*'.repeat(s7.buffers[iiii - 1].length)
             }
             buttons.append(b)
             s7.buttons[iiii - 1] = b
         })
+        
+        var msg = document.createElement('span')
+        buttons.append(msg)
         
         var d = document.createElement('div')
         d.style.width = '10px'
