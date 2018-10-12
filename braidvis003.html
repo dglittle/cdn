@@ -82,16 +82,21 @@ function update_space_dag(merge_info) {
     svg.setAttribute('height', BOX_Y * 3)
     
     var size = BOX_Y
-    
-    svg.append(create_line(size, size, size, size * 2, FOREGROUNDS.m))
-    svg.append(create_line(size, size + size/2, size * 2, size * 1.5, FOREGROUNDS.m))
+
+    // work here    
+    // svg.append(create_line(size, size, size, size * 2, FOREGROUNDS.m))
+    // svg.append(create_line(size, size + size/2, size * 2, size * 1.5, FOREGROUNDS.m))
+    svg.append(create_line(size + 0.5, size, size + 0.5, size * 2, 'black'))
+    svg.append(create_line(size, size * 1.5 + 0.5, size * 2, size * 1.5 + 0.5, 'black'))
     
     function draw_char_box(x, y, char, deleted) {
         svg.append(create_char(x + size/2, y + size*0.75, char, deleted ? FOREGROUNDS.m : 'black', false))
     }
     
     function draw_char_boxes(x, y, text, deleted) {
-        svg.append(create_rect(x, y, size * text.length, size, FOREGROUNDS.m))
+        // work here
+        // svg.append(create_rect(x, y, size * text.length, size, FOREGROUNDS.m))
+        svg.append(create_rect(x, y, size * text.length, size, 'black'))
         for (var i = 0; i < text.length; i++) {
             draw_char_box(x + i * size, y, text[i], deleted)
         }
@@ -99,6 +104,7 @@ function update_space_dag(merge_info) {
     
     var next_top_x = size * 2
     var next_bottom_x = size * 2
+    var last_was_middle = true
 
     var on_a = true
     var ai = 0
@@ -109,14 +115,32 @@ function update_space_dag(merge_info) {
     var b_regions = merge_info.b_regions
     function draw_t(t, deleted, middle) {
         if (middle) {
-            draw_char_boxes(Math.max(next_top_x, next_bottom_x), size*(1.5 - 0.5), t, deleted)
+            var x = Math.max(next_top_x, next_bottom_x)
+            if (last_was_middle) {
+                svg.append(create_line(x, size*1.5 + 0.5, x + size/2 + 0.5, size*1.5 + 0.5, 'black'))
+                x += size/2
+            } else {
+                if (next_top_x < x) {
+                    svg.append(create_line(next_top_x, size*0.75, x, size*0.75, 'black'))
+                } else if (next_bottom_x < x) {
+                    svg.append(create_line(next_bottom_x, size*2.25, x, size*2.25, 'black'))
+                }
+                svg.append(create_line(x, size*0.75, x + size/2 + 0.5, size*1.5 + 0.5, 'black'))
+                svg.append(create_line(x, size*2.25, x + size/2 + 0.5, size*1.5 + 0.5, 'black'))
+                x += size/2
+            }
+            
+            draw_char_boxes(x + 0.5, size + 0.5, t, deleted)
             next_top_x = next_bottom_x = Math.max(next_top_x, next_bottom_x) + t.length * size
+            last_was_middle = true
         } else if (on_a) {
-            draw_char_boxes(next_top_x, size*0.25, t, deleted)
+            draw_char_boxes(next_top_x + 0.5, size*0.25, t, deleted)
             next_top_x += t.length * size
+            last_was_middle = false
         } else {
-            draw_char_boxes(next_bottom_x, size*1.75, t, deleted)
+            draw_char_boxes(next_bottom_x + 0.5, size*1.75, t, deleted)
             next_bottom_x += t.length * size
+            last_was_middle = false
         }
     }
     while (true) {
