@@ -324,6 +324,13 @@ function sync7_create_simple_dag(s7) {
 }
 
 function sync7_create_fancy_dag(s7) {
+    
+    
+    // work here
+    console.log(s7)
+    
+    
+    
     var selected = {}
     
     var d = document.createElement('div')
@@ -1587,6 +1594,7 @@ function create_side_text_boxes(n) {
             s7.buffers[ii] = []
         
         var t = document.createElement('textarea')
+        s7.textarea = t
         grid.append(t)
         
         var buttons = document.createElement('div')
@@ -1626,6 +1634,7 @@ function create_side_text_boxes(n) {
             commit()
         }
         buttons.append(b)
+        s7.buttons[0] = b
         
         var iii = 1
         each(new Array(n - 1), function (_, ii) {
@@ -1667,6 +1676,22 @@ function create_side_text_boxes(n) {
         d.style.height = '20px'
         grid.append(d)
     })
+    
+    s7s[0].textarea.value = 'abc'
+    s7s[0].buttons[0].click()
+    
+    s7s[0].textarea.value = 'a12c'
+    s7s[0].buttons[0].click()
+    
+    s7s[1].textarea.value = 'XY'
+    s7s[1].buttons[0].click()
+    
+    s7s[0].buttons[1].click()
+    // s7s[1].textarea.value = 'XbY'
+    
+    // s7s[2].buttons[1].click()
+    // s7s[2].textarea.value = 'XbY'
+    // s7s[1].textarea.value = 'XbY'
 }
 
 create_side_text_boxes(4)
