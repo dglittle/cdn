@@ -327,7 +327,7 @@ function sync7_create_fancy_dag(s7) {
     
     
     // work here
-    console.log(s7)
+    console.log(JSON.stringify(s7, null, 2))
     
     
     
@@ -1677,6 +1677,8 @@ function create_side_text_boxes(n) {
         grid.append(d)
     })
     
+    // work here
+    
     s7s[0].textarea.value = 'abc'
     s7s[0].buttons[0].click()
     
@@ -1686,12 +1688,7 @@ function create_side_text_boxes(n) {
     s7s[1].textarea.value = 'XY'
     s7s[1].buttons[0].click()
     
-    s7s[0].buttons[1].click()
-    // s7s[1].textarea.value = 'XbY'
-    
-    // s7s[2].buttons[1].click()
-    // s7s[2].textarea.value = 'XbY'
-    // s7s[1].textarea.value = 'XbY'
+    // s7s[0].buttons[1].click()
 }
 
 create_side_text_boxes(4)
