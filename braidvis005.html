@@ -1624,7 +1624,7 @@ function create_side_text_boxes(n) {
                 
                 for (var ii = 0; ii < n; ii++) {
                     if (ii != i) {
-                        s7s[ii].buffers[i].push(msg)
+                        s7s[ii].buffers[i].push(JSON.parse(JSON.stringify(msg)))
                         style_merge_button(s7s[ii].buttons[i], i, s7s[ii].buffers[i].length)
                     }
                 }
