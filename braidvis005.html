@@ -11,7 +11,7 @@
 <script>
 
 // 55
-Math.randomSeed(12)
+Math.randomSeed(13)
     
 var BOX_X = 20
 var BOX_Y = 30
@@ -155,30 +155,35 @@ function update_space_dag(merge_info) {
             last_top_was_middle = true
             last_bottom_was_middle = true
         } else if (on_a) {
+            var x = next_top_x
             if (last_top_was_middle) {
-                svg.append(create_line(next_top_x, size*1.5 + 0.5, next_top_x + size/2 + 0.5, size*0.75, 'black'))
+                svg.append(create_line(next_top_x, size*1.5 + 0.5, x + size/2 + 0.5, size*0.75, 'black'))
             } else {
-                svg.append(create_line(next_top_x, size*0.75, next_top_x + size/2 + 0.5, size*0.75, 'black'))
-                
+                if (r[5] >= 0 && b_regions[r[5]][6] && b_regions[r[5]][6] > x)
+                    x = b_regions[r[5]][6]
+                svg.append(create_line(next_top_x, size*0.75, x + size/2 + 0.5, size*0.75, 'black'))
                 if (r[5] >= 0 && b_regions[r[5]][6]) {
-                    svg.append(create_line(b_regions[r[5]][6], size*2.25, next_top_x + size/2 + 0.5, size*0.75, 'black'))
+                    svg.append(create_line(b_regions[r[5]][6], size*2.25, x + size/2 + 0.5, size*0.75, 'black'))
                 }
             }
-            draw_char_boxes(next_top_x + size/2 + 0.5, size*0.25, t, deleted)
-            next_top_x += size/2 + t.length * size
+            draw_char_boxes(x + size/2 + 0.5, size*0.25, t, deleted)
+            next_top_x = x + size/2 + t.length * size
             r[6] = next_top_x
             last_top_was_middle = false
         } else {
+            var x = next_bottom_x
             if (last_bottom_was_middle) {
-                svg.append(create_line(next_bottom_x, size*1.5 + 0.5, next_bottom_x + size/2 + 0.5, size*2.25, 'black'))
+                svg.append(create_line(next_bottom_x, size*1.5 + 0.5, x + size/2 + 0.5, size*2.25, 'black'))
             } else {
-                svg.append(create_line(next_bottom_x, size*2.25, next_bottom_x + size/2 + 0.5, size*2.25, 'black'))
+                if (r[5] >= 0 && a_regions[r[5]][6] && a_regions[r[5]][6] > x)
+                    x = a_regions[r[5]][6]
+                svg.append(create_line(next_bottom_x, size*2.25, x + size/2 + 0.5, size*2.25, 'black'))
                 if (r[5] >= 0 && a_regions[r[5]][6]) {
-                    svg.append(create_line(a_regions[r[5]][6], size*0.75, next_bottom_x + size/2 + 0.5, size*2.25, 'black'))
+                    svg.append(create_line(a_regions[r[5]][6], size*0.75, x + size/2 + 0.5, size*2.25, 'black'))
                 }
             }
-            draw_char_boxes(next_bottom_x + size/2 + 0.5, size*1.75, t, deleted)
-            next_bottom_x += size/2 + t.length * size
+            draw_char_boxes(x + size/2 + 0.5, size*1.75, t, deleted)
+            next_bottom_x = x + size/2 + t.length * size
             r[6] = next_bottom_x
             last_bottom_was_middle = false
         }
@@ -1700,7 +1705,7 @@ function create_side_text_boxes(n) {
     
     
     s7s[2].buttons[0].click()
-    s7s[2].textarea.value = 'XbY'
+    s7s[2].textarea.value = 'XXXbY'
     s7s[2].c_button.click()
     
     s7s[0].buttons[2].click()
