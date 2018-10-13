@@ -324,13 +324,6 @@ function sync7_create_simple_dag(s7) {
 }
 
 function sync7_create_fancy_dag(s7) {
-    
-    
-    // work here
-    console.log(JSON.stringify(s7, null, 2))
-    
-    
-    
     var selected = {}
     
     var d = document.createElement('div')
@@ -1588,6 +1581,7 @@ function create_side_text_boxes(n) {
     var s7s = new Array(n)
     each(s7s, function (_, i) {
         var s7 = s7s[i] = sync7.create()
+        s7.commits.root.column = 0
         s7.buffers = new Array(n)
         s7.buttons = new Array(n)
         for (var ii = 0; ii < n; ii++)
@@ -1687,8 +1681,12 @@ function create_side_text_boxes(n) {
     
     s7s[1].textarea.value = 'XY'
     s7s[1].buttons[0].click()
+
+    // debugger
     
     // s7s[0].buttons[1].click()
+    
+    console.log(JSON.stringify(s7s[0], null, 2))
 }
 
 create_side_text_boxes(4)
