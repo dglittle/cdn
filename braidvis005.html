@@ -1528,7 +1528,7 @@ function sync7_create_visualization(s7) {
             max_width = c.x + column_max_widths[c.column]
     })
     
-    s7.width = max_width
+    s7.width = max_width + 1
     s7.height = max_height
 
     var d = document.createElement('div')
