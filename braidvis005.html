@@ -1522,7 +1522,7 @@ function sync7_create_visualization(s7) {
         c.x = 0
         each(column_max_widths, function (w, column) {
             if (column == c.column) return false
-            c.x += w + 2.7 * BOX_X
+            if (w) c.x += w + 2.7 * BOX_X
         })
         if (c.x + column_max_widths[c.column] > max_width)
             max_width = c.x + column_max_widths[c.column]
@@ -1553,7 +1553,7 @@ function sync7_create_visualization(s7) {
         c.x = 0
         each(column_max_widths, function (w, column) {
             if (column == c.column) return false
-            c.x += 100
+            if (w) c.x += 100
         })
         if (c.x + 100 > max_width)
             max_width = c.x + 100
@@ -1640,7 +1640,7 @@ function create_side_text_boxes(n) {
             commit()
         }
         buttons.append(b)
-        s7.buttons[0] = b
+        s7.c_button = b
         
         var iii = 1
         each(new Array(n - 1), function (_, ii) {
@@ -1682,16 +1682,28 @@ function create_side_text_boxes(n) {
     })
     
     // work here
-    
+
     s7s[0].textarea.value = 'abc'
-    s7s[0].buttons[0].click()
+    s7s[0].c_button.click()
     
     s7s[0].textarea.value = 'a12c'
-    s7s[0].buttons[0].click()
+    s7s[0].c_button.click()
     
-    s7s[1].textarea.value = 'XY'
+    
+    s7s[2].buttons[0].click()
+    s7s[2].textarea.value = 'XbY'
+    s7s[2].c_button.click()
+    
+    s7s[0].buttons[2].click()
+    
     s7s[1].buttons[0].click()
-
+    s7s[1].buttons[0].click()
+    s7s[1].textarea.value = 'w2c'
+    s7s[1].c_button.click()
+    s7s[1].textarea.value = 'wz'
+    s7s[1].c_button.click()
+    
+    s7s[0].buttons[1].click()
     s7s[0].buttons[1].click()
 }
 
