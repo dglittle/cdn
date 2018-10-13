@@ -126,7 +126,7 @@ function update_space_dag(merge_info) {
     var b_text = merge_info.b_text
     var a_regions = merge_info.a_regions
     var b_regions = merge_info.b_regions
-    function draw_t(t, deleted, middle) {
+    function draw_t(r, t, deleted, middle) {
         if (middle) {
             var x = Math.max(next_top_x, next_bottom_x)
             if (!last_top_was_middle) {
@@ -159,6 +159,15 @@ function update_space_dag(merge_info) {
                 svg.append(create_line(next_top_x, size*1.5 + 0.5, next_top_x + size/2 + 0.5, size*0.75, 'black'))
             } else {
                 svg.append(create_line(next_top_x, size*0.75, next_top_x + size/2 + 0.5, size*0.75, 'black'))
+                
+                
+                console.log('HI!')
+                console.log(r[5])
+                
+                //work here : another incoming line?
+                
+                
+                
             }
             draw_char_boxes(next_top_x + size/2 + 0.5, size*0.25, t, deleted)
             next_top_x += size/2 + t.length * size
@@ -193,15 +202,15 @@ function update_space_dag(merge_info) {
             var t = c_text.substr(cc[0], cc[1])
             if (cc[2]) {
                 if (cc[3] < di) {
-                    draw_t(t, true)
+                    draw_t(cc, t, true)
                 } else if (cc[3] == di) {
-                    draw_t(t, false, true)
+                    draw_t(cc, t, false, true)
                     if (on_a) { bi++ } else { ai++ }
                 } else {
-                    draw_t(t)
+                    draw_t(cc, t)
                 }
             } else {
-                draw_t(t)
+                draw_t(cc, t)
             }
             if (on_a) { ai++ } else { bi++ }
         } else if (dd && dd[5] < ci) {
@@ -210,7 +219,7 @@ function update_space_dag(merge_info) {
             throw 'failure'
         }
     }
-    draw_t('', false, true)
+    draw_t(null, '', false, true)
     
 
     
