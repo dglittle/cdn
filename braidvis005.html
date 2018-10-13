@@ -488,7 +488,7 @@ function sync7_create_fancy_dag(s7) {
             x : positionedObject.pageX - pos.x,
             y : positionedObject.pageY - pos.y
         }
-    }    
+    }
     
     svg_div.onmousedown = function (e) {
         e.preventDefault()
@@ -505,14 +505,13 @@ function sync7_create_fancy_dag(s7) {
                     hot_x : pos.x - (c.x || 0),
                     hot_y : pos.y - (c.y || 0)
                 }
-                redraw()
                 return false
             }
         })
         if (!grabbed) {
             selected = {}
-            redraw()
         }
+        redraw()
         if (grabbed) {
             var commit = s7.commits[grabbed.id]
             update_space_dag(commit.merge_info)
@@ -1572,6 +1571,21 @@ function sync7_create_visualization(s7) {
     return d
 }
 
+function sync7_create_visualizations(s7s) {
+    var len = 0
+    each(s7s, function () { len++ })
+    
+    var grid = document.createElement('div')
+    grid.style.display = 'grid'
+    grid.style['grid-template-columns'] = 'auto '.repeat(len)
+    
+    each(s7s, function (s7) {
+        grid.append(sync7_create_visualization(s7))
+    })
+    
+    return grid
+}
+
 function create_side_text_boxes(n) {
     var grid = document.createElement('div')
     grid.style.display = 'grid'
@@ -1615,10 +1629,8 @@ function create_side_text_boxes(n) {
                     }
                 }
                 
-                if (i == 0) {
-                    right.innerHTML = ''
-                    right.append(sync7_create_visualization(s7))
-                }
+                right.innerHTML = ''
+                right.append(sync7_create_visualizations(s7s))
             }
         }
         
@@ -1644,7 +1656,7 @@ function create_side_text_boxes(n) {
                 if (x) {
                     sync7.merge(s7, x, null, default_custom_merge_func)
                     each(s7.commits, function (c, id) {
-                        if (!c.column)
+                        if (c.column == null)
                             c.column = i
                     })
                     t.value = s7.text
@@ -1653,10 +1665,8 @@ function create_side_text_boxes(n) {
                 }
                 style_merge_button(s7.buttons[iiii - 1], iiii - 1, s7.buffers[iiii - 1].length)
                 
-                if (i == 0) {
-                    right.innerHTML = ''
-                    right.append(sync7_create_visualization(s7))
-                }
+                right.innerHTML = ''
+                right.append(sync7_create_visualizations(s7s))
             }
             buttons.append(b)
             s7.buttons[iiii - 1] = b
@@ -1682,11 +1692,7 @@ function create_side_text_boxes(n) {
     s7s[1].textarea.value = 'XY'
     s7s[1].buttons[0].click()
 
-    // debugger
-    
-    // s7s[0].buttons[1].click()
-    
-    console.log(JSON.stringify(s7s[0], null, 2))
+    s7s[0].buttons[1].click()
 }
 
 create_side_text_boxes(4)
