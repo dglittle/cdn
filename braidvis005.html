@@ -1503,10 +1503,6 @@ function apply_ops_to_sync7(s7s, ops, debug_print_buffer) {
 }
 
 function sync7_create_visualization(s7) {
-    each(s7.commits, function (c, id) {
-        c.text = sync7_get_text(s7, id)
-    })
-    
     var column_max_widths = []
     each(s7.commits, function (c, id) {
         var width = c.text.length * BOX_X
@@ -1586,18 +1582,17 @@ function sync7_create_visualization(s7) {
 }
 
 function sync7_create_visualizations(s7s) {
-    var len = 0
-    each(s7s, function () { len++ })
-    
-    var grid = document.createElement('div')
-    grid.style.display = 'grid'
-    grid.style['grid-template-columns'] = 'auto '.repeat(len)
+    var merged_s7 = { commits : {} }
     
     each(s7s, function (s7) {
-        grid.append(sync7_create_visualization(s7))
+        each(s7.commits, function (c, id) {
+            c.text = sync7_get_text(s7, id)
+            
+            merged_s7.commits[id] = JSON.parse(JSON.stringify(c))
+        })
     })
     
-    return grid
+    return sync7_create_visualization(merged_s7)
 }
 
 function create_side_text_boxes(n) {
