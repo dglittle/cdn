@@ -1596,10 +1596,17 @@ function sync7_create_visualization(s7) {
 
 function sync7_create_visualizations(s7s) {
     var merged_s7 = { commits : {} }
+    var known_mergers = {}
     
     each(s7s, function (s7) {
         each(s7.commits, function (c, id) {
             c.text = sync7_get_text(s7, id)
+            
+            if (Object.keys(c.to_parents).length > 1) {
+                var merger_key = Object.keys(c.to_parents).sort().join(',')
+                if (known_mergers[merger_key]) return
+                known_mergers[merger_key] = true
+            }
             
             merged_s7.commits[id] = JSON.parse(JSON.stringify(c))
         })
