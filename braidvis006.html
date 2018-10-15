@@ -1544,7 +1544,7 @@ function sync7_create_visualization(s7) {
         })
         layer_widths[layer_i] = x
         if (x > max_width) max_width = x
-        if (simple_x > simple_max_width) simple_max_width + simple_x
+        if (simple_x > simple_max_width) simple_max_width = simple_x
     })
     
     each(layers, function (layer_members, layer_i) {
