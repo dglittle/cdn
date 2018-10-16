@@ -1521,6 +1521,16 @@ function sync7_create_visualization(s7) {
     var layers = {}
     
     function get_layer(c) {
+        
+        
+
+        // work here        
+        if (!c) {
+            debugger
+        }
+        
+        
+        
         if (c.layer != null) return c.layer
         var max_layer = 0
         each(c.to_parents, function (d, p) {
@@ -1612,19 +1622,34 @@ function sync7_create_visualization(s7) {
 function sync7_create_visualizations(s7s) {
     var merged_s7 = { commits : {} }
     var known_mergers = {}
+    var conversions = {}
     
     each(s7s, function (s7) {
         each(s7.commits, function (c, id) {
-            c.text = sync7_get_text(s7, id)
-            
             if (Object.keys(c.to_parents).length > 1) {
                 var merger_key = Object.keys(c.to_parents).sort().join(',')
-                if (known_mergers[merger_key]) return
-                known_mergers[merger_key] = true
+                if (known_mergers[merger_key]) {
+                    conversions[id] = known_mergers[merger_key]
+                    return
+                }
+                known_mergers[merger_key] = id
             }
-            
+            c.text = sync7_get_text(s7, id)
             merged_s7.commits[id] = JSON.parse(JSON.stringify(c))
         })
+    })
+
+    var actions = []
+    each(merged_s7.commits, function (c, id) {
+        each(c.to_parents, function (d, p) {
+            if (conversions[p])
+                actions.push([id, p])
+        })
+    })
+    each(actions, function (a) {
+        var c = merged_s7.commits[a[0]]
+        c.to_parents[conversions[a[1]]] = c.to_parents[a[1]]
+        delete c.to_parents[a[1]]
     })
     
     return sync7_create_visualization(merged_s7)
