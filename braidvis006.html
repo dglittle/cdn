@@ -592,6 +592,21 @@ var sync7 = {}
         if (!cursors) cursors = {}
         if (!custom_merge_func) custom_merge_func = default_custom_merge_func
         
+        each(cs, function (c, id) {
+            each(c.to_parents, function (d, p) {
+                if (s7.waiting_commits[p]) {
+                    s7.waiting_commits[p].from_kids[id] = d
+                }
+            })
+        })
+        each(s7.waiting_commits, function (c, id) {
+            each(c.to_parents, function (d, p) {
+                if (cs[p]) {
+                    cs[p].from_kids[id] = d
+                }
+            })
+        })
+        
         var cant_add_these = {}
         function find_commit(id) {
             return s7.commits[id] || cs[id] || s7.waiting_commits[id]
