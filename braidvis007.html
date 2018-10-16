@@ -307,18 +307,18 @@ function sync7_create_simple_dag(s7) {
             marker.append(path)
         })
 
-        each(s7.commits, function (c, id) {
+        each(s7.versions, function (c, id) {
             var parents = Object.keys(c.to_parents).length
             var merge_node = parents == 0 || parents > 1
             var uid = merge_node ? 'm' : c.uid
             var foreground = FOREGROUNDS[uid]
 
             each(c.to_parents, function (d, pid) {
-                svg.append(create_arrow(s7.commits[pid].x || 0, s7.commits[pid].y || 0, c.x || 0, c.y || 0, foreground, null, uid))
+                svg.append(create_arrow(s7.versions[pid].x || 0, s7.versions[pid].y || 0, c.x || 0, c.y || 0, foreground, null, uid))
             })
         })
     
-        each(s7.commits, function (c, id) {
+        each(s7.versions, function (c, id) {
             var parents = Object.keys(c.to_parents).length
             var merge_node = parents == 0 || parents > 1
             var uid = merge_node ? 'm' : c.uid
@@ -348,7 +348,7 @@ function sync7_create_fancy_dag(s7) {
     
     function calc_specials(id) {
         var specials = {}
-        each(s7.commits[id].to_parents, function (d, p) {
+        each(s7.versions[id].to_parents, function (d, p) {
             var offset = 0
             each(d, function (d) {
                 if (typeof(d) == 'number') {
@@ -363,7 +363,7 @@ function sync7_create_fancy_dag(s7) {
         return specials
     }
     
-    function create_char_boxes(x, y, text, selected, specials, merge_node, commit) {
+    function create_char_boxes(x, y, text, selected, specials, merge_node, version) {
         var g = document.createElementNS('http://www.w3.org/2000/svg', 'g')
         
         if (selected) {
@@ -379,7 +379,7 @@ function sync7_create_fancy_dag(s7) {
         g.append(create_line(x, Math.floor(y + BOX_Y) + 0.5, x + BOX_X * text.length, Math.floor(y + BOX_Y) + 0.5, FOREGROUNDS.m, '3'))
 
         for (var i = 0; i < text.length; i++) {
-            var uid = merge_node ? 'm' : commit.uid
+            var uid = merge_node ? 'm' : version.uid
             var foreground = FOREGROUNDS[uid]
             g.append(create_char(Math.floor(x + i*BOX_X + BOX_X/2), y + BOX_Y*0.75, text[i], specials[i] ? foreground : FOREGROUNDS.m, specials[i] && !merge_node))
         }
@@ -471,15 +471,15 @@ function sync7_create_fancy_dag(s7) {
         svg.setAttribute('width', s7.width)
         svg.setAttribute('height', s7.height)
         
-        each(s7.commits, function (c, id) {
+        each(s7.versions, function (c, id) {
             var merge_node = Object.keys(c.to_parents).length > 1
             var uid = merge_node ? 'm' : c.uid
             each(c.to_parents, function (d, pid) {
-                svg.append(create_diff_lines(c.x || 0, c.y || 0, s7.commits[pid].x || 0, s7.commits[pid].y || 0, d, merge_node, uid))
+                svg.append(create_diff_lines(c.x || 0, c.y || 0, s7.versions[pid].x || 0, s7.versions[pid].y || 0, d, merge_node, uid))
             })
         })
     
-        each(s7.commits, function (c, id) {
+        each(s7.versions, function (c, id) {
             var merge_node = Object.keys(c.to_parents).length > 1
             svg.append(create_char_boxes(c.x || 0, c.y || 0, c.text || '', selected[id], calc_specials(id), merge_node, c))
         })
@@ -509,7 +509,7 @@ function sync7_create_fancy_dag(s7) {
         var pos = getRelPos(svg_div, e)
         
         var grabbed = null
-        each(s7.commits, function (c, id) {
+        each(s7.versions, function (c, id) {
             if (pos.x >= (c.x || 0) && pos.x < (c.x || 0) + (c.text || 'Q!?').length * BOX_X && pos.y >= (c.y || 0) && pos.y < (c.y || 0) + BOX_Y) {
                 if (!e.metaKey)
                     selected = {}
@@ -527,16 +527,16 @@ function sync7_create_fancy_dag(s7) {
         }
         redraw()
         if (grabbed) {
-            var commit = s7.commits[grabbed.id]
-            update_space_dag(commit.merge_info)
+            var version = s7.versions[grabbed.id]
+            update_space_dag(version.merge_info)
         }
 
         var oldMove = document.onmousemove
         document.onmousemove = function (e) {
             var pos = getRelPos(svg_div, e)
             if (grabbed) {
-                s7.commits[grabbed.id].x = pos.x - grabbed.hot_x
-                s7.commits[grabbed.id].y = pos.y - grabbed.hot_y
+                s7.versions[grabbed.id].x = pos.x - grabbed.hot_x
+                s7.versions[grabbed.id].y = pos.y - grabbed.hot_y
                 redraw()
             }
         }
@@ -560,11 +560,11 @@ var sync7 = {}
 
     sync7.create = function () {
         return {
-            commits : {
+            versions : {
                 'root' : { to_parents : {}, from_kids : {} }
             },
-            waiting_commits : {},
-            temp_commits : {},
+            waiting_versions : {},
+            temp_versions : {},
             real_leaves : ['root'],
             leaf : 'root',
             text : ''
@@ -574,13 +574,13 @@ var sync7 = {}
     sync7.commit = function (s7, s) {
         if (s == s7.text) { return }
         
-        var cs = s7.temp_commits
-        s7.temp_commits = {}
+        var cs = s7.temp_versions
+        s7.temp_versions = {}
     
         var id = guid()
         var to_parents = {}
-        s7.commits[s7.leaf].from_kids[id] = to_parents[s7.leaf] = sync7_diff(s, s7.text)
-        s7.commits[id] = cs[id] = { to_parents : to_parents, from_kids : {} }
+        s7.versions[s7.leaf].from_kids[id] = to_parents[s7.leaf] = sync7_diff(s, s7.text)
+        s7.versions[id] = cs[id] = { to_parents : to_parents, from_kids : {} }
         s7.leaf = id
         s7.real_leaves = [id]
         
@@ -594,12 +594,12 @@ var sync7 = {}
         
         each(cs, function (c, id) {
             each(c.to_parents, function (d, p) {
-                if (s7.waiting_commits[p]) {
-                    s7.waiting_commits[p].from_kids[id] = d
+                if (s7.waiting_versions[p]) {
+                    s7.waiting_versions[p].from_kids[id] = d
                 }
             })
         })
-        each(s7.waiting_commits, function (c, id) {
+        each(s7.waiting_versions, function (c, id) {
             each(c.to_parents, function (d, p) {
                 if (cs[p]) {
                     cs[p].from_kids[id] = d
@@ -608,23 +608,23 @@ var sync7 = {}
         })
         
         var cant_add_these = {}
-        function find_commit(id) {
-            return s7.commits[id] || cs[id] || s7.waiting_commits[id]
+        function find_version(id) {
+            return s7.versions[id] || cs[id] || s7.waiting_versions[id]
         }
         function mark_this_and_kids_as_unaddable(c, id) {
             if (!cant_add_these[id]) {
                 cant_add_these[id] = true
                 each(c.from_kids, function (d, kid) {
-                    var kidc = find_commit(kid)
+                    var kidc = find_version(kid)
                     if (kidc)
                         mark_this_and_kids_as_unaddable(kidc, kid)
                 })
             }
         }
-        function process_commit(c, id) {
+        function process_version(c, id) {
             var missing_parent = false
             each(c.to_parents, function (d, p) {
-                if (!find_commit(p)) {
+                if (!find_version(p)) {
                     missing_parent = true
                     return false
                 }
@@ -632,19 +632,19 @@ var sync7 = {}
             if (missing_parent)
                 mark_this_and_kids_as_unaddable(c, id)
         }        
-        each(cs, process_commit)
-        each(s7.waiting_commits, process_commit)
+        each(cs, process_version)
+        each(s7.waiting_versions, process_version)
         
-        if (Object.keys(cs).length + Object.keys(s7.waiting_commits).length - Object.keys(cant_add_these).length <= 0) {
-            Object.assign(s7.waiting_commits, cs)
+        if (Object.keys(cs).length + Object.keys(s7.waiting_versions).length - Object.keys(cant_add_these).length <= 0) {
+            Object.assign(s7.waiting_versions, cs)
             return cursors
         }        
         
         var projected_cursors = map(cursors, function (cursor) {
             var node = s7.leaf
-            while (s7.temp_commits[node]) {
+            while (s7.temp_versions[node]) {
                 var old_node = node
-                each(s7.commits[node].to_parents, function (d, p) {
+                each(s7.versions[node].to_parents, function (d, p) {
                     var offset = 0
                     var poffset = 0
                     each(d, function (d) {
@@ -668,25 +668,25 @@ var sync7 = {}
             return [cursor, node]
         })
         
-        function process_commit2(c, id) {
+        function process_version2(c, id) {
             if (cant_add_these[id]) {
                 if (cs[id])
-                    s7.waiting_commits[id] = c
+                    s7.waiting_versions[id] = c
             } else {
-                s7.commits[id] = c
-                if (s7.waiting_commits[id])
-                    delete s7.waiting_commits[id]
+                s7.versions[id] = c
+                if (s7.waiting_versions[id])
+                    delete s7.waiting_versions[id]
                 each(c.to_parents, function (d, p) {
-                    if (s7.commits[p]) {
-                        s7.commits[p].from_kids[id] = d
+                    if (s7.versions[p]) {
+                        s7.versions[p].from_kids[id] = d
                     }
                 })
             }
         }
-        each(cs, process_commit2)
-        each(s7.waiting_commits, process_commit2)        
+        each(cs, process_version2)
+        each(s7.waiting_versions, process_version2)        
 
-        s7.real_leaves = sync7_get_leaves(s7.commits, s7.temp_commits)
+        s7.real_leaves = sync7_get_leaves(s7.versions, s7.temp_versions)
         var leaves = Object.keys(s7.real_leaves).sort()
         
         var texts = {}
@@ -694,15 +694,15 @@ var sync7 = {}
             texts[leaf] = sync7_get_text(s7, leaf)
         })
     
-        each(s7.temp_commits, function (c, k) {
+        each(s7.temp_versions, function (c, k) {
             each(c.to_parents, function (d, p) {
-                if (!s7.temp_commits[p]) {
-                    delete s7.commits[p].from_kids[k]
+                if (!s7.temp_versions[p]) {
+                    delete s7.versions[p].from_kids[k]
                 }
             })
-            delete s7.commits[k]
+            delete s7.versions[k]
         })
-        s7.temp_commits = {}
+        s7.temp_versions = {}
         
         var prev_merge_node = leaves[0]
         var ancestors = sync7_get_ancestors(s7, prev_merge_node)
@@ -720,7 +720,7 @@ var sync7 = {}
                 function helper(x) {
                     var hit_LCA = LCAs[x]
                     if (!CAs[x]) {
-                        each(s7.commits[x].to_parents, function (d, p) {
+                        each(s7.versions[x].to_parents, function (d, p) {
                             hit_LCA = helper(p) || hit_LCA
                         })
                     }
@@ -738,7 +738,7 @@ var sync7 = {}
                 function helper(node) {
                     if (untouched_regions_for_node[node]) return untouched_regions_for_node[node]
                     var pur = {}
-                    each(s7.commits[node].from_kids, function (d, k) {
+                    each(s7.versions[node].from_kids, function (d, k) {
                         if (!nodes_on_path_to_LCAs[k]) { return }
                         var untouched = helper(k)
                         
@@ -836,7 +836,7 @@ var sync7 = {}
                         else
                             agg[key] = Math.max(agg[key] || -Infinity, projected_pos)
                     }
-                    each(s7.commits[node].from_kids, function (d, k) {
+                    each(s7.versions[node].from_kids, function (d, k) {
                         if (!nodes_on_path_to_LCAs[k]) { return }
                         
                         var endpoints = helper(k)
@@ -999,9 +999,9 @@ var sync7 = {}
             
             var id = guid()
             var to_parents = {}
-            s7.commits[prev_merge_node].from_kids[id] = to_parents[prev_merge_node] = m.to_a
-            s7.commits[leaf].from_kids[id] = to_parents[leaf] = m.to_b
-            s7.commits[id] = s7.temp_commits[id] = {
+            s7.versions[prev_merge_node].from_kids[id] = to_parents[prev_merge_node] = m.to_a
+            s7.versions[leaf].from_kids[id] = to_parents[leaf] = m.to_b
+            s7.versions[id] = s7.temp_versions[id] = {
                 to_parents : to_parents,
                 from_kids : {},
                 
@@ -1023,7 +1023,7 @@ var sync7 = {}
         return map(projected_cursors, function (cursor) {
             while (cursor[1] != s7.leaf) {
                 var old_node = cursor[1]
-                var kids = s7.commits[cursor[1]].from_kids
+                var kids = s7.versions[cursor[1]].from_kids
                 var kid = Object.keys(kids)[0]
                 var d = kids[kid]
 
@@ -1216,7 +1216,7 @@ var sync7 = {}
         var diff = []
         var prev = from
         each(path, function (next) {
-            diff = sync7_diff_merge_trans(diff, s7.commits[prev].to_parents[next])
+            diff = sync7_diff_merge_trans(diff, s7.versions[prev].to_parents[next])
             prev = next
         })
         return diff
@@ -1236,21 +1236,21 @@ var sync7 = {}
         var diff = sync7_merge_path_up(s7, s7.leaf, leaf_to_lca)
         var prev = lca
         each(lca_to_id, function (next) {
-            diff = sync7_diff_merge_trans(diff, s7.commits[next].to_parents[prev], 1, -1)
+            diff = sync7_diff_merge_trans(diff, s7.versions[next].to_parents[prev], 1, -1)
             prev = next
         })
         
         return sync7_diff_apply(s7.text, diff)
     }
         
-    function sync7_get_leaves(commits, ignore) {
+    function sync7_get_leaves(versions, ignore) {
         if (!ignore) ignore = {}
         var leaves = {}
-        each(commits, function (_, id) {
+        each(versions, function (_, id) {
             if (ignore[id]) { return }
             leaves[id] = true
         })
-        each(commits, function (c, id) {
+        each(versions, function (c, id) {
             if (ignore[id]) { return }
             each(c.to_parents, function (_, p) {
                 delete leaves[p]
@@ -1265,17 +1265,17 @@ var sync7 = {}
         if (typeof(id_or_set) == 'object') {
             frontier = Object.keys(id_or_set)
             if (include_self) each(id_or_set, function (_, id) {
-                ancestors[id] = s7.commits[id]
+                ancestors[id] = s7.versions[id]
             })
         } else {
             frontier = [id_or_set]
-            if (include_self) ancestors[id_or_set] = s7.commits[id_or_set]
+            if (include_self) ancestors[id_or_set] = s7.versions[id_or_set]
         }
         while (frontier.length > 0) {
             var next = frontier.shift()
-            each(s7.commits[next].to_parents, function (_, p) {
+            each(s7.versions[next].to_parents, function (_, p) {
                 if (!ancestors[p]) {
-                    ancestors[p] = s7.commits[p]
+                    ancestors[p] = s7.versions[p]
                     frontier.push(p)
                 }
             })
@@ -1297,7 +1297,7 @@ var sync7 = {}
                 }
                 return path
             }
-            each(s7.commits[next].to_parents, function (_, p) {
+            each(s7.versions[next].to_parents, function (_, p) {
                 if (!backs[p]) {
                     backs[p] = next
                     frontier.push(p)
@@ -1480,8 +1480,8 @@ function apply_ops_to_sync7(s7s, ops, debug_print_buffer) {
             var msg = sync7.commit(s7, t.slice(0, pos) + op.text + t.slice(pos + del))
             if (!msg) msg = null
             if (msg) {
-                s7.commits[s7.leaf].uid = op.side
-                s7.commits[s7.leaf].column = op.side
+                s7.versions[s7.leaf].uid = op.side
+                s7.versions[s7.leaf].column = op.side
             }
             each(other_s7s, function (s7) {
                 s7.buffer.push(JSON.parse(JSON.stringify(msg)))
@@ -1503,7 +1503,7 @@ function apply_ops_to_sync7(s7s, ops, debug_print_buffer) {
             var x = s7.buffer.shift()
             if (x) {
                 s7.cursor = sync7.merge(s7, x, null, default_custom_merge_func)
-                each(s7.commits, function (c, id) {
+                each(s7.versions, function (c, id) {
                     if (!c.column)
                         c.column = op.side
                 })
@@ -1524,14 +1524,14 @@ function sync7_create_visualization(s7) {
         if (c.layer != null) return c.layer
         var max_layer = 0
         each(c.to_parents, function (d, p) {
-            max_layer = Math.max(max_layer, get_layer(s7.commits[p]))
+            max_layer = Math.max(max_layer, get_layer(s7.versions[p]))
         })
         c.layer = max_layer + 1
         if (!layers[c.layer]) layers[c.layer] = []
         layers[c.layer].push(c)
         return c.layer
     }
-    each(s7.commits, function (c, id) {
+    each(s7.versions, function (c, id) {
         get_layer(c)
     })
     
@@ -1572,7 +1572,7 @@ function sync7_create_visualization(s7) {
     })
     
     var max_height = 0
-    each(s7.commits, function (c, id) {
+    each(s7.versions, function (c, id) {
         c.y = c.layer * BOX_Y * 3
         if (c.y + BOX_Y > max_height)
             max_height = c.y + BOX_Y
@@ -1587,9 +1587,9 @@ function sync7_create_visualization(s7) {
     
     var B = sync7_create_fancy_dag(s7)
     
-    var s72 = { commits : {} }
-    each(s7.commits, function (c, id) {
-        s72.commits[id] = {
+    var s72 = { versions : {} }
+    each(s7.versions, function (c, id) {
+        s72.versions[id] = {
             x : c.simple_x,
             y : c.y,
             uid : c.uid,
@@ -1610,12 +1610,12 @@ function sync7_create_visualization(s7) {
 }
 
 function sync7_create_visualizations(s7s) {
-    var merged_s7 = { commits : {} }
+    var merged_s7 = { versions : {} }
     var known_mergers = {}
     var conversions = {}
     
     each(s7s, function (s7) {
-        each(s7.commits, function (c, id) {
+        each(s7.versions, function (c, id) {
             if (Object.keys(c.to_parents).length > 1) {
                 var merger_key = Object.keys(c.to_parents).sort().join(',')
                 if (known_mergers[merger_key]) {
@@ -1625,19 +1625,19 @@ function sync7_create_visualizations(s7s) {
                 known_mergers[merger_key] = id
             }
             c.text = sync7_get_text(s7, id)
-            merged_s7.commits[id] = JSON.parse(JSON.stringify(c))
+            merged_s7.versions[id] = JSON.parse(JSON.stringify(c))
         })
     })
 
     var actions = []
-    each(merged_s7.commits, function (c, id) {
+    each(merged_s7.versions, function (c, id) {
         each(c.to_parents, function (d, p) {
             if (conversions[p])
                 actions.push([id, p])
         })
     })
     each(actions, function (a) {
-        var c = merged_s7.commits[a[0]]
+        var c = merged_s7.versions[a[0]]
         c.to_parents[conversions[a[1]]] = c.to_parents[a[1]]
         delete c.to_parents[a[1]]
     })
@@ -1654,7 +1654,7 @@ function create_side_text_boxes(n) {
     var s7s = new Array(n)
     each(s7s, function (_, i) {
         var s7 = s7s[i] = sync7.create()
-        s7.commits.root.column = 0
+        s7.versions.root.column = 0
         s7.buffers = new Array(n)
         s7.buttons = new Array(n)
         for (var ii = 0; ii < n; ii++)
@@ -1676,8 +1676,8 @@ function create_side_text_boxes(n) {
         function commit() {
             var msg = sync7.commit(s7, t.value)
             if (msg) {
-                s7.commits[s7.leaf].uid =
-                    s7.commits[s7.leaf].column =
+                s7.versions[s7.leaf].uid =
+                    s7.versions[s7.leaf].column =
                     msg[s7.leaf].uid =
                     msg[s7.leaf].column = i
                 
@@ -1714,13 +1714,13 @@ function create_side_text_boxes(n) {
                 var x = s7.buffers[iiii - 1].shift()
                 if (x) {
                     sync7.merge(s7, x, null, default_custom_merge_func)
-                    each(s7.commits, function (c, id) {
+                    each(s7.versions, function (c, id) {
                         if (c.column == null)
                             c.column = i
                     })
                     t.value = s7.text
                     
-                    msg.innerHTML = Object.keys(s7.waiting_commits).length > 0 ? ('pend\'n' + '*'.repeat(Object.keys(s7.waiting_commits).length)) : ''
+                    msg.innerHTML = Object.keys(s7.waiting_versions).length > 0 ? ('pend\'n' + '*'.repeat(Object.keys(s7.waiting_versions).length)) : ''
                 }
                 style_merge_button(s7.buttons[iiii - 1], iiii - 1, s7.buffers[iiii - 1].length)
                 
