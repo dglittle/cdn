@@ -1521,16 +1521,6 @@ function sync7_create_visualization(s7) {
     var layers = {}
     
     function get_layer(c) {
-        
-        
-
-        // work here        
-        if (!c) {
-            debugger
-        }
-        
-        
-        
         if (c.layer != null) return c.layer
         var max_layer = 0
         each(c.to_parents, function (d, p) {
