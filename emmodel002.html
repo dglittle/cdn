@@ -48,10 +48,17 @@ var M = []
 
 for (var y = 0; y < n; y++) {
     for (var x = 0; x < n; x++) {
-        
-        
+
         E.push(vec3.fromValues(0, Math.sin(y / n * tau * 2) * 0.5, 0))
-        M.push(vec3.fromValues(0, Math.sin(x / n * tau * 3) * 0.05, Math.sin(x / n * tau * 3) * 1))
+        M.push(vec3.fromValues(0, 0, Math.cos(y / n * tau * 2) * 0.5))
+
+
+        // E.push(vec3.fromValues(0, Math.sin(y / n * tau * 2) * 0.5, 0))
+        // M.push(vec3.fromValues(Math.cos(y / n * tau * 2) * 0.5, 0, 0))
+        
+        
+        // E.push(vec3.fromValues(0, Math.sin(y / n * tau * 2) * 0.5, 0))
+        // M.push(vec3.fromValues(0, Math.sin(x / n * tau * 3) * 0.05, Math.sin(x / n * tau * 3) * 1))
         
         
         // if (Math.random() < 0.998) {
