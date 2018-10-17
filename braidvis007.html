@@ -13,8 +13,8 @@
 // 55
 Math.randomSeed(13)
     
-var BOX_X = 20
-var BOX_Y = 30
+var BOX_X = 15
+var BOX_Y = 22
 
 var FOREGROUNDS = {
     m : '#C8C8C8', // AE
@@ -68,7 +68,7 @@ function create_rect(x, y, w, h, stroke) {
 function create_char(x, y, text, fill, bold) {
     var char = document.createElementNS('http://www.w3.org/2000/svg', 'text')
     char.style.fill = fill
-    char.style.fontSize = 19
+    char.style.fontSize = BOX_Y / 30 * 19
     char.style.fontFamily = 'avenir, sans-serif'
     if (bold) char.style.fontWeight = 'bold'
     char.setAttribute('x', x)
@@ -94,9 +94,6 @@ function update_space_dag(merge_info) {
     
     var size = BOX_Y
 
-    // work here    
-    // svg.append(create_line(size, size, size, size * 2, FOREGROUNDS.m))
-    // svg.append(create_line(size, size + size/2, size * 2, size * 1.5, FOREGROUNDS.m))
     svg.append(create_line(size + 0.5, size, size + 0.5, size * 2, 'black'))
     svg.append(create_line(size, size * 1.5 + 0.5, size * 2, size * 1.5 + 0.5, 'black'))
     
@@ -105,8 +102,6 @@ function update_space_dag(merge_info) {
     }
     
     function draw_char_boxes(x, y, text, deleted) {
-        // work here
-        // svg.append(create_rect(x, y, size * text.length, size, FOREGROUNDS.m))
         svg.append(create_rect(x, y, size * text.length, size, 'black'))
         for (var i = 0; i < text.length; i++) {
             draw_char_box(x + i * size, y, text[i], deleted)
@@ -227,27 +222,6 @@ function update_space_dag(merge_info) {
     draw_t(null, '', false, true)
     
 
-    
-    // svg.append(create_line(size*2, size*1.5, size*2.5, size*0.75, FOREGROUNDS.m))
-    // for (var i = 0; i < merge_info.a_text.length; i++) {
-    //     svg.append(create_rect(size * 2.5 + i * size, size/4, size, size, FOREGROUNDS.m))
-    //     svg.append(create_char(size * 2.5 + i * size + size/2, size/4 + size*0.75, merge_info.a_text[i], 'black', false))
-    // }
-    
-    // svg.append(create_line(size*2, size*1.5, size*2.5, size*2.25, FOREGROUNDS.m))
-    // for (var i = 0; i < merge_info.b_text.length; i++) {
-    //     svg.append(create_rect(size * 2.5 + i * size, size*2 - size/4, size, size, FOREGROUNDS.m))
-    //     svg.append(create_char(size * 2.5 + i * size + size/2, size*2 - size/4 + size*0.75, merge_info.b_text[i], 'black', false))
-    // }
-    
-    
-    
-    console.log('merge_info: ' + JSON.stringify(merge_info, null, 4))
-
-    
-    // var d = document.createElement('div')
-    // d.textContent = JSON.stringify(merge_info, null, '    ')
-    // space_dag_div.append(d)
 }
 
 function sync7_create_simple_dag(s7) {
@@ -328,10 +302,10 @@ function sync7_create_simple_dag(s7) {
             dot.style.fill = foreground
             dot.setAttribute('cx', c.x || 0)
             dot.setAttribute('cy', c.y || 0)
-            dot.setAttribute('r', '10')
+            dot.setAttribute('r', BOX_Y / 2)
             svg.append(dot)
             
-            var radius = 14
+            var radius = BOX_Y / 2 + 4
             each(s7.column_leaves, function (leaf, column) {
                 if (id == leaf) {
                     var halo = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
@@ -1634,7 +1608,7 @@ function sync7_create_visualization(s7) {
     })
     
     s7.width = max_width + 1
-    s7.height = max_height
+    s7.height = max_height + 1
 
     var d = document.createElement('div')
     d.style.display = 'grid'
@@ -1646,7 +1620,7 @@ function sync7_create_visualization(s7) {
     each(s7.versions, function (c, id) {
         s72.versions[id] = {
             x : c.simple_x,
-            y : c.y,
+            y : c.y + BOX_Y / 2,
             uid : c.uid,
             column : c.column,
             to_parents : c.to_parents
@@ -1654,7 +1628,7 @@ function sync7_create_visualization(s7) {
     })
     
     s72.width = simple_max_width
-    s72.height = max_height
+    s72.height = max_height + BOX_Y / 2
     
     var A = sync7_create_simple_dag(s72)
     
