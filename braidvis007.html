@@ -331,22 +331,20 @@ function sync7_create_simple_dag(s7) {
             dot.setAttribute('r', '10')
             svg.append(dot)
             
-            
-            
-            
-            // work here
-            if (s7.column_leaves[id]) {
-                var halo = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
-                halo.style.stroke = 'magenta'
-                halo.setAttribute('cx', c.x || 0)
-                halo.setAttribute('cy', c.y || 0)
-                halo.setAttribute('r', '14')
-                svg.append(halo)
-            }
-            
-            
-            
-            
+            var radius = 14
+            each(s7.column_leaves, function (leaf, column) {
+                if (id == leaf) {
+                    var halo = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
+                    halo.style.fill = '#00000000'
+                    halo.style.strokeWidth = '2'
+                    halo.style.stroke = FOREGROUNDS[column]
+                    halo.setAttribute('cx', c.x || 0)
+                    halo.setAttribute('cy', c.y || 0)
+                    halo.setAttribute('r', radius)
+                    svg.append(halo)
+                    radius += 4
+                }
+            })
         })
     }
     redraw()
