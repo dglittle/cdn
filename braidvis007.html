@@ -1712,6 +1712,7 @@ function create_side_text_boxes(n) {
             s7.buffers[ii] = []
         
         var t = document.createElement('textarea')
+        t.style.border = '2px solid ' + FOREGROUNDS[i]
         s7.textarea = t
         grid.append(t)
         
@@ -1720,8 +1721,9 @@ function create_side_text_boxes(n) {
         
         function style_merge_button(b, i, stars) {
             b.innerHTML = 'M' + (i + 1) + '*'.repeat(stars)
-            b.style.color = stars > 0 ? 'green' : 'inherit'
+            b.style.color = stars > 0 ? 'white' : 'inherit'
             b.style.fontWeight = stars > 0 ? 'bold' : 'inherit'
+            b.style.background = stars > 0 ? FOREGROUNDS[i] : BACKGROUNDS[i]
         }
         
         function commit() {
@@ -1760,6 +1762,7 @@ function create_side_text_boxes(n) {
             
             var b = document.createElement('button')
             b.innerHTML = 'M' + iiii
+            b.style.background = BACKGROUNDS[iiii - 1]
             b.onclick = function () {
                 commit()
                 var x = s7.buffers[iiii - 1].shift()
