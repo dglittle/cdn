@@ -557,7 +557,8 @@ function sync7_create_fancy_dag(s7) {
         redraw()
         if (grabbed) {
             var version = s7.versions[grabbed.id]
-            update_space_dag(version.merge_info)
+            if (version.merge_info)
+                update_space_dag(version.merge_info)
         }
 
         var oldMove = document.onmousemove
