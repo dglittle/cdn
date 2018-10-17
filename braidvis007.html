@@ -340,7 +340,7 @@ function sync7_create_simple_dag(s7) {
         
         var grabbed = null
         each(s7.versions, function (v, id) {
-            if (pos.x >= (v.x || 0) && pos.x < (v.x || 0) + 20 && pos.y >= (v.y || 0) && pos.y < (v.y || 0) + 20) {
+            if (pos.x >= (v.x || 0) - 10 && pos.x < (v.x || 0) + 10 && pos.y >= (v.y || 0) - 10 && pos.y < (v.y || 0) + 10) {
                 if (!e.metaKey)
                     selected = {}
                 selected[id] = true
