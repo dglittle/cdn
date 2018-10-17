@@ -1655,18 +1655,22 @@ function sync7_create_visualizations(s7s) {
     var conversions = {}
     
     each(s7s, function (s7) {
+        
+        function get_merger_key(id) {
+            var v = s7.versions[id]
+            if (Object.keys(v.to_parents).length <= 1) return id
+            if (v.merger_key) return v.merger_key
+            
+            var agg = []
+            each(v.to_parents, function (d, p) {
+                agg.push(get_merger_key(p))
+            })
+            return v.merger_key = agg.sort().join(',')
+        }
+        
         each(s7.versions, function (c, id) {
             if (Object.keys(c.to_parents).length > 1) {
-                
-                
-                
-                
-                
-                // work here : we need this key to include more information, namely all the ancestors of the merge which are not temporary nodes
-                
-                
-                
-                var merger_key = Object.keys(c.to_parents).sort().join(',')
+                var merger_key = get_merger_key(id)
                 if (known_mergers[merger_key]) {
                     conversions[id] = known_mergers[merger_key]
                     return
