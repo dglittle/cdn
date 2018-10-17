@@ -1620,7 +1620,7 @@ function sync7_create_visualization(s7) {
     var s72 = { versions : {}, column_leaves : s7.column_leaves }
     each(s7.versions, function (c, id) {
         s72.versions[id] = {
-            x : c.simple_x,
+            x : c.simple_x + Math.random() * 20,
             y : c.y + BOX_Y / 2,
             uid : c.uid,
             column : c.column,
