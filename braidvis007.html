@@ -1710,11 +1710,21 @@ function create_side_text_boxes(n) {
         s7.buttons = new Array(n)
         for (var ii = 0; ii < n; ii++)
             s7.buffers[ii] = []
+
+        var top_row = document.createElement('div')
+        top_row.style.display = 'grid'
+        top_row.style['grid-template-columns'] = '40px auto'
+        grid.append(top_row)
+        
+        var circle = document.createElement('div')
+        circle.style.width = '20px'
+        circle.style.height = '20px'
+        circle.style.background = FOREGROUNDS[i]
+        top_row.append(circle)
         
         var t = document.createElement('textarea')
-        t.style.border = '2px solid ' + FOREGROUNDS[i]
         s7.textarea = t
-        grid.append(t)
+        top_row.append(t)
         
         var buttons = document.createElement('div')
         grid.append(buttons)
