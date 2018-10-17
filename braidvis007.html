@@ -330,6 +330,23 @@ function sync7_create_simple_dag(s7) {
             dot.setAttribute('cy', c.y || 0)
             dot.setAttribute('r', '10')
             svg.append(dot)
+            
+            
+            
+            
+            // work here
+            if (s7.column_leaves[id]) {
+                var halo = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
+                halo.style.stroke = 'magenta'
+                halo.setAttribute('cx', c.x || 0)
+                halo.setAttribute('cy', c.y || 0)
+                halo.setAttribute('r', '14')
+                svg.append(halo)
+            }
+            
+            
+            
+            
         })
     }
     redraw()
@@ -1627,7 +1644,7 @@ function sync7_create_visualization(s7) {
     
     var B = sync7_create_fancy_dag(s7)
     
-    var s72 = { versions : {} }
+    var s72 = { versions : {}, column_leaves : s7.column_leaves }
     each(s7.versions, function (c, id) {
         s72.versions[id] = {
             x : c.simple_x,
@@ -1693,6 +1710,14 @@ function sync7_create_visualizations(s7s) {
         var c = merged_s7.versions[a[0]]
         c.to_parents[conversions[a[1]]] = c.to_parents[a[1]]
         delete c.to_parents[a[1]]
+    })
+    
+    merged_s7.column_leaves = {}
+    each(s7s, function (s7, column) {
+        var leaf = s7.leaf
+        var mk = s7.versions[s7.leaf].merger_key
+        if (mk) leaf = known_mergers[mk]
+        merged_s7.column_leaves[column] = leaf
     })
     
     return sync7_create_visualization(merged_s7)
