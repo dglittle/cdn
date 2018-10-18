@@ -220,8 +220,6 @@ function update_space_dag(merge_info) {
         }
     }
     draw_t(null, '', false, true)
-    
-
 }
 
 function sync7_create_simple_dag(s7) {
@@ -1633,8 +1631,10 @@ function sync7_create_visualization(s7) {
     
     var s72 = { versions : {}, column_leaves : s7.column_leaves }
     each(s7.versions, function (c, id) {
+        Math.randomSeed(id)
+        var random_x_offset = Math.random() * 20 - 10
         s72.versions[id] = {
-            x : c.simple_x + Math.random() * 20,
+            x : c.simple_x + random_x_offset,
             y : c.y + BOX_Y / 2,
             uid : c.uid,
             column : c.column,
@@ -1712,9 +1712,11 @@ function sync7_create_visualizations(s7s) {
 }
 
 function create_side_text_boxes(n) {
+    var size = BOX_Y + 10
+    
     var grid = document.createElement('div')
     grid.style.display = 'grid'
-    grid.style['grid-template-columns'] = '200px'
+    grid.style['grid-template-columns'] = (size + 10) + 'px ' + (200 - size) + 'px'
     left.append(grid)
     
     var s7s = new Array(n)
@@ -1726,20 +1728,30 @@ function create_side_text_boxes(n) {
         for (var ii = 0; ii < n; ii++)
             s7.buffers[ii] = []
 
-        var top_row = document.createElement('div')
-        top_row.style.display = 'grid'
-        top_row.style['grid-template-columns'] = '40px auto'
-        grid.append(top_row)
-        
-        var circle = document.createElement('div')
-        circle.style.width = '20px'
-        circle.style.height = '20px'
-        circle.style.background = FOREGROUNDS[i]
-        top_row.append(circle)
+        function create_circle_icon() {
+            svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+            svg.setAttribute('width', size)
+            svg.setAttribute('height', size)
+            
+            var halo = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
+            halo.style.fill = '#00000000'
+            halo.style.strokeWidth = '2'
+            halo.style.stroke = FOREGROUNDS[i]
+            halo.setAttribute('cx', size / 2)
+            halo.setAttribute('cy', size / 2)
+            halo.setAttribute('r', BOX_Y/2 + 4)
+            svg.append(halo)
+            
+            return svg
+        }
+        grid.append(create_circle_icon())
         
         var t = document.createElement('textarea')
         s7.textarea = t
-        top_row.append(t)
+        grid.append(t)
+        
+        var nothing = document.createElement('div')
+        grid.append(nothing)
         
         var buttons = document.createElement('div')
         grid.append(buttons)
@@ -1813,6 +1825,10 @@ function create_side_text_boxes(n) {
         var msg = document.createElement('span')
         buttons.append(msg)
         
+        var d = document.createElement('div')
+        d.style.width = '10px'
+        d.style.height = '20px'
+        grid.append(d)
         var d = document.createElement('div')
         d.style.width = '10px'
         d.style.height = '20px'
