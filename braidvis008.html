@@ -327,8 +327,10 @@ function sync7_create_simple_dag(s7) {
                 var old = old_info[pid + 'to' + id]
                 if (firstTime && old) {
                     svg.append(anim_arrow(old.x1, old.y1, old.x2, old.y2, s7.versions[pid].x || 0, s7.versions[pid].y || 0, c.x || 0, c.y || 0, foreground, null, uid))
-                } else {
+                } else if (firstTime && !old) {
                     svg.append(anim_arrow(s7.versions[pid].x || 0, s7.versions[pid].y || 0, (s7.versions[pid].x || 0) + 1, (s7.versions[pid].y || 0) + 1, s7.versions[pid].x || 0, s7.versions[pid].y || 0, c.x || 0, c.y || 0, foreground, null, uid))                
+                } else {
+                    svg.append(create_arrow(s7.versions[pid].x || 0, s7.versions[pid].y || 0, c.x || 0, c.y || 0, foreground, null, uid))                
                 }
                 old_info[pid + 'to' + id] = {
                     x1 : s7.versions[pid].x || 0,
@@ -1728,8 +1730,11 @@ function sync7_create_visualization(s7) {
     
     var s72 = { versions : {}, column_leaves : s7.column_leaves }
     each(s7.versions, function (c, id) {
+        var old_random = Math.random
         Math.randomSeed(id)
         var random_x_offset = Math.random() * 20 - 10
+        Math.random = old_random
+        
         s72.versions[id] = {
             x : c.simple_x + random_x_offset,
             y : c.y + BOX_Y / 2,
@@ -1753,7 +1758,6 @@ function sync7_create_visualization(s7) {
 
 function sync7_create_visualizations(s7s) {
     var merged_s7 = { versions : {} }
-    var known_mergers = {}
     var conversions = {}
     
     each(s7s, function (s7) {
@@ -1771,15 +1775,10 @@ function sync7_create_visualizations(s7s) {
         }
         
         each(s7.versions, function (c, id) {
-            if (Object.keys(c.to_parents).length > 1) {
-                var merger_key = get_merger_key(id)
-                if (known_mergers[merger_key]) {
-                    conversions[id] = known_mergers[merger_key]
-                    return
-                }
-                known_mergers[merger_key] = id
-            }
             c.text = sync7_get_text(s7, id)
+            if (Object.keys(c.to_parents).length > 1) {
+                id = conversions[id] = get_merger_key(id)
+            }
             merged_s7.versions[id] = JSON.parse(JSON.stringify(c))
         })
     })
@@ -1800,8 +1799,7 @@ function sync7_create_visualizations(s7s) {
     merged_s7.column_leaves = {}
     each(s7s, function (s7, column) {
         var leaf = s7.leaf
-        var mk = s7.versions[s7.leaf].merger_key
-        if (mk) leaf = known_mergers[mk]
+        if (conversions[leaf]) leaf = conversions[leaf]
         merged_s7.column_leaves[column] = leaf
     })
     
