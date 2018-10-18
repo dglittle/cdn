@@ -15,6 +15,7 @@ Math.randomSeed(13)
     
 var BOX_X = 15
 var BOX_Y = 22
+var anim_dur = '0.5s'
 
 var FOREGROUNDS = {
     m : '#C8C8C8', // AE
@@ -77,6 +78,16 @@ function create_char(x, y, text, fill, bold) {
     char.setAttribute('alignment-baseline', 'baseline')
     char.appendChild(document.createTextNode(text))
     return char
+}
+
+function anim(attr, from, to, dur) {
+    var anim = document.createElementNS('http://www.w3.org/2000/svg', 'animate')
+    anim.setAttribute('attributeType', 'XML')
+    anim.setAttribute('attributeName', attr)
+    anim.setAttribute('from', from)
+    anim.setAttribute('to', to)
+    anim.setAttribute('dur', dur)
+    return anim
 }
 
 var space_dag_div = null
@@ -234,14 +245,17 @@ function sync7_create_simple_dag(s7) {
     svg_div.style.cursor = 'pointer'
     d.append(svg_div)
 
-    function create_arrow(x1, y1, x2, y2, stroke, dasharray, uid) {
-        var line = document.createElementNS('http://www.w3.org/2000/svg', 'line')
-        
+    function get_arrow_offsets(x1, y1, x2, y2) {
         var start = vec3.fromValues(x1, y1, 0)
         var end = vec3.fromValues(x2, y2, 0)
         var to_end = vec3.subtract(vec3.create(), end, start)
         var len = vec3.length(to_end)
-        var arrow = vec3.scale(vec3.create(), to_end, 1.0 / len * (len - 21))
+        return vec3.scale(vec3.create(), to_end, 1.0 / len * (len - 21))
+    }
+
+    function create_arrow(x1, y1, x2, y2, stroke, dasharray, uid) {
+        var line = document.createElementNS('http://www.w3.org/2000/svg', 'line')
+        var arrow = get_arrow_offsets(x1, y1, x2, y2)
 
         line.setAttribute('marker-end', 'url(#marker_id_' + uid + ')')
 
@@ -252,6 +266,27 @@ function sync7_create_simple_dag(s7) {
         line.style['stroke-width'] = 2
         line.setAttribute('stroke', stroke)
         if (dasharray) line.setAttribute('stroke-dasharray', dasharray)
+        return line
+    }
+    
+    function anim_arrow(_x1, _y1, _x2, _y2, x1, y1, x2, y2, stroke, dasharray, uid) {
+        var _arrow = get_arrow_offsets(_x1, _y1, _x2, _y2)
+        var arrow = get_arrow_offsets(x1, y1, x2, y2)
+        
+        var line = create_arrow(_x1, _y1, _x2, _y2, stroke, dasharray, uid)
+        
+        line.append(anim('x1', _x1, x1, anim_dur))
+        line.append(anim('y1', _y1, y1, anim_dur))
+        line.append(anim('x2', _x1 + _arrow[0], x1 + arrow[0], anim_dur))
+        line.append(anim('y2', _y1 + _arrow[1], y1 + arrow[1], anim_dur))
+        
+        setTimeout(() => {
+            line.setAttribute('x1', x1)
+            line.setAttribute('y1', y1)
+            line.setAttribute('x2', x1 + arrow[0])
+            line.setAttribute('y2', y1 + arrow[1])
+        })
+        
         return line
     }
 
@@ -289,7 +324,18 @@ function sync7_create_simple_dag(s7) {
             var foreground = FOREGROUNDS[uid]
 
             each(c.to_parents, function (d, pid) {
-                svg.append(create_arrow(s7.versions[pid].x || 0, s7.versions[pid].y || 0, c.x || 0, c.y || 0, foreground, null, uid))
+                var old = old_info[pid + 'to' + id]
+                if (firstTime && old) {
+                    svg.append(anim_arrow(old.x1, old.y1, old.x2, old.y2, s7.versions[pid].x || 0, s7.versions[pid].y || 0, c.x || 0, c.y || 0, foreground, null, uid))
+                } else {
+                    svg.append(anim_arrow(s7.versions[pid].x || 0, s7.versions[pid].y || 0, (s7.versions[pid].x || 0) + 1, (s7.versions[pid].y || 0) + 1, s7.versions[pid].x || 0, s7.versions[pid].y || 0, c.x || 0, c.y || 0, foreground, null, uid))                
+                }
+                old_info[pid + 'to' + id] = {
+                    x1 : s7.versions[pid].x || 0,
+                    y1 : s7.versions[pid].y || 0,
+                    x2 : c.x || 0,
+                    y2 : c.y || 0
+                }
             })
         })
     
@@ -305,7 +351,8 @@ function sync7_create_simple_dag(s7) {
             if (firstTime && old) {
                 dot.setAttribute('cx', old.x)
                 dot.setAttribute('cy', old.y)
-                dot.style.transition = 'cx 2s, cy 2s'
+                dot.append(anim('cx', old.x, c.x || 0, anim_dur))
+                dot.append(anim('cy', old.y, c.y || 0, anim_dur))
                 setTimeout(() => {
                     dot.setAttribute('cx', c.x || 0)
                     dot.setAttribute('cy', c.y || 0)
@@ -314,11 +361,15 @@ function sync7_create_simple_dag(s7) {
             } else {
                 dot.setAttribute('cx', c.x || 0)
                 dot.setAttribute('cy', c.y || 0)
-                dot.setAttribute('r', 0)
-                dot.style.transition = 'r 2s'
-                setTimeout(() => {
+                if (firstTime) {
+                    dot.setAttribute('r', 0)
+                    dot.append(anim('r', 0, BOX_Y / 2, anim_dur))
+                    setTimeout(() => {
+                        dot.setAttribute('r', BOX_Y / 2)
+                    }, 0)
+                } else {
                     dot.setAttribute('r', BOX_Y / 2)
-                })
+                }
             }
             svg.append(dot)
             old_info[id] = {
@@ -338,21 +389,27 @@ function sync7_create_simple_dag(s7) {
                     if (firstTime && old) {
                         halo.setAttribute('cx', old.x)
                         halo.setAttribute('cy', old.y)
-                        halo.style.transition = 'cx 2s, cy 2s'
+                        halo.setAttribute('r', old.r)
+                        halo.append(anim('cx', old.x, c.x || 0, anim_dur))
+                        halo.append(anim('cy', old.y, c.y || 0, anim_dur))
+                        halo.append(anim('r', old.r, radius, anim_dur))
+                        var my_radius = radius
                         setTimeout(() => {
                             halo.setAttribute('cx', c.x || 0)
                             halo.setAttribute('cy', c.y || 0)
+                            halo.setAttribute('r', my_radius)
                         }, 0)
                     } else {
                         halo.setAttribute('cx', c.x || 0)
                         halo.setAttribute('cy', c.y || 0)
+                        halo.setAttribute('r', radius)
                     }
                     old_info['halo' + column] = {
                         x : c.x || 0,
-                        y : c.y || 0
+                        y : c.y || 0,
+                        r : radius
                     }
                     
-                    halo.setAttribute('r', radius)
                     svg.append(halo)
                     radius += 4
                 }
@@ -1684,7 +1741,7 @@ function sync7_create_visualization(s7) {
     })
     
     s72.width = simple_max_width
-    s72.height = max_height + BOX_Y / 2
+    s72.height = max_height + BOX_Y
     
     var A = sync7_create_simple_dag(s72)
     
