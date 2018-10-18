@@ -323,6 +323,23 @@ function sync7_create_simple_dag(s7) {
     }
     redraw()
 
+    svg_div.onmousemove = function (e) {
+        var pos = getRelPos(svg_div, e)
+        
+        each(s7.versions, function (v, id) {
+            if (pos.x >= (v.x || 0) - 10 && pos.x < (v.x || 0) + 10 && pos.y >= (v.y || 0) - 10 && pos.y < (v.y || 0) + 10) {
+                var version = s7.versions[id]
+                if (version.merge_info) {
+                    selected = {}
+                    selected[id] = true
+                    update_space_dag(version.merge_info)
+                    redraw()
+                    return false
+                }
+            }
+        })
+    }
+    
     svg_div.onmousedown = function (e) {
         e.preventDefault()
         var pos = getRelPos(svg_div, e)
@@ -330,9 +347,6 @@ function sync7_create_simple_dag(s7) {
         var grabbed = null
         each(s7.versions, function (v, id) {
             if (pos.x >= (v.x || 0) - 10 && pos.x < (v.x || 0) + 10 && pos.y >= (v.y || 0) - 10 && pos.y < (v.y || 0) + 10) {
-                if (!e.metaKey)
-                    selected = {}
-                selected[id] = true
                 grabbed = {
                     id : id,
                     hot_x : pos.x - (v.x || 0),
@@ -341,9 +355,6 @@ function sync7_create_simple_dag(s7) {
                 return false
             }
         })
-        if (!grabbed) {
-            selected = {}
-        }
         redraw()
 
         var oldMove = document.onmousemove
@@ -533,6 +544,21 @@ function sync7_create_fancy_dag(s7) {
         }
     }
     
+    svg_div.onmousemove = function (e) {
+        var pos = getRelPos(svg_div, e)
+        each(s7.versions, function (v, id) {
+            if (pos.x >= (v.x || 0) && pos.x < (v.x || 0) + (v.text || 'Q!?').length * BOX_X && pos.y >= (v.y || 0) && pos.y < (v.y || 0) + BOX_Y) {
+                var version = s7.versions[id]
+                if (version.merge_info) {
+                    selected = {}
+                    selected[id] = true
+                    update_space_dag(version.merge_info)
+                    redraw()
+                    return false
+                }
+            }
+        })
+    }
     svg_div.onmousedown = function (e) {
         e.preventDefault()
         var pos = getRelPos(svg_div, e)
@@ -540,9 +566,6 @@ function sync7_create_fancy_dag(s7) {
         var grabbed = null
         each(s7.versions, function (v, id) {
             if (pos.x >= (v.x || 0) && pos.x < (v.x || 0) + (v.text || 'Q!?').length * BOX_X && pos.y >= (v.y || 0) && pos.y < (v.y || 0) + BOX_Y) {
-                if (!e.metaKey)
-                    selected = {}
-                selected[id] = true
                 grabbed = {
                     id : id,
                     hot_x : pos.x - (v.x || 0),
@@ -551,15 +574,6 @@ function sync7_create_fancy_dag(s7) {
                 return false
             }
         })
-        if (!grabbed) {
-            selected = {}
-        }
-        redraw()
-        if (grabbed) {
-            var version = s7.versions[grabbed.id]
-            if (version.merge_info)
-                update_space_dag(version.merge_info)
-        }
 
         var oldMove = document.onmousemove
         document.onmousemove = function (e) {
@@ -1624,6 +1638,7 @@ function sync7_create_visualization(s7) {
             y : c.y + BOX_Y / 2,
             uid : c.uid,
             column : c.column,
+            merge_info : c.merge_info,
             to_parents : c.to_parents
         }
     })
