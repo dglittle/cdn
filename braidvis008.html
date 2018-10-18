@@ -222,6 +222,9 @@ function update_space_dag(merge_info) {
     draw_t(null, '', false, true)
 }
 
+// work here
+var old_info = {}
+
 function sync7_create_simple_dag(s7) {
     var selected = {}
     
@@ -253,7 +256,7 @@ function sync7_create_simple_dag(s7) {
     }
 
     var svg = null
-    function redraw() {
+    function redraw(firstTime) {
         if (svg) svg.remove()
         svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
         svg_div.append(svg)
@@ -298,10 +301,30 @@ function sync7_create_simple_dag(s7) {
             
             var dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
             dot.style.fill = foreground
-            dot.setAttribute('cx', c.x || 0)
-            dot.setAttribute('cy', c.y || 0)
-            dot.setAttribute('r', BOX_Y / 2)
+            var old = old_info[id]
+            if (firstTime && old) {
+                dot.setAttribute('cx', old.x)
+                dot.setAttribute('cy', old.y)
+                dot.style.transition = 'cx 2s, cy 2s'
+                setTimeout(() => {
+                    dot.setAttribute('cx', c.x || 0)
+                    dot.setAttribute('cy', c.y || 0)
+                }, 0)
+                dot.setAttribute('r', BOX_Y / 2)
+            } else {
+                dot.setAttribute('cx', c.x || 0)
+                dot.setAttribute('cy', c.y || 0)
+                dot.setAttribute('r', 0)
+                dot.style.transition = 'r 2s'
+                setTimeout(() => {
+                    dot.setAttribute('r', BOX_Y / 2)
+                })
+            }
             svg.append(dot)
+            old_info[id] = {
+                x : c.x,
+                y : c.y
+            }
             
             var radius = BOX_Y / 2 + 4
             each(s7.column_leaves, function (leaf, column) {
@@ -310,8 +333,25 @@ function sync7_create_simple_dag(s7) {
                     halo.style.fill = '#00000000'
                     halo.style.strokeWidth = '2'
                     halo.style.stroke = FOREGROUNDS[column]
-                    halo.setAttribute('cx', c.x || 0)
-                    halo.setAttribute('cy', c.y || 0)
+                    
+                    var old = old_info['halo' + column]
+                    if (firstTime && old) {
+                        halo.setAttribute('cx', old.x)
+                        halo.setAttribute('cy', old.y)
+                        halo.style.transition = 'cx 2s, cy 2s'
+                        setTimeout(() => {
+                            halo.setAttribute('cx', c.x || 0)
+                            halo.setAttribute('cy', c.y || 0)
+                        }, 0)
+                    } else {
+                        halo.setAttribute('cx', c.x || 0)
+                        halo.setAttribute('cy', c.y || 0)
+                    }
+                    old_info['halo' + column] = {
+                        x : c.x || 0,
+                        y : c.y || 0
+                    }
+                    
                     halo.setAttribute('r', radius)
                     svg.append(halo)
                     radius += 4
@@ -319,7 +359,7 @@ function sync7_create_simple_dag(s7) {
             })
         })
     }
-    redraw()
+    redraw(true)
 
     svg_div.onmousemove = function (e) {
         var pos = getRelPos(svg_div, e)
