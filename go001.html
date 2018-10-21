@@ -1,14 +1,20 @@
+<body></body>
 <script>
 
 console.log('hi2!')
 
 function createUploadButton() {
     var b = document.createElement('button')
+    document.body.append(b)
     b.onclick = function () {
         var inp = document.createElement('input')
         inp.setAttribute('type', 'file')
         inp.onchange = function () {
             if (this.files.length == 1) {
+                
+                console.log('got here!!!')
+                
+                
                 var r = new FileReader()
                 r.onload = function (e) {
                     var im = new Image()
@@ -19,6 +25,7 @@ function createUploadButton() {
                         var g = c.getContext('2d')
                         g.drawImage(im, 0, 0, im.width, im.height)
                         document.body.append(c)
+                        console.log('got here!!')
                     }
                     im.src = r.result
                 }
@@ -29,9 +36,6 @@ function createUploadButton() {
         document.body.append(inp)
         inp.click()
     }
-
-    b.append(c)
-    d.append(b)
 }
 createUploadButton()
 
