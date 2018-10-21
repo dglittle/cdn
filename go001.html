@@ -11,10 +11,6 @@ function createUploadButton() {
         inp.setAttribute('type', 'file')
         inp.onchange = function () {
             if (this.files.length == 1) {
-                
-                console.log('got here!!!')
-                
-                
                 var r = new FileReader()
                 r.onload = function (e) {
                     var im = new Image()
@@ -25,10 +21,10 @@ function createUploadButton() {
                         var g = c.getContext('2d')
                         g.drawImage(im, 0, 0, im.width, im.height)
                         document.body.append(c)
-                        console.log('got here!!')
                     }
                     im.src = r.result
                 }
+                r.readAsText(this.files[0])
             }
             document.body.removeChild(inp)
         }
