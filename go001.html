@@ -1,5 +1,38 @@
 <script>
 
-console.log('hi!')
+console.log('hi2!')
+
+function createUploadButton() {
+    var b = document.createElement('button')
+    b.onclick = function () {
+        var inp = document.createElement('input')
+        inp.setAttribute('type', 'file')
+        inp.onchange = function () {
+            if (this.files.length == 1) {
+                var r = new FileReader()
+                r.onload = function (e) {
+                    var im = new Image()
+                    im.onload = function () {
+                        var c = document.createElement('canvas')
+                        c.width = im.width
+                        c.height = im.height
+                        var g = c.getContext('2d')
+                        g.drawImage(im, 0, 0, im.width, im.height)
+                        document.body.append(c)
+                    }
+                    im.src = r.result
+                }
+            }
+            document.body.removeChild(inp)
+        }
+        inp.style.display = 'none'
+        document.body.append(inp)
+        inp.click()
+    }
+
+    b.append(c)
+    d.append(b)
+}
+createUploadButton()
 
 </script>
