@@ -1,0 +1,285 @@
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.7.1/gl-matrix-min.js"></script>
+<body style="margin:0px"></body>
+<script>
+
+var c = document.createElement('canvas')
+c.width = window.innerWidth
+c.height = window.innerHeight
+document.body.append(c)
+var g = c.getContext('2d')
+
+var G = 10000
+
+var earth = {
+    x : c.width / 2,
+    y : c.height / 2,
+    r : 50,
+    m : 10
+}
+
+var moon = {
+    x : c.width / 2,
+    y : c.height / 8,
+    r : 10,
+    xs : -18.5,
+    ys :0,
+    m : 10 / 10
+}
+
+var rocket = null
+function reset_rocket() {
+    rocket = {
+        x : c.width / 2,
+        y : earth.y - earth.r - 8,
+        m : 10 / 1000000,
+        xs : 0,
+        ys : -30,
+        direction : -Math.PI,
+        blowing_up : 0
+    }
+}
+reset_rocket()
+
+var keys = {
+    left : false,
+    right : false,
+    up : false,
+    down : false
+}
+
+var scale = 1
+
+var moon_trace = []
+
+function apply_gravity(apply_to, from_this, dt) {
+    var r = Math.sqrt(Math.pow(apply_to.x - from_this.x, 2) + Math.pow(apply_to.y - from_this.y, 2))
+    
+    var force = -G * apply_to.m * from_this.m / Math.pow(r, 2)
+
+    apply_to.xs += (apply_to.x - from_this.x) / r * force / apply_to.m * dt
+    apply_to.ys += (apply_to.y - from_this.y) / r * force / apply_to.m * dt
+}
+
+function loop() {
+    // var dt = 0.005
+    var dt = 0.05
+    
+    apply_gravity(moon, earth, dt)
+
+
+    if (!rocket.blowing_up && Math.sqrt(Math.pow(earth.x - rocket.x, 2) + Math.pow(earth.y - rocket.y, 2)) < earth.r) {
+        // rocket.blowing_up = 1
+        
+        var earth_center = vec2.fromValues(earth.x, earth.y)
+        var our_location = vec2.fromValues(rocket.x, rocket.y)
+        var from_us_to_center = vec2.subtract(vec2.create(), earth_center, our_location)
+        vec2.normalize(from_us_to_center, from_us_to_center)
+        var our_velocity = vec2.fromValues(rocket.xs, rocket.ys)
+        var dot = vec2.dot(from_us_to_center, our_velocity)
+        vec2.scale(from_us_to_center, from_us_to_center, dot)
+        vec2.subtract(our_velocity, our_velocity, from_us_to_center)
+        
+        rocket.xs = our_velocity[0]
+        rocket.ys = our_velocity[1]
+        
+        
+        // var r = Math.sqrt(Math.pow(earth.x - rocket.x, 2) + Math.pow(earth.y - rocket.y, 2))
+        // var factor = earth.r / r
+        // rocket.x *= factor
+        // rocket.y *= factor
+        // rocket.xs = 0
+        // rocket.ys = 0
+    } else if (!rocket.blowing_up) {
+        apply_gravity(rocket, earth, dt)
+        apply_gravity(rocket, moon, dt)
+    } else {
+        rocket.blowing_up++
+    }
+    
+    
+    moon.x += moon.xs * dt
+    moon.y += moon.ys * dt
+    
+    
+    
+    
+    
+    
+    var projected_orbit = []
+    var fake_rocket = {
+        x : rocket.x,
+        y : rocket.y,
+        xs : rocket.xs,
+        ys : rocket.ys,
+        m : rocket.m
+    }
+    var fake_moon = {
+        x : moon.x,
+        y : moon.y,
+        xs : moon.xs,
+        ys : moon.ys,
+        m : moon.m
+    }
+    for (var i = 0; i < 1000; i++) {
+        apply_gravity(fake_moon, earth, dt)
+        
+        apply_gravity(fake_rocket, earth, dt)
+        apply_gravity(fake_rocket, fake_moon, dt)
+        
+        fake_moon.x += fake_moon.xs * dt
+        fake_moon.y += fake_moon.ys * dt
+        
+        fake_rocket.x += fake_rocket.xs * dt
+        fake_rocket.y += fake_rocket.ys * dt
+        
+        projected_orbit.push({
+            x : fake_rocket.x,
+            y : fake_rocket.y
+        })
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+
+    if (!rocket.blowing_up) {
+        rocket.x += rocket.xs * dt
+        rocket.y += rocket.ys * dt
+    }
+
+    if (keys.up) {
+        rocket.xs += Math.cos(rocket.direction + Math.PI/2) * 30 * dt
+        rocket.ys += Math.sin(rocket.direction + Math.PI/2) * 30 * dt
+    }
+    if (keys.left) {
+        rocket.direction -= 0.1
+    }
+    if (keys.right) {
+        rocket.direction += 0.1
+    }
+
+
+    moon_trace.push({
+        x : moon.x,
+        y : moon.y
+    })
+    if (moon_trace.length > 1000) moon_trace.shift()
+
+    g.fillStyle = 'black'
+    g.fillRect(0, 0, c.width, c.height)
+    
+    
+    g.save()
+    g.scale(scale, scale)
+    g.translate((-rocket.x + c.width / 2) / scale, (-rocket.y + c.height / 2) / scale)
+    
+    g.beginPath()
+    for (var i = 0; i < moon_trace.length; i++) {
+        if (i == 0) g.moveTo(moon_trace[i].x, moon_trace[i].y)
+        else g.lineTo(moon_trace[i].x, moon_trace[i].y)
+    }
+    g.strokeStyle = 'white'
+    g.stroke()
+    
+    
+
+
+
+
+    g.beginPath()
+    g.moveTo(rocket.x, rocket.y)
+    for (var i = 0; i < projected_orbit.length; i++) {
+        g.lineTo(projected_orbit[i].x, projected_orbit[i].y)
+    }
+    g.strokeStyle = 'red'
+    g.stroke()
+    
+    
+    
+    
+    
+    
+    
+    g.beginPath()
+    g.arc(earth.x, earth.y, earth.r + 10, 0, 2*Math.PI)
+    g.fillStyle = 'rgba(0, 0, 255, ' + 0.5 + ')'
+    g.fill()
+
+    g.beginPath()
+    g.arc(earth.x, earth.y, earth.r, 0, 2*Math.PI)
+    g.fillStyle = 'blue'
+    g.fill()
+    
+    g.beginPath()
+    g.arc(moon.x, moon.y, moon.r, 0, 2*Math.PI)
+    g.fillStyle = 'grey'
+    g.fill()
+    
+    if (rocket.blowing_up) {
+        if (rocket.blowing_up < 200) {
+            g.beginPath()
+            g.arc(rocket.x, rocket.y, rocket.blowing_up, 0, 2*Math.PI)
+            if (rocket.blowing_up < 20) {
+                g.fillStyle = 'rgba(255, 255, 0, 1)'
+            } else {
+                g.fillStyle = 'rgba(255, 255, 0, ' + (1 / (rocket.blowing_up - 20) * 0.5) + ')'            
+            }
+            g.fill()            
+        }
+    } else {
+        g.save()
+        g.translate(rocket.x, rocket.y)
+        // g.rotate(-Math.atan2(rocket.xs, rocket.ys))
+        g.rotate(rocket.direction)
+        g.beginPath()
+        g.moveTo(0, 8)
+        g.lineTo(8, -8)
+        g.lineTo(-8, -8)
+        g.fillStyle = 'white'
+        g.fill()
+        g.beginPath()
+        g.restore()
+    }
+    
+    
+    g.restore()
+
+
+    window.requestAnimationFrame(loop)
+}
+window.requestAnimationFrame(loop)
+
+window.onkeydown = function (e) {
+    if (e.code == 'ArrowLeft')
+        keys.left = true
+    if (e.code == 'ArrowRight')
+        keys.right = true
+    if (e.code == 'ArrowUp')
+        keys.up = true
+    if (e.code == 'ArrowDown')
+        keys.down = true
+    if (e.code == 'KeyR')
+        reset_rocket()
+    if (e.code == 'Minus')
+        scale /= 1.1
+    if (e.code == 'Equal')
+        scale *= 1.1
+}
+
+window.onkeyup = function (e) {
+    if (e.code == 'ArrowLeft')
+        keys.left = false
+    if (e.code == 'ArrowRight')
+        keys.right = false
+    if (e.code == 'ArrowUp')
+        keys.up = false
+    if (e.code == 'ArrowDown')
+        keys.down = false
+}
+
+</script>
