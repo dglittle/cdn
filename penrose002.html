@@ -35,10 +35,11 @@ var offset = [0, 0]
 c.ontouchstart = function (e) {
     e.preventDefault()
     var start_pos = [e.touches[0].pageX, e.touches[0].pageY]
+    var new_pos = start_pos
 
     var oldMove = document.ontouchmove
     document.ontouchmove = function (e) {
-        var new_pos = [e.touches[0].pageX, e.touches[0].pageY]
+        new_pos = [e.touches[0].pageX, e.touches[0].pageY]
         var d = sub(new_pos, start_pos)
         c.style.left = d[0] + 'px'
         c.style.top = d[1] + 'px'
@@ -47,7 +48,6 @@ c.ontouchstart = function (e) {
     var oldEnd = document.ontouchend;
     var oldCancel = document.ontouchcancel
     document.ontouchend = function (e) {
-        var new_pos = [e.touches[0].pageX, e.touches[0].pageY]
         var d = sub(new_pos, start_pos)
         offset = sub(offset, d)
         tile_floor(c, offset)
