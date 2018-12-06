@@ -1806,7 +1806,7 @@ function sync7_create_visualizations(s7s) {
     return sync7_create_visualization(merged_s7)
 }
 
-function create_side_text_boxes(n) {
+function create_side_text_boxes(n, show_example) {
     var size = BOX_Y + 10
     
     var grid = document.createElement('div')
@@ -1930,47 +1930,47 @@ function create_side_text_boxes(n) {
         grid.append(d)
     })
     
-    // work here
-
-    s7s[0].textarea.value = 'abc'
-    s7s[0].c_button.click()
-    
-    s7s[0].textarea.value = 'a12c'
-    s7s[0].c_button.click()
-    
-    
-    s7s[2].buttons[0].click()
-    s7s[2].textarea.value = 'XXXbY'
-    s7s[2].c_button.click()
-    
-    s7s[0].buttons[2].click()
-    
-    s7s[1].buttons[0].click()
-    s7s[1].buttons[0].click()
-    s7s[1].textarea.value = 'w2c'
-    s7s[1].c_button.click()
-    s7s[1].textarea.value = 'wz'
-    s7s[1].c_button.click()
-    
-    s7s[0].buttons[1].click()
-    s7s[0].buttons[1].click()
-}
-
-create_side_text_boxes(4)
-
-function add_refresh_button() {
-    var b = document.createElement('button')
-    b.textContent = 'reset'
-    b.onclick = function () {
-        each(s7s, function (s7) {
-            s7.textarea.value = 'bloop!'
-        })
-        
-        console.log('hi!!2')
+    function add_refresh_button() {
+        var b = document.createElement('button')
+        b.textContent = 'reset'
+        b.onclick = function () {
+            left.innerHTML = ''
+            create_side_text_boxes(n)
+        }
+        left.append(b)
     }
-    left.append(b)
+    add_refresh_button()
+    
+    right.innerHTML = ''
+    right.append(sync7_create_visualizations(s7s))
+    
+    if (show_example) {
+        s7s[0].textarea.value = 'abc'
+        s7s[0].c_button.click()
+        
+        s7s[0].textarea.value = 'a12c'
+        s7s[0].c_button.click()
+        
+        
+        s7s[2].buttons[0].click()
+        s7s[2].textarea.value = 'XXXbY'
+        s7s[2].c_button.click()
+        
+        s7s[0].buttons[2].click()
+        
+        s7s[1].buttons[0].click()
+        s7s[1].buttons[0].click()
+        s7s[1].textarea.value = 'w2c'
+        s7s[1].c_button.click()
+        s7s[1].textarea.value = 'wz'
+        s7s[1].c_button.click()
+        
+        s7s[0].buttons[1].click()
+        s7s[0].buttons[1].click()
+    }
 }
-add_refresh_button()
+
+create_side_text_boxes(4, true)
 
 function getPos(e) {
     var x = 0, y = 0
