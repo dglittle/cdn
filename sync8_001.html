@@ -3,4 +3,31 @@
 
 console.log('hi!')
 
+var sync8 = {}
+
+sync8.create = function () {
+    var begin_loc = { nexts : [] }
+    var end_loc = { prevs : [] }
+    begin_loc.nexts.push(end_loc)
+    end_loc.prevs.push(begin_loc)
+    
+    return {
+        T : { 'root' : { parents : {} } },
+        S : begin_loc
+    }
+}
+
+sync8.add_version = function (s) {
+    
+}
+
+sync8.merge = function () {
+}
+
+
+var s8 = sync8.create()
+
+console.log(s8)
+
+
 </script>
