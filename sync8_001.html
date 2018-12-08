@@ -1,33 +1,106 @@
+
+<script src="https://dglittle.github.io/cdn/random001.js"></script>
+<script src="https://dglittle.github.io/cdn/utils004.js"></script>
+<script src="https://invisible-college.github.io/universal-sync/diffsync.js"></script>
 <body></body>
 <script>
-
-console.log('hi!')
 
 var sync8 = {}
 
 sync8.create = function () {
-    var begin_loc = { nexts : [] }
-    var end_loc = { prevs : [] }
+    var begin_loc = { prevs : [], nexts : [] }
+    var end_loc = { prevs : [], nexts : [] }
     begin_loc.nexts.push(end_loc)
     end_loc.prevs.push(begin_loc)
     
     return {
         T : { 'root' : { parents : {} } },
-        S : begin_loc
+        S : begin_loc,
+        text : 'hello there'
     }
 }
 
-sync8.add_version = function (s) {
+sync8.traverse_space_dag = function (S, cb) {
+    var cur, stack = [[S, 0]]    
+    while (cur = stack[stack.length - 1]) {
+        if (cur[1] == 0) {
+            cur[0].incoming_count = 0
+        }
+        if (cur[1] < cur[0].nexts.length) {
+            var next = cur[0].nexts[cur[1]]
+            if (next.prevs[0] == cur[0]) {
+                stack.push([next, 0])
+            }
+            cur[1]++
+        } else {
+            stack.pop()
+        }
+    }
     
+    var offset = 0
+    stack = [[S, 0]]
+    while (cur = stack[stack.length - 1]) {
+        if (cur[1] == 0) {
+            cb(cur[0], offset)
+            if (cur[0].text)
+                offset += cur[0].text.length
+        }
+        
+        if (cur[1] < cur[0].nexts.length) {
+            var next = cur[0].nexts[cur[1]]
+            next.incoming_count++
+            if (next.incoming_count == next.prevs.length) {
+                stack.push([next, 0])
+            }
+            cur[1]++
+        } else {
+            stack.pop()
+        }
+    }
+}
+
+sync8.add_version = function (s8, s) {
+    
+    var d = sync8.diff(s8.text, s)
+    
+    console.log('d', d)
+    
+    traverse_space_dag(s8.S, function (patch, offset) {
+        console.log(patch, ' @ offset: ' + offset)
+    })
 }
 
 sync8.merge = function () {
 }
 
+sync8.diff = function (a, b) {
+    var ret = []
+    var d = diff_main(a, b)
+    for (var i = 0; i < d.length; i++) {
+        var top = ret[ret.length - 1]
+        if (d[i][0] == 0) {
+            ret.push(d[i][1].length)
+        } else if (d[i][0] == 1) {
+            if (top && (typeof(top) != 'number'))
+                top[1] += d[i][1]
+            else
+                ret.push(['', d[i][1]])
+        } else {
+            if (top && (typeof(top) != 'number'))
+                top[0] += d[i][1]
+            else
+                ret.push([d[i][1], ''])
+        }
+    }
+    return ret
+}
+
+////////////////////
 
 var s8 = sync8.create()
 
 console.log(s8)
+sync8.add_version(s8, 'hello world')
 
 
 </script>
