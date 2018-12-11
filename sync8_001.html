@@ -26,6 +26,8 @@ sync8.add_version = function (s8, s) {
     
     console.log('DIFF: ', d)
     
+    var operations_to_perform = []
+    
     sync8.traverse_space_dag(s8.S, function (x, offset) {
         var d = ds[i]
         
@@ -33,6 +35,20 @@ sync8.add_version = function (s8, s) {
         if (d[1].length == 0) {
             if (offset + x.text.length > d[0]) {
                 // insert within this x
+                operations_to_perform.push(function () {
+                    var tail = sync8.create_space_dag_node()
+                    tail.nexts = x.nexts
+                    
+                    var inserted_thing = sync8.create_space_dag_node()
+                    
+                    
+                    
+                    x.nexts = [  tail]
+                    
+                    
+                    
+                    tail.prevs.push(x)
+                })
             } else if (offset + x.text.length == d[0]) {
                 // insert at tail end of this x,
                 // meaning we need to see the first thing
@@ -47,7 +63,7 @@ sync8.add_version = function (s8, s) {
         }
         
         
-        if (offset 
+        //if (offset 
         
         console.log(patch, ' @ offset: ' + offset)
     })
@@ -56,11 +72,14 @@ sync8.add_version = function (s8, s) {
 sync8.merge = function () {
 }
 
-sync8.create_space_dag_node = function () {
+sync8.create_space_dag_node = function (patch_id, patch_begin, patch_end) {
     return {
         nexts : [],
         prevs : [],
-        text : ''
+        text : '',
+        patch_id : patch_id,
+        patch_begin : patch_begin,
+        patch_end : patch_end
     }
 }
 
@@ -136,6 +155,5 @@ var s8 = sync8.create()
 
 console.log(s8)
 console.log(sync8.diff('hello there', 'hello world'))
-
 
 </script>
