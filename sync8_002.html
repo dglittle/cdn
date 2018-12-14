@@ -76,10 +76,12 @@ function sync8_update_all_but_text(s8, vid, parents, patches) {
     function add_outgoing(add_to, loc, outgoing_to) {
         outgoing_to.prevs[add_to.p_id] = true
         if (loc < add_to.p_end) {
-            var tail = sync8_create_space_dag_node(add_to.vid, add_to.p_id, loc + 1, add_to.p_end)
+            var text_divide = add_to.text.length - ((add_to.p_end - loc) >> 1)
+            var tail = sync8_create_space_dag_node(add_to.vid, add_to.p_id, loc + 1, add_to.p_end, add_to.text.substring(text_divide))
             tail.nexts = add_to.nexts
             tail.prevs = [add_to]
             add_to.p_end = loc
+            add_to.text = add_to.text.substring(0, text_divide)
             add_to.nexts = [outgoing_to, tail]
         } else {
             var i = binarySearch(add_to.nexts, outgoing_to.vid, function (a, b) {
@@ -106,8 +108,8 @@ function sync8_update_all_but_text(s8, vid, parents, patches) {
         }
     }
 
-    var pi = 0   
-    var looking_for_end = false
+    var pi = 0
+    var inserting_node = null
     sync8_trav_space_dag(s8.S, parents == s8.leaves ?
     function () {
         return true
@@ -119,24 +121,28 @@ function sync8_update_all_but_text(s8, vid, parents, patches) {
         var p = patches[pi]
         if (!p) return false
         
-        if (looking_for_end) {
+        if (inserting_node) {
             
             // work here
+                    add_incoming(next, next.p_begin, n)
             
         } else if (offset + node.text.length < p[0]) {
-            return
         } else if (offset + node.text.length == p[0]) {
             if (p[1] == '') {
-                if (node.nexts[0].p_begin == -1) {
-                    return
+                if (next.p_begin == -1) {
                 } else {
-                    var n = sync8_create_space_dag_node(vid, pi, null, null, p[2])
-                    add_outgoing(node, node.p_end, n)
-                    add_incoming(next, next.p_begin, n)
-                    pi++
+                    inserting_node = sync8_create_space_dag_node(vid, pi, null, null, p[2])
+                    add_outgoing(node, node.p_end, inserting_node)
                 }
             } else {
-                return
+            }
+        } else {
+            if (p[1] == '') {
+                inserting_node = sync8_create_space_dag_node(vid, pi, null, null, p[2])
+                add_outgoing(node, node.p_end - (offset + node.text.length - p[0]) * 2, inserting_node)
+            } else {
+                inserting_node = sync8_create_space_dag_node(vid, pi, null, null, p[2])
+                add_outgoing(node, node.p_end - (offset + node.text.length - p[0]) * 2 + 1, inserting_node)
             }
         }
     })
