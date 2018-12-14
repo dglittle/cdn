@@ -1,0 +1,241 @@
+
+<script src="https://dglittle.github.io/cdn/random001.js"></script>
+<script src="https://dglittle.github.io/cdn/utils004.js"></script>
+<script src="https://invisible-college.github.io/universal-sync/diffsync.js"></script>
+<body></body>
+<script>
+
+function sync8_create() {
+    var begin_loc = sync8_create_space_dag_node('root', 0, -1, -1)
+    var end_loc = sync8_create_space_dag_node('root', 1, 0, 0)
+    begin_loc.nexts.push(end_loc)
+    end_loc.prevs.push(begin_loc)
+    
+    return {
+        T : { 'root' : {} },
+        S : begin_loc,
+        leaves : { 'root' : true },
+        text : ''
+    }
+}
+
+function sync8_create_space_dag_node(vid, p_id, p_begin, p_end) {
+    return {
+        vid : vid,
+        p_id : p_id,
+        p_begin : p_begin,
+        p_end : p_end,
+        
+        text : '',
+        visible : true,
+        
+        nexts : [],
+        prevs : []
+    }
+}
+
+function sync8_add_version(s8, s) {
+    var vid = 'id' + Math.random()
+    var save_leaves = Object.assign({}, s8.leaves)
+    var ps = sync8_diff_ODI(s8.text, s)
+    
+    sync8_update_all_but_text(s8, vid, s8.leaves, ps)
+    
+    return {
+        vid : vid,
+        parents : save_leaves,
+        patches : ps
+    }
+}
+
+function sync8_merge(s8, vid, parents, patches) {
+    
+}
+
+function sync8_update_all_but_text(s8, vid, parents, patches) {
+}
+
+function sync8_trav_space_dag() {
+}
+
+function sync8_diff_ODI(a, b) {
+    var offset = 0
+    var prev = null
+    var ret = []
+    var d = diff_main(a, b)
+    for (var i = 0; i < d.length; i++) {
+        if (d[i][0] == 0) {
+            if (prev) ret.push(prev)
+            prev = null
+            offset += d[i][1].length
+        } else if (d[i][0] == 1) {
+            if (prev)
+                prev[2] += d[i][1]
+            else
+                prev = [offset, '', d[i][1]]
+        } else {
+            if (prev)
+                prev[1] += d[i][1]
+            else
+                prev = [offset, d[i][1], '']
+            offset += d[i][1].length
+        }
+    }
+    if (prev) ret.push(prev)
+    return ret
+}
+
+
+
+// var sync8 = {}
+
+// sync8.create = function () {
+//     var begin_loc = sync8.create_space_dag_node()
+//     var end_loc = sync8.create_space_dag_node()
+//     begin_loc.nexts.push(end_loc)
+//     end_loc.prevs.push(begin_loc)
+    
+//     return {
+//         T : { 'root' : { parents : {} } },
+//         S : begin_loc,
+//         text : ''
+//     }
+// }
+
+// sync8.add_version = function (s8, s) {
+//     var ds = sync8.diff(s8.text, s)
+//     var i = 0
+    
+//     console.log('DIFF: ', d)
+    
+//     var operations_to_perform = []
+    
+//     sync8.traverse_space_dag(s8.S, function (x, offset) {
+//         var d = ds[i]
+        
+//         // if we're inserting without deleting
+//         if (d[1].length == 0) {
+//             if (offset + x.text.length > d[0]) {
+//                 // insert within this x
+//                 operations_to_perform.push(function () {
+//                     var tail = sync8.create_space_dag_node()
+//                     tail.nexts = x.nexts
+                    
+//                     var inserted_thing = sync8.create_space_dag_node()
+                    
+                    
+                    
+//                     x.nexts = [  tail]
+                    
+                    
+                    
+//                     tail.prevs.push(x)
+//                 })
+//             } else if (offset + x.text.length == d[0]) {
+//                 // insert at tail end of this x,
+//                 // meaning we need to see the first thing
+//                 // that comes next, and insert into that
+//             }
+//         }
+//         // if we're replacing
+//         else {
+//             if (offset <= d[0] && offset + x.text.length > d[0]) {
+//                 // we want to insert into this x
+//             }
+//         }
+        
+        
+//         //if (offset 
+        
+//         console.log(patch, ' @ offset: ' + offset)
+//     })
+// }
+
+// sync8.merge = function () {
+// }
+
+// sync8.create_space_dag_node = function (patch_id, patch_begin, patch_end) {
+//     return {
+//         nexts : [],
+//         prevs : [],
+//         text : '',
+//         patch_id : patch_id,
+//         patch_begin : patch_begin,
+//         patch_end : patch_end
+//     }
+// }
+
+// sync8.traverse_space_dag = function (S, cb) {
+//     var cur, stack = [[S, 0]]    
+//     while (cur = stack[stack.length - 1]) {
+//         if (cur[1] == 0) {
+//             cur[0].incoming_count = 0
+//         }
+//         if (cur[1] < cur[0].nexts.length) {
+//             var next = cur[0].nexts[cur[1]]
+//             if (next.prevs[0] == cur[0]) {
+//                 stack.push([next, 0])
+//             }
+//             cur[1]++
+//         } else {
+//             stack.pop()
+//         }
+//     }
+    
+//     var offset = 0
+//     stack = [[S, 0]]
+//     while (cur = stack[stack.length - 1]) {
+//         if (cur[1] == 0) {
+//             cb(cur[0], offset)
+//             if (cur[0].text)
+//                 offset += cur[0].text.length
+//         }
+        
+//         if (cur[1] < cur[0].nexts.length) {
+//             var next = cur[0].nexts[cur[1]]
+//             next.incoming_count++
+//             if (next.incoming_count == next.prevs.length) {
+//                 stack.push([next, 0])
+//             }
+//             cur[1]++
+//         } else {
+//             stack.pop()
+//         }
+//     }
+// }
+
+// sync8.diff = function (a, b) {
+//     var offset = 0
+//     var prev = null
+//     var ret = []
+//     var d = diff_main(a, b)
+//     for (var i = 0; i < d.length; i++) {
+//         if (d[i][0] == 0) {
+//             if (prev) ret.push(prev)
+//             prev = null
+//             offset += d[i][1].length
+//         } else if (d[i][0] == 1) {
+//             if (prev)
+//                 prev[2] += d[i][1]
+//             else
+//                 prev = [offset, '', d[i][1]]
+//         } else {
+//             if (prev)
+//                 prev[1] += d[i][1]
+//             else
+//                 prev = [offset, d[i][1], '']
+//             offset += d[i][1].length
+//         }
+//     }
+//     if (prev) ret.push(prev)
+//     return ret
+// }
+
+// ////////////////////
+
+// var s8 = sync8.create()
+
+// console.log(s8)
+// console.log(sync8.diff('hello there', 'hello world'))
+
+</script>
