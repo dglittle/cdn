@@ -19,7 +19,7 @@ function sync8_create() {
     }
 }
 
-function sync8_create_space_dag_node(vid, p_id, p_begin, p_end, text) {
+function sync8_create_space_dag_node(vid, p_i, p_begin, p_end, text) {
     if (!text) text = ''
     if (p_begin == undefined) {
         p_begin = -1
@@ -27,7 +27,7 @@ function sync8_create_space_dag_node(vid, p_id, p_begin, p_end, text) {
     }
     return {
         vid : vid,
-        p_id : p_id,
+        p_i : p_i,
         p_begin : p_begin,
         p_end : p_end,
         
@@ -66,28 +66,33 @@ function sync8_merge(s8, vid, parents, patches) {
 function sync8_update_all_but_text(s8, vid, parents, patches) {
     s8.T[vid] = parents
     
-    each(parents, function (_, parent) {
-        if (s8.leaves[parent]) {
-            delete s8.leaves[parent]
+    each(parents, function (_, p) {
+        if (s8.leaves[p]) {
+            delete s8.leaves[p]
         }
     })
     s8.leaves[vid] = true
     
+    function get_pid(patch) {
+        return patch.vid + ':' + patch.p_i
+    }
+    
     function add_outgoing(add_to, loc, outgoing_to) {
-        outgoing_to.prevs[add_to.p_id] = true
+        outgoing_to.prevs[get_pid(add_to)] = true
         if (loc < add_to.p_end) {
             var text_divide = add_to.text.length - ((add_to.p_end - loc) >> 1)
-            var tail = sync8_create_space_dag_node(add_to.vid, add_to.p_id, loc + 1, add_to.p_end, add_to.text.substring(text_divide))
+            var tail = sync8_create_space_dag_node(add_to.vid, add_to.p_i, loc + 1, add_to.p_end, add_to.text.substring(text_divide))
             tail.nexts = add_to.nexts
-            tail.prevs = [add_to]
+            tail.prevs = {}
+            tail.prevs[get_pid(add_to)] = true
             add_to.p_end = loc
             add_to.text = add_to.text.substring(0, text_divide)
             add_to.nexts = [outgoing_to, tail]
         } else {
-            var i = binarySearch(add_to.nexts, outgoing_to.vid, function (a, b) {
-                if (b == add_to.vid) return -1
-                if (a < b) return -1
-                if (a > b) return 1
+            var i = binarySearch(add_to.nexts, function (x) {
+                if (x == add_to.vid) return -1
+                if (outgoing_to.vid < x) return -1
+                if (outgoing_to.vid > x) return 1
                 return 0
             })
             add_to.nexts.splice(i, 0, outgoing_to)
@@ -96,28 +101,42 @@ function sync8_update_all_but_text(s8, vid, parents, patches) {
     
     function add_incoming(add_to, loc, incoming_from) {
         if (loc > add_to.p_begin) {
-            var tail = sync8_create_space_dag_node(add_to.vid, add_to.p_id, loc, add_to.p_end)
+            var tail = sync8_create_space_dag_node(add_to.vid, add_to.p_i, loc, add_to.p_end)
             tail.nexts = add_to.nexts
-            tail.prevs = [incoming_from, add_to]
+            tail.prevs = {}
+            tail.prevs[get_pid(incoming_from)] = true
+            tail.prevs[get_pid(add_to)] = true
             add_to.p_end = loc - 1
             add_to.nexts = [tail]
             incoming_from.nexts = [tail]
         } else {
-            add_to.prevs[incoming_from.p_id] = true
+            add_to.prevs[get_pid(incoming_from)] = true
             incoming_from.nexts = [add_to]
         }
     }
 
     var pi = 0
     var inserting_node = null
-    sync8_trav_space_dag(s8.S, parents == s8.leaves ?
-    function () {
-        return true
-    } : function (node) {
-        
-        // work here
-        
-    }, function (node, offset, next) {
+    
+    var membership_function = null
+    if (parents == s8.leaves) {
+        membership_function = () => true
+    } else {
+        var members = {}
+        function mark_members(key) {
+            if (!members[key]) {
+                members[key] = true
+                each(s8.T[key], (_, p) => {
+                    mark_members(p)
+                })
+            }
+        }
+        each(parents, (_, p) => {
+            mark_members(p)
+        })
+    }
+    
+    sync8_trav_space_dag(s8.S, membership_function, function (node, offset, next) {
         var p = patches[pi]
         if (!p) return false
         
@@ -179,12 +198,12 @@ function sync8_diff_ODI(a, b) {
 }
 
 // modified from https://stackoverflow.com/questions/22697936/binary-search-in-javascript
-function binarySearch(ar, el, compare_fn) {
+function binarySearch(ar, compare_fn) {
     var m = 0;
     var n = ar.length - 1;
     while (m <= n) {
         var k = (n + m) >> 1;
-        var cmp = compare_fn(el, ar[k]);
+        var cmp = compare_fn(ar[k]);
         if (cmp > 0) {
             m = k + 1;
         } else if(cmp < 0) {
