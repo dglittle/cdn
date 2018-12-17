@@ -39,8 +39,17 @@ function sync8_add_version(s8, s) {
     var vid = 'id' + Math.random()
     var save_leaves = Object.assign({}, s8.leaves)
     var ps = sync8_diff_ODI(s8.text, s)
+    
+    
+    
+    // work here
+    console.log('text: ', s8.text)
+    console.log('ps:', ps)
+    
+    
 
     sync8_update_all_but_text(s8, vid, s8.leaves, ps)
+    s8.text = s
 
     return {
         vid : vid,
@@ -189,7 +198,7 @@ function sync8_trav_space_dag(S, f, cb) {
         each(node.nexts, (next) => {
             if (f(next)) helper(next)
         })
-        if (node.next) helper(next)
+        if (node.next) helper(node.next)
     }
     helper(S)
 }
@@ -247,10 +256,14 @@ console.log('hi there')
 console.log(s8)
 
 console.log('-----------')
-var x = sync8_add_version(s8, 'hi')
+var x = sync8_add_version(s8, 'abc')
 console.log(x)
 console.log(s8)
 
+console.log('-----------')
+var x = sync8_add_version(s8, 'abC')
+console.log(x)
+console.log(s8)
 
 
 
