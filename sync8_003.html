@@ -72,17 +72,19 @@ function sync8_update_all_but_text(s8, vid, parents, patches) {
     function add_outgoing(add_to, loc, outgoing_to) {
         if (loc < add_to.p_end) {
             var text_divide = add_to.text.length - ((add_to.p_end + (add_to.p_end % 2 == 0 ? 1 : 0) - loc) >> 1)
+            
             var tail = sync8_create_space_dag_node(add_to.vid, add_to.p_i, loc + 1, add_to.p_end, add_to.text.substring(text_divide))
             tail.nexts = add_to.nexts
             tail.next = add_to.next
-            tail.prev =
-            tail.prevs[get_pid(add_to)] = true
+            if (tail.next) tail.next.prev = tail
+            tail.prev = add_to
+            
             add_to.p_end = loc
             add_to.text = add_to.text.substring(0, text_divide)
-            add_to.nexts = [outgoing_to, tail]
+            add_to.nexts.push(outgoing_to)
+            add_to.next = tail
         } else {
             var i = binarySearch(add_to.nexts, function (x) {
-                if (x == add_to.vid) return -1
                 if (outgoing_to.vid < x) return -1
                 if (outgoing_to.vid > x) return 1
                 return 0
@@ -91,38 +93,30 @@ function sync8_update_all_but_text(s8, vid, parents, patches) {
         }
     }
     
-    function add_incoming(add_to, loc, incoming_from) {
+    function add_incoming(add_to, loc) {
         if (loc > add_to.p_begin) {
-            
-            var text_divide = null
-            if (add_to.p_end % 3 == 0) {
-                text_divide = add_to.text.length - Math.floor((add_to.p_end + 1 - loc) / 3)
-            } else (add_to.p_end % 3 == 1) {
-                text_divide = add_to.text.length - Math.floor((add_to.p_end + 3 - loc) / 3)
-            } else (add_to.p_end % 3 == 2) {
-                text_divide = add_to.text.length - Math.floor((add_to.p_end + 2 - loc) / 3)
-            }
+            var text_divide = add_to.text.length - ((add_to.p_end + (add_to.p_end % 2 == 0 ? 2 : 1) - loc) >> 1)
             
             var tail = sync8_create_space_dag_node(add_to.vid, add_to.p_i, loc, add_to.p_end, add_to.text.substring(text_divide))
             tail.nexts = add_to.nexts
-            tail.prevs = {}
-            tail.prevs[get_pid(incoming_from)] = true
-            tail.prevs[get_pid(add_to)] = true
+            tail.next = add_to.next
+            if (tail.next) tail.next.prev = tail
+            tail.prev = add_to
+            
             add_to.p_end = loc - 1
-            add_to.nexts = [tail]
-            incoming_from.nexts = [tail]
-        } else {
-            add_to.prevs[get_pid(incoming_from)] = true
-            incoming_from.nexts = [add_to]
+            add_to.text = add_to.text.substring(0, text_divide)
+            add_to.next = tail
         }
     }
 
     var pi = 0
-    var inserting_node = null
+    var delete_up_to = 0
     
     var membership_function = null
     if (parents == s8.leaves) {
-        membership_function = () => true
+        membership_function = (x) => {
+            return x.vid != vid
+        }
     } else {
         var members = {}
         function mark_members(key) {
@@ -144,6 +138,14 @@ function sync8_update_all_but_text(s8, vid, parents, patches) {
     sync8_trav_space_dag(s8.S, membership_function, function (node, offset, next_is_a_new_beginning) {
         var p = patches[pi]
         if (!p) return false
+        
+        if (work here
+        
+        
+        
+        
+        
+        
         
         function add_inserting_node() {
             return inserting_node = sync8_create_space_dag_node(vid, pi, null, null, p[2])
@@ -192,6 +194,32 @@ function sync8_update_all_but_text(s8, vid, parents, patches) {
     })
 }
 
+function sync8_diff_ODI(a, b) {
+    var offset = 0
+    var prev = null
+    var ret = []
+    var d = diff_main(a, b)
+    for (var i = 0; i < d.length; i++) {
+        if (d[i][0] == 0) {
+            if (prev) ret.push(prev)
+            prev = null
+            offset += d[i][1].length
+        } else if (d[i][0] == 1) {
+            if (prev)
+                prev[2] += d[i][1]
+            else
+                prev = [offset, 0, d[i][1]]
+        } else {
+            if (prev)
+                prev[1] += d[i][1].length
+            else
+                prev = [offset, d[i][1].length, '']
+            offset += d[i][1].length
+        }
+    }
+    if (prev) ret.push(prev)
+    return ret
+}
 
 
 
