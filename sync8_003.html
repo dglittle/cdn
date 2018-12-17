@@ -5,7 +5,192 @@
 <body></body>
 <script>
 
+function sync8_create() {
+    return {
+        T : { 'root' : {} },
+        S : sync8_create_space_dag_node('root', 0, 0, 0),
+        leaves : { 'root' : true },
+        text : ''
+    }
+}
 
+function sync8_create_space_dag_node(vid, p_i, p_begin, p_end, text) {
+    if (!text) text = ''
+    if (p_begin == undefined) {
+        p_begin = 0
+        p_end = text.length * 2
+    }
+    return {
+        vid : vid,
+        p_i : p_i,
+        p_begin : p_begin,
+        p_end : p_end,
+        
+        text : text,
+        visible : true,
+        
+        nexts : [],
+        next : null,
+        prev : null
+    }
+}
+
+function sync8_add_version(s8, s) {
+    var vid = 'id' + Math.random()
+    var save_leaves = Object.assign({}, s8.leaves)
+    var ps = sync8_diff_ODI(s8.text, s)
+
+    sync8_update_all_but_text(s8, vid, s8.leaves, ps)
+
+    return {
+        vid : vid,
+        parents : save_leaves,
+        patches : ps
+    }
+}
+
+function sync8_merge(s8, vid, parents, patches) {
+    sync8_update_all_but_text(s8, vid, parents, patches)
+    
+    s8.text = []
+    sync8_trav_space_dag(s8.S, () => true, function (node, offset) {
+        s8.text.push(node.text)
+    })
+    return s8.text = s8.text.join('')
+}
+
+function sync8_update_all_but_text(s8, vid, parents, patches) {
+    s8.T[vid] = parents
+    
+    each(parents, function (_, p) {
+        if (s8.leaves[p]) {
+            delete s8.leaves[p]
+        }
+    })
+    s8.leaves[vid] = true
+    
+    function add_outgoing(add_to, loc, outgoing_to) {
+        if (loc < add_to.p_end) {
+            var text_divide = add_to.text.length - ((add_to.p_end + (add_to.p_end % 2 == 0 ? 1 : 0) - loc) >> 1)
+            var tail = sync8_create_space_dag_node(add_to.vid, add_to.p_i, loc + 1, add_to.p_end, add_to.text.substring(text_divide))
+            tail.nexts = add_to.nexts
+            tail.next = add_to.next
+            tail.prev =
+            tail.prevs[get_pid(add_to)] = true
+            add_to.p_end = loc
+            add_to.text = add_to.text.substring(0, text_divide)
+            add_to.nexts = [outgoing_to, tail]
+        } else {
+            var i = binarySearch(add_to.nexts, function (x) {
+                if (x == add_to.vid) return -1
+                if (outgoing_to.vid < x) return -1
+                if (outgoing_to.vid > x) return 1
+                return 0
+            })
+            add_to.nexts.splice(i, 0, outgoing_to)
+        }
+    }
+    
+    function add_incoming(add_to, loc, incoming_from) {
+        if (loc > add_to.p_begin) {
+            
+            var text_divide = null
+            if (add_to.p_end % 3 == 0) {
+                text_divide = add_to.text.length - Math.floor((add_to.p_end + 1 - loc) / 3)
+            } else (add_to.p_end % 3 == 1) {
+                text_divide = add_to.text.length - Math.floor((add_to.p_end + 3 - loc) / 3)
+            } else (add_to.p_end % 3 == 2) {
+                text_divide = add_to.text.length - Math.floor((add_to.p_end + 2 - loc) / 3)
+            }
+            
+            var tail = sync8_create_space_dag_node(add_to.vid, add_to.p_i, loc, add_to.p_end, add_to.text.substring(text_divide))
+            tail.nexts = add_to.nexts
+            tail.prevs = {}
+            tail.prevs[get_pid(incoming_from)] = true
+            tail.prevs[get_pid(add_to)] = true
+            add_to.p_end = loc - 1
+            add_to.nexts = [tail]
+            incoming_from.nexts = [tail]
+        } else {
+            add_to.prevs[get_pid(incoming_from)] = true
+            incoming_from.nexts = [add_to]
+        }
+    }
+
+    var pi = 0
+    var inserting_node = null
+    
+    var membership_function = null
+    if (parents == s8.leaves) {
+        membership_function = () => true
+    } else {
+        var members = {}
+        function mark_members(key) {
+            if (!members[key]) {
+                members[key] = true
+                each(s8.T[key], (_, p) => {
+                    mark_members(p)
+                })
+            }
+        }
+        each(parents, (_, p) => {
+            mark_members(p)
+        })
+        membership_function = function (x) {
+            return members[x.vid]
+        }
+    }
+    
+    sync8_trav_space_dag(s8.S, membership_function, function (node, offset, next_is_a_new_beginning) {
+        var p = patches[pi]
+        if (!p) return false
+        
+        function add_inserting_node() {
+            return inserting_node = sync8_create_space_dag_node(vid, pi, null, null, p[2])
+        }
+        
+        if (inserting_node) {
+            
+            // work here
+                    add_incoming(next, next.p_begin, n)
+            
+        } else if (offset + node.text.length < p[0]) {
+        } else if (offset + node.text.length == p[0]) {
+            if (p[1] == '') {
+                if (node.p_end == -1 || node.p_end % 3 == 2) {
+                    if (next_is_a_new_beginning) {
+                    } else {
+                        add_outgoing(node, node.p_end, add_inserting_node())
+                    }
+                } else if (node.p_end % 3 == 1) {
+                } else if (node.p_end % 3 == 0) {
+                    if (node.p_end == node.p_begin)
+                        throw 'something happened that was unexpected'
+                    add_outgoing(node, node.p_end - 1, add_inserting_node())
+                }
+            } else {
+            }
+        } else {
+            if (p[1] == '') {
+                var loc = null
+                var chars_after_us = offset + node.text.length - p[0]
+                if (node.p_end % 3 == 0) {
+                    loc = node.p_end - 1 - chars_after_us * 3
+                } else if (node.p_end % 3 == 1) {
+                    loc = node.p_end + 1 - chars_after_us * 3
+                } else if (node.p_end % 3 == 2) {
+                    loc = node.p_end - chars_after_us * 3
+                }
+                add_outgoing(node, loc, add_inserting_node())
+            } else {
+                
+                
+                work here
+                add_outgoing(node, node.p_end - (offset + node.text.length - p[0]) * 2 + 1, add_inserting_node())
+            }
+        }
+    })
+}
 
 
 
