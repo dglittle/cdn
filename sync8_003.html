@@ -27,7 +27,7 @@ function sync8_create_space_dag_node(vid, p_i, p_begin, p_end, text) {
         p_end : p_end,
         
         text : text,
-        visible : true,
+        deleted_vid : null,
         
         nexts : [],
         next : null,
@@ -167,7 +167,7 @@ function sync8_update_all_but_text(s8, vid, parents, patches) {
         }
         
         if (delete_up_to > offset) {
-            node.visible = false
+            node.deleted_vid = vid
             if (delete_up_to > offset + node.text.length) return
             
             if (delete_up_to < offset + node.text.length) {
@@ -181,6 +181,17 @@ function sync8_update_all_but_text(s8, vid, parents, patches) {
 }
 
 function sync8_trav_space_dag(S, f, cb) {
+    var offset = 0
+    function helper(node) {
+        cb(node, offset)
+        if (!node.deleted_vid || !f(node.deleted_vid))
+            offset += node.text.length
+        each(node.nexts, (next) => {
+            if (f(next)) helper(next)
+        })
+        if (node.next) helper(next)
+    }
+    helper(S)
 }
 
 function sync8_diff_ODI(a, b) {
@@ -210,6 +221,10 @@ function sync8_diff_ODI(a, b) {
     return ret
 }
 
+var s8 = sync8_create()
+
+console.log('hi there')
+console.log(s8)
 
 
 
