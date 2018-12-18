@@ -315,7 +315,9 @@ function create_random_ops() {
         }
     }
     add_random_ops()
-    while (Math.random() < 0.8) add_random_ops()
+    var n = 100 s+ Math.floor(Math.random() * 20)
+    for (var i = 0; i < n; i++) add_random_ops()
+    //while (Math.random() < 0.9) add_random_ops()
     return ops
 }
 
@@ -464,7 +466,7 @@ for (var tests = 0; tests < 1000; tests++) {
     var ops = create_random_ops()
     var good = false
     
-    for (var i = 0; i < 100; i++) {
+    for (var i = 0; i < 1; i++) {
         var res = apply_ops_to_test_repos(ops)
         if (res.same) {
             good = true
@@ -501,10 +503,10 @@ for (var tests = 0; tests < 1000; tests++) {
         
         throw 'stopy'
     } else {
-        print_stuff.push('BLAR! ' + ops.length + ' i=' + i)
-        print_stuff.push('a: ' + res.sync8.a.text + ' == ' + res.diffsync.a.cache)
-        print_stuff.push('b: ' + res.sync8.b.text + ' == ' + res.diffsync.b.cache)
-        print_stuff.push('c: ' + res.sync8.c.text + ' == ' + res.diffsync.c.cache)
+        // print_stuff.push('BLAR! ' + ops.length + ' i=' + i)
+        // print_stuff.push('a: ' + res.sync8.a.text + ' == ' + res.diffsync.a.cache)
+        // print_stuff.push('b: ' + res.sync8.b.text + ' == ' + res.diffsync.b.cache)
+        // print_stuff.push('c: ' + res.sync8.c.text + ' == ' + res.diffsync.c.cache)
     }
     console.log(print_stuff.join('\n'))
 }
