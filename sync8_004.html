@@ -61,7 +61,7 @@ function sync8_merge(s8, vid, parents, patches) {
 }
 
 function sync8_update_all_but_text(s8, vid, parents, patches) {
-    s8.T[vid] = parents
+    s8.T[vid] = parents == s8.leaves ? Object.assign({}, s8.leaves) : parents
     
     each(parents, function (_, p) {
         if (s8.leaves[p]) {
