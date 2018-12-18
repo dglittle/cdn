@@ -429,6 +429,9 @@ function apply_ops_to_diffsync(dss, ops, debug_print_buffer) {
     })
 }
 
+var sync8_time = 0
+var diffsync_time = 0
+
 function apply_ops_to_test_repos(ops, debug_print_buffer) {
     var test_repos = {
         sync8 : {
@@ -443,17 +446,21 @@ function apply_ops_to_test_repos(ops, debug_print_buffer) {
         },
     }
     
+    var begin_time = Date.now()
     apply_ops_to_sync8(test_repos.sync8, ops, debug_print_buffer)
+    sync8_time += Date.now() - begin_time
 
+    var begin_time = Date.now()
     apply_ops_to_diffsync(test_repos.diffsync, ops, debug_print_buffer)
+    diffsync_time += Date.now() - begin_time
 
     test_repos.same = (test_repos.sync8.a.text == test_repos.diffsync.a.cache) && (test_repos.sync8.b.text == test_repos.diffsync.b.cache) && (test_repos.sync8.c.text == test_repos.diffsync.c.cache)
     return test_repos
 }
 
-Math.randomSeed(133)
+Math.randomSeed(134)
 
-for (var tests = 0; tests < 300; tests++) {
+for (var tests = 0; tests < 1000; tests++) {
     var ops = create_random_ops()
     var good = false
     
@@ -467,6 +474,14 @@ for (var tests = 0; tests < 300; tests++) {
     
     var print_stuff = ['TEST NUM ' + tests]
     if (!good) {
+        
+        
+        
+        // work here
+        continue
+        
+        
+        
         print_stuff.push('BLOOP:')
         //console.log('ops: ' + JSON.stringify(ops, null, '  '))
         
@@ -493,6 +508,8 @@ for (var tests = 0; tests < 300; tests++) {
     }
     console.log(print_stuff.join('\n'))
 }
+
+console.log('times', sync8_time, diffsync_time)
 
 
 </script>
