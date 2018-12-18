@@ -1,0 +1,152 @@
+
+<body style="margin:0px">
+<script src="https://dglittle.github.io/cdn/utils001.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.6.1/gl-matrix-min.js"></script>
+<script>
+
+var tau = Math.PI * 2
+
+var DT = 1
+
+var SIZE = 400
+var BALL_R = 5
+
+var BALLS = 100
+var FAST_BALLS = 10
+var FAST_BALL_SPEED = 10
+
+var balls = []
+for (var i = 0; i < BALLS; i++) {
+    balls.push({
+        x : lerp(0, BALL_R, 1, SIZE - BALL_R, Math.random()),
+        y : lerp(0, BALL_R, 1, SIZE - BALL_R, Math.random()),
+        vx : 0,
+        vy : 0
+    })
+}
+for (var i = 0; i < FAST_BALLS; i++) {
+    var a = Math.random() * tau
+    balls[i].vx = FAST_BALL_SPEED * Math.sin(a)
+    balls[i].vy = FAST_BALL_SPEED * Math.cos(a)
+}
+
+var c = document.createElement('canvas')
+c.width = SIZE
+c.height = SIZE
+c.style.width = c.width * window.devicePixelRatio
+c.style.height = c.height * window.devicePixelRatio
+var g = c.getContext('2d')
+document.body.append(c)
+
+function step() {
+    balls.forEach((ball) => {
+        ball.x += ball.vx * DT
+        ball.y += ball.vy * DT
+    })
+    
+    balls.forEach((ball) => {
+        if (ball.x - BALL_R < 0) {
+            ball.x = 0
+            if (ball.vx < 0) ball.vx *= -1
+        }
+        if (ball.x + BALL_R > SIZE) {
+            ball.x = SIZE
+            if (ball.vx > 0) ball.vx *= -1
+        }
+        if (ball.y - BALL_R < 0) {
+            ball.y = 0
+            if (ball.vy < 0) ball.vy *= -1
+        }
+        if (ball.y + BALL_R > SIZE) {
+            ball.y = SIZE
+            if (ball.vy > 0) ball.vy *= -1
+        }
+    })
+    
+    var m = {}
+    var sections = 10
+    var section_size = SIZE / sections
+    balls.forEach((ball, i) => {
+        var done_keys = {}
+        function helper(x, y) {
+            var key = Math.floor(x / section_size) + ',' + Math.floor(y / section_size)
+            if (!done_keys[key]) {
+                done_keys[key] = true
+                if (!m[key]) m[key] = []
+                m[key].push(i)
+            }
+        }
+        helper(ball.x - BALL_R, ball.y - BALL_R)
+        helper(ball.x + BALL_R, ball.y - BALL_R)
+        helper(ball.x - BALL_R, ball.y + BALL_R)
+        helper(ball.x + BALL_R, ball.y + BALL_R)
+    })
+    
+    var collisions = {}
+    var collision_dist_sq = Math.pow(BALL_R * 2, 2)
+    each(m, (ball_indicies) => {
+        for (var i = 0; i < ball_indicies.length; i++) {
+            for (var ii = i + 1; ii < ball_indicies.length; ii++) {
+                var a = balls[ball_indicies[i]]
+                var b = balls[ball_indicies[ii]]
+                var dx = a.x - b.x
+                var dy = a.y - b.y
+                var distSq = dx * dx + dy * dy
+                if (distSq < collision_dist_sq) {
+                    var key = '' + [ball_indicies[i], ball_indicies[ii]].sort()
+                    collisions[key] = [ball_indicies[i], ball_indicies[ii]]
+                }
+            }
+        }
+    })
+    
+    each(collisions, (info) => {
+        var a = balls[info[0]]
+        var b = balls[info[1]]
+        
+        var a_p = vec2.fromValues(a.x, a.y)
+        var b_p = vec2.fromValues(b.x, b.y)
+        
+        var a_to_b = vec2.sub(vec2.create(), b_p, a_p)
+        vec2.normalize(a_to_b, a_to_b)
+        
+        var a_v = vec2.fromValues(a.vx, a.vy)
+        var b_v = vec2.fromValues(b.vx, b.vy)
+        
+        var a_v_into_b = vec2.scale(vec2.create(), a_to_b, vec2.dot(a_to_b, a_v))
+        var b_v_into_a = vec2.scale(vec2.create(), a_to_b, vec2.dot(a_to_b, b_v))
+        
+        var a_v_away = vec2.sub(vec2.create(), a_v, a_v_into_b)
+        var b_v_away = vec2.add(vec2.create(), b_v, b_v_into_a)
+        
+        var new_a_v = vec2.add(vec2.create(), a_v_away, b_v_into_a)
+        var new_b_v = vec2.add(vec2.create(), b_v_away, a_v_into_b)
+        
+        a.vx = new_a_v[0]
+        a.vy = new_a_v[1]
+        b.vx = new_b_v[0]
+        b.vy = new_b_v[1]
+    })
+}
+
+function draw() {
+    g.fillStyle = 'rgba(255, 255, 255, 0.01)'
+    g.fillRect(0, 0, c.width, c.height)
+    
+    g.fillStyle = 'black'
+    balls.forEach((ball) => {
+        g.beginPath()
+        g.arc(ball.x, ball.y, BALL_R, 0, tau, false)
+        g.fill()
+    })
+}
+
+function loop() {
+    step()
+    draw()
+    setTimeout(loop, 30)
+}
+loop()
+
+</script>
+</body>
