@@ -193,8 +193,6 @@ function sync8_trav_space_dag(S, f, cb) {
             }
         })
         
-        cb(node, offset, has_nexts)
-        
         var deleted = false
         each(node.deleted_by, (vid) => {
             if (f(vid)) {
@@ -202,8 +200,11 @@ function sync8_trav_space_dag(S, f, cb) {
                 return false
             }
         })
-        if (!deleted)
+        
+        if (!deleted) {
+            cb(node, offset, has_nexts)
             offset += node.text.length
+        }
             
         each(node.nexts, (next) => {
             if (f(next)) helper(next)
