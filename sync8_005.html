@@ -290,7 +290,7 @@ function create_random_text() {
     function add_char() {
         random_text += String.fromCharCode(97 + Math.floor(Math.random() * 26))
     }
-    while (Math.random() < 0.5) add_char()
+    while (Math.random() < 0.82) add_char()
     return random_text
 }
 
@@ -458,7 +458,7 @@ function apply_ops_to_test_repos(ops, debug_print_buffer) {
     return test_repos
 }
 
-Math.randomSeed(134)
+Math.randomSeed(135)
 
 for (var tests = 0; tests < 1000; tests++) {
     var ops = create_random_ops()
