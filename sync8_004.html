@@ -453,7 +453,7 @@ function apply_ops_to_test_repos(ops, debug_print_buffer) {
 
 Math.randomSeed(133)
 
-for (var tests = 0; tests < 100; tests++) {
+for (var tests = 0; tests < 300; tests++) {
     var ops = create_random_ops()
     var good = false
     
@@ -469,8 +469,6 @@ for (var tests = 0; tests < 100; tests++) {
     if (!good) {
         print_stuff.push('BLOOP:')
         //console.log('ops: ' + JSON.stringify(ops, null, '  '))
-        
-        debugger
         
         apply_ops_to_test_repos(ops, print_stuff)
         print_stuff.push('As8: ' + res.sync8.a.text)
