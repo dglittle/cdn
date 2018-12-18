@@ -82,7 +82,7 @@ function sync8_update_all_but_text(s8, vid, parents, patches) {
             
             add_to.p_end = loc
             add_to.text = add_to.text.substring(0, text_divide)
-            add_to.nexts.push(outgoing_to)
+            add_to.nexts = [outgoing_to]
             add_to.next = tail
         } else {
             var i = binarySearch(add_to.nexts, function (x) {
@@ -106,6 +106,7 @@ function sync8_update_all_but_text(s8, vid, parents, patches) {
             
             add_to.p_end = loc - 1
             add_to.text = add_to.text.substring(0, text_divide)
+            add_to.nexts = []
             add_to.next = tail
         }
     }
