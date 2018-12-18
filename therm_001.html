@@ -10,31 +10,37 @@ var c = document.createElement('canvas')
 document.body.append(c)
 c.width = X
 c.height = X
+c.style['image-rendering'] = 'pixelated'
 c.style.width = c.width * scale
 c.style.height = c.height * scale
 var g = c.getContext('2d')
 
+var Y = 10
 var energies = []
-for (var i = 0; i < X - 1; i++) {
+for (var i = 0; i < X - Y; i++)
     energies.push(0)
-}
-energies.push(1)
+for (var i = 0; i < Y; i++)
+    energies.push(1)
 
 function step() {
-    var a = Math.floor(Math.random() * X)
-    var b = Math.floor(Math.random() * X)
-    var total_energy = energies[a] + energies[b]
-    energies[a] = 0
-    energies[b] = 0
-    var alpha = Math.random()
-    energies[a] += alpha * total_energy
-    energies[b] += (1 - alpha) * total_energy
+    while (true) {
+        var a = Math.floor(Math.random() * X)
+        var b = Math.floor(Math.random() * X)
+        if (a != b) break
+    }
     
-    energies.sort((a, b) => b - a)
+    var min_e = Math.min(energies[a], energies[b])
+    var max_e = Math.max(energies[a], energies[b])
+    var alpha = Math.random()
+    
+    energies[a] = alpha * (max_e - min_e) + min_e
+    energies[b] = (1 - alpha) * (max_e - min_e) + min_e
+    
+    energies.sort((a, b) => a - b)
 }
 
 function draw() {
-    g.fillStyle = 'rgba(255, 255, 255, 0.1)'
+    g.fillStyle = 'rgba(255, 255, 255, 0.01)'
     g.fillRect(0, 0, c.width, c.height)
     
     g.beginPath()
@@ -47,89 +53,12 @@ function draw() {
     g.stroke()
 }
 
-
-var iteration = 0
-function update_it() {
-    var dt = 1
-    function update_pair_vel(x1, y1, x2, y2) {
-        var a = spins[y1][x1]
-        var b = spins[y2][x2]
-        var F = -Math.sin(a - b)
-        vels[y1][x1] += F * dt / 100
-        vels[y2][x2] += -F * dt / 100
-    }
-    for (var y = 0; y < yn; y++) {
-        for (var x = 0; x < xn; x++) {
-            update_pair_vel(x, y, (x + 1) % xn, y)
-            update_pair_vel(x, y, x, (y + 1) % yn)
-        }
-    }
-    
-    iteration++
-    if (iteration < 1000) {
-        for (var y = 0; y < yn; y++) {
-            for (var x = 0; x < xn; x++) {
-                vels[y][x] *= 1 - 1/(iteration/3 + 1)
-            }
-        }
-    }
-    
-    
-    for (var y = 0; y < yn; y++) {
-        for (var x = 0; x < xn; x++) {
-            spins[y][x] += vels[y][x] * dt
-        }
-    }
-}
-
-function paint_it() {
-    g.fillStyle = 'white'
-    g.fillRect(0, 0, c.width, c.height)
-    // g.beginPath()
-    for (var y = 0; y < yn; y++) {
-        for (var x = 0; x < xn; x++) {
-            var a = fmod(spins[y][x] + Math.PI/2, Math.PI*2)
-
-            var R = 0
-            var G = 0
-            var B = 0
-            if (a < Math.PI*2/3) {
-                R = lerp(0, 1, Math.PI*2/3, 0, a)
-                G = lerp(0, 0, Math.PI*2/3, 1, a)
-            } else if (a < Math.PI*2*2/3) {
-                G = lerp(Math.PI*2/3, 1, Math.PI*2*2/3, 0, a)
-                B = lerp(Math.PI*2/3, 0, Math.PI*2*2/3, 1, a)
-            } else {
-                B = lerp(Math.PI*2*2/3, 1, Math.PI*2, 0, a)
-                R = lerp(Math.PI*2*2/3, 0, Math.PI*2, 1, a)
-            }
-            g.fillStyle = 'rgb(' + Math.floor(255 * R) + ', ' + Math.floor(255 * G) + ', ' + Math.floor(255 * B) + ')'
-            g.fillRect(x * xd, y * yd, xd, yd)
-
-            // g.beginPath()
-            // g.moveTo(x * xd + xd/2 + xd/2*Math.cos(a), y * yd + yd/2 + yd/2*Math.sin(a))
-            // g.arc(x * xd + xd/2, y * yd + yd/2, xd/2, a, a + Math.PI)
-            // g.fill()
-        }
-    }
-    // g.fillStyle = 'red'
-    // g.fill()        
-}
-
 function loop() {
-    update_it()
-    paint_it()
-    setTimeout(loop, 15)
+    step()
+    draw()
+    setTimeout(loop, 30)
 }
 loop()
-
-document.body.append(c)
-
-function fmod(a, b) {
-    var m = a % b
-    if (m < 0) return m + b
-    return m
-}
 
 </script>
 </body>
