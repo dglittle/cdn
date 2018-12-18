@@ -1,0 +1,498 @@
+
+<script src="https://dglittle.github.io/cdn/random001.js"></script>
+<script src="https://dglittle.github.io/cdn/utils004.js"></script>
+<script src="https://invisible-college.github.io/universal-sync/diffsync.js"></script>
+<body></body>
+<script>
+
+function sync8_create() {
+    return {
+        T : { 'root' : {} },
+        S : sync8_create_space_dag_node('root', 0, 0, 0),
+        leaves : { 'root' : true },
+        text : ''
+    }
+}
+
+function sync8_create_space_dag_node(vid, p_i, p_begin, p_end, text) {
+    if (!text) text = ''
+    if (p_begin == undefined) {
+        p_begin = 0
+        p_end = text.length * 2
+    }
+    return {
+        vid : vid,
+        p_i : p_i,
+        p_begin : p_begin,
+        p_end : p_end,
+        
+        text : text,
+        deleted_by : {},
+        
+        nexts : [],
+        next : null,
+        prev : null
+    }
+}
+
+function sync8_add_version(s8, s) {
+    var vid = 'id' + Math.random()
+    var save_leaves = Object.assign({}, s8.leaves)
+    var ps = sync8_diff_ODI(s8.text, s)
+
+    sync8_update_all_but_text(s8, vid, s8.leaves, ps)
+    s8.text = s
+
+    return {
+        vid : vid,
+        parents : save_leaves,
+        patches : ps
+    }
+}
+
+function sync8_merge(s8, vid, parents, patches) {
+    sync8_update_all_but_text(s8, vid, parents, patches)
+    
+    s8.text = []
+    sync8_trav_space_dag(s8.S, () => true, function (node, offset) {
+        s8.text.push(node.text)
+    })
+    return s8.text = s8.text.join('')
+}
+
+function sync8_update_all_but_text(s8, vid, parents, patches) {
+    s8.T[vid] = parents == s8.leaves ? Object.assign({}, s8.leaves) : parents
+    
+    each(parents, function (_, p) {
+        if (s8.leaves[p]) {
+            delete s8.leaves[p]
+        }
+    })
+    s8.leaves[vid] = true
+    
+    function add_outgoing(add_to, loc, outgoing_to) {
+        if (loc < add_to.p_end) {
+            var text_divide = add_to.text.length - ((add_to.p_end + (add_to.p_end % 2 == 0 ? 1 : 0) - loc) >> 1)
+            
+            var tail = sync8_create_space_dag_node(add_to.vid, add_to.p_i, loc + 1, add_to.p_end, add_to.text.substring(text_divide))
+            tail.nexts = add_to.nexts
+            tail.next = add_to.next
+            if (tail.next) tail.next.prev = tail
+            tail.prev = add_to
+            
+            add_to.p_end = loc
+            add_to.text = add_to.text.substring(0, text_divide)
+            add_to.nexts = [outgoing_to]
+            add_to.next = tail
+        } else {
+            var i = binarySearch(add_to.nexts, function (x) {
+                if (outgoing_to.vid < x.vid) return -1
+                if (outgoing_to.vid > x.vid) return 1
+                return 0
+            })
+            add_to.nexts.splice(i, 0, outgoing_to)
+        }
+    }
+    
+    function add_incoming(add_to, loc) {
+        if (loc > add_to.p_begin) {
+            var text_divide = add_to.text.length - ((add_to.p_end + (add_to.p_end % 2 == 0 ? 2 : 1) - loc) >> 1)
+            
+            var tail = sync8_create_space_dag_node(add_to.vid, add_to.p_i, loc, add_to.p_end, add_to.text.substring(text_divide))
+            tail.nexts = add_to.nexts
+            tail.next = add_to.next
+            if (tail.next) tail.next.prev = tail
+            tail.prev = add_to
+            
+            add_to.p_end = loc - 1
+            add_to.text = add_to.text.substring(0, text_divide)
+            add_to.nexts = []
+            add_to.next = tail
+        }
+    }
+
+    var pi = 0
+    var delete_up_to = 0
+    
+    var membership_function = null
+    if (parents == s8.leaves) {
+        membership_function = (x) => {
+            return x.vid != vid
+        }
+    } else {
+        var members = {}
+        function mark_members(key) {
+            if (!members[key]) {
+                members[key] = true
+                each(s8.T[key], (_, p) => {
+                    mark_members(p)
+                })
+            }
+        }
+        each(parents, (_, p) => {
+            mark_members(p)
+        })
+        membership_function = function (x) {
+            return members[x.vid]
+        }
+    }
+    
+    sync8_trav_space_dag(s8.S, membership_function, function (node, offset, has_nexts) {
+        var p = patches[pi]
+        if (!p) return false
+        
+        if (p[1] == 0) {
+            if (p[0] > offset + node.text.length) return
+            
+            var insert_location = (p[0] == offset) ? node.p_begin : node.p_end - ((offset + node.text.length - p[0]) * 2) + (node.p_end % 2 == 0 ? 0 : -1)
+            
+            if (insert_location == node.p_end && has_nexts) return
+            
+            add_outgoing(node, insert_location, sync8_create_space_dag_node(vid, pi, null, null, p[2]))
+            pi++
+            return
+        }
+        
+        if (delete_up_to <= offset) {
+            if (p[0] >= offset + node.text.length) return
+            
+            var insert_location = node.p_end - ((offset + node.text.length - p[0]) * 2) + (node.p_end % 2 == 0 ? 1 : 0)
+            
+            delete_up_to = p[0] + p[1]
+            
+            if (insert_location < node.p_begin) {
+                add_outgoing(node.prev, node.prev.p_end, sync8_create_space_dag_node(vid, pi, null, null, p[2]))
+            } else {
+                add_outgoing(node, insert_location, sync8_create_space_dag_node(vid, pi, null, null, p[2]))
+                return
+            }
+        }
+        
+        if (delete_up_to > offset) {
+            node.deleted_by[vid] = true
+            if (delete_up_to > offset + node.text.length) return
+            
+            if (delete_up_to < offset + node.text.length) {
+                add_incoming(node, node.p_end - ((offset + node.text.length - delete_up_to) * 2) + (node.p_end % 2 == 0 ? 1 : 0))
+            }
+            
+            pi++
+            return
+        }
+    })
+}
+
+function sync8_trav_space_dag(S, f, cb) {
+    var offset = 0
+    function helper(node) {
+        var has_nexts = false
+        each(node.nexts, (next) => {
+            if (f(next)) {
+                has_nexts = true
+                return false
+            }
+        })
+        
+        var deleted = false
+        each(node.deleted_by, (vid) => {
+            if (f(vid)) {
+                deleted = true
+                return false
+            }
+        })
+        
+        if (!deleted) {
+            cb(node, offset, has_nexts)
+            offset += node.text.length
+        }
+            
+        each(node.nexts, (next) => {
+            if (f(next)) helper(next)
+        })
+        if (node.next) helper(node.next)
+    }
+    helper(S)
+}
+
+function sync8_diff_ODI(a, b) {
+    var offset = 0
+    var prev = null
+    var ret = []
+    var d = diff_main(a, b)
+    for (var i = 0; i < d.length; i++) {
+        if (d[i][0] == 0) {
+            if (prev) ret.push(prev)
+            prev = null
+            offset += d[i][1].length
+        } else if (d[i][0] == 1) {
+            if (prev)
+                prev[2] += d[i][1]
+            else
+                prev = [offset, 0, d[i][1]]
+        } else {
+            if (prev)
+                prev[1] += d[i][1].length
+            else
+                prev = [offset, d[i][1].length, '']
+            offset += d[i][1].length
+        }
+    }
+    if (prev) ret.push(prev)
+    return ret
+}
+
+// modified from https://stackoverflow.com/questions/22697936/binary-search-in-javascript
+function binarySearch(ar, compare_fn) {
+    var m = 0;
+    var n = ar.length - 1;
+    while (m <= n) {
+        var k = (n + m) >> 1;
+        var cmp = compare_fn(ar[k]);
+        if (cmp > 0) {
+            m = k + 1;
+        } else if(cmp < 0) {
+            n = k - 1;
+        } else {
+            return k;
+        }
+    }
+    return m;
+}
+
+/////////////////////////////////////
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function create_random_text() {
+    var random_text = ''
+    function add_char() {
+        random_text += String.fromCharCode(97 + Math.floor(Math.random() * 26))
+    }
+    while (Math.random() < 0.5) add_char()
+    return random_text
+}
+
+function create_random_ops() {
+    var ops = []
+    function add_random_ops() {
+        if (Math.random() < 0.5) {
+            ops.push({
+                op : 'commit',
+                side : Math.random() < 0.33 ? 'a' :
+                    Math.random() < 0.5 ? 'b' : 'c',
+                pos : Math.random(),
+                del : Math.random(),
+                text : create_random_text()
+            })
+        } else {
+            ops.push({
+                op : 'merge',
+                side : Math.random() < 0.33 ? 'a' :
+                    Math.random() < 0.5 ? 'b' : 'c'
+            })
+        }
+    }
+    add_random_ops()
+    while (Math.random() < 0.8) add_random_ops()
+    return ops
+}
+
+function apply_ops_to_sync8(s8s, ops, debug_print_buffer) {
+    if (!s8s.a.buffer) s8s.a.buffer = []
+    if (!s8s.b.buffer) s8s.b.buffer = []
+    if (!s8s.c.buffer) s8s.c.buffer = []
+    each(ops, function (op, opi) {
+        var s8 = s8s[op.side]
+        var other_s8s = []
+        each(s8s, function (s8, key) {
+            if (key != op.side)
+                other_s8s.push(s8)
+        })
+        if (op.op == 'commit') {
+            var t = s8.text
+            var pos = Math.floor((t.length + 1) * op.pos)
+            var del = Math.floor((t.length - pos) * op.del)
+            var msg = sync8_add_version(s8, t.slice(0, pos) + op.text + t.slice(pos + del))
+            each(other_s8s, function (s8) {
+                s8.buffer.push(JSON.parse(JSON.stringify(msg)))
+            })
+            
+            if (debug_print_buffer) {
+                debug_print_buffer.push('OP COMMIT')
+                debug_print_buffer.push('side: ' + op.side)
+                debug_print_buffer.push('pos: ' + pos)
+                debug_print_buffer.push('del: ' + del)
+                debug_print_buffer.push('txt: ' + op.text)
+            }
+            
+        } else if (op.op == 'merge') {
+            var x = s8.buffer.shift()
+            if (x) {
+                
+                if (debug_print_buffer) {
+                    debug_print_buffer.push('msg')
+                    debug_print_buffer.push(JSON.stringify(x))
+                }
+                
+                s8.cursors = sync8_merge(s8, x.vid, x.parents, x.patches)
+            }
+
+            if (debug_print_buffer) {
+                debug_print_buffer.push('OP MERGE')
+                debug_print_buffer.push('side: ' + op.side)
+            }
+        }
+    })
+}
+
+function apply_ops_to_diffsync(dss, ops, debug_print_buffer) {
+    function map_array(a, f) {
+        var b = []
+        each(a, function (v, k) { b[k] = f(v) })
+        return b
+    }
+    function adjust_range(range, patch) {
+        return map_array(range, function (x) {
+            each(patch, function (p) {
+                if (p[0] < x) {
+                    if (p[0] + p[1] <= x) {
+                        x += -p[1] + p[2].length
+                    } else {
+                        x = p[0] + p[2].length
+                    }
+                } else return false
+            })
+            return x
+        })
+    }
+
+    if (!dss.a.buffer) dss.a.buffer = []
+    if (!dss.b.buffer) dss.b.buffer = []
+    if (!dss.c.buffer) dss.c.buffer = []
+    if (typeof(dss.a.cursors) != 'number') dss.a.cursors = [0, 0]
+    if (typeof(dss.b.cursors) != 'number') dss.b.cursors = [0, 0]
+    if (typeof(dss.c.cursors) != 'number') dss.c.cursors = [0, 0]
+    each(ops, function (op) {
+        var ds = dss[op.side]
+        var others = []
+        each(dss, function (ds, key) {
+            if (key != op.side)
+                others.push(ds)
+        })
+        if (op.op == 'commit') {
+            var t = ds.cache
+            var pos = Math.floor((t.length + 1) * op.pos)
+            var del = Math.floor((t.length - pos) * op.del)
+            var msg = ds.commit(t.slice(0, pos) + op.text + t.slice(pos + del))
+            if (!msg) msg = null
+            each(others, function (ds) {
+                ds.buffer.push(JSON.parse(JSON.stringify(msg)))
+            })
+            
+            if (ds.cursor > ds.cache.length) {
+                ds.cursor = ds.cache.length
+            }
+            
+        } else if (op.op == 'merge') {
+            var x = ds.buffer.shift()
+            if (x) {
+                var old = ds.cache
+                
+                ds.merge(x)
+                
+                var patch = get_diff_patch(old, ds.cache)
+                ds.cursors = adjust_range(ds.cursors, patch)
+            }
+        }
+    })
+}
+
+function apply_ops_to_test_repos(ops, debug_print_buffer) {
+    var test_repos = {
+        sync8 : {
+            a : sync8_create(),
+            b : sync8_create(),
+            c : sync8_create(),
+        },
+        diffsync : {
+            a : diffsync.create_minigit(),
+            b : diffsync.create_minigit(),
+            c : diffsync.create_minigit(),
+        },
+    }
+    
+    apply_ops_to_sync8(test_repos.sync8, ops, debug_print_buffer)
+
+    apply_ops_to_diffsync(test_repos.diffsync, ops, debug_print_buffer)
+
+    test_repos.same = (test_repos.sync8.a.text == test_repos.diffsync.a.cache) && (test_repos.sync8.b.text == test_repos.diffsync.b.cache) && (test_repos.sync8.c.text == test_repos.diffsync.c.cache)
+    return test_repos
+}
+
+Math.randomSeed(133)
+
+for (var tests = 0; tests < 300; tests++) {
+    var ops = create_random_ops()
+    var good = false
+    
+    for (var i = 0; i < 100; i++) {
+        var res = apply_ops_to_test_repos(ops)
+        if (res.same) {
+            good = true
+            break
+        }
+    }
+    
+    var print_stuff = ['TEST NUM ' + tests]
+    if (!good) {
+        print_stuff.push('BLOOP:')
+        //console.log('ops: ' + JSON.stringify(ops, null, '  '))
+        
+        apply_ops_to_test_repos(ops, print_stuff)
+        print_stuff.push('As8: ' + res.sync8.a.text)
+        print_stuff.push('Adi: ' + res.diffsync.a.cache)
+        print_stuff.push('Bs8: ' + res.sync8.b.text)
+        print_stuff.push('Bdi: ' + res.diffsync.b.cache)
+        print_stuff.push('Cs8: ' + res.sync8.c.text)
+        print_stuff.push('Cdi: ' + res.diffsync.c.cache)
+        console.log(print_stuff.join('\n'))
+        
+        console.log('^^$$############')
+        console.log(res.sync8.a.S)
+        console.log(res.sync8.b.S)
+        console.log(res.sync8.c.S)
+        
+        throw 'stopy'
+    } else {
+        print_stuff.push('BLAR! ' + ops.length + ' i=' + i)
+        print_stuff.push('a: ' + res.sync8.a.text + ' == ' + res.diffsync.a.cache)
+        print_stuff.push('b: ' + res.sync8.b.text + ' == ' + res.diffsync.b.cache)
+        print_stuff.push('c: ' + res.sync8.c.text + ' == ' + res.diffsync.c.cache)
+    }
+    console.log(print_stuff.join('\n'))
+}
+
+
+</script>
