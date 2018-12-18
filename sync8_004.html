@@ -348,6 +348,12 @@ function apply_ops_to_sync8(s8s, ops, debug_print_buffer) {
         } else if (op.op == 'merge') {
             var x = s8.buffer.shift()
             if (x) {
+                
+                if (debug_print_buffer) {
+                    debug_print_buffer.push('msg')
+                    debug_print_buffer.push(JSON.stringify(x))
+                }
+                
                 s8.cursors = sync8_merge(s8, x.vid, x.parents, x.patches)
             }
 
