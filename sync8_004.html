@@ -27,7 +27,7 @@ function sync8_create_space_dag_node(vid, p_i, p_begin, p_end, text) {
         p_end : p_end,
         
         text : text,
-        deleted_vid : null,
+        deleted_by : {},
         
         nexts : [],
         next : null,
@@ -136,7 +136,7 @@ function sync8_update_all_but_text(s8, vid, parents, patches) {
         }
     }
     
-    sync8_trav_space_dag(s8.S, membership_function, function (node, offset, next_is_a_new_beginning) {
+    sync8_trav_space_dag(s8.S, membership_function, function (node, offset, has_nexts) {
         var p = patches[pi]
         if (!p) return false
         
@@ -145,7 +145,7 @@ function sync8_update_all_but_text(s8, vid, parents, patches) {
             
             var insert_location = (p[0] == offset) ? node.p_begin : node.p_end - ((offset + node.text.length - p[0]) * 2) + (node.p_end % 2 == 0 ? 0 : -1)
             
-            if (insert_location == node.p_end && next_is_a_new_beginning) return
+            if (insert_location == node.p_end && has_nexts) return
             
             add_outgoing(node, insert_location, sync8_create_space_dag_node(vid, pi, null, null, p[2]))
             pi++
@@ -168,7 +168,7 @@ function sync8_update_all_but_text(s8, vid, parents, patches) {
         }
         
         if (delete_up_to > offset) {
-            node.deleted_vid = vid
+            node.deleted_by[vid] = true
             if (delete_up_to > offset + node.text.length) return
             
             if (delete_up_to < offset + node.text.length) {
@@ -184,9 +184,26 @@ function sync8_update_all_but_text(s8, vid, parents, patches) {
 function sync8_trav_space_dag(S, f, cb) {
     var offset = 0
     function helper(node) {
-        cb(node, offset)
-        if (!node.deleted_vid || !f(node.deleted_vid))
+        var has_nexts = false
+        each(node.nexts, (next) => {
+            if (f(next)) {
+                has_nexts = true
+                return false
+            }
+        })
+        
+        cb(node, offset, has_nexts)
+        
+        var deleted = false
+        each(node.deleted_by, (vid) => {
+            if (f(vid)) {
+                deleted = true
+                return false
+            }
+        })
+        if (!deleted)
             offset += node.text.length
+            
         each(node.nexts, (next) => {
             if (f(next)) helper(next)
         })
@@ -445,14 +462,19 @@ for (var tests = 0; tests < 100; tests++) {
         print_stuff.push('BLOOP:')
         //console.log('ops: ' + JSON.stringify(ops, null, '  '))
         apply_ops_to_test_repos(ops, print_stuff)
-        print_stuff.push('As7: ' + res.sync8.a.text)
+        print_stuff.push('As8: ' + res.sync8.a.text)
         print_stuff.push('Adi: ' + res.diffsync.a.cache)
-        print_stuff.push('Bs7: ' + res.sync8.b.text)
+        print_stuff.push('Bs8: ' + res.sync8.b.text)
         print_stuff.push('Bdi: ' + res.diffsync.b.cache)
-        print_stuff.push('Cs7: ' + res.sync8.c.text)
+        print_stuff.push('Cs8: ' + res.sync8.c.text)
         print_stuff.push('Cdi: ' + res.diffsync.c.cache)
         console.log(print_stuff.join('\n'))
-        throw 'stop7'
+        
+        console.log('^^$$############')
+        console.log(res.sync8.b.S)
+        console.log(res.sync8.c.S)
+        
+        throw 'stopy'
     } else {
         print_stuff.push('BLAR! ' + ops.length + ' i=' + i)
         print_stuff.push('a: ' + res.sync8.a.text + ' == ' + res.diffsync.a.cache)
