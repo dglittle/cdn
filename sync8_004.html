@@ -86,8 +86,8 @@ function sync8_update_all_but_text(s8, vid, parents, patches) {
             add_to.next = tail
         } else {
             var i = binarySearch(add_to.nexts, function (x) {
-                if (outgoing_to.vid < x) return -1
-                if (outgoing_to.vid > x) return 1
+                if (outgoing_to.vid < x.vid) return -1
+                if (outgoing_to.vid > x.vid) return 1
                 return 0
             })
             add_to.nexts.splice(i, 0, outgoing_to)
@@ -482,6 +482,7 @@ for (var tests = 0; tests < 100; tests++) {
         console.log(print_stuff.join('\n'))
         
         console.log('^^$$############')
+        console.log(res.sync8.a.S)
         console.log(res.sync8.b.S)
         console.log(res.sync8.c.S)
         
