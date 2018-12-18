@@ -353,10 +353,6 @@ function apply_ops_to_sync8(s8s, ops, debug_print_buffer) {
                 if (debug_print_buffer) {
                     debug_print_buffer.push('msg')
                     debug_print_buffer.push(JSON.stringify(x))
-                    
-                    if (x.vid == 'id0.4268090929836035') {
-                        debugger
-                    }
                 }
                 
                 s8.cursors = sync8_merge(s8, x.vid, x.parents, x.patches)
@@ -472,6 +468,9 @@ for (var tests = 0; tests < 100; tests++) {
     if (!good) {
         print_stuff.push('BLOOP:')
         //console.log('ops: ' + JSON.stringify(ops, null, '  '))
+        
+        debugger
+        
         apply_ops_to_test_repos(ops, print_stuff)
         print_stuff.push('As8: ' + res.sync8.a.text)
         print_stuff.push('Adi: ' + res.diffsync.a.cache)
