@@ -331,7 +331,7 @@ function apply_ops_to_sync8(s8s, ops, debug_print_buffer) {
         } else if (op.op == 'merge') {
             var x = s8.buffer.shift()
             if (x) {
-                s8.cursors = sync7_merge(s7, x, s7.cursors, my_custom_merge_func)
+                s8.cursors = sync8_merge(s8, x.vid, x.parents, x.patches)
             }
 
             if (debug_print_buffer) {
