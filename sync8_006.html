@@ -1226,7 +1226,7 @@ function apply_ops_to_test_repos(ops, debug_print_buffer) {
     }
 
     var begin_time = Date.now()
-    apply_ops_to_sync7(test_repos.sync7, ops, debug_print_buffer)
+    apply_ops_to_sync7(test_repos.sync7, ops)
     sync7_time += Date.now() - begin_time
     
     var begin_time = Date.now()
@@ -1239,7 +1239,7 @@ function apply_ops_to_test_repos(ops, debug_print_buffer) {
 
 Math.randomSeed(135)
 
-for (var tests = 0; tests < 2; tests++) {
+for (var tests = 0; tests < 10; tests++) {
     var ops = create_random_ops()
     var good = false
 
