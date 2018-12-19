@@ -1093,7 +1093,7 @@ function create_random_ops() {
         }
     }
     add_random_ops()
-    var n = 5 + Math.floor(Math.random() * 10)
+    var n = 5 + Math.floor(Math.random() * 5)
     for (var i = 0; i < n; i++) add_random_ops()
     //while (Math.random() < 0.9) add_random_ops()
     return ops
@@ -1239,7 +1239,7 @@ function apply_ops_to_test_repos(ops, debug_print_buffer) {
 
 Math.randomSeed(135)
 
-for (var tests = 0; tests < 1; tests++) {
+for (var tests = 0; tests < 2; tests++) {
     var ops = create_random_ops()
     var good = false
 
@@ -1274,12 +1274,16 @@ for (var tests = 0; tests < 1; tests++) {
         //console.log('ops: ' + JSON.stringify(ops, null, '  '))
         
         apply_ops_to_test_repos(ops, print_stuff)
+        
+        print_stuff.push('As7: ' + res.sync7.a.text)
         print_stuff.push('As8: ' + res.sync8.a.text)
-        print_stuff.push('Adi: ' + res.diffsync.a.cache)
+        
+        print_stuff.push('Bs7: ' + res.sync7.b.text)
         print_stuff.push('Bs8: ' + res.sync8.b.text)
-        print_stuff.push('Bdi: ' + res.diffsync.b.cache)
+        
+        print_stuff.push('Cs7: ' + res.sync7.c.text)
         print_stuff.push('Cs8: ' + res.sync8.c.text)
-        print_stuff.push('Cdi: ' + res.diffsync.c.cache)
+        
         console.log(print_stuff.join('\n'))
         
         console.log('^^$$############')
