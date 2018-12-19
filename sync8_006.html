@@ -1242,6 +1242,8 @@ Math.randomSeed(135)
 for (var tests = 0; tests < 1; tests++) {
     var ops = create_random_ops()
     var good = false
+
+    console.log('TEST NUM < ' + tests)
     
     for (var i = 0; i < 100; i++) {
         var res = apply_ops_to_test_repos(ops)
@@ -1251,7 +1253,8 @@ for (var tests = 0; tests < 1; tests++) {
         }
     }
     
-    console.log('TEST NUM ' + tests)
+    console.log('TEST NUM > ' + tests)
+    
     var print_stuff = []
     if (!good) {
         
