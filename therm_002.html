@@ -41,6 +41,15 @@ c.style.height = c.height * window.devicePixelRatio
 var g = c.getContext('2d')
 document.body.append(c)
 
+var cc = document.createElement('canvas')
+document.body.append(cc)
+cc.style.display = 'block'
+cc.width = SIZE
+cc.height = 100
+cc.style.width = cc.width * window.devicePixelRatio
+cc.style.height = cc.height * window.devicePixelRatio
+var gg = cc.getContext('2d')
+
 function step() {
     balls.forEach((ball) => {
         ball.x += ball.vx * DT
@@ -146,6 +155,23 @@ function draw() {
         g.beginPath()
         g.arc(ball.x, ball.y, BALL_R, 0, tau, false)
         g.fill()
+    })
+    
+    var max_speed = 0
+    var speeds = []
+    each(balls, (ball) => {
+        var speed = Math.sqrt(ball.vx * ball.vx + ball.vy * ball.vy)
+        speeds.push(speed)
+        if (speed > max_speed)
+            max_speed = speed
+    })
+    speeds.sort((a, b) => a - b)
+    gg.fillStyle = 'rgba(255, 255, 255, 0.01)'
+    gg.fillRect(0, 0, cc.width, cc.height)
+    
+    gg.fillStyle = 'black'
+    speeds.forEach((speed, i) => {
+        gg.fillRect(SIZE / BALLS * i, lerp(0, cc.height, FAST_BALL_SPEED, 0, speed), SIZE / BALLS, cc.height)
     })
 }
 
