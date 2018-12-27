@@ -1,8 +1,11 @@
 
 <body style="margin:0px">
+<script src="https://dglittle.github.io/cdn/random001.js"></script>
 <script src="https://dglittle.github.io/cdn/utils001.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.6.1/gl-matrix-min.js"></script>
 <script>
+
+Math.randomSeed(20)
 
 var tau = Math.PI * 2
 
@@ -46,19 +49,19 @@ function step() {
     
     balls.forEach((ball) => {
         if (ball.x - BALL_R < 0) {
-            ball.x = 0
+            ball.x = BALL_R
             if (ball.vx < 0) ball.vx *= -1
         }
         if (ball.x + BALL_R > SIZE) {
-            ball.x = SIZE
+            ball.x = SIZE - BALL_R
             if (ball.vx > 0) ball.vx *= -1
         }
         if (ball.y - BALL_R < 0) {
-            ball.y = 0
+            ball.y = BALL_R
             if (ball.vy < 0) ball.vy *= -1
         }
         if (ball.y + BALL_R > SIZE) {
-            ball.y = SIZE
+            ball.y = SIZE - BALL_R
             if (ball.vy > 0) ball.vy *= -1
         }
     })
@@ -113,11 +116,16 @@ function step() {
         var a_v = vec2.fromValues(a.vx, a.vy)
         var b_v = vec2.fromValues(b.vx, b.vy)
         
-        var a_v_into_b = vec2.scale(vec2.create(), a_to_b, vec2.dot(a_to_b, a_v))
-        var b_v_into_a = vec2.scale(vec2.create(), a_to_b, vec2.dot(a_to_b, b_v))
+        var a_v_dot = vec2.dot(a_to_b, a_v)
+        var b_v_dot = vec2.dot(a_to_b, b_v)
+        
+        if (a_v_dot < b_v_dot) return
+        
+        var a_v_into_b = vec2.scale(vec2.create(), a_to_b, a_v_dot)
+        var b_v_into_a = vec2.scale(vec2.create(), a_to_b, b_v_dot)
         
         var a_v_away = vec2.sub(vec2.create(), a_v, a_v_into_b)
-        var b_v_away = vec2.add(vec2.create(), b_v, b_v_into_a)
+        var b_v_away = vec2.sub(vec2.create(), b_v, b_v_into_a)
         
         var new_a_v = vec2.add(vec2.create(), a_v_away, b_v_into_a)
         var new_b_v = vec2.add(vec2.create(), b_v_away, a_v_into_b)
