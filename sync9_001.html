@@ -97,6 +97,8 @@ function sync9_val_read(x) {
     if (x.val.t == 'lit') return x.val.v
     if (x.val.t == 'val') throw 'bad'
     if (x.val.t == 'obj') return sync9_obj_read(x.val)
+    if (x.val.t == 'arr') return sync9_arr_read(x.val)
+    if (x.val.t == 'str') return sync9_str_read(x.val)
 }
 
 function sync9_obj_read(x) {
