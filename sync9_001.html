@@ -108,6 +108,11 @@ function sync9_arr_read(x) {
 }
 
 function sync9_str_read(x) {
+    var s = []
+    sync9_trav_space_dag(x.S, () => true, (node) => {
+        s.push(node.elems)
+    })
+    return s.join('')
 }
 
 
