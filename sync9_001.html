@@ -21,38 +21,31 @@ function sync9_add_version(x, vid, parents, changes) {
             delete x.leaves[k]
     })
     x.leaves[vid] = true
-
-    var pi = 0
-    var delete_up_to = 0
     
     var membership_function = null
-    if (parents == s8.leaves) {
-        membership_function = (x) => {
-            return x.vid != vid
+    if (parents == x.leaves) {
+        membership_function = (_vid) => {
+            return _vid != vid
         }
     } else {
         var members = {}
         function mark_members(key) {
             if (!members[key]) {
                 members[key] = true
-                each(s8.T[key], (_, p) => {
-                    mark_members(p)
+                Object.keys(s8.T[key]).forEach((k) => {
+                    mark_members(k)
                 })
             }
         }
-        each(parents, (_, p) => {
-            mark_members(p)
+        Object.keys(parents).forEach((k) => {
+            mark_members(k)
         })
-        membership_function = function (x) {
-            return members[x.vid]
+        membership_function = function (_vid) {
+            return members[_vid]
         }
     }
     
-    sync8_trav_space_dag(s8.S, membership_function, function (node, offset, has_nexts) {    
-    
-    
-    
-    
+    sync9_val_add_version(x.val, vid, membership_function, changes)
 }
 
 function sync9_read(s9) {
@@ -72,16 +65,16 @@ function sync9_create_str() {
 }
 
 
-function sync9_val_add_version(x, id, parents, changes) {
+function sync9_val_add_version(x, id, is_member, changes) {
 }
 
-function sync9_obj_add_version(x, id, parents, changes) {
+function sync9_obj_add_version(x, id, is_member, changes) {
 }
 
-function sync9_arr_add_version(x, id, parents, changes) {
+function sync9_arr_add_version(x, id, is_member, changes) {
 }
 
-function sync9_str_add_version(x, id, parents, changes) {
+function sync9_str_add_version(x, id, is_member, changes) {
 }
 
 
