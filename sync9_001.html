@@ -11,9 +11,19 @@
 var parse_me = '.a.b[3].d["hi"] = "yo"'
 
 function sync8_parse_change(change) {
+    var re = /(a|b)/g
+
+    console.log('------------------')    
+    console.log(re.exec(change))
+    console.log('------------------')    
+    console.log(re.exec(change))
+    console.log('------------------')    
+    console.log(re.exec(change))
+    console.log('------------------')    
+    console.log(re.exec(change))
 }
 
-
+sync8_parse_change(parse_me)
 
 
 // function sync9_create() {
