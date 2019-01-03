@@ -135,6 +135,13 @@ function sync9_val_add_version(x, vid, parents, change) {
 }
 
 function sync9_obj_add_version(x, vid, parents, changes, is_member) {
+    Object.entries(changes).forEach(([k, v]) => {
+        if (!x.S[k]) x.S[k] = sync9_create_val()
+        
+        sync9_val_add_version(x.S[k], vid, parents, v)
+        
+        
+    })
 }
 
 function sync9_arr_add_version(x, vid, parents, changes, is_member) {
