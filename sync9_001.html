@@ -8,23 +8,33 @@
 
 
 
-var parse_me = 'ab[3].d["hi"] = "yo"'
+var parse_me = '.a.b[3].d["hi\\u2665ii"] = {"x":2}'
 
 function sync8_parse_change(change) {
-    var re = /\.?[^\.\[ =]+|\[(\d+|'(\\'|[^'])*'|"(\\"|[^"])*")\]|\s*=\s*.*/
+    var keys = []
+    var val = null
     
-    console.log('------------------')    
-    console.log(re.exec(change))
-    console.log(re.lastIndex)
-    console.log('------------------')    
-    console.log(re.exec(change))
-    console.log(re.lastIndex)
-    console.log('------------------')    
-    console.log(re.exec(change))
-    console.log(re.lastIndex)
-    console.log('------------------')    
-    console.log(re.exec(change))
-    console.log(re.lastIndex)
+    var re = /\.?([^\.\[ =]+)|\[(\d+|'(\\'|[^'])*'|"(\\"|[^"])*")\]|\s*=\s*(.*)/g
+    var m
+    while (m = re.exec(change)) {
+        if (m[1])
+            keys.push(m[1])
+        else if (m[2])
+            keys.push(JSON.parse(m[2]))
+        else if (m[5])
+            val = JSON.parse(m[5])
+        
+        // else if ()
+        
+        console.log('------------------')    
+        console.log(m)
+        console.log(re.lastIndex)
+    }
+    
+    console.log('keys!')
+    console.log(keys)
+    console.log('val!')
+    console.log(val)
 }
 
 sync8_parse_change(parse_me)
