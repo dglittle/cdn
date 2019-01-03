@@ -8,19 +8,23 @@
 
 
 
-var parse_me = '.a.b[3].d["hi"] = "yo"'
+var parse_me = 'ab[3].d["hi"] = "yo"'
 
 function sync8_parse_change(change) {
-    var re = /(a|b)/g
-
+    var re = /\.?[^\.\[ =]+|\[(\d+|'(\\'|[^'])*'|"(\\"|[^"])*")\]|\s*=\s*.*/
+    
     console.log('------------------')    
     console.log(re.exec(change))
+    console.log(re.lastIndex)
     console.log('------------------')    
     console.log(re.exec(change))
+    console.log(re.lastIndex)
     console.log('------------------')    
     console.log(re.exec(change))
+    console.log(re.lastIndex)
     console.log('------------------')    
     console.log(re.exec(change))
+    console.log(re.lastIndex)
 }
 
 sync8_parse_change(parse_me)
