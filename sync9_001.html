@@ -22,9 +22,9 @@ function sync9_add_version(x, vid, parents, changes) {
     })
     x.leaves[vid] = true
     
-    var membership_function = null
+    var is_member = null
     if (parents == x.leaves) {
-        membership_function = (_vid) => {
+        is_member = (_vid) => {
             return _vid != vid
         }
     } else {
@@ -40,12 +40,12 @@ function sync9_add_version(x, vid, parents, changes) {
         Object.keys(parents).forEach((k) => {
             mark_members(k)
         })
-        membership_function = function (_vid) {
+        is_member = function (_vid) {
             return members[_vid]
         }
     }
     
-    sync9_val_add_version(x.val, vid, membership_function, changes)
+    sync9_val_add_version(x.val, vid, parents, changes, is_member)
 }
 
 function sync9_read(s9) {
