@@ -55,6 +55,7 @@ function sync9_read(x) {
 
 function sync9_create_val() {
     return {
+        t : 'val',
         S : { 'root' : null },
         val : { t : 'lit', v : null }
     }
@@ -86,7 +87,7 @@ function sync9_str_add_version(x, vid, parents, changes, is_member) {
 function sync9_val_read(x) {
     if (x.val.t == 'lit') return x.val.v
     if (x.val.t == 'val') throw 'bad'
-    
+    if (x.val.t == 'obj') return sync9_obj_read(x.val)
 }
 
 function sync9_obj_read(x) {
