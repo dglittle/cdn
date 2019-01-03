@@ -120,7 +120,12 @@ function sync9_val_add_version(x, vid, parents, changes, is_member) {
     var set_it = false
     Object.keys(parents).forEach(p => {
         if (x.S[p] === null || vid < x.S[p]) {
-            
+            var cur = x.S[p]
+            while (cur) {
+                var save = x.S[cur]
+                delete x.S[cur]
+                cur = save
+            }
             
             
             
