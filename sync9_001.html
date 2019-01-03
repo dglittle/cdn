@@ -5,156 +5,162 @@
 <body></body>
 <script>
 
-function sync9_create() {
-    return {
-        T : { 'root' : {} },
-        leaves : { 'root' : true },
-        val : sync9_create_val()
-    }
+
+
+
+var parse_me = '.a.b[3].d["hi"] = "yo"'
+
+function sync8_parse_change(change) {
 }
 
-function sync9_add_version(x, vid, parents, changes) {
-    x.T[vid] = parents == x.leaves ? Object.assign({}, x.leaves) : parents
+
+
+
+// function sync9_create() {
+//     return {
+//         T : { 'root' : {} },
+//         leaves : { 'root' : true },
+//         val : sync9_create_val()
+//     }
+// }
+
+// function sync9_add_version(x, vid, parents, changes) {
+//     x.T[vid] = parents == x.leaves ? Object.assign({}, x.leaves) : parents
     
-    Object.keys(parents).forEach((k) => {
-        if (x.leaves[k])
-            delete x.leaves[k]
-    })
-    x.leaves[vid] = true
+//     Object.keys(parents).forEach((k) => {
+//         if (x.leaves[k])
+//             delete x.leaves[k]
+//     })
+//     x.leaves[vid] = true
     
-    var is_anc = null
-    if (parents == x.leaves) {
-        is_anc = (_vid) => {
-            return _vid != vid
-        }
-    } else {
-        var ancs = {}
-        function mark_ancs(key) {
-            if (!ancs[key]) {
-                ancs[key] = true
-                Object.keys(x.T[key]).forEach(k => mark_ancs(k))
-            }
-        }
-        Object.keys(parents).forEach(k => mark_ancs(k))
-        is_anc = function (_vid) {
-            return ancs[_vid]
-        }
-    }
-    
-    
-    
-    parse changes.. work here
+//     var is_anc = null
+//     if (parents == x.leaves) {
+//         is_anc = (_vid) => {
+//             return _vid != vid
+//         }
+//     } else {
+//         var ancs = {}
+//         function mark_ancs(key) {
+//             if (!ancs[key]) {
+//                 ancs[key] = true
+//                 Object.keys(x.T[key]).forEach(k => mark_ancs(k))
+//             }
+//         }
+//         Object.keys(parents).forEach(k => mark_ancs(k))
+//         is_anc = function (_vid) {
+//             return ancs[_vid]
+//         }
+//     }
     
     
     
+//     parse changes.. work here
     
     
-    sync9_val_add_version(x.val, vid, parents, changes, is_anc)
-}
+    
+    
+    
+//     sync9_val_add_version(x.val, vid, parents, changes, is_anc)
+// }
 
-function sync9_read(x) {
-    return sync9_val_read(x.val)
-}
-
-
-function sync9_create_val() {
-    return {
-        t : 'val',
-        S : { 'root' : null },
-        val : { t : 'lit', v : null }
-    }
-}
-
-function sync9_create_obj() {
-    return {
-        t : 'obj',
-        S : {}
-    }
-}
-
-function sync9_create_arr() {
-    return {
-        t : 'arr'
-    }
-}
-
-function sync9_create_str() {
-    return {
-        t : 'str'
-    }
-}
+// function sync9_read(x) {
+//     return sync9_val_read(x.val)
+// }
 
 
-function sync9_val_read(x) {
-    if (x.val.t == 'lit') return x.val.v
-    if (x.val.t == 'val') throw 'bad'
-    if (x.val.t == 'obj') return sync9_obj_read(x.val)
-    if (x.val.t == 'arr') return sync9_arr_read(x.val)
-    if (x.val.t == 'str') return sync9_str_read(x.val)
-}
+// function sync9_create_val() {
+//     return {
+//         t : 'val',
+//         S : { 'root' : null },
+//         val : { t : 'lit', v : null }
+//     }
+// }
 
-function sync9_obj_read(x) {
-    var o = {}
-    Object.entries(x.S).forEach(([k, v]) => {
-        o[k] = sync9_val_read(v)
-    })
-    return o
-}
+// function sync9_create_obj() {
+//     return {
+//         t : 'obj',
+//         S : {}
+//     }
+// }
 
-function sync9_arr_read(x) {
-    var a = []
-    sync9_trav_space_dag(x.S, () => true, (node) => {
-        node.elems.forEach((e) => {
-            a.push(sync9_val_read(e))
-        })
-    })
-    return a
-}
+// function sync9_create_arr() {
+//     return {
+//         t : 'arr'
+//     }
+// }
 
-function sync9_str_read(x) {
-    var s = []
-    sync9_trav_space_dag(x.S, () => true, (node) => {
-        s.push(node.elems)
-    })
-    return s.join('')
-}
+// function sync9_create_str() {
+//     return {
+//         t : 'str'
+//     }
+// }
 
 
-function sync9_val_add_version(x, vid, parents, change) {
-    var set_it = false
-    Object.keys(parents).forEach(p => {
-        if (x.S[p] === null || vid < x.S[p]) {
-            var cur = x.S[p]
-            while (cur) {
-                var next = x.S[cur]
-                delete x.S[cur]
-                cur = next
-            }
-            x.S[p] = vid
-            x.S[vid] = null
-            set_it = true
-        }
-    })
-    if (set_it) x.val = change
-}
+// function sync9_val_read(x) {
+//     if (x.val.t == 'lit') return x.val.v
+//     if (x.val.t == 'val') throw 'bad'
+//     if (x.val.t == 'obj') return sync9_obj_read(x.val)
+//     if (x.val.t == 'arr') return sync9_arr_read(x.val)
+//     if (x.val.t == 'str') return sync9_str_read(x.val)
+// }
 
-function sync9_obj_add_version(x, vid, parents, changes) {
-    Object.entries(changes).forEach(([k, v]) => {
-        if (!x.S[k]) x.S[k] = sync9_create_val()
-        sync9_val_add_version(x.S[k], vid, parents, v)
-    })
-}
+// function sync9_obj_read(x) {
+//     var o = {}
+//     Object.entries(x.S).forEach(([k, v]) => {
+//         o[k] = sync9_val_read(v)
+//     })
+//     return o
+// }
 
-function sync9_arr_add_version(x, vid, parents, changes, is_anc) {
-}
+// function sync9_arr_read(x) {
+//     var a = []
+//     sync9_trav_space_dag(x.S, () => true, (node) => {
+//         node.elems.forEach((e) => {
+//             a.push(sync9_val_read(e))
+//         })
+//     })
+//     return a
+// }
 
-function sync9_str_add_version(x, vid, parents, changes, is_anc) {
-}
+// function sync9_str_read(x) {
+//     var s = []
+//     sync9_trav_space_dag(x.S, () => true, (node) => {
+//         s.push(node.elems)
+//     })
+//     return s.join('')
+// }
 
 
+// function sync9_val_add_version(x, vid, parents, change) {
+//     var set_it = false
+//     Object.keys(parents).forEach(p => {
+//         if (x.S[p] === null || vid < x.S[p]) {
+//             var cur = x.S[p]
+//             while (cur) {
+//                 var next = x.S[cur]
+//                 delete x.S[cur]
+//                 cur = next
+//             }
+//             x.S[p] = vid
+//             x.S[vid] = null
+//             set_it = true
+//         }
+//     })
+//     if (set_it) x.val = change
+// }
 
+// function sync9_obj_add_version(x, vid, parents, changes) {
+//     Object.entries(changes).forEach(([k, v]) => {
+//         if (!x.S[k]) x.S[k] = sync9_create_val()
+//         sync9_val_add_version(x.S[k], vid, parents, v)
+//     })
+// }
 
+// function sync9_arr_add_version(x, vid, parents, changes, is_anc) {
+// }
 
+// function sync9_str_add_version(x, vid, parents, changes, is_anc) {
+// }
 
 
 
@@ -162,262 +168,267 @@ function sync9_str_add_version(x, vid, parents, changes, is_anc) {
 
 
 
-function sync8_create() {
-    return {
-        T : { 'root' : {} },
-        S : sync8_create_space_dag_node('root', 0, 0, 0),
-        leaves : { 'root' : true },
-        text : ''
-    }
-}
 
-function sync8_create_space_dag_node(vid, p_i, p_begin, p_end, text) {
-    if (!text) text = ''
-    if (p_begin == undefined) {
-        p_begin = 0
-        p_end = text.length * 2
-    }
-    return {
-        vid : vid,
-        p_i : p_i,
-        p_begin : p_begin,
-        p_end : p_end,
+
+
+
+
+// function sync8_create() {
+//     return {
+//         T : { 'root' : {} },
+//         S : sync8_create_space_dag_node('root', 0, 0, 0),
+//         leaves : { 'root' : true },
+//         text : ''
+//     }
+// }
+
+// function sync8_create_space_dag_node(vid, p_i, p_begin, p_end, text) {
+//     if (!text) text = ''
+//     if (p_begin == undefined) {
+//         p_begin = 0
+//         p_end = text.length * 2
+//     }
+//     return {
+//         vid : vid,
+//         p_i : p_i,
+//         p_begin : p_begin,
+//         p_end : p_end,
         
-        text : text,
-        deleted_by : {},
+//         text : text,
+//         deleted_by : {},
         
-        nexts : [],
-        next : null,
-        prev : null
-    }
-}
+//         nexts : [],
+//         next : null,
+//         prev : null
+//     }
+// }
 
-function sync8_add_version(s8, s) {
-    var vid = 'id' + Math.random()
-    var save_leaves = Object.assign({}, s8.leaves)
-    var ps = sync8_diff_ODI(s8.text, s)
+// function sync8_add_version(s8, s) {
+//     var vid = 'id' + Math.random()
+//     var save_leaves = Object.assign({}, s8.leaves)
+//     var ps = sync8_diff_ODI(s8.text, s)
 
-    sync8_update_all_but_text(s8, vid, s8.leaves, ps)
-    s8.text = s
+//     sync8_update_all_but_text(s8, vid, s8.leaves, ps)
+//     s8.text = s
 
-    return {
-        vid : vid,
-        parents : save_leaves,
-        patches : ps
-    }
-}
+//     return {
+//         vid : vid,
+//         parents : save_leaves,
+//         patches : ps
+//     }
+// }
 
-function sync8_merge(s8, vid, parents, patches) {
-    sync8_update_all_but_text(s8, vid, parents, patches)
+// function sync8_merge(s8, vid, parents, patches) {
+//     sync8_update_all_but_text(s8, vid, parents, patches)
     
-    s8.text = []
-    sync8_trav_space_dag(s8.S, () => true, function (node, offset) {
-        s8.text.push(node.text)
-    })
-    return s8.text = s8.text.join('')
-}
+//     s8.text = []
+//     sync8_trav_space_dag(s8.S, () => true, function (node, offset) {
+//         s8.text.push(node.text)
+//     })
+//     return s8.text = s8.text.join('')
+// }
 
-function sync8_update_all_but_text(s8, vid, parents, patches) {
-    s8.T[vid] = parents == s8.leaves ? Object.assign({}, s8.leaves) : parents
+// function sync8_update_all_but_text(s8, vid, parents, patches) {
+//     s8.T[vid] = parents == s8.leaves ? Object.assign({}, s8.leaves) : parents
     
-    each(parents, function (_, p) {
-        if (s8.leaves[p]) {
-            delete s8.leaves[p]
-        }
-    })
-    s8.leaves[vid] = true
+//     each(parents, function (_, p) {
+//         if (s8.leaves[p]) {
+//             delete s8.leaves[p]
+//         }
+//     })
+//     s8.leaves[vid] = true
     
-    function add_outgoing(add_to, loc, outgoing_to) {
-        if (loc < add_to.p_end) {
-            var text_divide = add_to.text.length - ((add_to.p_end + (add_to.p_end % 2 == 0 ? 1 : 0) - loc) >> 1)
+//     function add_outgoing(add_to, loc, outgoing_to) {
+//         if (loc < add_to.p_end) {
+//             var text_divide = add_to.text.length - ((add_to.p_end + (add_to.p_end % 2 == 0 ? 1 : 0) - loc) >> 1)
             
-            var tail = sync8_create_space_dag_node(add_to.vid, add_to.p_i, loc + 1, add_to.p_end, add_to.text.substring(text_divide))
-            tail.nexts = add_to.nexts
-            tail.next = add_to.next
-            if (tail.next) tail.next.prev = tail
-            tail.prev = add_to
+//             var tail = sync8_create_space_dag_node(add_to.vid, add_to.p_i, loc + 1, add_to.p_end, add_to.text.substring(text_divide))
+//             tail.nexts = add_to.nexts
+//             tail.next = add_to.next
+//             if (tail.next) tail.next.prev = tail
+//             tail.prev = add_to
             
-            add_to.p_end = loc
-            add_to.text = add_to.text.substring(0, text_divide)
-            add_to.nexts = [outgoing_to]
-            add_to.next = tail
-        } else {
-            var i = binarySearch(add_to.nexts, function (x) {
-                if (outgoing_to.vid < x.vid) return -1
-                if (outgoing_to.vid > x.vid) return 1
-                return 0
-            })
-            add_to.nexts.splice(i, 0, outgoing_to)
-        }
-    }
+//             add_to.p_end = loc
+//             add_to.text = add_to.text.substring(0, text_divide)
+//             add_to.nexts = [outgoing_to]
+//             add_to.next = tail
+//         } else {
+//             var i = binarySearch(add_to.nexts, function (x) {
+//                 if (outgoing_to.vid < x.vid) return -1
+//                 if (outgoing_to.vid > x.vid) return 1
+//                 return 0
+//             })
+//             add_to.nexts.splice(i, 0, outgoing_to)
+//         }
+//     }
     
-    function add_incoming(add_to, loc) {
-        if (loc > add_to.p_begin) {
-            var text_divide = add_to.text.length - ((add_to.p_end + (add_to.p_end % 2 == 0 ? 2 : 1) - loc) >> 1)
+//     function add_incoming(add_to, loc) {
+//         if (loc > add_to.p_begin) {
+//             var text_divide = add_to.text.length - ((add_to.p_end + (add_to.p_end % 2 == 0 ? 2 : 1) - loc) >> 1)
             
-            var tail = sync8_create_space_dag_node(add_to.vid, add_to.p_i, loc, add_to.p_end, add_to.text.substring(text_divide))
-            tail.nexts = add_to.nexts
-            tail.next = add_to.next
-            if (tail.next) tail.next.prev = tail
-            tail.prev = add_to
+//             var tail = sync8_create_space_dag_node(add_to.vid, add_to.p_i, loc, add_to.p_end, add_to.text.substring(text_divide))
+//             tail.nexts = add_to.nexts
+//             tail.next = add_to.next
+//             if (tail.next) tail.next.prev = tail
+//             tail.prev = add_to
             
-            add_to.p_end = loc - 1
-            add_to.text = add_to.text.substring(0, text_divide)
-            add_to.nexts = []
-            add_to.next = tail
-        }
-    }
+//             add_to.p_end = loc - 1
+//             add_to.text = add_to.text.substring(0, text_divide)
+//             add_to.nexts = []
+//             add_to.next = tail
+//         }
+//     }
 
-    var pi = 0
-    var delete_up_to = 0
+//     var pi = 0
+//     var delete_up_to = 0
     
-    var membership_function = null
-    if (parents == s8.leaves) {
-        membership_function = (x) => {
-            return x.vid != vid
-        }
-    } else {
-        var members = {}
-        function mark_members(key) {
-            if (!members[key]) {
-                members[key] = true
-                each(s8.T[key], (_, p) => {
-                    mark_members(p)
-                })
-            }
-        }
-        each(parents, (_, p) => {
-            mark_members(p)
-        })
-        membership_function = function (x) {
-            return members[x.vid]
-        }
-    }
+//     var membership_function = null
+//     if (parents == s8.leaves) {
+//         membership_function = (x) => {
+//             return x.vid != vid
+//         }
+//     } else {
+//         var members = {}
+//         function mark_members(key) {
+//             if (!members[key]) {
+//                 members[key] = true
+//                 each(s8.T[key], (_, p) => {
+//                     mark_members(p)
+//                 })
+//             }
+//         }
+//         each(parents, (_, p) => {
+//             mark_members(p)
+//         })
+//         membership_function = function (x) {
+//             return members[x.vid]
+//         }
+//     }
     
-    sync8_trav_space_dag(s8.S, membership_function, function (node, offset, has_nexts) {
-        var p = patches[pi]
-        if (!p) return false
+//     sync8_trav_space_dag(s8.S, membership_function, function (node, offset, has_nexts) {
+//         var p = patches[pi]
+//         if (!p) return false
         
-        if (p[1] == 0) {
-            if (p[0] > offset + node.text.length) return
+//         if (p[1] == 0) {
+//             if (p[0] > offset + node.text.length) return
             
-            var insert_location = (p[0] == offset) ? node.p_begin : node.p_end - ((offset + node.text.length - p[0]) * 2) + (node.p_end % 2 == 0 ? 0 : -1)
+//             var insert_location = (p[0] == offset) ? node.p_begin : node.p_end - ((offset + node.text.length - p[0]) * 2) + (node.p_end % 2 == 0 ? 0 : -1)
             
-            if (insert_location == node.p_end && has_nexts) return
+//             if (insert_location == node.p_end && has_nexts) return
             
-            add_outgoing(node, insert_location, sync8_create_space_dag_node(vid, pi, null, null, p[2]))
-            pi++
-            return
-        }
+//             add_outgoing(node, insert_location, sync8_create_space_dag_node(vid, pi, null, null, p[2]))
+//             pi++
+//             return
+//         }
         
-        if (delete_up_to <= offset) {
-            if (p[0] >= offset + node.text.length) return
+//         if (delete_up_to <= offset) {
+//             if (p[0] >= offset + node.text.length) return
             
-            var insert_location = node.p_end - ((offset + node.text.length - p[0]) * 2) + (node.p_end % 2 == 0 ? 1 : 0)
+//             var insert_location = node.p_end - ((offset + node.text.length - p[0]) * 2) + (node.p_end % 2 == 0 ? 1 : 0)
             
-            delete_up_to = p[0] + p[1]
+//             delete_up_to = p[0] + p[1]
             
-            if (insert_location < node.p_begin) {
-                add_outgoing(node.prev, node.prev.p_end, sync8_create_space_dag_node(vid, pi, null, null, p[2]))
-            } else {
-                add_outgoing(node, insert_location, sync8_create_space_dag_node(vid, pi, null, null, p[2]))
-                return
-            }
-        }
+//             if (insert_location < node.p_begin) {
+//                 add_outgoing(node.prev, node.prev.p_end, sync8_create_space_dag_node(vid, pi, null, null, p[2]))
+//             } else {
+//                 add_outgoing(node, insert_location, sync8_create_space_dag_node(vid, pi, null, null, p[2]))
+//                 return
+//             }
+//         }
         
-        if (delete_up_to > offset) {
-            node.deleted_by[vid] = true
-            if (delete_up_to > offset + node.text.length) return
+//         if (delete_up_to > offset) {
+//             node.deleted_by[vid] = true
+//             if (delete_up_to > offset + node.text.length) return
             
-            if (delete_up_to < offset + node.text.length) {
-                add_incoming(node, node.p_end - ((offset + node.text.length - delete_up_to) * 2) + (node.p_end % 2 == 0 ? 1 : 0))
-            }
+//             if (delete_up_to < offset + node.text.length) {
+//                 add_incoming(node, node.p_end - ((offset + node.text.length - delete_up_to) * 2) + (node.p_end % 2 == 0 ? 1 : 0))
+//             }
             
-            pi++
-            return
-        }
-    })
-}
+//             pi++
+//             return
+//         }
+//     })
+// }
 
-function sync8_trav_space_dag(S, f, cb) {
-    var offset = 0
-    function helper(node) {
-        var has_nexts = false
-        each(node.nexts, (next) => {
-            if (f(next)) {
-                has_nexts = true
-                return false
-            }
-        })
+// function sync8_trav_space_dag(S, f, cb) {
+//     var offset = 0
+//     function helper(node) {
+//         var has_nexts = false
+//         each(node.nexts, (next) => {
+//             if (f(next)) {
+//                 has_nexts = true
+//                 return false
+//             }
+//         })
         
-        var deleted = false
-        each(node.deleted_by, (vid) => {
-            if (f(vid)) {
-                deleted = true
-                return false
-            }
-        })
+//         var deleted = false
+//         each(node.deleted_by, (vid) => {
+//             if (f(vid)) {
+//                 deleted = true
+//                 return false
+//             }
+//         })
         
-        if (!deleted) {
-            cb(node, offset, has_nexts)
-            offset += node.text.length
-        }
+//         if (!deleted) {
+//             cb(node, offset, has_nexts)
+//             offset += node.text.length
+//         }
             
-        each(node.nexts, (next) => {
-            if (f(next)) helper(next)
-        })
-        if (node.next) helper(node.next)
-    }
-    helper(S)
-}
+//         each(node.nexts, (next) => {
+//             if (f(next)) helper(next)
+//         })
+//         if (node.next) helper(node.next)
+//     }
+//     helper(S)
+// }
 
-function sync8_diff_ODI(a, b) {
-    var offset = 0
-    var prev = null
-    var ret = []
-    var d = diff_main(a, b)
-    for (var i = 0; i < d.length; i++) {
-        if (d[i][0] == 0) {
-            if (prev) ret.push(prev)
-            prev = null
-            offset += d[i][1].length
-        } else if (d[i][0] == 1) {
-            if (prev)
-                prev[2] += d[i][1]
-            else
-                prev = [offset, 0, d[i][1]]
-        } else {
-            if (prev)
-                prev[1] += d[i][1].length
-            else
-                prev = [offset, d[i][1].length, '']
-            offset += d[i][1].length
-        }
-    }
-    if (prev) ret.push(prev)
-    return ret
-}
+// function sync8_diff_ODI(a, b) {
+//     var offset = 0
+//     var prev = null
+//     var ret = []
+//     var d = diff_main(a, b)
+//     for (var i = 0; i < d.length; i++) {
+//         if (d[i][0] == 0) {
+//             if (prev) ret.push(prev)
+//             prev = null
+//             offset += d[i][1].length
+//         } else if (d[i][0] == 1) {
+//             if (prev)
+//                 prev[2] += d[i][1]
+//             else
+//                 prev = [offset, 0, d[i][1]]
+//         } else {
+//             if (prev)
+//                 prev[1] += d[i][1].length
+//             else
+//                 prev = [offset, d[i][1].length, '']
+//             offset += d[i][1].length
+//         }
+//     }
+//     if (prev) ret.push(prev)
+//     return ret
+// }
 
-// modified from https://stackoverflow.com/questions/22697936/binary-search-in-javascript
-function binarySearch(ar, compare_fn) {
-    var m = 0;
-    var n = ar.length - 1;
-    while (m <= n) {
-        var k = (n + m) >> 1;
-        var cmp = compare_fn(ar[k]);
-        if (cmp > 0) {
-            m = k + 1;
-        } else if(cmp < 0) {
-            n = k - 1;
-        } else {
-            return k;
-        }
-    }
-    return m;
-}
+// // modified from https://stackoverflow.com/questions/22697936/binary-search-in-javascript
+// function binarySearch(ar, compare_fn) {
+//     var m = 0;
+//     var n = ar.length - 1;
+//     while (m <= n) {
+//         var k = (n + m) >> 1;
+//         var cmp = compare_fn(ar[k]);
+//         if (cmp > 0) {
+//             m = k + 1;
+//         } else if(cmp < 0) {
+//             n = k - 1;
+//         } else {
+//             return k;
+//         }
+//     }
+//     return m;
+// }
 
-/////////////////////////////////////
+// /////////////////////////////////////
 
-console.log('hi!')
+// console.log('hi!')
 
 </script>
