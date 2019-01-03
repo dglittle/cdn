@@ -127,6 +127,7 @@ function sync9_val_add_version(x, vid, parents, changes, is_member) {
                 cur = next
             }
             x.S[p] = vid
+            set_it = true
         }
     })
     if (set_it) x.val = work here
