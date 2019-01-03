@@ -92,13 +92,22 @@ function sync9_val_read(x) {
 function sync9_obj_read(x) {
     var o = {}
     Object.entries(x.S).forEach(([k, v]) => {
-        
+        o[k] = sync9_val_read(v)
     })
-    
     return o
 }
 
 function sync9_arr_read(x) {
+    var a = []
+    sync9_trav_space_dag(x.S, () => true, (node) => {
+        
+        
+        work here
+        a = a.concat(node.elems)
+        a.push(sync9_val_read(node.elems))
+    })
+    
+    
 }
 
 function sync9_str_read(x) {
