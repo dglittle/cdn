@@ -120,8 +120,6 @@ function sync9_val_add_version(x, vid, parents, change) {
     var set_it = false
     Object.keys(parents).forEach(p => {
         if (x.S[p] === null || vid < x.S[p]) {
-            set_it = true
-            
             var cur = x.S[p]
             while (cur) {
                 var next = x.S[cur]
@@ -129,6 +127,8 @@ function sync9_val_add_version(x, vid, parents, change) {
                 cur = next
             }
             x.S[p] = vid
+            x.S[vid] = null
+            set_it = true
         }
     })
     if (set_it) x.val = change
