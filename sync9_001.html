@@ -22,30 +22,34 @@ function sync9_add_version(x, vid, parents, changes) {
     })
     x.leaves[vid] = true
     
-    var is_member = null
+    var is_anc = null
     if (parents == x.leaves) {
-        is_member = (_vid) => {
+        is_anc = (_vid) => {
             return _vid != vid
         }
     } else {
-        var members = {}
-        function mark_members(key) {
-            if (!members[key]) {
-                members[key] = true
-                Object.keys(s8.T[key]).forEach((k) => {
-                    mark_members(k)
-                })
+        var ancs = {}
+        function mark_ancs(key) {
+            if (!ancs[key]) {
+                ancs[key] = true
+                Object.keys(x.T[key]).forEach(k => mark_ancs(k))
             }
         }
-        Object.keys(parents).forEach((k) => {
-            mark_members(k)
-        })
-        is_member = function (_vid) {
-            return members[_vid]
+        Object.keys(parents).forEach(k => mark_ancs(k))
+        is_anc = function (_vid) {
+            return ancs[_vid]
         }
     }
     
-    sync9_val_add_version(x.val, vid, parents, changes, is_member)
+    
+    
+    parse changes.. work here
+    
+    
+    
+    
+    
+    sync9_val_add_version(x.val, vid, parents, changes, is_anc)
 }
 
 function sync9_read(x) {
@@ -134,20 +138,17 @@ function sync9_val_add_version(x, vid, parents, change) {
     if (set_it) x.val = change
 }
 
-function sync9_obj_add_version(x, vid, parents, changes, is_member) {
+function sync9_obj_add_version(x, vid, parents, changes) {
     Object.entries(changes).forEach(([k, v]) => {
         if (!x.S[k]) x.S[k] = sync9_create_val()
-        
         sync9_val_add_version(x.S[k], vid, parents, v)
-        
-        
     })
 }
 
-function sync9_arr_add_version(x, vid, parents, changes, is_member) {
+function sync9_arr_add_version(x, vid, parents, changes, is_anc) {
 }
 
-function sync9_str_add_version(x, vid, parents, changes, is_member) {
+function sync9_str_add_version(x, vid, parents, changes, is_anc) {
 }
 
 
