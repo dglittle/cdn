@@ -43,27 +43,19 @@ function sync9_add_version(x, vid, parents, changes) {
         var parse = sync9_parse_change(change)
         var cur = x.T.val
         each(parse.keys, (key, i) => {
-            
             var val = sync9_space_dag_get(cur.S, 0, is_anc)
-            
-            
-            
-            
-            
-            work here
-            
-            
-            
-            if (!is_anc(cur.leaf)) {
-                cur = null
-                return false
-            }
-            if (!cur.val) throw 'bad'
-            if (typeof(key) == 'string' && cur.val.t == 'obj') {
-                if (!cur.val.S[key]) cur.val.S[key] = sync9_create_val()
-                cur = cur.val.S[key]
-            } else if (typeof(key) == 'number' && cur.val.t == 'arr') {
-                cur = sync9_arr_get(cur.val, key)
+            if (!val) throw 'bad'
+            if (typeof(key) == 'string' && val.t == 'obj') {
+                if (!val.S[key]) val.S[key] = sync9_create_val()
+                cur = val.S[key]
+            } else if (typeof(key) == 'number' && val.t == 'arr') {
+                cur = sync9_space_dag_get(val.S, key, is_anc)
+                
+                
+                work here
+                
+                
+                
                 if (!cur) throw 'bad'
             } else if (typeof(key) == 'number' && cur.val.t == 'str') {
                 if (i != parse.keys.length - 1) throw 'bad'
