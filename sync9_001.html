@@ -143,6 +143,12 @@ function sync9_str_read(x) {
 
 
 function sync9_val_add_version(x, vid, parents, change) {
+    
+    
+    
+    work here : need to do this differently now
+    
+    
     var set_it = false
     Object.keys(parents).forEach(p => {
         if (x.S[p] === null || vid < x.S[p]) {
