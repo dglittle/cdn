@@ -42,6 +42,28 @@ function sync9_add_version(x, vid, parents, changes) {
     changes.forEach(change => {
         var parse = sync9_parse_change(change)
         var cur = T.val
+        each(parse.keys, (key, i) => {
+            if (!is_anc(cur.leaf)) {
+                cur = null
+                return false
+            }
+            
+            
+            
+            if (!cur.val) throw 'bad'
+            
+            if (typeof(key) == 'string' && cur.val.t == 'obj') {
+                if (cur.val
+            }
+            
+        })
+        if (cur) {
+            
+            
+        }
+        
+        
+        
         parse.keys.forEach((key, i) => {
             if (!cur.val) throw 'bad'
             if (typeof(key) == 'string' && cur.val.t == 'obj') {
