@@ -43,6 +43,14 @@ function sync9_add_version(x, vid, parents, changes) {
         var parse = sync9_parse_change(change)
         var cur = T.val
         each(parse.keys, (key, i) => {
+            
+            
+            
+            
+            work here
+            
+            
+            
             if (!is_anc(cur.leaf)) {
                 cur = null
                 return false
@@ -79,9 +87,7 @@ function sync9_read(x) {
 function sync9_create_val() {
     return {
         t : 'val',
-        S : { 'root' : null },
-        leaf : 'root',
-        val : { t : 'lit', val : null }
+        S : sync9_create_space_dag_node('root', [{ t : 'lit', val : null }])
     }
 }
 
@@ -108,11 +114,13 @@ function sync9_create_str() {
 
 
 function sync9_val_read(x) {
-    if (x.val.t == 'lit') return x.val.val
-    if (x.val.t == 'val') throw 'bad'
-    if (x.val.t == 'obj') return sync9_obj_read(x.val)
-    if (x.val.t == 'arr') return sync9_arr_read(x.val)
-    if (x.val.t == 'str') return sync9_str_read(x.val)
+    var val = sync9_space_dag_get(x.S, 0)
+    if (!val) return
+    if (val.t == 'lit') return val.val
+    if (val.t == 'val') throw 'bad'
+    if (val.t == 'obj') return sync9_obj_read(val)
+    if (val.t == 'arr') return sync9_arr_read(val)
+    if (val.t == 'str') return sync9_str_read(val)
 }
 
 function sync9_obj_read(x) {
@@ -149,10 +157,10 @@ function sync9_str_add_version(x, vid, parents, changes, is_anc) {
 }
 
 
-function sync9_arr_get(x, i, is_anc) {
+function sync9_space_dag_get(x, i, is_anc) {
     var ret = null
     var offset = 0
-    sync9_trav_space_dag(x.S, is_anc ? is_anc : () => true, (node) => {
+    sync9_trav_space_dag(x, is_anc ? is_anc : () => true, (node) => {
         if (i - offset < node.elems.length) {
             ret = node.elems[i - offset]
             return false
