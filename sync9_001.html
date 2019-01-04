@@ -41,7 +41,7 @@ function sync9_add_version(x, vid, parents, changes) {
     
     changes.forEach(change => {
         var parse = sync9_parse_change(change)
-        var cur = T.val
+        var cur = x.T.val
         each(parse.keys, (key, i) => {
             
             var val = sync9_space_dag_get(cur.S, 0, is_anc)
