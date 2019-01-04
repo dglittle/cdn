@@ -47,24 +47,6 @@ function sync9_add_version(x, vid, parents, changes) {
                 cur = null
                 return false
             }
-            
-            
-            
-            if (!cur.val) throw 'bad'
-            
-            if (typeof(key) == 'string' && cur.val.t == 'obj') {
-                if (cur.val
-            }
-            
-        })
-        if (cur) {
-            
-            
-        }
-        
-        
-        
-        parse.keys.forEach((key, i) => {
             if (!cur.val) throw 'bad'
             if (typeof(key) == 'string' && cur.val.t == 'obj') {
                 if (!cur.val.S[key]) cur.val.S[key] = sync9_create_val()
@@ -77,13 +59,15 @@ function sync9_add_version(x, vid, parents, changes) {
                 parse.range = [key, key + 1]
             } else throw 'bad'
         })
-        if (parse.range && (parse.val instanceof Array) && cur.val && cur.val.t == 'arr') {
-            sync9_arr_add_version(cur.val, vid, parents, [[parse.range[0], parse.range[1] - parse.range[0], parse.val]], is_anc)
-        } else if (parse.range && (parse.val instanceof String) && cur.val && cur.val.t == 'str') {
-            sync9_str_add_version(cur.val, vid, parents, [[parse.range[0], parse.range[1] - parse.range[0], parse.val]], is_anc)
-        } else if (!parse.range) {
-            sync9_val_add_version(cur, vid, parents, parse.val)
-        } else throw 'bad'
+        if (cur) {
+            if (parse.range && (parse.val instanceof Array) && cur.val && cur.val.t == 'arr') {
+                sync9_arr_add_version(cur.val, vid, parents, [[parse.range[0], parse.range[1] - parse.range[0], parse.val]], is_anc)
+            } else if (parse.range && (parse.val instanceof String) && cur.val && cur.val.t == 'str') {
+                sync9_str_add_version(cur.val, vid, parents, [[parse.range[0], parse.range[1] - parse.range[0], parse.val]], is_anc)
+            } else if (!parse.range) {
+                sync9_val_add_version(cur, vid, parents, parse.val)
+            } else throw 'bad'
+        }
     })
 }
 
@@ -96,6 +80,7 @@ function sync9_create_val() {
     return {
         t : 'val',
         S : { 'root' : null },
+        leaf : 'root',
         val : { t : 'lit', val : null }
     }
 }
@@ -109,15 +94,15 @@ function sync9_create_obj() {
 
 function sync9_create_arr() {
     return {
-        t : 'arr'
-        S : 
+        t : 'arr',
+        S : sync9_create_space_dag_node('root', [])
     }
 }
 
 function sync9_create_str() {
     return {
-        t : 'str'
-        S : 
+        t : 'str',
+        S : sync9_create_space_dag_node('root', '')
     }
 }
 
