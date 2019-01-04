@@ -24,9 +24,7 @@ function sync9_add_version(x, vid, parents, changes) {
     
     var is_anc = null
     if (parents == x.leaves) {
-        is_anc = (_vid) => {
-            return _vid != vid
-        }
+        is_anc = (_vid) => _vid != vid
     } else {
         var ancs = {}
         function mark_ancs(key) {
@@ -41,7 +39,7 @@ function sync9_add_version(x, vid, parents, changes) {
     
     changes.forEach(change => {
         var parse = sync9_parse_change(change)
-        var cur = x.T.val
+        var cur = x.val
         each(parse.keys, (key, i) => {
             var val = sync9_space_dag_get(cur.S, 0, is_anc)
             if (!val) throw 'bad'
@@ -50,12 +48,6 @@ function sync9_add_version(x, vid, parents, changes) {
                 cur = val.S[key]
             } else if (typeof(key) == 'number' && val.t == 'arr') {
                 cur = sync9_space_dag_get(val.S, key, is_anc)
-                
-                
-                work here : work here
-                
-                
-                
                 if (!cur) throw 'bad'
             } else if (typeof(key) == 'number' && cur.val.t == 'str') {
                 if (i != parse.keys.length - 1) throw 'bad'
