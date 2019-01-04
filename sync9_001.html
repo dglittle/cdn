@@ -212,24 +212,22 @@ function sync9_parse_change(change) {
 
 
 
-function sync9_create_space_dag_node(vid, p_i, p_begin, p_end, text) {
-    if (!text) text = ''
-    if (p_begin == undefined) {
-        p_begin = 0
-        p_end = text.length * 2
+function sync9_create_space_dag_node(vid, elems, start, stop) {
+    if (start === undefined) {
+        start = 0
+        stop = elems.length * 2
     }
     return {
         vid : vid,
-        p_i : p_i,
-        p_begin : p_begin,
-        p_end : p_end,
-        
-        text : text,
-        deleted_by : {},
+        elems : elems,
+        start : start,
+        stop : stop,
         
         nexts : [],
         next : null,
-        prev : null
+        prev : null,
+        
+        deleted_by : {}
     }
 }
 
