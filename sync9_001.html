@@ -231,53 +231,27 @@ function sync9_create_space_dag_node(vid, elems, start, stop) {
     }
 }
 
-function sync8_add_version(s8, s) {
-    var vid = 'id' + Math.random()
-    var save_leaves = Object.assign({}, s8.leaves)
-    var ps = sync8_diff_ODI(s8.text, s)
-
-    sync8_update_all_but_text(s8, vid, s8.leaves, ps)
-    s8.text = s
-
-    return {
-        vid : vid,
-        parents : save_leaves,
-        patches : ps
+function sync9_space_dag_add_version(x, vid, parents, splices, is_anc) {
+    
+    function subseq(x, start, stop) {
+        return (x instanceof Array) ?
+            x.slice(start, stop) :
+            x.substring(start, stop)
     }
-}
-
-function sync8_merge(s8, vid, parents, patches) {
-    sync8_update_all_but_text(s8, vid, parents, patches)
-    
-    s8.text = []
-    sync8_trav_space_dag(s8.S, () => true, function (node, offset) {
-        s8.text.push(node.text)
-    })
-    return s8.text = s8.text.join('')
-}
-
-function sync8_update_all_but_text(s8, vid, parents, patches) {
-    s8.T[vid] = parents == s8.leaves ? Object.assign({}, s8.leaves) : parents
-    
-    each(parents, function (_, p) {
-        if (s8.leaves[p]) {
-            delete s8.leaves[p]
-        }
-    })
-    s8.leaves[vid] = true
     
     function add_outgoing(add_to, loc, outgoing_to) {
-        if (loc < add_to.p_end) {
-            var text_divide = add_to.text.length - ((add_to.p_end + (add_to.p_end % 2 == 0 ? 1 : 0) - loc) >> 1)
+        if (loc < add_to.stop) {
+            var elems_divide = add_to.elems.length - ((add_to.stop + (add_to.stop % 2 == 0 ? 1 : 0) - loc) >> 1)
             
-            var tail = sync8_create_space_dag_node(add_to.vid, add_to.p_i, loc + 1, add_to.p_end, add_to.text.substring(text_divide))
+            var tail = sync9_create_space_dag_node(add_to.vid, subseq(add_to.elems, elems_divide), loc + 1, add_to.stop)
+            
             tail.nexts = add_to.nexts
             tail.next = add_to.next
             if (tail.next) tail.next.prev = tail
             tail.prev = add_to
             
-            add_to.p_end = loc
-            add_to.text = add_to.text.substring(0, text_divide)
+            add_to.stop = loc
+            add_to.elems = subseq(add_to.elems, 0, elems_divide)
             add_to.nexts = [outgoing_to]
             add_to.next = tail
         } else {
@@ -291,94 +265,71 @@ function sync8_update_all_but_text(s8, vid, parents, patches) {
     }
     
     function add_incoming(add_to, loc) {
-        if (loc > add_to.p_begin) {
-            var text_divide = add_to.text.length - ((add_to.p_end + (add_to.p_end % 2 == 0 ? 2 : 1) - loc) >> 1)
+        if (loc > add_to.start) {
+            var elems_divide = add_to.elems.length - ((add_to.stop + (add_to.stop % 2 == 0 ? 2 : 1) - loc) >> 1)
             
-            var tail = sync8_create_space_dag_node(add_to.vid, add_to.p_i, loc, add_to.p_end, add_to.text.substring(text_divide))
+            var tail = sync9_create_space_dag_node(add_to.vid, subseq(add_to.elems, text_divide), loc, add_to.stop)
             tail.nexts = add_to.nexts
             tail.next = add_to.next
             if (tail.next) tail.next.prev = tail
             tail.prev = add_to
             
-            add_to.p_end = loc - 1
-            add_to.text = add_to.text.substring(0, text_divide)
+            add_to.stop = loc - 1
+            add_to.elems = subseq(add_to.elems, 0, elems_divide)
             add_to.nexts = []
             add_to.next = tail
         }
     }
 
-    var pi = 0
+    var si = 0
     var delete_up_to = 0
     
-    var membership_function = null
-    if (parents == s8.leaves) {
-        membership_function = (x) => {
-            return x.vid != vid
-        }
-    } else {
-        var members = {}
-        function mark_members(key) {
-            if (!members[key]) {
-                members[key] = true
-                each(s8.T[key], (_, p) => {
-                    mark_members(p)
-                })
-            }
-        }
-        each(parents, (_, p) => {
-            mark_members(p)
-        })
-        membership_function = function (x) {
-            return members[x.vid]
-        }
-    }
-    
-    sync8_trav_space_dag(s8.S, membership_function, function (node, offset, has_nexts) {
-        var p = patches[pi]
-        if (!p) return false
+    sync9_trav_space_dag(x.S, is_anc, (node, offset, has_nexts) => {
+        var s = splices[si]
+        if (!s) return false
         
-        if (p[1] == 0) {
-            if (p[0] > offset + node.text.length) return
+        if (s[1] == 0) {
+            if (s[0] > offset + node.elems.length) return
             
-            var insert_location = (p[0] == offset) ? node.p_begin : node.p_end - ((offset + node.text.length - p[0]) * 2) + (node.p_end % 2 == 0 ? 0 : -1)
+            var insert_location = (s[0] == offset) ? node.start : node.stop - ((offset + node.elems.length - s[0]) * 2) + (node.stop % 2 == 0 ? 0 : -1)
             
-            if (insert_location == node.p_end && has_nexts) return
+            if (insert_location == node.stop && has_nexts) return
             
-            add_outgoing(node, insert_location, sync8_create_space_dag_node(vid, pi, null, null, p[2]))
-            pi++
+            add_outgoing(node, insert_location, sync9_create_space_dag_node(vid, s[2]))
+            si++
             return
         }
         
         if (delete_up_to <= offset) {
-            if (p[0] >= offset + node.text.length) return
+            if (s[0] >= offset + node.elems.length) return
             
-            var insert_location = node.p_end - ((offset + node.text.length - p[0]) * 2) + (node.p_end % 2 == 0 ? 1 : 0)
+            var insert_location = node.stop - ((offset + node.elems.length - s[0]) * 2) + (node.stop % 2 == 0 ? 1 : 0)
             
-            delete_up_to = p[0] + p[1]
+            delete_up_to = s[0] + s[1]
             
-            if (insert_location < node.p_begin) {
-                add_outgoing(node.prev, node.prev.p_end, sync8_create_space_dag_node(vid, pi, null, null, p[2]))
+            if (insert_location < node.start) {
+                add_outgoing(node.prev, node.prev.stop, sync9_create_space_dag_node(vid, s[2]))
             } else {
-                add_outgoing(node, insert_location, sync8_create_space_dag_node(vid, pi, null, null, p[2]))
+                add_outgoing(node, insert_location, sync9_create_space_dag_node(vid, s[2]))
                 return
             }
         }
         
         if (delete_up_to > offset) {
             node.deleted_by[vid] = true
-            if (delete_up_to > offset + node.text.length) return
+            if (delete_up_to > offset + node.elems.length) return
             
-            if (delete_up_to < offset + node.text.length) {
-                add_incoming(node, node.p_end - ((offset + node.text.length - delete_up_to) * 2) + (node.p_end % 2 == 0 ? 1 : 0))
+            if (delete_up_to < offset + node.elems.length) {
+                add_incoming(node, node.stop - ((offset + node.elems.length - delete_up_to) * 2) + (node.stop % 2 == 0 ? 1 : 0))
             }
             
-            pi++
+            si++
             return
         }
     })
 }
 
-function sync8_trav_space_dag(S, f, cb) {
+function sync9_trav_space_dag(S, f, cb) {
     var offset = 0
     function helper(node) {
         var has_nexts = false
@@ -399,7 +350,7 @@ function sync8_trav_space_dag(S, f, cb) {
         
         if (!deleted) {
             cb(node, offset, has_nexts)
-            offset += node.text.length
+            offset += node.elems.length
         }
             
         each(node.nexts, (next) => {
@@ -410,7 +361,7 @@ function sync8_trav_space_dag(S, f, cb) {
     helper(S)
 }
 
-function sync8_diff_ODI(a, b) {
+function sync9_diff_ODI(a, b) {
     var offset = 0
     var prev = null
     var ret = []
@@ -454,9 +405,5 @@ function binarySearch(ar, compare_fn) {
     }
     return m;
 }
-
-/////////////////////////////////////
-
-console.log('hi!')
 
 </script>
