@@ -14,9 +14,9 @@ function sync9_create() {
 }
 
 function sync9_add_version(x, vid, parents, changes) {
-    x.T[vid] = parents == x.leaves ? Object.assign({}, x.leaves) : parents
+    x.T[vid] = parents == x.leaves ? Object.assign({}, parents) : parents
     
-    Object.keys(parents).forEach((k) => {
+    Object.keys(parents).forEach(k => {
         if (x.leaves[k])
             delete x.leaves[k]
     })
