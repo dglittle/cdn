@@ -54,13 +54,13 @@ function sync9_add_version(x, vid, parents, changes) {
             } else throw 'bad'
         })
         if (!parse.range) {
-            sync9_space_dag_add_version(cur.S, vid, parents, [[0, 0, [sync9_wrap(parse.val)]]], is_anc)
+            sync9_space_dag_add_version(cur.S, vid, parents, [[0, 0, [sync9_wrap(parse.val, vid)]]], is_anc)
         } else {
             var val = sync9_space_dag_get(cur.S, 0, is_anc)
             if (!val) throw 'bad'
             if (parse.val instanceof Array && val.t != 'arr') throw 'bad'
             if (parse.val instanceof String && val.t != 'str') throw 'bad'
-            sync9_space_dag_add_version(val.S, vid, parents, [[parse.range[0], parse.range[1] - parse.range[0], sync9_wrap(parse.val)]], is_anc)
+            sync9_space_dag_add_version(val.S, vid, parents, [[parse.range[0], parse.range[1] - parse.range[0], sync9_wrap(parse.val, vid)]], is_anc)
         }
     })
 }
@@ -403,7 +403,6 @@ function binarySearch(ar, compare_fn) {
 var s9 = sync9_create()
 sync9_add_version(s9, 'blah', {'root' : true}, [' = {"a":5, "b":6}'])
 
-debugger
 sync9_add_version(s9, 'blah2', {'blah' : true}, ['.a = 7'])
 
 console.log(s9)
