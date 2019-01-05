@@ -54,7 +54,7 @@ function sync9_add_version(x, vid, parents, changes) {
             } else throw 'bad'
         })
         if (!parse.range) {
-            sync9_space_dag_add_version(cur.S, vid, parents, [[0, 0, sync9_wrap(parse.val)]], is_anc)
+            sync9_space_dag_add_version(cur.S, vid, parents, [[0, 0, [sync9_wrap(parse.val)]]], is_anc)
         } else {
             var val = sync9_space_dag_get(cur.S, 0, is_anc)
             if (!val) throw 'bad'
@@ -85,7 +85,7 @@ function sync9_wrap(x, vid) {
         } else {
             var o = sync9_create_obj()
             Object.entries(x).forEach(([k, v]) => {
-                o[k] = sync9_wrap(v, vid)
+                o.S[k] = sync9_wrap(v, vid)
             })
             return o
         }
@@ -395,7 +395,7 @@ function binarySearch(ar, compare_fn) {
 
 
 var s9 = sync9_create()
-sync9_add_version(s9, 'blah', {'root' : true}, [' = 3'])
+sync9_add_version(s9, 'blah', {'root' : true}, [' = {"a":5, "b":6}'])
 console.log(s9)
 
 
