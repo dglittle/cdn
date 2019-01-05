@@ -54,19 +54,42 @@ function sync9_add_version(x, vid, parents, changes) {
             } else throw 'bad'
         })
         if (!parse.range) {
-            sync9_space_dag_add_version(cur.S, vid, parents, [[0, 0, parse.val]], is_anc)
+            sync9_space_dag_add_version(cur.S, vid, parents, [[0, 0, sync9_wrap(parse.val)]], is_anc)
         } else {
             var val = sync9_space_dag_get(cur.S, 0, is_anc)
             if (!val) throw 'bad'
             if (parse.val instanceof Array && val.t != 'arr') throw 'bad'
             if (parse.val instanceof String && val.t != 'str') throw 'bad'
-            sync9_space_dag_add_version(val.S, vid, parents, [[parse.range[0], parse.range[1] - parse.range[0], parse.val]], is_anc)
+            sync9_space_dag_add_version(val.S, vid, parents, [[parse.range[0], parse.range[1] - parse.range[0], sync9_wrap(parse.val)]], is_anc)
         }
     })
 }
 
 function sync9_read(x) {
     return sync9_val_read(x.val)
+}
+
+
+function sync9_wrap(x, vid) {
+    if (typeof(x) == 'number') {
+        return { t : 'lit', val : x }
+    } else if (typeof(x) == 'string') {
+        var s = sync9_create_str()
+        sync9_space_dag_add_version(s.S, vid, { 'root' : true }, [[0, 0, x]], _vid => _vid != vid)
+        return s
+    } else if (typeof(x) == 'object') {
+        if (x instanceof Array) {
+            var a = sync9_create_arr()
+            sync9_space_dag_add_version(a.S, vid, { 'root' : true }, [[0, 0, x.map(x => sync9_wrap(x, vid))]], _vid => _vid != vid)
+            return a
+        } else {
+            var o = sync9_create_obj()
+            Object.entries(x).forEach(([k, v]) => {
+                o[k] = sync9_wrap(v, vid)
+            })
+            return o
+        }
+    } else throw 'bad'
 }
 
 
