@@ -17,8 +17,7 @@ function sync9_add_version(x, vid, parents, changes) {
     x.T[vid] = parents == x.leaves ? Object.assign({}, parents) : parents
     
     Object.keys(parents).forEach(k => {
-        if (x.leaves[k])
-            delete x.leaves[k]
+        if (x.leaves[k]) delete x.leaves[k]
     })
     x.leaves[vid] = true
     
