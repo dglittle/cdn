@@ -402,6 +402,7 @@ function binarySearch(ar, compare_fn) {
 
 var s9 = sync9_create()
 sync9_add_version(s9, 'blah', {'root' : true}, [' = {"a":5, "b":6}'])
+sync9_add_version(s9, 'blah2', {'blah' : true}, ['.a = 7'])
 console.log(s9)
 
 console.log(sync9_read(s9))
