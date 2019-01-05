@@ -300,7 +300,7 @@ function sync9_trav_space_dag(S, f, cb) {
     function helper(node) {
         var has_nexts = false
         each(node.nexts, (next) => {
-            if (f(next)) {
+            if (f(next.vid)) {
                 has_nexts = true
                 return false
             }
@@ -321,7 +321,7 @@ function sync9_trav_space_dag(S, f, cb) {
         }
             
         each(node.nexts, (next) => {
-            if (f(next)) helper(next)
+            if (f(next.vid)) helper(next)
         })
         if (node.next) helper(node.next)
     }
@@ -402,7 +402,10 @@ function binarySearch(ar, compare_fn) {
 
 var s9 = sync9_create()
 sync9_add_version(s9, 'blah', {'root' : true}, [' = {"a":5, "b":6}'])
+
+debugger
 sync9_add_version(s9, 'blah2', {'blah' : true}, ['.a = 7'])
+
 console.log(s9)
 
 console.log(sync9_read(s9))
