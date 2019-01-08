@@ -61,6 +61,7 @@ function sync9_add_version(x, vid, parents, changes) {
             if (cur.t == 'val') cur = sync9_space_dag_get(cur.S, 0, is_anc)
             if (parse.val instanceof Array && cur.t != 'arr') throw 'bad'
             if (parse.val instanceof String && cur.t != 'str') throw 'bad'
+            if (parse.val instanceof Array) parse.val = parse.val.map(x => sync9_wrap(x, vid))
             sync9_space_dag_add_version(cur.S, vid, parents, [[parse.range[0], parse.range[1] - parse.range[0], parse.val]], is_anc)
         }
     })
@@ -283,31 +284,14 @@ function sync9_trav_space_dag(S, f, cb) {
     var exit_early = {}
     var offset = 0
     function helper(node) {
-        var has_nexts = false
-        each(node.nexts, (next) => {
-            if (f(next.vid)) {
-                has_nexts = true
-                return false
-            }
-        })
-        
-        var deleted = false
-        each(node.deleted_by, (vid) => {
-            if (f(vid)) {
-                deleted = true
-                return false
-            }
-        })
-        
-        if (!deleted) {
+        var has_nexts = node.nexts.find(next => f(next.vid))
+        if (!Object.keys(node.deleted_by).find(vid => f(vid))) {
             if (cb(node, offset, has_nexts) == false)
                 throw exit_early
             offset += node.elems.length
         }
-            
-        each(node.nexts, (next) => {
+        for (var next of node.nexts)
             if (f(next.vid)) helper(next)
-        })
         if (node.next) helper(node.next)
     }
     try {
@@ -394,7 +378,11 @@ sync9_add_version(s9, 'blah3', {'blah2' : true}, ['.b[0:1] = [3,4]'])
 
 sync9_add_version(s9, 'blah4', {'blah2' : true}, ['.b[1] = [{"c":5}]'])
 
+
+debugger
 sync9_add_version(s9, 'blah5', {'blah4' : true, 'blah3' : true}, ['.b[2][0].c = 8'])
+
+
 
 console.log(s9)
 
