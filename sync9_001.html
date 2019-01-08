@@ -106,7 +106,7 @@ function sync9_wrap(x, vid) {
     } else if (typeof(x) == 'object') {
         if (x instanceof Array) {
             var a = sync9_create_arr()
-            sync9_space_dag_add_version(a.S, vid, { 'root' : true }, [[0, 0, x]], _vid => _vid != vid)
+            sync9_space_dag_add_version(a.S, vid, { 'root' : true }, [[0, 0, x.map(x => sync9_wrap(x, vid))]], _vid => _vid != vid)
             return a
         } else {
             var o = sync9_create_obj()
