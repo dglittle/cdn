@@ -1,0 +1,30 @@
+
+<script src="https://dglittle.github.io/cdn/random001.js"></script>
+<script src="https://dglittle.github.io/cdn/utils004.js"></script>
+<script src="https://invisible-college.github.io/universal-sync/diffsync.js"></script>
+<body></body>
+<script>
+
+
+function create_tracker() {
+    var a = {}
+    return new Proxy(a, {
+        get : (target, prop) => {
+            return target[prop]
+        },
+        set : (target, prop, val) => {
+            console.log('[' + JSON.stringify(prop) + '] = ' + val)
+            target[prop] = val
+            return true
+        }
+    })
+}
+
+
+var tracker = create_tracker()
+tracker.a = 5
+tracker.b = 7
+
+
+
+</script>
