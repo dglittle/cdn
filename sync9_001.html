@@ -40,18 +40,17 @@ function sync9_add_version(x, vid, parents, changes) {
         var parse = sync9_parse_change(change)
         var cur = x.val
         each(parse.keys, (key, i) => {
-            var val = cur.t == 'val' ? sync9_space_dag_get(cur.S, 0, is_anc) : cur
-            if (!val) throw 'bad'
-            if (typeof(key) == 'string' && val.t == 'obj') {
-                if (!val.S[key]) val.S[key] = sync9_create_val()
-                cur = val.S[key]
+            if (cur.t == 'val') cur = sync9_space_dag_get(cur.S, 0, is_anc)
+            if (!cur) throw 'bad'
+            if (typeof(key) == 'string' && cur.t == 'obj') {
+                if (!cur.S[key]) cur.S[key] = sync9_create_val()
+                cur = cur.S[key]
             } else if (typeof(key) == 'number') {
                 if (i == parse.keys.length - 1) {
                     parse.range = [key, key + 1]
-                    cur = val
                     parse.val = [parse.val]
-                } else if (i < parse.keys.length - 1 && val.t == 'arr') {
-                    cur = sync9_space_dag_get(val.S, key, is_anc)
+                } else if (i < parse.keys.length - 1 && cur.t == 'arr') {
+                    cur = sync9_space_dag_get(cur.S, key, is_anc)
                 } else throw 'bad'
             } else throw 'bad'
         })
@@ -59,6 +58,7 @@ function sync9_add_version(x, vid, parents, changes) {
             if (cur.t != 'val') throw 'bad'
             sync9_space_dag_add_version(cur.S, vid, parents, [[0, 0, [sync9_wrap(parse.val, vid)]]], is_anc)
         } else {
+            if (cur.t == 'val') cur = sync9_space_dag_get(cur.S, 0, is_anc)
             if (parse.val instanceof Array && cur.t != 'arr') throw 'bad'
             if (parse.val instanceof String && cur.t != 'str') throw 'bad'
             sync9_space_dag_add_version(cur.S, vid, parents, [[parse.range[0], parse.range[1] - parse.range[0], parse.val]], is_anc)
@@ -218,7 +218,7 @@ function sync9_space_dag_add_version(S, vid, parents, splices, is_anc) {
         if (loc > add_to.start) {
             var elems_divide = add_to.elems.length - ((add_to.stop + (add_to.stop % 2 == 0 ? 2 : 1) - loc) >> 1)
             
-            var tail = sync9_create_space_dag_node(add_to.vid, subseq(add_to.elems, text_divide), loc, add_to.stop)
+            var tail = sync9_create_space_dag_node(add_to.vid, subseq(add_to.elems, elems_divide), loc, add_to.stop)
             tail.nexts = add_to.nexts
             tail.next = add_to.next
             if (tail.next) tail.next.prev = tail
@@ -389,8 +389,12 @@ var s9 = sync9_create()
 sync9_add_version(s9, 'blah', {'root' : true}, [' = {"a":5, "b":6}'])
 
 sync9_add_version(s9, 'blah2', {'blah' : true}, ['.b = [1,2]'])
-sync9_add_version(s9, 'blah3', {'blah2' : true}, ['.b[1] = 3'])
 
+sync9_add_version(s9, 'blah3', {'blah2' : true}, ['.b[0:1] = [3,4]'])
+
+sync9_add_version(s9, 'blah4', {'blah2' : true}, ['.b[1] = [{"c":5}]'])
+
+sync9_add_version(s9, 'blah5', {'blah4' : true, 'blah3' : true}, ['.b[2][0].c = 8'])
 
 console.log(s9)
 
