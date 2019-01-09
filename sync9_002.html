@@ -5,25 +5,94 @@
 <body></body>
 <script>
 
-
-function create_tracker() {
-    var a = {}
-    return new Proxy(a, {
-        get : (target, prop) => {
-            return target[prop]
+function tracker_wrapper(x, path) {
+    var child_path = key => path + `[${JSON.stringify(key)}]`
+    return new Proxy(x, {
+        get : (x, key) => {
+            var y = x[key]
+            if (typeof(y) == 'object') {
+                return tracker_wrapper(y, child_path(key))
+            } else return y
         },
-        set : (target, prop, val) => {
-            console.log('[' + JSON.stringify(prop) + '] = ' + val)
-            target[prop] = val
+        set : (x, key, val) => {
+            console.log(child_path(key) + ' = ' + JSON.stringify(val))
+            x[key] = val
             return true
         }
     })
+    
+}
+
+function create_tracker() {
+    return tracker_wrapper({}, 'root')
 }
 
 
 var tracker = create_tracker()
 tracker.a = 5
 tracker.b = 7
+tracker.c = {d : 9, e : 10}
+
+tracker.c.e = 11
+
+
+
+
+
+
+
+db = sync9_client()
+
+var client = diffsync.create_client({
+    ws_url : 'ws://invisible.college:' + diffsync.port,
+    channel : 'the_cool_room',
+    get_text : function () {
+        return current_text_displayed_to_user
+    },
+    get_range : function () {
+        return [selection_start, selection_end]
+    },
+    on_text : function (text, range) {
+        current_text_displayed_to_user = text
+        set_selection(range[0], range[1])
+    },
+    on_ranges : function (peer_ranges) {
+.        for (peer in peer_ranges) {
+            set_peer_selection(peer_ranges[peer][0], peer_ranges[peer][1])
+        }
+    }
+})
+
+client.on_change() <-- call this when the user changes the text or cursor/selection position
+
+
+
+
+sync9_create_client({
+    ws_url : 'ws://blah',
+    channel : 'bloop',
+    default 
+    on : (proxy_obj) => {
+    }
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
