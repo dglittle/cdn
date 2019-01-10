@@ -6,7 +6,9 @@
 <script>
 
 
-sync9_create_client('ws://localhost:60608')
+console.log('it begins')
+
+//sync9_create_client('ws://localhost:60608')
 
 
 /*
@@ -21,6 +23,7 @@ db.on(key, (proxy_value) => {
 function sync9_create_client(url) {
     var ws = null
     var keys = {}
+    var pong_timer = null
     
     function send(o) {
         try {
@@ -35,22 +38,23 @@ function sync9_create_client(url) {
     function reconnect() {
         ws = new WebSocket(url)
 
-        var pong_timer = null
         function on_pong() {
             clearTimeout(pong_timer)
             setTimeout(() => {
                 send({ ping : true })
-                //pong_timer = setTimeout(reconnect, 4000)
+                pong_timer = setTimeout(reconnect, 4000)
             }, 3000)
         }
         
         ws.onopen = () => {
+            console.log('connection open..')
+            
             on_pong()
             Object.keys(keys).forEach(k => send({ on : k }))
         }
         ws.onclose = reconnect
         ws.onmessage = (e) => {
-            console.log('message: ' + e.data)
+            console.log('message: ', JSON.parse(e.data))
             
             var o = JSON.parse(e.data)
             if (o.pong) return on_pong()
