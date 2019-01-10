@@ -23,7 +23,7 @@ db.on(key, (proxy_value) => {
 function sync9_create_client(url) {
     var ws = null
     var keys = {}
-    var pong_timer = null
+    var ping_pong_timer = null
     
     function send(o) {
         try {
@@ -36,14 +36,14 @@ function sync9_create_client(url) {
     })
 
     function reconnect() {
-        clearTimeout(pong_timer)
+        clearTimeout(ping_pong_timer)
         ws = new WebSocket(url)
 
         function on_pong() {
-            clearTimeout(pong_timer)
-            setTimeout(() => {
+            clearTimeout(ping_pong_timer)
+            ping_pong_timer = setTimeout(() => {
                 send({ ping : true })
-                pong_timer = setTimeout(reconnect, 4000)
+                ping_pong_timer = setTimeout(reconnect, 4000)
             }, 3000)
         }
         
