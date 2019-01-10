@@ -40,7 +40,7 @@ function sync9_create_client(url) {
             clearTimeout(pong_timer)
             setTimeout(() => {
                 send({ ping : true })
-                pong_timer = setTimeout(reconnect, 4000)
+                //pong_timer = setTimeout(reconnect, 4000)
             }, 3000)
         }
         
@@ -50,10 +50,10 @@ function sync9_create_client(url) {
         }
         ws.onclose = reconnect
         ws.onmessage = (e) => {
+            console.log('message: ' + e.data)
+            
             var o = JSON.parse(e.data)
             if (o.pong) return on_pong()
-
-            console.log('message: ' + e.data)
             
             if (o.init) {
                 
