@@ -8,7 +8,10 @@
 
 console.log('it begins: ' + sync9_guid())
 
-//sync9_create_client('ws://localhost:60608')
+var db = sync9_create_client('ws://localhost:60608')
+db.on('bloop', (proxy) => {
+    console.log('got here! proxy = ', proxy)
+})
 
 
 /*
