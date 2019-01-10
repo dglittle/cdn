@@ -36,6 +36,7 @@ function sync9_create_client(url) {
     })
 
     function reconnect() {
+        clearTimeout(pong_timer)
         ws = new WebSocket(url)
 
         function on_pong() {
@@ -54,7 +55,7 @@ function sync9_create_client(url) {
         }
         ws.onclose = reconnect
         ws.onmessage = (e) => {
-            console.log('message: ', JSON.parse(e.data))
+            console.log('message: ', JSON.parse(e.data), Math.random())
             
             var o = JSON.parse(e.data)
             if (o.pong) return on_pong()
