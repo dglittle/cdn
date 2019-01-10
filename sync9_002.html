@@ -6,9 +6,9 @@
 <script>
 
 
-console.log('it begins')
+console.log('it begins: ' + sync9_guid())
 
-sync9_create_client('ws://localhost:60608')
+//sync9_create_client('ws://localhost:60608')
 
 
 /*
@@ -83,16 +83,6 @@ function sync9_create_client(url) {
         close : () => send({ close : true })
     }
 }
-
-function sync9_guid() {
-    var x = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    var s = []
-    for (var i = 0; i < 15; i++)
-        s.push(x[Math.floor(Math.random() * x.length)])
-    return s.join('')
-}
-
-
 
 function sync9_create() {
     return {
@@ -437,6 +427,14 @@ function sync9_diff_ODI(a, b) {
     }
     if (prev) ret.push(prev)
     return ret
+}
+
+function sync9_guid() {
+    var x = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    var s = []
+    for (var i = 0; i < 15; i++)
+        s.push(x[Math.floor(Math.random() * x.length)])
+    return s.join('')
 }
 
 // modified from https://stackoverflow.com/questions/22697936/binary-search-in-javascript
