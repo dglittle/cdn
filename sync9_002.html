@@ -5,95 +5,84 @@
 <body></body>
 <script>
 
-function tracker_wrapper(x, path) {
-    var child_path = key => path + `[${JSON.stringify(key)}]`
-    return new Proxy(x, {
-        get : (x, key) => {
-            var y = x[key]
-            if (typeof(y) == 'object') {
-                return tracker_wrapper(y, child_path(key))
-            } else return y
-        },
-        set : (x, key, val) => {
-            console.log(child_path(key) + ' = ' + JSON.stringify(val))
-            x[key] = val
-            return true
-        }
-    })
+/*
+
+var db = sync9_create_client(url)
+db.on(key, (proxy_value) => {
+    proxy_value.x = 5
+})
+
+*/
+
+function sync9_create_client(url) {
+    var ws = null
+    var keys = {}
     
-}
+    function send(o) {
+        try {
+            ws.send(JSON.stringify(o))
+        } catch (e) {}
+    }
 
-function create_tracker() {
-    return tracker_wrapper({}, 'root')
-}
+    window.addEventListener('beforeunload', () => {
+        send({ close : true })
+    })
 
+    function reconnect() {
+        ws = new WebSocket(url)
 
-var tracker = create_tracker()
-tracker.a = 5
-tracker.b = 7
-tracker.c = {d : 9, e : 10}
+        var pong_timer = null
+        function on_pong() {
+            clearTimeout(pong_timer)
+            setTimeout(() => {
+                send({ ping : true })
+                pong_timer = setTimeout(reconnect, 4000)
+            }, 3000)
+        }
+        
+        ws.onopen = () => {
+            on_pong()
+            Object.keys(keys).forEach(k => send({ on : k }))
+        }
+        ws.onclose = reconnect
+        ws.onmessage = (e) => {
+            var o = JSON.parse(e.data)
+            if (o.pong) return on_pong()
 
-tracker.c.e = 11
-
-
-
-
-
-
-
-db = sync9_client()
-
-var client = diffsync.create_client({
-    ws_url : 'ws://invisible.college:' + diffsync.port,
-    channel : 'the_cool_room',
-    get_text : function () {
-        return current_text_displayed_to_user
-    },
-    get_range : function () {
-        return [selection_start, selection_end]
-    },
-    on_text : function (text, range) {
-        current_text_displayed_to_user = text
-        set_selection(range[0], range[1])
-    },
-    on_ranges : function (peer_ranges) {
-.        for (peer in peer_ranges) {
-            set_peer_selection(peer_ranges[peer][0], peer_ranges[peer][1])
+            console.log('message: ' + e.data)
+            
+            if (o.init) {
+                
+            }
         }
     }
-})
-
-client.on_change() <-- call this when the user changes the text or cursor/selection position
-
-
-
-
-sync9_create_client({
-    ws_url : 'ws://blah',
-    channel : 'bloop',
-    default 
-    on : (proxy_obj) => {
+    reconnect()
+    
+    return {
+        on : (key, cb) => {
+            keys[key] = {
+                s9 : sync9_create(),
+                unACKed_versions : {},
+                cb : cb
+            }
+            send({ on : key })
+        },
+        off : key => {
+            delete keys[key]
+            send({ off : key })
+        },
+        close : () => send({ close : true })
     }
-})
+}
 
+function sync9_guid() {
+    var x = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    var s = []
+    for (var i = 0; i < 15; i++)
+        s.push(x[Math.floor(Math.random() * x.length)])
+    return s.join('')
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+sync9_create_client('ws://localhost:60608')
 
 </script>
