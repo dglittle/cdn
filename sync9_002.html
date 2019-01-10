@@ -14,15 +14,6 @@ db.on('bloop', (proxy) => {
 })
 
 
-/*
-
-var db = sync9_create_client(url)
-db.on(key, (proxy_value) => {
-    proxy_value.x = 5
-})
-
-*/
-
 function sync9_create_client(url) {
     var ws = null
     var keys = {}
