@@ -12,7 +12,15 @@ c.height = Math.floor(c.width * 2 / 3)
 document.body.append(c)
 var g = c.getContext('2d')
 
-var spinor = [[1, 0], [0, 0]]
+//var spinor = [[1, 0], [0, 0]]
+var spinor = [[1/Math.sqrt(2), 0], [1/Math.sqrt(2), .2]]
+
+var flag = [
+    vec3.set(vec3.create(), 0, 0, 1),
+    vec3.set(vec3.create(), 0.2, 0, 1),
+    vec3.set(vec3.create(), 0.2, 0, 0.8),
+    vec3.set(vec3.create(), 0, 0, 0.8)
+]
 
 function draw_everything() {
     g.fillStyle = 'white'
@@ -38,7 +46,53 @@ function draw_everything() {
     g.arc(c.width/6 + r*spinor[1][0], c.height*3/4 - r*spinor[1][1], 5, 0, tau)
     g.fillStyle = 'red'
     g.fill()
-
+    
+    var x_axis = vec3.set(vec3.create(), 1, 0, 0)
+    var y_axis = vec3.set(vec3.create(), 0, 1, 0)
+    var z_axis = vec3.set(vec3.create(), 0, 0, 1)
+    
+    var vector = vec3.set(vec3.create(),
+        2*spinor[0][0]*spinor[1][0] + 2*spinor[0][1]*spinor[1][1],
+        2*spinor[0][0]*spinor[1][1] + 2*spinor[0][1]*spinor[1][0],
+        spinor[0][0]*spinor[0][0] + spinor[0][1]*spinor[0][1] - spinor[1][0]*spinor[1][0] - spinor[1][1]*spinor[1][1])
+    
+    var m = mat3.fromValues(
+        -Math.sin(tau/8), -Math.cos(tau/8)*Math.sin(tau/16), Math.cos(tau/8)*Math.cos(tau/16),
+        Math.sin(tau/8), -Math.cos(tau/8)*Math.sin(tau/16), Math.cos(tau/8)*Math.cos(tau/16),
+        0, Math.cos(tau/16), Math.sin(tau/16))
+    
+    vec3.transformMat3(x_axis, x_axis, m)
+    vec3.transformMat3(y_axis, y_axis, m)
+    vec3.transformMat3(z_axis, z_axis, m)
+    vec3.transformMat3(vector, vector, m)
+    
+    var r = c.width/3
+    var x = c.width/3*2
+    var y = c.height/2
+    
+    g.beginPath()
+    g.moveTo(x, y)
+    g.lineTo(x + x_axis[0]*r, y - x_axis[1]*r)
+    g.strokeStyle = 'red'
+    g.stroke()
+    
+    g.beginPath()
+    g.moveTo(x, y)
+    g.lineTo(x + y_axis[0]*r, y - y_axis[1]*r)
+    g.strokeStyle = 'green'
+    g.stroke()
+    
+    g.beginPath()
+    g.moveTo(x, y)
+    g.lineTo(x + z_axis[0]*r, y - z_axis[1]*r)
+    g.strokeStyle = 'blue'
+    g.stroke()
+    
+    g.beginPath()
+    g.moveTo(x, y)
+    g.lineTo(x + vector[0]*r, y - vector[1]*r)
+    g.strokeStyle = 'black'
+    g.stroke()
 }
 
 draw_everything()
