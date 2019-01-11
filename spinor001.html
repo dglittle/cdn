@@ -1,0 +1,46 @@
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.6.1/gl-matrix-min.js"></script>
+
+<body style="margin:0px"></body>
+<script>
+
+var tau = Math.PI * 2
+
+var c = document.createElement('canvas')
+c.width = window.innerWidth
+c.height = Math.floor(c.width * 2 / 3)
+document.body.append(c)
+var g = c.getContext('2d')
+
+var spinor = [[1, 0], [0, 0]]
+
+function draw_everything() {
+    g.fillStyle = 'white'
+    g.fillRect(0, 0, c.width, c.height)
+    
+    var r = c.width/6 - 5
+    g.beginPath()
+    g.arc(c.width/6, c.height/4, r, 0, tau)
+    g.fillStyle = 'lightgrey'
+    g.fill()
+
+    g.beginPath()
+    g.arc(c.width/6 + r*spinor[0][0], c.height/4 - r*spinor[0][1], 5, 0, tau)
+    g.fillStyle = 'red'
+    g.fill()
+
+    g.beginPath()
+    g.arc(c.width / 6, c.height*3/4, r, 0, tau)
+    g.fillStyle = 'lightgrey'
+    g.fill()
+
+    g.beginPath()
+    g.arc(c.width/6 + r*spinor[1][0], c.height*3/4 - r*spinor[1][1], 5, 0, tau)
+    g.fillStyle = 'red'
+    g.fill()
+
+}
+
+draw_everything()
+
+</script>
