@@ -52,10 +52,11 @@ function sync9_create_client(url) {
         }
         ws.onclose = reconnect
         ws.onmessage = (e) => {
-            console.log('message: ', JSON.parse(e.data), Math.random())
-            
             var o = JSON.parse(e.data)
             if (o.pong) return on_pong()
+            
+            console.log('message: ', JSON.parse(e.data))
+            
             if (o.init || o.version) {
                 var s9 = keys[o.key].s9
                 if (o.init)
