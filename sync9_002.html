@@ -8,19 +8,21 @@
 
 console.log('it begins: ' + sync9_guid())
 
-var db1 = sync9_create_client('ws://localhost:60608')
-db1.on('bloop', (proxy) => {
-    console.log('got here DB1! proxy = ', proxy)
-    if (false && proxy.root && proxy.root % 2 == 1 && proxy.root < 10)
-        proxy.root += 1
-})
-
-var db2 = sync9_create_client('ws://localhost:60608')
-db2.on('bloop', (proxy) => {
-    console.log('got here DB2! proxy = ', proxy)
-    if (!proxy.root || proxy.root % 2 == 0)
-        proxy.root = (proxy.root || 0) + 1
-})
+if (true) {
+    var db1 = sync9_create_client('ws://localhost:60608')
+    db1.on('bloop', (proxy) => {
+        console.log('got here DB1! proxy = ', proxy)
+        if (proxy.root && proxy.root.length == 0)
+            proxy.root.push(77)
+    })
+    
+    var db2 = sync9_create_client('ws://localhost:60608')
+    db2.on('bloop', (proxy) => {
+        console.log('got here DB2! proxy = ', proxy)
+        if (!proxy.root)
+            proxy.root = []
+    })
+}
 
 
 function sync9_create_client(url) {
