@@ -8,9 +8,15 @@
 
 console.log('it begins: ' + sync9_guid())
 
-var db = sync9_create_client('ws://localhost:60608')
-db.on('bloop', (proxy) => {
-    console.log('got here! proxy = ', proxy)
+var db1 = sync9_create_client('ws://localhost:60608')
+db1.on('bloop', (proxy) => {
+    console.log('got here DB1! proxy = ', proxy)
+})
+
+var db2 = sync9_create_client('ws://localhost:60608')
+db2.on('bloop', (proxy) => {
+    console.log('got here DB2! proxy = ', proxy)
+    proxy.x = 5
 })
 
 
