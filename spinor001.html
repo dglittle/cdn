@@ -1,6 +1,6 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.6.1/gl-matrix-min.js"></script>
-
+<script src="https://dglittle.github.io/cdn/utils001.js"></script>
 <body style="margin:0px"></body>
 <script>
 
@@ -96,5 +96,27 @@ function draw_everything() {
 }
 
 draw_everything()
+
+var mouseDown = 0
+document.body.onmousedown = () => ++mouseDown
+document.body.onmouseup = () => --mouseDown
+
+var on_mouse = (e, mouse_down_override) => {
+    if (!mouse_down_override && mouseDown <= 0) return
+    var x = e.pageX
+    var y = e.pageY
+    
+    if (x < c.width/3 && y < c.height/2) {
+        spinor[0][0] = lerp(5, -1, c.width/3 - 5, 1, x)
+        spinor[0][1] = lerp(5, 1, c.height/2 - 5, -1, y)
+    } else if (x < c.width/3 && y > c.height/2) {
+        spinor[1][0] = lerp(5, -1, c.width/3 - 5, 1, x)
+        spinor[1][1] = lerp(c.height/2 + 5, 1, c.height - 5, -1, y)
+    }
+    
+    draw_everything()
+}
+c.onmousedown = (e) => on_mouse(e, true)
+c.onmousemove = on_mouse
 
 </script>
