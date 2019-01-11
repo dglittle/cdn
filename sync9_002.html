@@ -16,7 +16,7 @@ db1.on('bloop', (proxy) => {
 var db2 = sync9_create_client('ws://localhost:60608')
 db2.on('bloop', (proxy) => {
     console.log('got here DB2! proxy = ', proxy)
-    proxy.x = 5
+    proxy.root = 5
 })
 
 
@@ -65,8 +65,10 @@ function sync9_create_client(url) {
                     })
                 else
                     sync9_add_version(s9, o.version.vid, o.version.parents, o.version.changes)
-                    
-                keys[o.key].cb(sync9_create_proxy(sync9_read(s9), (change) => {
+                
+                keys[o.key].cb(sync9_create_proxy({ root : sync9_read(s9) }, (change) => {
+                    if (!change.startsWith('["root"]')) throw 'bad'
+                    change = change.substr(8)
                     var v = {
                         vid : sync9_guid(),
                         parents : Object.assign({}, s9.leaves),
