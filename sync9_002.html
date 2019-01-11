@@ -20,27 +20,21 @@ function sync9_create_client(url) {
     var ping_pong_timer = null
     
     function send(o) {
-        try {
-            ws.send(JSON.stringify(o))
-        } catch (e) {}
+        try { ws.send(JSON.stringify(o)) } catch (e) {}
     }
-
-    window.addEventListener('beforeunload', () => {
-        send({ close : true })
-    })
+    
+    function on_pong() {
+        clearTimeout(ping_pong_timer)
+        ping_pong_timer = setTimeout(() => {
+            send({ ping : true })
+            ping_pong_timer = setTimeout(reconnect, 4000)
+        }, 3000)
+    }
 
     function reconnect() {
         clearTimeout(ping_pong_timer)
         ws = new WebSocket(url)
-
-        function on_pong() {
-            clearTimeout(ping_pong_timer)
-            ping_pong_timer = setTimeout(() => {
-                send({ ping : true })
-                ping_pong_timer = setTimeout(reconnect, 4000)
-            }, 3000)
-        }
-        
+    
         ws.onopen = () => {
             console.log('connection open..')
             
@@ -54,6 +48,11 @@ function sync9_create_client(url) {
             var o = JSON.parse(e.data)
             if (o.pong) return on_pong()
             if (o.init) {
+                Object.values(o.init).forEach(v => {
+                    sync9_add_version(keys[o.key].s9, v.vid, v.parents, v.changes)
+                })
+                
+                
                 
                 
                 
@@ -430,6 +429,23 @@ function sync9_guid() {
     for (var i = 0; i < 15; i++)
         s.push(x[Math.floor(Math.random() * x.length)])
     return s.join('')
+}
+
+function sync9_create_proxy(x, cb, path) {
+    var child_path = key => (path || '') + '[' + JSON.stringify(key) + ']'
+    return new Proxy(x, {
+        get : (x, key) => {
+            var y = x[key]
+            if (typeof(y) == 'object') {
+                return sync9_create_proxy(y, cb, child_path(key))
+            } else return y
+        },
+        set : (x, key, val) => {
+            cb(child_path(key) + ' = ' + JSON.stringify(val))
+            x[key] = val
+            return true
+        }
+    })
 }
 
 // modified from https://stackoverflow.com/questions/22697936/binary-search-in-javascript
