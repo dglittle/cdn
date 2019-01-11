@@ -11,12 +11,15 @@ console.log('it begins: ' + sync9_guid())
 var db1 = sync9_create_client('ws://localhost:60608')
 db1.on('bloop', (proxy) => {
     console.log('got here DB1! proxy = ', proxy)
+    if (false && proxy.root && proxy.root % 2 == 1 && proxy.root < 10)
+        proxy.root += 1
 })
 
 var db2 = sync9_create_client('ws://localhost:60608')
 db2.on('bloop', (proxy) => {
     console.log('got here DB2! proxy = ', proxy)
-    proxy.root = 5
+    if (!proxy.root || proxy.root % 2 == 0)
+        proxy.root = (proxy.root || 0) + 1
 })
 
 
@@ -460,7 +463,7 @@ function sync9_create_proxy(x, cb, path) {
     return new Proxy(x, {
         get : (x, key) => {
             var y = x[key]
-            if (typeof(y) == 'object') {
+            if (y && typeof(y) == 'object') {
                 return sync9_create_proxy(y, cb, child_path(key))
             } else return y
         },
