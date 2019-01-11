@@ -163,18 +163,7 @@ function sync9_add_version(x, vid, parents, changes) {
 }
 
 function sync9_read(x) {
-    
-    
-    
-    if (x == null) {
-        // work here
-        console.log('NULLLLLLLLL!!!!')
-        return null
-    }
-    
-    
-    
-    if (typeof(x) == 'object') {
+    if (x && typeof(x) == 'object') {
         if (!x.t && x.val) return sync9_read(x.val)
         if (x.t == 'val') return sync9_read(sync9_space_dag_get(x.S, 0))
         if (x.t == 'obj') {
