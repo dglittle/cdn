@@ -39,7 +39,10 @@ function sync9_create_client(url) {
             console.log('connection open..')
             
             on_pong()
-            Object.keys(keys).forEach(k => send({ on : k }))
+            Object.entries(keys).forEach(([k, v]) => {
+                send({ on : k })
+                Object.values(v.unACKed_versions).forEach(v => send({ key : k, version : v }))
+            })
         }
         ws.onclose = reconnect
         ws.onmessage = (e) => {
@@ -47,15 +50,28 @@ function sync9_create_client(url) {
             
             var o = JSON.parse(e.data)
             if (o.pong) return on_pong()
-            if (o.init) {
-                Object.values(o.init).forEach(v => {
-                    sync9_add_version(keys[o.key].s9, v.vid, v.parents, v.changes)
-                })
-                
-                
-                
-                
-                
+            if (o.init || o.version) {
+                var s9 = keys[o.key].s9
+                if (o.init)
+                    Object.values(o.init).forEach(v => {
+                        sync9_add_version(s9, v.vid, v.parents, v.changes)
+                    })
+                else
+                    sync9_add_version(s9, o.version.vid, o.version.parents, o.version.changes)
+                    
+                keys[o.key].cb(sync9_create_proxy(sync9_read(s9), (change) => {
+                    var v = {
+                        vid : sync9_guid(),
+                        parents : Object.assign({}, s9.leaves),
+                        changes : [change]
+                    }
+                    send({ key : o.key, version : v })
+                    keys[o.key].unACKed_versions[v.vid] = v
+                    sync9_add_version(s9, v.vid, s9.leaves, v.changes)
+                }))
+            }
+            if (o.ACK) {
+                delete keys[o.key].unACKed_versions[o.ACK]
             }
         }
     }
@@ -73,8 +89,7 @@ function sync9_create_client(url) {
         off : key => {
             delete keys[key]
             send({ off : key })
-        },
-        close : () => send({ close : true })
+        }
     }
 }
 
