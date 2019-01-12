@@ -13,7 +13,7 @@ if (true) {
     db1.on('bloop', (proxy) => {
         console.log('got here DB1! proxy = ', JSON.stringify(proxy))
         if (proxy.root && proxy.root.length == 3)
-            proxy.root = 'aBBc'
+            proxy.root = 'AabcZ'
     })
     
     var db2 = sync9_create_client('ws://localhost:60608')
@@ -73,7 +73,18 @@ function sync9_create_client(url) {
                 
                 keys[o.key].cb(sync9_create_proxy({ root : sync9_read(s9) }, (changes) => {
                     changes = changes.map(c => {
-                        if (!c.startsWith('["root"]')) throw 'bad'
+                        if (!c.startsWith('["root"]')) {
+                         
+                         
+                            console.log(changes)
+                         
+                            // work here   
+                            
+                            throw 'bad'
+                            
+                            
+                            
+                        }
                         return c.substr(8)
                     })
                     var v = {
@@ -501,7 +512,7 @@ function sync9_create_proxy(x, cb, path) {
         set : (x, key, val) => {
             if (typeof(val) == 'string' && typeof(x[key]) == 'string') {
                 cb(sync9_diff_ODI(x[key], val).map(splice => {
-                    return path + '[' + splice[0] + ':' + (splice[0] + splice[1]) + '] = ' + splice[2]
+                    return child_path(key) + '[' + splice[0] + ':' + (splice[0] + splice[1]) + '] = ' + JSON.stringify(splice[2])
                 }))
             } else {
                 if ((x instanceof Array) && key.match(/^\d+$/)) key = +key
