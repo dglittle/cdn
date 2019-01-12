@@ -461,30 +461,36 @@ function sync9_guid() {
 }
 
 function sync9_create_proxy(x, cb, path) {
-    
-    
-    work here
-    
-    
-        // hard
-        copyWithin()
-        reverse()
-        sort()
-        
-        // maybe
-        fill()
-        
-        // yes
-        push()
-        pop()
-        shift()
-        unshift()
-        splice()
-    
-    
-    var child_path = key => (path || '') + '[' + JSON.stringify(key) + ']'
+    path = path || ''
+    var child_path = key => path + '[' + JSON.stringify(key) + ']'
     return new Proxy(x, {
         get : (x, key) => {
+            if (['copyWithin', 'reverse', 'sort', 'fill'].includes(key))
+                throw 'proxy does not support function: ' + key
+            if (key == 'push') return function () {
+                var args = Array.from(arguments)
+                cb(path + '[' + x.length + ':' + x.length + '] = ' + JSON.stringify(args))
+                return x.push.apply(x, args)
+            }
+            if (key == 'pop') return function () {
+                cb(path + '[' + (x.length - 1) + ':' + x.length + '] = []')
+                return x.pop()
+            }
+            if (key == 'shift') return function () {
+                cb(path + '[0:1] = []')
+                return x.shift()
+            }
+            if (key == 'unshift') return function () {
+                var args = Array.from(arguments)
+                cb(path + '[0:0] = ' + JSON.stringify(args))
+                return x.unshift.apply(x, args)
+            }
+            if (key == 'splice') return function () {
+                var args = Array.from(arguments)
+                cb(child_path(key) + '[' + args[0] + ':' + (args[0] + args[1]) + '] = ' + JSON.stringify(args.slice(2)))
+                return x.splice.apply(x, args)
+            }
+            
             var y = x[key]
             if (y && typeof(y) == 'object') {
                 return sync9_create_proxy(y, cb, child_path(key))
