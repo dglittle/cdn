@@ -497,6 +497,7 @@ function sync9_create_proxy(x, cb, path) {
             } else return y
         },
         set : (x, key, val) => {
+            if ((x instanceof Array) && key.match(/^\d+$/)) key = +key            
             cb(child_path(key) + ' = ' + JSON.stringify(val))
             x[key] = val
             return true
