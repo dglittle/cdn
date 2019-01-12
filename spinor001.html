@@ -15,7 +15,7 @@ var g = c.getContext('2d')
 //var spinor = [[1, 0], [0, 0]]
 var spinor = [[1/Math.sqrt(2), 0], [1/Math.sqrt(2), .2]]
 
-var flag = [
+var orig_flag = [
     vec3.set(vec3.create(), 0, 0, 1),
     vec3.set(vec3.create(), 0.2, 0, 1),
     vec3.set(vec3.create(), 0.2, 0, 0.8),
@@ -51,20 +51,49 @@ function draw_everything() {
     var y_axis = vec3.set(vec3.create(), 0, 1, 0)
     var z_axis = vec3.set(vec3.create(), 0, 0, 1)
     
-    var vector = vec3.set(vec3.create(),
+    var R = vec3.set(vec3.create(),
         2*spinor[0][0]*spinor[1][0] + 2*spinor[0][1]*spinor[1][1],
         2*spinor[0][0]*spinor[1][1] + 2*spinor[0][1]*spinor[1][0],
         spinor[0][0]*spinor[0][0] + spinor[0][1]*spinor[0][1] - spinor[1][0]*spinor[1][0] - spinor[1][1]*spinor[1][1])
     
-    var m = mat3.fromValues(
+    var camera = mat3.fromValues(
         -Math.sin(tau/8), -Math.cos(tau/8)*Math.sin(tau/16), Math.cos(tau/8)*Math.cos(tau/16),
         Math.sin(tau/8), -Math.cos(tau/8)*Math.sin(tau/16), Math.cos(tau/8)*Math.cos(tau/16),
         0, Math.cos(tau/16), Math.sin(tau/16))
     
-    vec3.transformMat3(x_axis, x_axis, m)
-    vec3.transformMat3(y_axis, y_axis, m)
-    vec3.transformMat3(z_axis, z_axis, m)
-    vec3.transformMat3(vector, vector, m)
+    vec3.transformMat3(x_axis, x_axis, camera)
+    vec3.transformMat3(y_axis, y_axis, camera)
+    vec3.transformMat3(z_axis, z_axis, camera)
+    
+    var phi = Math.atan2(R[1], R[0])
+    var alpha = -(Math.atan2(spinor[0][1], spinor[0][0])*2 + phi)
+    
+    var alpha_rotation = mat3.fromValues(
+        Math.cos(alpha), Math.sin(alpha), 0,
+        -Math.sin(alpha), Math.cos(alpha), 0,
+        0, 0, 1)
+    
+    var R_len = vec3.length(R)
+    var ABA_z = R
+    var ABA_y = vec3.fromValues(-R[1], R[0], 0)
+    vec3.normalize(ABA_y, ABA_y)
+    vec3.scale(ABA_y, ABA_y, R_len)
+    var ABA_x = vec3.cross(vec3.create(), ABA_y, ABA_z)
+    vec3.normalize(ABA_x, ABA_x)
+    vec3.scale(ABA_x, ABA_x, R_len)
+    
+    var ABA = mat3.fromValues(
+        ABA_x[0], ABA_x[1], ABA_x[2],
+        ABA_y[0], ABA_y[1], ABA_y[2],
+        ABA_z[0], ABA_z[1], ABA_z[2])
+
+    var flag = orig_flag.map(o_f => {
+        var f = vec3.clone(o_f)
+        vec3.transformMat3(f, f, alpha_rotation)
+        vec3.transformMat3(f, f, ABA)
+        vec3.transformMat3(f, f, camera)
+        return f
+    })
     
     var r = c.width/3
     var x = c.width/3*2
@@ -90,7 +119,8 @@ function draw_everything() {
     
     g.beginPath()
     g.moveTo(x, y)
-    g.lineTo(x + vector[0]*r, y - vector[1]*r)
+    for (var i = 0; i < flag.length; i++)
+        g.lineTo(x + flag[i][0]*r, y - flag[i][1]*r)
     g.strokeStyle = 'black'
     g.stroke()
 }
