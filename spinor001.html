@@ -136,12 +136,62 @@ var on_mouse = (e, mouse_down_override) => {
     var x = e.pageX
     var y = e.pageY
     
+    
+    var R = vec3.set(vec3.create(),
+        2*spinor[0][0]*spinor[1][0] + 2*spinor[0][1]*spinor[1][1],
+        2*spinor[0][0]*spinor[1][1] + 2*spinor[0][1]*spinor[1][0],
+        spinor[0][0]*spinor[0][0] + spinor[0][1]*spinor[0][1] - spinor[1][0]*spinor[1][0] - spinor[1][1]*spinor[1][1])
+    var R_len = vec3.length(R)
+    
+    
     if (x < c.width/3 && y < c.height/2) {
         spinor[0][0] = lerp(5, -1, c.width/3 - 5, 1, x)
         spinor[0][1] = lerp(5, 1, c.height/2 - 5, -1, y)
+        
+        var a_lenSq = Math.pow(spinor[0][0], 2) + Math.pow(spinor[0][1], 2)
+        if (a_lenSq > 1) {
+            var a_factor = 1 / Math.sqrt(a_lenSq)
+            spinor[0][0] *= a_factor
+            spinor[0][1] *= a_factor
+            spinor[1][0] = 0
+            spinor[1][1] = 0
+            draw_everything()
+            return
+        }
+        if (spinor[1][0] == 0 && spinor[1][1] == 0) {
+            spinor[1][0] = 1
+            spinor[1][1] = 0
+        }
+        
+        var b_lenSq = Math.pow(spinor[1][0], 2) + Math.pow(spinor[1][1], 2)
+        
+        var b_factor = Math.sqrt(1 - a_lenSq) / Math.sqrt(b_lenSq)
+        spinor[1][0] *= b_factor
+        spinor[1][1] *= b_factor
     } else if (x < c.width/3 && y > c.height/2) {
         spinor[1][0] = lerp(5, -1, c.width/3 - 5, 1, x)
         spinor[1][1] = lerp(c.height/2 + 5, 1, c.height - 5, -1, y)
+
+        var b_lenSq = Math.pow(spinor[1][0], 2) + Math.pow(spinor[1][1], 2)
+        if (b_lenSq > 1) {
+            var b_factor = 1 / Math.sqrt(b_lenSq)
+            spinor[1][0] *= b_factor
+            spinor[1][1] *= b_factor
+            spinor[0][0] = 0
+            spinor[0][1] = 0
+            draw_everything()
+            return
+        }
+        if (spinor[0][0] == 0 && spinor[0][1] == 0) {
+            spinor[0][0] = 1
+            spinor[0][1] = 0
+        }
+        
+        var a_lenSq = Math.pow(spinor[0][0], 2) + Math.pow(spinor[0][1], 2)
+        
+        var a_factor = Math.sqrt(1 - b_lenSq) / Math.sqrt(a_lenSq)
+        spinor[0][0] *= a_factor
+        spinor[0][1] *= a_factor
     }
     
     draw_everything()
