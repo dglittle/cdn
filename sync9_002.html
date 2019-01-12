@@ -8,17 +8,17 @@
 
 console.log('it begins: ' + sync9_guid())
 
-if (false) {
+if (true) {
     var db1 = sync9_create_client('ws://localhost:60608')
     db1.on('bloop', (proxy) => {
-        console.log('got here DB1! proxy = ', proxy)
+        console.log('got here DB1! proxy = ', JSON.stringify(proxy))
         if (proxy.root && proxy.root.length == 0)
             proxy.root.push(77)
     })
     
     var db2 = sync9_create_client('ws://localhost:60608')
     db2.on('bloop', (proxy) => {
-        console.log('got here DB2! proxy = ', proxy)
+        console.log('got here DB2! proxy = ', JSON.stringify(proxy))
         if (!proxy.root)
             proxy.root = []
     })
@@ -71,13 +71,15 @@ function sync9_create_client(url) {
                 else
                     sync9_add_version(s9, o.version.vid, o.version.parents, o.version.changes)
                 
-                keys[o.key].cb(sync9_create_proxy({ root : sync9_read(s9) }, (change) => {
-                    if (!change.startsWith('["root"]')) throw 'bad'
-                    change = change.substr(8)
+                keys[o.key].cb(sync9_create_proxy({ root : sync9_read(s9) }, (changes) => {
+                    changes = changes.map(c => {
+                        if (!c.startsWith('["root"]')) throw 'bad'
+                        return c.substr(8)
+                    })
                     var v = {
                         vid : sync9_guid(),
                         parents : Object.assign({}, s9.leaves),
-                        changes : [change]
+                        changes : changes
                     }
                     send({ key : o.key, version : v })
                     keys[o.key].unACKed_versions[v.vid] = v
@@ -469,25 +471,25 @@ function sync9_create_proxy(x, cb, path) {
                 throw 'proxy does not support function: ' + key
             if (key == 'push') return function () {
                 var args = Array.from(arguments)
-                cb(path + '[' + x.length + ':' + x.length + '] = ' + JSON.stringify(args))
+                cb([path + '[' + x.length + ':' + x.length + '] = ' + JSON.stringify(args)])
                 return x.push.apply(x, args)
             }
             if (key == 'pop') return function () {
-                cb(path + '[' + (x.length - 1) + ':' + x.length + '] = []')
+                cb([path + '[' + (x.length - 1) + ':' + x.length + '] = []'])
                 return x.pop()
             }
             if (key == 'shift') return function () {
-                cb(path + '[0:1] = []')
+                cb([path + '[0:1] = []'])
                 return x.shift()
             }
             if (key == 'unshift') return function () {
                 var args = Array.from(arguments)
-                cb(path + '[0:0] = ' + JSON.stringify(args))
+                cb([path + '[0:0] = ' + JSON.stringify(args)])
                 return x.unshift.apply(x, args)
             }
             if (key == 'splice') return function () {
                 var args = Array.from(arguments)
-                cb(child_path(key) + '[' + args[0] + ':' + (args[0] + args[1]) + '] = ' + JSON.stringify(args.slice(2)))
+                cb([child_path(key) + '[' + args[0] + ':' + (args[0] + args[1]) + '] = ' + JSON.stringify(args.slice(2))])
                 return x.splice.apply(x, args)
             }
             
@@ -497,8 +499,14 @@ function sync9_create_proxy(x, cb, path) {
             } else return y
         },
         set : (x, key, val) => {
-            if ((x instanceof Array) && key.match(/^\d+$/)) key = +key            
-            cb(child_path(key) + ' = ' + JSON.stringify(val))
+            if (typeof(val) == 'string' && typeof(x[key]) == 'string') {
+                cb(sync9_diff_ODI(x[key], val).map(splice => {
+                    return path + '[' + splice[0] + ':' + (splice[0] + splice[1]) + '] = ' + splice[2]
+                }))
+            } else {
+                if ((x instanceof Array) && key.match(/^\d+$/)) key = +key
+                cb([child_path(key) + ' = ' + JSON.stringify(val)])
+            }
             x[key] = val
             return true
         }
