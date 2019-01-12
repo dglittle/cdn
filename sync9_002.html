@@ -12,15 +12,15 @@ if (true) {
     var db1 = sync9_create_client('ws://localhost:60608')
     db1.on('bloop', (proxy) => {
         console.log('got here DB1! proxy = ', JSON.stringify(proxy))
-        if (proxy.root && proxy.root.length == 0)
-            proxy.root.push(77)
+        if (proxy.root && proxy.root.length == 3)
+            proxy.root = 'aBBc'
     })
     
     var db2 = sync9_create_client('ws://localhost:60608')
     db2.on('bloop', (proxy) => {
         console.log('got here DB2! proxy = ', JSON.stringify(proxy))
         if (!proxy.root)
-            proxy.root = []
+            proxy.root = 'abc'
     })
 }
 
