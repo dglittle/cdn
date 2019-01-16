@@ -12,17 +12,25 @@ var c = document.createElement('canvas')
 c.width = 256
 c.height = 256
 var g = c.getContext('2d')
+document.body.append(c)
 
 var cc = document.createElement('canvas')
 cc.width = 256
 cc.height = 256
 var gg = cc.getContext('2d')
+document.body.append(cc)
+
+var ccc = document.createElement('canvas')
+ccc.width = 256
+ccc.height = 256
+var ggg = cc.getContext('2d')
+document.body.append(ccc)
 
 var xd = 256 / 64
 var yd = 256 / 64
 var xn = c.width / xd
 var yn = c.height / yd
-var zn = 1
+var zn = 10
 
 var spins = []
 var spinsB = []
@@ -133,6 +141,20 @@ function paint_it() {
             gg.fillRect(x * xd, y * yd, xd, yd)
         }
     }
+    
+    ggg.fillStyle = 'white'
+    ggg.fillRect(0, 0, c.width, c.height)
+    for (var y = 0; y < yn; y++) {
+        for (var x = 0; x < xn; x++) {
+            var s = vec3.normalize(vec3.create(), vels[y][x][0])
+
+            var R = lerp(-1, 0, 1, 1, s[0])
+            var G = lerp(-1, 0, 1, 1, s[1])
+            var B = lerp(-1, 0, 1, 1, s[2])
+            ggg.fillStyle = 'rgb(' + Math.floor(255 * R) + ', ' + Math.floor(255 * G) + ', ' + Math.floor(255 * B) + ')'
+            ggg.fillRect(x * xd, y * yd, xd, yd)
+        }
+    }
 }
 
 function loop() {
@@ -141,9 +163,6 @@ function loop() {
     setTimeout(loop, 1)
 }
 loop()
-
-document.body.append(c)
-document.body.append(cc)
 
 function fmod(a, b) {
     var m = a % b
