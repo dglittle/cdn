@@ -1,0 +1,134 @@
+
+
+
+<body style="margin:0px">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.6.1/gl-matrix-min.js"></script>
+<script src="https://dglittle.github.io/cdn/utils001.js"></script>
+<script>
+
+var tau = Math.PI * 2
+
+var c = document.createElement('canvas')
+c.width = 256
+c.height = 256
+var g = c.getContext('2d')
+
+var cc = document.createElement('canvas')
+cc.width = 256
+cc.height = 256
+var gg = cc.getContext('2d')
+
+var xd = 256 / 64
+var yd = 256 / 64
+var xn = c.width / xd
+var yn = c.height / yd
+
+var spins = []
+var spinsB = []
+var vels = []
+for (var y = 0; y < yn; y++) {
+    var row = []
+    var rowB = []
+    var vrow = []
+    for (var x = 0; x < xn; x++) {
+        var v = vec3.random(vec3.create())
+        row.push(v)
+        rowB.push(vec3.cross(vec3.create(), v, vec3.random(vec3.create())))
+        vrow.push(vec3.create())
+    }
+    spins.push(row)
+    spinsB.push(rowB)
+    vels.push(vrow)
+}
+
+var iteration = 0
+function update_it() {
+    var dt = 1
+    function update_pair_vel(spins, x1, y1, x2, y2) {
+        var a = spins[y1][x1]
+        var b = spins[y2][x2]
+        var F = vec3.cross(vec3.create(), a, b)
+        
+        vec3.scaleAndAdd(vels[y1][x1], vels[y1][x1], F, dt / 100)
+        vec3.scaleAndAdd(vels[y2][x2], vels[y2][x2], vec3.negate(vec3.create(), F), dt / 100)
+    }
+    for (var y = 0; y < yn; y++) {
+        for (var x = 0; x < xn; x++) {
+            update_pair_vel(spins, x, y, (x + 1) % xn, y)
+            update_pair_vel(spins, x, y, x, (y + 1) % yn)
+            update_pair_vel(spinsB, x, y, (x + 1) % xn, y)
+            update_pair_vel(spinsB, x, y, x, (y + 1) % yn)
+        }
+    }
+    
+    iteration++
+    if (iteration < 1000) {
+        for (var y = 0; y < yn; y++) {
+            for (var x = 0; x < xn; x++) {
+                vec3.scale(vels[y][x], vels[y][x], 1 - 1/(iteration/3 + 1))
+            }
+        }
+    }
+    
+    for (var y = 0; y < yn; y++) {
+        for (var x = 0; x < xn; x++) {
+            var length = vec3.length(vels[y][x])
+            if (length > 0) {
+                var unit = vec3.scale(vec3.create(), vels[y][x], 1 / length)
+                var Q = quat.setAxisAngle(quat.create(), unit, length * dt)
+                var M = mat3.fromQuat(mat3.create(), Q)
+                vec3.transformMat3(spins[y][x], spins[y][x], M)
+                vec3.transformMat3(spinsB[y][x], spinsB[y][x], M)
+            }
+        }
+    }
+}
+
+function paint_it() {
+    g.fillStyle = 'white'
+    g.fillRect(0, 0, c.width, c.height)
+    for (var y = 0; y < yn; y++) {
+        for (var x = 0; x < xn; x++) {
+            var s = spins[y][x]
+
+            var R = lerp(-1, 0, 1, 1, s[0])
+            var G = lerp(-1, 0, 1, 1, s[1])
+            var B = lerp(-1, 0, 1, 1, s[2])
+            g.fillStyle = 'rgb(' + Math.floor(255 * R) + ', ' + Math.floor(255 * G) + ', ' + Math.floor(255 * B) + ')'
+            g.fillRect(x * xd, y * yd, xd, yd)
+        }
+    }
+
+    gg.fillStyle = 'white'
+    gg.fillRect(0, 0, c.width, c.height)
+    for (var y = 0; y < yn; y++) {
+        for (var x = 0; x < xn; x++) {
+            var s = spinsB[y][x]
+
+            var R = lerp(-1, 0, 1, 1, s[0])
+            var G = lerp(-1, 0, 1, 1, s[1])
+            var B = lerp(-1, 0, 1, 1, s[2])
+            gg.fillStyle = 'rgb(' + Math.floor(255 * R) + ', ' + Math.floor(255 * G) + ', ' + Math.floor(255 * B) + ')'
+            gg.fillRect(x * xd, y * yd, xd, yd)
+        }
+    }
+}
+
+function loop() {
+    update_it()
+    paint_it()
+    setTimeout(loop, 1)
+}
+loop()
+
+document.body.append(c)
+document.body.append(cc)
+
+function fmod(a, b) {
+    var m = a % b
+    if (m < 0) return m + b
+    return m
+}
+
+</script>
+</body>
