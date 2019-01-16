@@ -33,7 +33,9 @@ for (var y = 0; y < yn; y++) {
     for (var x = 0; x < xn; x++) {
         var v = vec3.random(vec3.create())
         row.push(v)
-        rowB.push(vec3.cross(vec3.create(), v, vec3.random(vec3.create())))
+        rowB.push(vec3.normalize(vec3.create(),
+            vec3.cross(vec3.create(), v, vec3.random(vec3.create()))
+        ))
         vrow.push(vec3.create())
     }
     spins.push(row)
