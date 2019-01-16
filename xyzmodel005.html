@@ -23,8 +23,14 @@ document.body.append(cc)
 var ccc = document.createElement('canvas')
 ccc.width = 256
 ccc.height = 256
-var ggg = cc.getContext('2d')
+var ggg = ccc.getContext('2d')
 document.body.append(ccc)
+
+var cccc = document.createElement('canvas')
+cccc.width = 256
+cccc.height = 256
+var gggg = cccc.getContext('2d')
+document.body.append(cccc)
 
 var xd = 256 / 64
 var yd = 256 / 64
@@ -142,19 +148,47 @@ function paint_it() {
         }
     }
     
+    var max_vel = 0.25
+    // for (var y = 0; y < yn; y++) {
+    //     for (var x = 0; x < xn; x++) {
+    //         var vel = vec3.length(vels[y][x][0])
+    //         if (vel > max_vel) max_vel = vel
+    //     }
+    // }
+    
+    // console.log(max_vel)
+    
     ggg.fillStyle = 'white'
     ggg.fillRect(0, 0, c.width, c.height)
     for (var y = 0; y < yn; y++) {
         for (var x = 0; x < xn; x++) {
-            var s = vec3.normalize(vec3.create(), vels[y][x][0])
+            var v = vels[y][x][0]
+            var vel = vec3.length(v)
+            
+            var s = vec3.scale(vec3.create(), v, 1 / vel)
 
             var R = lerp(-1, 0, 1, 1, s[0])
             var G = lerp(-1, 0, 1, 1, s[1])
             var B = lerp(-1, 0, 1, 1, s[2])
-            ggg.fillStyle = 'rgb(' + Math.floor(255 * R) + ', ' + Math.floor(255 * G) + ', ' + Math.floor(255 * B) + ')'
+            ggg.fillStyle = 'rgb(' + Math.floor(255 * R * vel/max_vel) + ', ' + Math.floor(255 * G * vel/max_vel) + ', ' + Math.floor(255 * B * vel/max_vel) + ')'
             ggg.fillRect(x * xd, y * yd, xd, yd)
         }
     }
+    
+    gggg.fillStyle = 'white'
+    gggg.fillRect(0, 0, c.width, c.height)
+    for (var y = 0; y < yn; y++) {
+        for (var x = 0; x < xn; x++) {
+            var s = spinsB[y][x][Math.floor(zn / 2)]
+
+            var R = lerp(-1, 0, 1, 1, s[0])
+            var G = lerp(-1, 0, 1, 1, s[1])
+            var B = lerp(-1, 0, 1, 1, s[2])
+            gggg.fillStyle = 'rgb(' + Math.floor(255 * R) + ', ' + Math.floor(255 * G) + ', ' + Math.floor(255 * B) + ')'
+            gggg.fillRect(x * xd, y * yd, xd, yd)
+        }
+    }
+    
 }
 
 function loop() {
