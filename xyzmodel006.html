@@ -29,9 +29,6 @@ var spins = []
 for (var y = 0; y < yn; y++) {
     var row = []
     for (var x = 0; x < xn; x++) {
-        
-        debugger
-        
         var v = vec4.random(vec4.create())
 
         if (x == 0 && y == 0)
@@ -132,6 +129,9 @@ function nudge_slerp(v0, v1) {
         // If the inputs are too close for comfort, linearly interpolate
         // and normalize the result.
         
+        // work here
+        t = 0.5
+        
         var result = vec4.lerp(vec4.create(), v0, v1, t)
         vec4.normalize(result, result)
         return result
@@ -145,7 +145,7 @@ function nudge_slerp(v0, v1) {
     //var theta = theta_0*t          // theta = angle between v0 and result
     
     // work here
-    theta = tau / 1000 * Math.sin(theta_0)
+    theta = tau / 200 * Math.sin(theta_0)
 
     
     var sin_theta = Math.sin(theta)     // compute this value only once
