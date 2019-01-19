@@ -29,10 +29,9 @@ var spins = []
 for (var y = 0; y < yn; y++) {
     var row = []
     for (var x = 0; x < xn; x++) {
+        // var a = vec3.random(vec3.create())
         var v = vec4.random(vec4.create())
-
-        if (x == 0 && y == 0)
-            console.log(v)
+        // var v = vec4.fromValues(a[0], a[1], a[2], 0)
 
         row.push(v)
     }
