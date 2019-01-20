@@ -63,9 +63,9 @@ function paint_it() {
         for (var x = 0; x < xn; x++) {
             var s = spins[y][x]
 
-            var R = lerp(-1, 0, 1, 1, s[0])
-            var G = lerp(-1, 0, 1, 1, s[1])
-            var B = lerp(-1, 0, 1, 1, s[2])
+            var R = Math.abs(s[0])
+            var G = Math.abs(s[1])
+            var B = Math.abs(s[2])
             g.fillStyle = 'rgb(' + Math.floor(255 * R) + ', ' + Math.floor(255 * G) + ', ' + Math.floor(255 * B) + ')'
             g.fillRect(x * xd, y * yd, xd, yd)
         }
@@ -77,9 +77,9 @@ function paint_it() {
         for (var x = 0; x < xn; x++) {
             var s = spins[y][x]
 
-            var R = lerp(-1, 0, 1, 1, s[1])
-            var G = lerp(-1, 0, 1, 1, s[2])
-            var B = lerp(-1, 0, 1, 1, s[3])
+            var R = Math.sin(Math.abs(s[1]) * Math.PI)
+            var G = Math.sin(Math.abs(s[2]) * Math.PI)
+            var B = Math.sin(Math.abs(s[3]) * Math.PI)
             gg.fillStyle = 'rgb(' + Math.floor(255 * R) + ', ' + Math.floor(255 * G) + ', ' + Math.floor(255 * B) + ')'
             gg.fillRect(x * xd, y * yd, xd, yd)
         }
