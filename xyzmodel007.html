@@ -1,0 +1,184 @@
+
+
+
+<body style="margin:0px">
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.6.1/gl-matrix-min.js"></script> -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix.js"></script>
+
+<script src="https://dglittle.github.io/cdn/utils001.js"></script>
+<script>
+
+// throw 'stop'
+
+var tau = Math.PI * 2
+
+var c = document.createElement('canvas')
+c.width = 256
+c.height = 256
+var g = c.getContext('2d')
+
+var cc = document.createElement('canvas')
+cc.width = 256
+cc.height = 256
+var gg = cc.getContext('2d')
+
+var xd = 256 / 64
+var yd = 256 / 64
+var xn = c.width / xd
+var yn = c.height / yd
+
+var spins = []
+for (var y = 0; y < yn; y++) {
+    var row = []
+    for (var x = 0; x < xn; x++) {
+        var a = vec4.random(vec4.create())
+        var b = vec4.random(vec4.create())
+        var v = [a[0], a[1], a[2], a[3], b[0], b[1], b[2], b[3]]
+        v = v_normalize(v)
+        row.push(v)
+        
+    }
+    spins.push(row)
+}
+
+var iteration = 0
+function update_it() {
+    var dt = 1
+    function update_pair_vel(x1, y1, x2, y2) {
+        var a = spins[y1][x1]
+        var b = spins[y2][x2]
+        
+        spins[y1][x1] = nudge_slerp(a, b)
+        spins[y2][x2] = nudge_slerp(b, a)
+    }
+    for (var y = 0; y < yn; y++) {
+        for (var x = 0; x < xn; x++) {
+            update_pair_vel(x, y, (x + 1) % xn, y)
+            update_pair_vel(x, y, x, (y + 1) % yn)
+        }
+    }
+}
+
+function paint_it() {
+    g.fillStyle = 'white'
+    g.fillRect(0, 0, c.width, c.height)
+    for (var y = 0; y < yn; y++) {
+        for (var x = 0; x < xn; x++) {
+            var s = spins[y][x]
+
+            var R = lerp(-1, 0, 1, 1, s[0])
+            var G = lerp(-1, 0, 1, 1, s[1])
+            var B = lerp(-1, 0, 1, 1, s[2])
+            g.fillStyle = 'rgb(' + Math.floor(255 * R) + ', ' + Math.floor(255 * G) + ', ' + Math.floor(255 * B) + ')'
+            g.fillRect(x * xd, y * yd, xd, yd)
+        }
+    }
+
+    gg.fillStyle = 'white'
+    gg.fillRect(0, 0, c.width, c.height)
+    for (var y = 0; y < yn; y++) {
+        for (var x = 0; x < xn; x++) {
+            var s = spins[y][x]
+
+            var R = Math.sin(Math.abs(s[3]) * Math.PI)
+            var G = Math.sin(Math.abs(s[4]) * Math.PI)
+            var B = Math.sin(Math.abs(s[5]) * Math.PI)
+            gg.fillStyle = 'rgb(' + Math.floor(255 * R) + ', ' + Math.floor(255 * G) + ', ' + Math.floor(255 * B) + ')'
+            gg.fillRect(x * xd, y * yd, xd, yd)
+        }
+    }
+}
+
+function loop() {
+    update_it()
+    paint_it()
+    setTimeout(loop, 1)
+}
+loop()
+
+document.body.append(c)
+document.body.append(cc)
+
+function fmod(a, b) {
+    var m = a % b
+    if (m < 0) return m + b
+    return m
+}
+
+
+function nudge_slerp(v0, v1) {
+// function slerp(v0, v1, t) {
+    // Only unit quaternions are valid rotations.
+    // Normalize to avoid undefined behavior.
+    
+    v0 = v_normalize(v0)
+    v1 = v_normalize(v1)
+
+    // Compute the cosine of the angle between the two vectors.
+    var dot = v_dot(v0, v1)
+
+    // If the dot product is negative, slerp won't take
+    // the shorter path. Note that v1 and -v1 are equivalent when
+    // the negation is applied to all four components. Fix by 
+    // reversing one quaternion.
+    
+    // if (dot < 0) {
+    //     vec4.scale(v1, v1, -1)
+    //     dot = -dot
+    // }  
+
+    var DOT_THRESHOLD = 0.9995
+    if (dot > DOT_THRESHOLD || dot < -DOT_THRESHOLD) {
+        // If the inputs are too close for comfort, linearly interpolate
+        // and normalize the result.
+        
+        // work here
+        t = 0.5
+        
+        return v_normalize(v_lerp(v0, v1, t))
+    }
+
+    // Since dot is in range [0, DOT_THRESHOLD], acos is safe
+    var theta_0 = Math.acos(dot)        // theta_0 = angle between input vectors
+    
+    
+    
+    //var theta = theta_0*t          // theta = angle between v0 and result
+    
+    // work here
+    theta = tau / 200 * Math.sin(theta_0)
+
+    
+    var sin_theta = Math.sin(theta)     // compute this value only once
+    var sin_theta_0 = Math.sin(theta_0) // compute this value only once
+
+    var s0 = Math.cos(theta) - dot * sin_theta / sin_theta_0  // == sin(theta_0 - theta) / sin(theta_0)
+    var s1 = sin_theta / sin_theta_0
+
+    return v_add(v_scale(v0, s0), v_scale(v1, s1))
+}
+
+function v_dot(a, b) {
+    return a.reduce((sum, aa, i) => sum + aa*b[i], 0)
+}
+
+function v_normalize(v) {
+    var x = v_dot(v, v)
+    if (x > 0) x = 1 / Math.sqrt(x)
+    return v.map(a => a * x)
+}
+
+function v_lerp(v0, v1, t) {
+    return v0.map((a, i) => lerp(0, a, 1, v1[i], t))
+}
+
+function v_add(a, b) {
+    return a.map((aa, i) => aa + b[i])
+}
+
+function v_scale(a, s) {
+    return a.map(aa => aa * s)
+}
+
+</script>
+</body>
