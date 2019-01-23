@@ -14,6 +14,82 @@ function sync9_prune() {
 }
 
 function sync9_space_dag_rebase(S, vid, parents, splices, is_anc, new_parents, new_is_anc) {
+    
+    var exit_early = {}
+    var gap = 0
+    var si = 0
+    var delete_up_to = 0
+    var offset = 0
+    function helper(node) {
+        var s = splices[si]
+        if (!s) throw exit_early
+        
+        if (Object.keys(node.deleted_by).find(vid => is_anc(vid))) {
+        } else if (Object.keys(node.deleted_by).find(vid => new_is_anc(vid))) {
+            gap -= node.elems.length
+            offset += node.elems.length
+        } else if (!is_anc(node.vid)) {
+            gap += node.elems.length
+        } else {
+            if (s[1] == 0) {
+                if (s[0] <= offset + node.elems.length) {
+                    s[0] += gap
+                    si++
+                }
+            }
+        }
+        
+        
+        
+        for (var next of node.nexts)
+            if (new_is_anc) helper(next)
+        if (node.next) helper(node.next)
+        
+        
+            
+            
+            
+            
+            
+            
+            if (cb(node, offset, has_nexts) == false)
+            
+            
+            
+            
+            
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+            offset += node.elems.length
+        }
+        for (var next of node.nexts)
+            if (f(next.vid)) helper(next)
+        if (node.next) helper(node.next)
+    }
+    try {
+        helper(S)
+    } catch (e) {
+        if (e != exit_early) throw e
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     var gap = 0
     var si = 0
     sync9_trav_space_dag(S, new_is_anc, (node, offset, has_nexts) => {
@@ -23,13 +99,88 @@ function sync9_space_dag_rebase(S, vid, parents, splices, is_anc, new_parents, n
                 if (offset + node.elems.length >= s[0]) {
                     s[0] += gap
                     si++
-                } else break
+                } else return
             }
+            return false
         } else {
             gap += node.elems.length
         }
     })
 }
+
+    var gap = 0
+    var si = 0
+    var delete_up_to = 0
+    
+    sync9_trav_space_dag(S, new_is_anc, (node, offset, has_nexts) => {
+        var s = splices[si]
+        if (!s) return false
+        
+        if (!is_anc(node.vid)) {
+            gap += node.elems.length
+            return
+        }
+        
+        if (!Object.keys(node.deleted_by).find(vid => f(vid))) {
+        
+        
+        
+        
+        if (s[1] == 0) {
+            if (s[0] > offset + node.elems.length) return
+            s[0] += gap
+            si++
+            return
+        }
+        
+        if (delete_up_to <= offset) {
+            if (s[0] >= offset + node.elems.length) return
+            
+            var insert_location = node.stop - ((offset + node.elems.length - s[0]) * 2) + (node.stop % 2 == 0 ? 1 : 0)
+            
+            delete_up_to = s[0] + s[1]
+            
+            if (insert_location < node.start) {
+                add_outgoing(node.prev, node.prev.stop, sync9_create_space_dag_node(vid, s[2]))
+            } else {
+                add_outgoing(node, insert_location, sync9_create_space_dag_node(vid, s[2]))
+                return
+            }
+        }
+        
+        if (delete_up_to > offset) {
+            node.deleted_by[vid] = true
+            if (delete_up_to > offset + node.elems.length) return
+            
+            if (delete_up_to < offset + node.elems.length) {
+                add_incoming(node, node.stop - ((offset + node.elems.length - delete_up_to) * 2) + (node.stop % 2 == 0 ? 1 : 0))
+            }
+            
+            si++
+            return
+        }
+    })
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 if (false) {
     var db1 = sync9_create_client('ws://localhost:60608')
