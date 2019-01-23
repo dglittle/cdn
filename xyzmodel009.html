@@ -43,7 +43,7 @@ for (var y = 0; y < yn; y++) {
     vels.push(vrow)
 }
 
-throw 'stop'
+// throw 'stop'
 
 var iteration = 0
 function update_it() {
@@ -59,7 +59,7 @@ function update_it() {
         var y = spinsB[y2][x2]
         var z = vec3.cross(vec3.create(), x, y)
         var b = mat3.fromValues(x[0], x[1], x[2], y[0], y[1], y[2], z[0], z[1], z[2])
-        b = mat3_to_quat(a)
+        b = mat3_to_quat(b)
         
         var c = [
             a[0]*b[0] + a[1]*b[1] + a[2]*b[2] + a[3]*b[3],
