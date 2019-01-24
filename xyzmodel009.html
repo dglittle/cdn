@@ -45,8 +45,57 @@ for (var y = 0; y < yn; y++) {
 
 // throw 'stop'
 
+
+
+
+
+
+
+
+
+// debugger
+
+//         var x = vec3.fromValues(1, 0, 0)
+//         var y = vec3.fromValues(0, 1, 0)
+//         var z = vec3.cross(vec3.create(), x, y)
+//         var a = mat3.fromValues(x[0], x[1], x[2], y[0], y[1], y[2], z[0], z[1], z[2])
+//         a = mat3_to_quat(a)
+        
+//         var x = vec3.fromValues(1, 0, 0)
+//         var y = vec3.fromValues(0, 0, -1)
+//         var z = vec3.cross(vec3.create(), x, y)
+//         var b = mat3.fromValues(x[0], x[1], x[2], y[0], y[1], y[2], z[0], z[1], z[2])
+//         b = mat3_to_quat(b)
+        
+//         var swap = a; a = b; b = swap
+//         var c = [
+//             a[0]*b[0] + a[1]*b[1] + a[2]*b[2] + a[3]*b[3],
+//             a[1]*b[0] - a[0]*b[1] + a[3]*b[2] - a[2]*b[3],
+//             a[2]*b[0] - a[3]*b[1] - a[0]*b[2] + a[1]*b[3],
+//             a[3]*b[0] + a[2]*b[1] - a[1]*b[2] - a[0]*b[3],
+//             ]
+        
+//         var angle_axis = quat_to_angle_axis(c)
+//         var angle = angle_axis[0]
+//         var axis = vec3.fromValues(angle_axis[1], angle_axis[2], angle_axis[3])
+
+// throw 'stop'
+
+
+
+
+
+
+
+
+
+
+
+
 var iteration = 0
 function update_it() {
+    //console.log(spins[0][0])
+    
     var dt = 1
     function update_pair_vel(x1, y1, x2, y2) {
         var x = spins[y1][x1]
@@ -61,6 +110,7 @@ function update_it() {
         var b = mat3.fromValues(x[0], x[1], x[2], y[0], y[1], y[2], z[0], z[1], z[2])
         b = mat3_to_quat(b)
         
+        var swap = a; a = b; b = swap
         var c = [
             a[0]*b[0] + a[1]*b[1] + a[2]*b[2] + a[3]*b[3],
             a[1]*b[0] - a[0]*b[1] + a[3]*b[2] - a[2]*b[3],
@@ -72,8 +122,11 @@ function update_it() {
         var angle = angle_axis[0]
         var axis = vec3.fromValues(angle_axis[1], angle_axis[2], angle_axis[3])
         
-        vec3.scaleAndAdd(vels[y1][x1], vels[y1][x1], axis, Math.sin(angle) * dt / 100)
-        vec3.scaleAndAdd(vels[y2][x2], vels[y2][x2], vec3.negate(vec3.create(), axis), Math.sin(angle) * dt / 100)
+        var mag = Math.sin(angle) * dt / 1000
+        // vec3.scaleAndAdd(vels[y1][x1], vels[y1][x1], axis, mag)
+        // vec3.scaleAndAdd(vels[y2][x2], vels[y2][x2], vec3.negate(vec3.create(), axis), mag)
+        vec3.scaleAndAdd(vels[y1][x1], vels[y1][x1], vec3.negate(vec3.create(), axis), mag)
+        vec3.scaleAndAdd(vels[y2][x2], vels[y2][x2], axis, mag)
     }
     for (var y = 0; y < yn; y++) {
         for (var x = 0; x < xn; x++) {
@@ -94,7 +147,7 @@ function update_it() {
     for (var y = 0; y < yn; y++) {
         for (var x = 0; x < xn; x++) {
             var length = vec3.length(vels[y][x])
-            if (length > 0) {
+            if (length > 0.001) {
                 var unit = vec3.scale(vec3.create(), vels[y][x], 1 / length)
                 var Q = quat.setAxisAngle(quat.create(), unit, length * dt)
                 var M = mat3.fromQuat(mat3.create(), Q)
