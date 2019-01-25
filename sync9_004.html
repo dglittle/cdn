@@ -10,8 +10,9 @@ console.log('it begins: ' + sync9_guid())
 
 
 function sync9_space_dag_prune(S, is_prunable) {
-    
-    
+    sync9_trav_space_dag(S, () => true, (node, offset, has_nexts) => {
+        
+    })
 }
 
 function sync9_space_dag_rebase(S, vid, parents, splices, is_anc, new_parents, new_is_anc) {
