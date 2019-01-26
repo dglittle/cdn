@@ -11,16 +11,16 @@ if (true) {
     var s9 = sync9_create()
     sync9_add_version(s9, 'v1', s9.leaves, [' = "abc"'])
     sync9_add_version(s9, 'v2', s9.leaves, ['[0:0] = "Z"'])
-    sync9_space_dag_prune(sync9_space_dag_get(s9.val.S, 0).S, (a, b) => a != 'root' && b != 'root')
+    
+    debugger
+    
+    sync9_space_dag_prune(sync9_space_dag_get(s9.val.S, 0).S, (a, b) => true)
     console.log(sync9_space_dag_get(s9.val.S, 0))
 }
 
 
 
 function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b) {
-    
-    debugger
-    
     function process_node(node, offset) {
         console.log('processing: ' + node.vid)
         
@@ -47,8 +47,15 @@ function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b) {
         }
 
         if (node.stop % 2 == 0 && nexts.length > 0 && has_everyone_whos_seen_a_seen_b(node.vid, nexts[0].vid)) {
+            if (nexts[0].stop == 0) {
+                node.nexts = nexts[0].nexts
+                prev_node = node
+                helper(nexts[0].next)
+                
+            } else {
+                node.nexts = []
+            }
             
-            node.nexts = (nexts[0].stop == 0) ? nexts[0].nexts : []
             prev_node = node
             nexts.forEach(helper)
             helper(next)
