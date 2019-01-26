@@ -7,229 +7,7 @@
 
 console.log('it begins: ' + sync9_guid())
 
-function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b) {
-    function process_node(node, offset, has_nexts) {
-        var nexts = node.nexts
-        var next = node.next
-        
-        var prev_node
-        var helper = n => {
-            if (n && prev_node.nexts.length == 0) {
-                prev_node.elems = prev_node.elems.concat(n.elems)
-                prev_node.stop += n.elems.length * 2
-                if (n.stop % 2 == 1)
-                    prev_node.stop++
-                prev_node.nexts = n.nexts
-                prev_node.next = n.next
-                n.next.prev = prev_node
-            } else {
-                prev_node.next = n
-                n.prev = prev_node
-            }
-            
-            while (n && n.next) n = n.next
-            prev_node = n
-        }
-
-        if (node.stop % 2 == 0 && has_nexts && has_everyone_whos_seen_a_seen_b(node.vid, nexts[0].vid)) {
-            
-            node.nexts = (nexts[0].stop == 0) ? nexts[0].nexts : []
-            prev_node = node
-            nexts.forEach(helper)
-            helper(next)
-            return true
-        }
-        
-        if (node.stop % 2 == 1 && next && next.elems.length > 0 && Object.keys(next.deleted_by).find(x => has_everyone_whos_seen_a_seen_b(node.vid, x))) {
-            
-            if (node.start % 2 == 1 && node.start == node.stop) {
-                prev_node = node.prev
-            } else {
-                node.stop--
-                node.nexts = []
-                prev_node = node
-            }
-            nexts.forEach(helper)
-            next.nexts.forEach(helper)
-            helper(next.next)
-            return true
-        }
-    }
-    sync9_trav_space_dag(S, () => true, (node, offset, has_nexts) => {
-        while (process_node(node, offset, has_nexts)) {}
-    })
-}
-
-function sync9_space_dag_rebase(S, vid, parents, splices, is_anc, new_parents, new_is_anc) {
-    
-    var exit_early = {}
-    var gap = 0
-    var si = 0
-    var delete_up_to = 0
-    var offset = 0
-    function helper(node) {
-        var s = splices[si]
-        if (!s) throw exit_early
-        
-        if (Object.keys(node.deleted_by).find(vid => is_anc(vid))) {
-        } else if (Object.keys(node.deleted_by).find(vid => new_is_anc(vid))) {
-            gap -= node.elems.length
-            offset += node.elems.length
-        } else if (!is_anc(node.vid)) {
-            gap += node.elems.length
-        } else {
-            if (s[1] == 0) {
-                if (s[0] <= offset + node.elems.length) {
-                    s[0] += gap
-                    si++
-                }
-            }
-        }
-        
-        
-        
-        for (var next of node.nexts)
-            if (new_is_anc) helper(next)
-        if (node.next) helper(node.next)
-        
-        
-            
-            
-            
-            
-            
-            
-            if (cb(node, offset, has_nexts) == false)
-            
-            
-            
-            
-            
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-            offset += node.elems.length
-        }
-        for (var next of node.nexts)
-            if (f(next.vid)) helper(next)
-        if (node.next) helper(node.next)
-    }
-    try {
-        helper(S)
-    } catch (e) {
-        if (e != exit_early) throw e
-    }
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    var gap = 0
-    var si = 0
-    sync9_trav_space_dag(S, new_is_anc, (node, offset, has_nexts) => {
-        if (is_anc(node.vid)) {
-            var s = null
-            while (s = splices[si]) {
-                if (offset + node.elems.length >= s[0]) {
-                    s[0] += gap
-                    si++
-                } else return
-            }
-            return false
-        } else {
-            gap += node.elems.length
-        }
-    })
-}
-
-    var gap = 0
-    var si = 0
-    var delete_up_to = 0
-    
-    sync9_trav_space_dag(S, new_is_anc, (node, offset, has_nexts) => {
-        var s = splices[si]
-        if (!s) return false
-        
-        if (!is_anc(node.vid)) {
-            gap += node.elems.length
-            return
-        }
-        
-        if (!Object.keys(node.deleted_by).find(vid => f(vid))) {
-        
-        
-        
-        
-        if (s[1] == 0) {
-            if (s[0] > offset + node.elems.length) return
-            s[0] += gap
-            si++
-            return
-        }
-        
-        if (delete_up_to <= offset) {
-            if (s[0] >= offset + node.elems.length) return
-            
-            var insert_location = node.stop - ((offset + node.elems.length - s[0]) * 2) + (node.stop % 2 == 0 ? 1 : 0)
-            
-            delete_up_to = s[0] + s[1]
-            
-            if (insert_location < node.start) {
-                add_outgoing(node.prev, node.prev.stop, sync9_create_space_dag_node(vid, s[2]))
-            } else {
-                add_outgoing(node, insert_location, sync9_create_space_dag_node(vid, s[2]))
-                return
-            }
-        }
-        
-        if (delete_up_to > offset) {
-            node.deleted_by[vid] = true
-            if (delete_up_to > offset + node.elems.length) return
-            
-            if (delete_up_to < offset + node.elems.length) {
-                add_incoming(node, node.stop - ((offset + node.elems.length - delete_up_to) * 2) + (node.stop % 2 == 0 ? 1 : 0))
-            }
-            
-            si++
-            return
-        }
-    })
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-if (false) {
+if (true) {
     var db1 = sync9_create_client('ws://localhost:60608')
     db1.on('bloop', (proxy) => {
         console.log('got here DB1! proxy = ', JSON.stringify(proxy))
@@ -244,7 +22,6 @@ if (false) {
             proxy.root = 'abc'
     })
 }
-
 
 function sync9_create_client(url) {
     var ws = null
@@ -339,6 +116,57 @@ function sync9_create_client(url) {
             send({ off : key })
         }
     }
+}
+
+function sync9_create_server(wss) {
+	var keys = {}
+
+	wss.on('connection', (ws) => {
+		console.log('NEW CONNECTION')
+
+		ws.id = sync9_guid()
+		var ons = {}
+
+	    function send(o, _ws) {
+	        try { (_ws || ws).send(JSON.stringify(o)) } catch (e) {}
+	    }
+
+        ws.on('message', (message) => {
+            var o = JSON.parse(message)
+            if (o.ping) return send({ pong : true })
+
+            console.log('message: ' + message)
+        
+            if (o.on) {
+            	ons[o.on] = true
+            	if (!keys[o.on]) keys[o.on] = {
+            		versions : {},
+            		members : {}
+            	}
+            	keys[o.on].members[ws.id] = ws
+            	send({ key : o.on, init : keys[o.on].versions })
+            }
+            if (o.off) {
+            	delete ons[o.off]
+            	delete keys[o.off].members[ws.id]
+            }
+            if (o.version) {
+            	keys[o.key].versions[o.version.vid] = o.version
+            	send({ key : o.key, ACK : o.version.vid })
+            	Object.values(keys[o.key].members).forEach(_ws => {
+            		if (_ws != ws) send(o, _ws)
+            	})
+            }
+    	})
+
+    	function myClose() {
+    		Object.keys(ons).forEach(key => {
+    			delete keys[key].members[ws.id]
+    		})
+    	}
+        ws.on('close', myClose)
+        ws.on('error', myClose)    	
+	})
 }
 
 function sync9_create() {
@@ -635,6 +463,59 @@ function sync9_trav_space_dag(S, f, cb) {
     } catch (e) {
         if (e != exit_early) throw e
     }
+}
+
+function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b) {
+    function process_node(node, offset, has_nexts) {
+        var nexts = node.nexts
+        var next = node.next
+        
+        var prev_node
+        var helper = n => {
+            if (n && prev_node.nexts.length == 0) {
+                prev_node.elems = prev_node.elems.concat(n.elems)
+                prev_node.stop += n.elems.length * 2
+                if (n.stop % 2 == 1)
+                    prev_node.stop++
+                prev_node.nexts = n.nexts
+                prev_node.next = n.next
+                n.next.prev = prev_node
+            } else {
+                prev_node.next = n
+                n.prev = prev_node
+            }
+            
+            while (n && n.next) n = n.next
+            prev_node = n
+        }
+
+        if (node.stop % 2 == 0 && has_nexts && has_everyone_whos_seen_a_seen_b(node.vid, nexts[0].vid)) {
+            
+            node.nexts = (nexts[0].stop == 0) ? nexts[0].nexts : []
+            prev_node = node
+            nexts.forEach(helper)
+            helper(next)
+            return true
+        }
+        
+        if (node.stop % 2 == 1 && next && next.elems.length > 0 && Object.keys(next.deleted_by).find(x => has_everyone_whos_seen_a_seen_b(node.vid, x))) {
+            
+            if (node.start % 2 == 1 && node.start == node.stop) {
+                prev_node = node.prev
+            } else {
+                node.stop--
+                node.nexts = []
+                prev_node = node
+            }
+            nexts.forEach(helper)
+            next.nexts.forEach(helper)
+            helper(next.next)
+            return true
+        }
+    }
+    sync9_trav_space_dag(S, () => true, (node, offset, has_nexts) => {
+        while (process_node(node, offset, has_nexts)) {}
+    })
 }
 
 function sync9_parse_change(change) {
