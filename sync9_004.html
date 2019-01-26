@@ -19,7 +19,9 @@ if (true) {
 
 function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b) {
     
-    function process_node(node, offset, has_nexts) {
+    debugger
+    
+    function process_node(node, offset) {
         console.log('processing: ' + node.vid)
         
         var nexts = node.nexts
@@ -44,7 +46,7 @@ function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b) {
                 prev_node = prev_node.next
         }
 
-        if (node.stop % 2 == 0 && has_nexts && has_everyone_whos_seen_a_seen_b(node.vid, nexts[0].vid)) {
+        if (node.stop % 2 == 0 && nexts.length > 0 && has_everyone_whos_seen_a_seen_b(node.vid, nexts[0].vid)) {
             
             node.nexts = (nexts[0].stop == 0) ? nexts[0].nexts : []
             prev_node = node
@@ -68,8 +70,8 @@ function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b) {
             return true
         }
     }
-    sync9_trav_space_dag(S, () => true, (node, offset, has_nexts) => {
-        while (process_node(node, offset, has_nexts)) {}
+    sync9_trav_space_dag(S, () => true, (node, offset) => {
+        while (process_node(node, offset)) {}
     })
 }
 
