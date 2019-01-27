@@ -13,10 +13,10 @@ document.body.append(c)
 var g = c.getContext('2d')
 
 var flag_verts = [
-    vec3.fromValues(0, 0, 1),
-    vec3.fromValues(0.2, 0, 1),
-    vec3.fromValues(0.2, 0, 0.8),
-    vec3.fromValues(0, 0, 0.8)
+    vec3.fromValues(1, 0, 0),
+    vec3.fromValues(1, 0.2, 0),
+    vec3.fromValues(0.8, 0.2, 0),
+    vec3.fromValues(0.8, 0, 0)
 ]
 
 // var camera = mat3.fromValues(1, 0, 0, 0, 1, 0, 0, 0, 1)
@@ -47,11 +47,13 @@ function drawAxes() {
 function random_rotation_matrix() {
     var x = vec3.random(vec3.create())
     var y = vec3.cross(vec3.create(), x, vec3.random(vec3.create()))
+    vec3.normalize(y, y)
     var z = vec3.cross(vec3.create(), x, y)
+    vec3.normalize(z, z)
     return mat3.fromValues(x[0], x[1], x[2], y[0], y[1], y[2], z[0], z[1], z[2])
 }
 
-function drawFlag(m3) {
+function drawFlag(m3, color) {
     var r = c.width/2
     var x = c.width/2
     var y = c.height/2
@@ -66,7 +68,7 @@ function drawFlag(m3) {
     g.beginPath()
     g.moveTo(x, y)
     flag.forEach(v => g.lineTo(x + v[0]*r, y - v[1]*r))
-    g.strokeStyle = 'black'
+    g.strokeStyle = color
     g.stroke()
 }
 
@@ -152,19 +154,38 @@ function angle_axis_to_matrix(angle_axis) {
 drawAxes()
 
 var m = random_rotation_matrix()
-drawFlag(m)
+// m = mat3.fromValues(0, 1, 0, 0, 0, 1, 1, 0, 0)
+// m = mat3.fromValues(0, 1, 0, -1, 0, 0, 0, 0, 1)
+// m = mat3.fromValues(0.6277652382850647, 0.3373219668865204, -0.7015159726142883, -0.4115331172943115, 0.3406897187232971, -0.20444872975349426, 0.1700342297554016, 0.4170428514480591, 0.3526923358440399)
+drawFlag(m, 'magenta')
+// console.log(m)
 
-var q = mat3_to_quat(m)
-var aa = quat_to_angle_axis(q)
-var a = aa[0]
-for (var i = 1; i < 5; i++) {
-    aa[0] = lerp(0, 0, 5, a, i)
-    var m2 = angle_axis_to_matrix(aa)
-    drawFlag(m2)
+// debugger
+
+
+function update() {
+    g.clearRect(0, 0, c.width, c.height)
+    drawAxes()
+    drawFlag(m, 'magenta')
+    
+    
+    var q = mat3_to_quat(m)
+    var aa = quat_to_angle_axis(q)
+    var a = aa[0]
+    if (a > tau/2) a -= tau
+    if (a < -tau/2) a += tau
+    for (var i = 0; i < 10; i++) {
+        aa[0] = -lerp(0, 0, 10, a, i)
+        var m2 = angle_axis_to_matrix(aa)
+        drawFlag(m2, 'black')
+    }
+
+    
+    var rot = angle_axis_to_matrix([tau/100, 0, 0, 1])
+    mat3.mul(camera, camera, rot)
+    setTimeout(update, 100)
 }
-
-
-
+update()
 
 
 
