@@ -50,7 +50,7 @@ for (var y = 0; y < yn; y++) {
     vels.push(vrow)
 }
 
-// throw 'stop'
+throw 'stop'
 
 var iteration = 0
 function update_it() {
@@ -60,9 +60,6 @@ function update_it() {
     
     var dt = 1
     function update_pair_vel(x1, y1, x2, y2) {
-        
-        debugger
-        
         var x = spins[y1][x1]
         var y = spinsB[y1][x1]
         var z = vec3.cross(vec3.create(), x, y)
@@ -97,21 +94,24 @@ function update_it() {
         vec3.scaleAndAdd(vels[y1][x1], vels[y1][x1], vec3.negate(vec3.create(), axis), mag)
         vec3.scaleAndAdd(vels[y2][x2], vels[y2][x2], axis, mag)
     }
-    for (var y = 0; y < yn; y++) {
-        for (var x = 0; x < xn; x++) {
-            update_pair_vel(x, y, (x + 1) % xn, y)
-            update_pair_vel(x, y, x, (y + 1) % yn)
-        }
-    }
     
-    iteration++
-    if (iteration < 1000) {
-        for (var y = 0; y < yn; y++) {
-            for (var x = 0; x < xn; x++) {
-                vec3.scale(vels[y][x], vels[y][x], 1 - 1/(iteration/3 + 1))
-            }
-        }
-    }
+    update_pair_vel(0, 0, 1, 0)
+    
+    // for (var y = 0; y < yn; y++) {
+    //     for (var x = 0; x < xn; x++) {
+    //         update_pair_vel(x, y, (x + 1) % xn, y)
+    //         update_pair_vel(x, y, x, (y + 1) % yn)
+    //     }
+    // }
+    
+    // iteration++
+    // if (iteration < 1000) {
+    //     for (var y = 0; y < yn; y++) {
+    //         for (var x = 0; x < xn; x++) {
+    //             vec3.scale(vels[y][x], vels[y][x], 1 - 1/(iteration/3 + 1))
+    //         }
+    //     }
+    // }
     
     for (var y = 0; y < yn; y++) {
         for (var x = 0; x < xn; x++) {
