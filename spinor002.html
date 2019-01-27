@@ -153,33 +153,37 @@ function angle_axis_to_matrix(angle_axis) {
 
 drawAxes()
 
-var m = random_rotation_matrix()
-// m = mat3.fromValues(0, 1, 0, 0, 0, 1, 1, 0, 0)
-// m = mat3.fromValues(0, 1, 0, -1, 0, 0, 0, 0, 1)
-// m = mat3.fromValues(0.6277652382850647, 0.3373219668865204, -0.7015159726142883, -0.4115331172943115, 0.3406897187232971, -0.20444872975349426, 0.1700342297554016, 0.4170428514480591, 0.3526923358440399)
-drawFlag(m, 'magenta')
-// console.log(m)
-
-// debugger
-
+var m1 = random_rotation_matrix()
+var m2 = random_rotation_matrix()
 
 function update() {
     g.clearRect(0, 0, c.width, c.height)
     drawAxes()
-    drawFlag(m, 'magenta')
+    drawFlag(m1, 'cyan')
+    drawFlag(m2, 'magenta')
     
+    var q1 = mat3_to_quat(m1)
+    var q2 = mat3_to_quat(m2)
+    var a = q2
+    var b = q1
+    var q = [
+        a[0]*b[0] + a[1]*b[1] + a[2]*b[2] + a[3]*b[3],
+        a[1]*b[0] - a[0]*b[1] + a[3]*b[2] - a[2]*b[3],
+        a[2]*b[0] - a[3]*b[1] - a[0]*b[2] + a[1]*b[3],
+        a[3]*b[0] + a[2]*b[1] - a[1]*b[2] - a[0]*b[3],
+        ]    
     
-    var q = mat3_to_quat(m)
     var aa = quat_to_angle_axis(q)
     var a = aa[0]
     if (a > tau/2) a -= tau
     if (a < -tau/2) a += tau
+    
     for (var i = 0; i < 10; i++) {
         aa[0] = -lerp(0, 0, 10, a, i)
-        var m2 = angle_axis_to_matrix(aa)
-        drawFlag(m2, 'black')
+        var T = angle_axis_to_matrix(aa)
+        var m = mat3.mul(mat3.create(), m1, T)
+        drawFlag(m, 'black')
     }
-
     
     var rot = angle_axis_to_matrix([tau/100, 0, 0, 1])
     mat3.mul(camera, camera, rot)
