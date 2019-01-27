@@ -1,6 +1,4 @@
 
-
-
 <body style="margin:0px">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.6.1/gl-matrix-min.js"></script>
 <script src="https://dglittle.github.io/cdn/utils001.js"></script>
@@ -10,25 +8,54 @@
 
 var tau = Math.PI * 2
 
-var c = document.createElement('canvas')
-c.width = 256
-c.height = 256
-var g = c.getContext('2d')
-document.body.append(c)
+// var c = document.createElement('canvas')
+// c.width = 256
+// c.height = 256
+// var g = c.getContext('2d')
+// document.body.append(c)
 
-var cc = document.createElement('canvas')
-cc.width = 256
-cc.height = 256
-var gg = cc.getContext('2d')
-document.body.append(cc)
+// var cc = document.createElement('canvas')
+// cc.width = 256
+// cc.height = 256
+// var gg = cc.getContext('2d')
+// document.body.append(cc)
 
 var output = document.createElement('div')
 document.body.append(output)
 
-var xd = 256 / 2
-var yd = 256 / 1
-var xn = c.width / xd
-var yn = c.height / yd
+
+
+
+
+var c = document.createElement('canvas')
+c.width = 400
+c.height = 400
+document.body.append(c)
+var g = c.getContext('2d')
+
+var flag_verts = [
+    vec3.fromValues(1, 0, 0),
+    vec3.fromValues(1, 0.2, 0),
+    vec3.fromValues(0.8, 0.2, 0),
+    vec3.fromValues(0.8, 0, 0)
+]
+
+// var camera = mat3.fromValues(1, 0, 0, 0, 1, 0, 0, 0, 1)
+var camera = mat3.fromValues(
+    -Math.sin(tau/8), -Math.cos(tau/8)*Math.sin(tau/16), Math.cos(tau/8)*Math.cos(tau/16),
+    Math.sin(tau/8), -Math.cos(tau/8)*Math.sin(tau/16), Math.cos(tau/8)*Math.cos(tau/16),
+    0, Math.cos(tau/16), Math.sin(tau/16))
+
+
+
+
+
+// var xd = 256 / 2
+// var yd = 256 / 1
+// var xn = c.width / xd
+// var yn = c.height / yd
+var xn = 2
+var yn = 1
 
 var spins = []
 var spinsB = []
@@ -50,7 +77,43 @@ for (var y = 0; y < yn; y++) {
     vels.push(vrow)
 }
 
-throw 'stop'
+function drawFlag(m3, color) {
+    var r = c.width/2
+    var x = c.width/2
+    var y = c.height/2
+    
+    var flag = flag_verts.map(v => {
+        var vv = vec3.clone(v)
+        vec3.transformMat3(vv, vv, m3)
+        vec3.transformMat3(vv, vv, camera)
+        return vv
+    })
+    
+    g.beginPath()
+    g.moveTo(x, y)
+    flag.forEach(v => g.lineTo(x + v[0]*r, y - v[1]*r))
+    g.strokeStyle = color || 'black'
+    g.stroke()
+}
+
+function drawAxes() {
+    var r = c.width/2
+    var x = c.width/2
+    var y = c.height/2
+    
+    var axis_color = [
+        [vec3.fromValues(1, 0, 0), 'red'],
+        [vec3.fromValues(0, 1, 0), 'green'],
+        [vec3.fromValues(0, 0, 1), 'blue']
+    ].forEach(a => {
+        var axis = vec3.transformMat3(vec3.create(), a[0], camera)
+        g.beginPath()
+        g.moveTo(x, y)
+        g.lineTo(x + axis[0]*r, y - axis[1]*r)
+        g.strokeStyle = a[1]
+        g.stroke()
+    })
+}
 
 var iteration = 0
 function update_it() {
@@ -58,7 +121,7 @@ function update_it() {
     
     output.textContent = JSON.stringify(spins[0][0])
     
-    var dt = 1
+    var dt = 1/30
     function update_pair_vel(x1, y1, x2, y2) {
         var x = spins[y1][x1]
         var y = spinsB[y1][x1]
@@ -125,36 +188,51 @@ function update_it() {
             }
         }
     }
+    
+    // vec3.scale(vels[0][0], vels[0][0], 0.5)
+    // vec3.scale(vels[0][1], vels[0][1], 0.5)
+}
+
+function mat3_from_axes(x, y) {
+    var z = vec3.cross(vec3.create(), x, y)
+    return mat3.fromValues(x[0], x[1], x[2], y[0], y[1], y[2], z[0], z[1], z[2])
 }
 
 function paint_it() {
-    g.fillStyle = 'white'
-    g.fillRect(0, 0, c.width, c.height)
-    for (var y = 0; y < yn; y++) {
-        for (var x = 0; x < xn; x++) {
-            var s = spins[y][x]
+    g.clearRect(0, 0, c.width, c.height)
+    drawAxes()
+    
+    drawFlag(mat3_from_axes(spins[0][0], spinsB[0][0]), 'red')
+    drawFlag(mat3_from_axes(spins[0][1], spinsB[0][1]), 'orange')
+    
+    
+    // g.fillStyle = 'white'
+    // g.fillRect(0, 0, c.width, c.height)
+    // for (var y = 0; y < yn; y++) {
+    //     for (var x = 0; x < xn; x++) {
+    //         var s = spins[y][x]
 
-            var R = lerp(-1, 0, 1, 1, s[0])
-            var G = lerp(-1, 0, 1, 1, s[1])
-            var B = lerp(-1, 0, 1, 1, s[2])
-            g.fillStyle = 'rgb(' + Math.floor(255 * R) + ', ' + Math.floor(255 * G) + ', ' + Math.floor(255 * B) + ')'
-            g.fillRect(x * xd, y * yd, xd, yd)
-        }
-    }
+    //         var R = lerp(-1, 0, 1, 1, s[0])
+    //         var G = lerp(-1, 0, 1, 1, s[1])
+    //         var B = lerp(-1, 0, 1, 1, s[2])
+    //         g.fillStyle = 'rgb(' + Math.floor(255 * R) + ', ' + Math.floor(255 * G) + ', ' + Math.floor(255 * B) + ')'
+    //         g.fillRect(x * xd, y * yd, xd, yd)
+    //     }
+    // }
 
-    gg.fillStyle = 'white'
-    gg.fillRect(0, 0, c.width, c.height)
-    for (var y = 0; y < yn; y++) {
-        for (var x = 0; x < xn; x++) {
-            var s = spinsB[y][x]
+    // gg.fillStyle = 'white'
+    // gg.fillRect(0, 0, c.width, c.height)
+    // for (var y = 0; y < yn; y++) {
+    //     for (var x = 0; x < xn; x++) {
+    //         var s = spinsB[y][x]
 
-            var R = lerp(-1, 0, 1, 1, s[0])
-            var G = lerp(-1, 0, 1, 1, s[1])
-            var B = lerp(-1, 0, 1, 1, s[2])
-            gg.fillStyle = 'rgb(' + Math.floor(255 * R) + ', ' + Math.floor(255 * G) + ', ' + Math.floor(255 * B) + ')'
-            gg.fillRect(x * xd, y * yd, xd, yd)
-        }
-    }
+    //         var R = lerp(-1, 0, 1, 1, s[0])
+    //         var G = lerp(-1, 0, 1, 1, s[1])
+    //         var B = lerp(-1, 0, 1, 1, s[2])
+    //         gg.fillStyle = 'rgb(' + Math.floor(255 * R) + ', ' + Math.floor(255 * G) + ', ' + Math.floor(255 * B) + ')'
+    //         gg.fillRect(x * xd, y * yd, xd, yd)
+    //     }
+    // }
 }
 
 function loop() {
