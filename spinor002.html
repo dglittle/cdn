@@ -191,8 +191,8 @@ om2 = mat3.fromValues(-0.5211337804794312,
   0.7489135265350342)
 
 // m1 = mat3.fromValues(1, 0, 0, 0, 1, 0, 0, 0, 1)
-m1 = om1 // mat3.fromValues(0, 1, 0, -1, 0, 0, 0, 0, 1)
-m2 = om2
+// m1 = om1 // mat3.fromValues(0, 1, 0, -1, 0, 0, 0, 0, 1)
+// m2 = om2
 // m2 = mat3.fromValues(-1, 0, 0, 0, -1, 0, 0, 0, 1)
 
 first = true
@@ -219,13 +219,6 @@ function update() {
     var a = aa[0]
     if (a > tau/2) a -= tau
     if (a < -tau/2) a += tau
-
-    if (first) {
-        console.log('angle = ' + a)
-        console.log('axis = ' + JSON.stringify([aa[1], aa[2], aa[3]], null, '  '))
-    }    
-    
-    drawVec3(vec3.fromValues(aa[1], aa[2], aa[3]))
     
     var temp = vec3.transformMat3(vec3.create(), vec3.fromValues(aa[1], aa[2], aa[3]), m1)
     aa[1] = temp[0]
@@ -233,10 +226,6 @@ function update() {
     aa[3] = temp[2]
     
     drawVec3(vec3.fromValues(aa[1], aa[2], aa[3]), 'orange')
-    
-    if (first) {
-        console.log('TEMP', aa)
-    }
     
     for (var i = 0; i < 10; i++) {
         aa[0] = -lerp(0, 0, 10, a, i)
@@ -252,9 +241,9 @@ function update() {
     //     drawFlag(m, 'black')
     // }
     
-    // var rot = angle_axis_to_matrix([tau/100, 0, 0, 1])
-    // mat3.mul(camera, camera, rot)
-    // setTimeout(update, 100)
+    var rot = angle_axis_to_matrix([tau/100, 0, 0, 1])
+    mat3.mul(camera, camera, rot)
+    setTimeout(update, 100)
     
     first = false
 }
