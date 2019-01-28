@@ -72,6 +72,20 @@ function drawFlag(m3, color) {
     g.stroke()
 }
 
+function drawVec3(v3, color) {
+    var r = c.width/2
+    var x = c.width/2
+    var y = c.height/2
+    
+    var v = vec3.transformMat3(vec3.create(), v3, camera)
+    
+    g.beginPath()
+    g.moveTo(x, y)
+    g.lineTo(x + v[0]*r, y - v[1]*r)
+    g.strokeStyle = color || 'black'
+    g.stroke()
+}
+
 // http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/
 function mat3_to_quat(m) {
     var m00 = m[0]
@@ -156,6 +170,33 @@ drawAxes()
 var m1 = random_rotation_matrix()
 var m2 = random_rotation_matrix()
 
+om1 = mat3.fromValues(-0.2658519446849823,
+  -0.011241802014410496,
+  0.9639483094215393,
+  -0.4274600148200989,
+  0.8976292610168457,
+  -0.10742288082838058,
+  -0.8640605807304382,
+  -0.4406079351902008,
+  -0.24344190955162048)
+
+om2 = mat3.fromValues(-0.5211337804794312,
+  -0.5383093953132629,
+  0.6623010039329529,
+  0.7046115398406982,
+  -0.7092507481575012,
+  -0.022043541073799133,
+  0.481603741645813,
+  0.45517730712890625,
+  0.7489135265350342)
+
+// m1 = mat3.fromValues(1, 0, 0, 0, 1, 0, 0, 0, 1)
+m1 = mat3.fromValues(0, 1, 0, -1, 0, 0, 0, 0, 1)
+m2 = om1
+// m2 = mat3.fromValues(-1, 0, 0, 0, -1, 0, 0, 0, 1)
+
+first = true
+
 function update() {
     g.clearRect(0, 0, c.width, c.height)
     drawAxes()
@@ -164,6 +205,7 @@ function update() {
     
     var q1 = mat3_to_quat(m1)
     var q2 = mat3_to_quat(m2)
+    
     var a = q2
     var b = q1
     var q = [
@@ -177,7 +219,22 @@ function update() {
     var a = aa[0]
     if (a > tau/2) a -= tau
     if (a < -tau/2) a += tau
+
+    if (first) {
+        first = false
+        console.log('angle = ' + a)
+        console.log('axis = ' + JSON.stringify([aa[1], aa[2], aa[3]], null, '  '))
+    }    
     
+    drawVec3(vec3.fromValues(aa[1], aa[2], aa[3]))
+    
+    for (var i = 0; i < 10; i++) {
+        aa[0] = -lerp(0, 0, 10, a, i)
+        var T = angle_axis_to_matrix(aa)
+        var m = mat3.mul(mat3.create(), T, m1)
+        drawFlag(m, 'black')
+    }
+
     for (var i = 0; i < 10; i++) {
         aa[0] = -lerp(0, 0, 10, a, i)
         var T = angle_axis_to_matrix(aa)
@@ -185,9 +242,9 @@ function update() {
         drawFlag(m, 'black')
     }
     
-    var rot = angle_axis_to_matrix([tau/100, 0, 0, 1])
-    mat3.mul(camera, camera, rot)
-    setTimeout(update, 100)
+    // var rot = angle_axis_to_matrix([tau/100, 0, 0, 1])
+    // mat3.mul(camera, camera, rot)
+    // setTimeout(update, 100)
 }
 update()
 
