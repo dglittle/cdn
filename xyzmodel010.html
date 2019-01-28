@@ -1,10 +1,15 @@
 
 <body style="margin:0px">
+<script src="https://dglittle.github.io/cdn/random001.js"></script>
+<script>
+Math.randomSeed(125)
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.6.1/gl-matrix-min.js"></script>
 <script src="https://dglittle.github.io/cdn/utils001.js"></script>
 <script>
 
-// throw 'stop'
+// Math.randomSeed(124)
+
 
 var tau = Math.PI * 2
 
@@ -77,6 +82,17 @@ for (var y = 0; y < yn; y++) {
     vels.push(vrow)
 }
 
+
+var bloop = vec3.clone(spins[0][0])
+var bloopB = vec3.clone(spinsB[0][0])
+
+// spins[0][0] = vec3.fromValues(1, 0, 0)
+// spinsB[0][0] = vec3.fromValues(0, 1, 0)
+
+// spins[0][1] = vec3.fromValues(0, 1, 0)
+// spinsB[0][1] = vec3.fromValues(0, 0, -1)
+
+
 function drawFlag(m3, color) {
     var r = c.width/2
     var x = c.width/2
@@ -119,9 +135,9 @@ var iteration = 0
 function update_it() {
     //console.log(spins[0][0])
     
-    output.textContent = JSON.stringify(spins[0][0])
+    //output.textContent = JSON.stringify(spins[0][0])
     
-    var dt = 1/30
+    var dt = 5
     function update_pair_vel(x1, y1, x2, y2) {
         var x = spins[y1][x1]
         var y = spinsB[y1][x1]
@@ -146,19 +162,41 @@ function update_it() {
         if (angle > tau/2) angle -= tau
         if (angle < -tau/2) angle += tau
         var axis = vec3.fromValues(angle_axis[1], angle_axis[2], angle_axis[3])
+        
+        
+        
+        // work here
+        console.log('angle = ' + angle)
+        console.log('axis = ' + JSON.stringify([axis[0], axis[1], axis[2]], null, '  '))
+        //throw 'stop'
+        
+        
+        
         if (angle < 0) {
             angle = -angle
             vec3.negate(axis, axis)
         }
         
         var mag = Math.sin(angle) * dt / 1000
+        
+        // work here
+        // mag = 1
+        
         // vec3.scaleAndAdd(vels[y1][x1], vels[y1][x1], axis, mag)
         // vec3.scaleAndAdd(vels[y2][x2], vels[y2][x2], vec3.negate(vec3.create(), axis), mag)
         vec3.scaleAndAdd(vels[y1][x1], vels[y1][x1], vec3.negate(vec3.create(), axis), mag)
         vec3.scaleAndAdd(vels[y2][x2], vels[y2][x2], axis, mag)
+        
+        // work here
+        console.log('mag = ', mag)
+        console.log('vel = ', vels[y1][x1])
+        
     }
     
-    update_pair_vel(0, 0, 1, 0)
+    if (iteration == 0) {
+        dt = 50
+        update_pair_vel(0, 0, 1, 0)
+    }
     
     // for (var y = 0; y < yn; y++) {
     //     for (var x = 0; x < xn; x++) {
@@ -167,7 +205,7 @@ function update_it() {
     //     }
     // }
     
-    // iteration++
+    iteration++
     // if (iteration < 1000) {
     //     for (var y = 0; y < yn; y++) {
     //         for (var x = 0; x < xn; x++) {
@@ -177,7 +215,7 @@ function update_it() {
     // }
     
     for (var y = 0; y < yn; y++) {
-        for (var x = 0; x < xn; x++) {
+        for (var x = 0; x < 1; x++) {
             var length = vec3.length(vels[y][x])
             if (length > 0.001) {
                 var unit = vec3.scale(vec3.create(), vels[y][x], 1 / length)
@@ -199,9 +237,11 @@ function mat3_from_axes(x, y) {
 }
 
 function paint_it() {
-    g.clearRect(0, 0, c.width, c.height)
+    g.fillStyle = 'rgba(255, 255, 255, 0.01)'
+    g.fillRect(0, 0, c.width, c.height)
     drawAxes()
     
+    drawFlag(mat3_from_axes(bloop, bloopB), 'cyan')
     drawFlag(mat3_from_axes(spins[0][0], spinsB[0][0]), 'red')
     drawFlag(mat3_from_axes(spins[0][1], spinsB[0][1]), 'orange')
     
@@ -238,7 +278,7 @@ function paint_it() {
 function loop() {
     update_it()
     paint_it()
-    setTimeout(loop, 1)
+    setTimeout(loop, 100)
 }
 loop()
 
