@@ -2,7 +2,7 @@
 <body style="margin:0px">
 <script src="https://dglittle.github.io/cdn/random001.js"></script>
 <script>
-Math.randomSeed(125)
+// Math.randomSeed(126)
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.6.1/gl-matrix-min.js"></script>
 <script src="https://dglittle.github.io/cdn/utils001.js"></script>
@@ -142,12 +142,14 @@ function update_it() {
         var x = spins[y1][x1]
         var y = spinsB[y1][x1]
         var z = vec3.cross(vec3.create(), x, y)
-        a = mat3_to_quat(mat3.fromValues(x[0], x[1], x[2], y[0], y[1], y[2], z[0], z[1], z[2]))
+        var m1 = mat3.fromValues(x[0], x[1], x[2], y[0], y[1], y[2], z[0], z[1], z[2])
+        a = mat3_to_quat(m1)
         
         var x = spins[y2][x2]
         var y = spinsB[y2][x2]
         var z = vec3.cross(vec3.create(), x, y)
-        b = mat3_to_quat(mat3.fromValues(x[0], x[1], x[2], y[0], y[1], y[2], z[0], z[1], z[2]))
+        var m2 = mat3.fromValues(x[0], x[1], x[2], y[0], y[1], y[2], z[0], z[1], z[2])
+        b = mat3_to_quat(m2)
         
         var swap = a; a = b; b = swap
         var c = [
@@ -161,6 +163,14 @@ function update_it() {
         var angle = angle_axis[0]
         if (angle > tau/2) angle -= tau
         if (angle < -tau/2) angle += tau
+        
+        var temp = vec3.transformMat3(vec3.create(), vec3.fromValues(angle_axis[1], angle_axis[2], angle_axis[3]), m1)
+        angle_axis[1] = temp[0]
+        angle_axis[2] = temp[1]
+        angle_axis[3] = temp[2]
+        
+        
+        
         var axis = vec3.fromValues(angle_axis[1], angle_axis[2], angle_axis[3])
         
         
@@ -194,8 +204,10 @@ function update_it() {
     }
     
     if (iteration == 0) {
+        var save_dt = dt
         dt = 50
         update_pair_vel(0, 0, 1, 0)
+        dt = save_dt
     }
     
     // for (var y = 0; y < yn; y++) {
