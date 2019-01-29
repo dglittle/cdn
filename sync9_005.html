@@ -12,7 +12,7 @@ if (true) {
     sync9_add_version(s9, 'v1', s9.leaves, [' = "abc"'])
     sync9_add_version(s9, 'v2', s9.leaves, ['[0:0] = "Z"'])
     
-    sync9_space_dag_prune(sync9_space_dag_get(s9.val.S, 0).S, (a, b) => true)
+    //sync9_space_dag_prune(sync9_space_dag_get(s9.val.S, 0).S, (a, b) => true)
     console.log(sync9_space_dag_get(s9.val.S, 0))
 }
 
@@ -58,7 +58,6 @@ function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b) {
             node.stop = node.elems.length * 2 + ((next.stop % 2 == 1) ? 1 : 0)
             node.nexts = next.nexts
             node.next = next.next
-            if (node.next) node.next.prev = node
             return true
         }
     }
@@ -388,7 +387,6 @@ function sync9_create_space_dag_node(vid, elems, start, stop) {
         
         nexts : [],
         next : null,
-        prev : null,
         
         deleted_by : {}
     }
@@ -423,8 +421,6 @@ function sync9_space_dag_add_version(S, vid, parents, splices, is_anc) {
             
             tail.nexts = add_to.nexts
             tail.next = add_to.next
-            if (tail.next) tail.next.prev = tail
-            tail.prev = add_to
             
             add_to.stop = loc
             add_to.elems = subseq(add_to.elems, 0, elems_divide)
@@ -447,8 +443,6 @@ function sync9_space_dag_add_version(S, vid, parents, splices, is_anc) {
             var tail = sync9_create_space_dag_node(add_to.vid, subseq(add_to.elems, elems_divide), loc, add_to.stop)
             tail.nexts = add_to.nexts
             tail.next = add_to.next
-            if (tail.next) tail.next.prev = tail
-            tail.prev = add_to
             
             add_to.stop = loc - 1
             add_to.elems = subseq(add_to.elems, 0, elems_divide)
@@ -460,7 +454,7 @@ function sync9_space_dag_add_version(S, vid, parents, splices, is_anc) {
     var si = 0
     var delete_up_to = 0
     
-    sync9_trav_space_dag(S, is_anc, (node, offset, has_nexts) => {
+    sync9_trav_space_dag(S, is_anc, (node, offset, has_nexts, prev) => {
         var s = splices[si]
         if (!s) return false
         
@@ -484,7 +478,7 @@ function sync9_space_dag_add_version(S, vid, parents, splices, is_anc) {
             delete_up_to = s[0] + s[1]
             
             if (insert_location < node.start) {
-                add_outgoing(node.prev, node.prev.stop, sync9_create_space_dag_node(vid, s[2]))
+                add_outgoing(prev, prev.stop, sync9_create_space_dag_node(vid, s[2]))
             } else {
                 add_outgoing(node, insert_location, sync9_create_space_dag_node(vid, s[2]))
                 return
@@ -508,17 +502,17 @@ function sync9_space_dag_add_version(S, vid, parents, splices, is_anc) {
 function sync9_trav_space_dag(S, f, cb, view_deleted) {
     var exit_early = {}
     var offset = 0
-    function helper(node) {
+    function helper(node, prev) {
         var has_nexts = node.nexts.find(next => f(next.vid))
         if (view_deleted ||
             !Object.keys(node.deleted_by).some(vid => f(vid))) {
-            if (cb(node, offset, has_nexts) == false)
+            if (cb(node, offset, has_nexts, prev) == false)
                 throw exit_early
             offset += node.elems.length
         }
         for (var next of node.nexts)
             if (f(next.vid)) helper(next)
-        if (node.next) helper(node.next)
+        if (node.next) helper(node.next, node)
     }
     try {
         helper(S)
