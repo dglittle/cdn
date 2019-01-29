@@ -11,8 +11,9 @@ if (true) {
     var s9 = sync9_create()
     sync9_add_version(s9, 'v1', s9.leaves, [' = "abc"'])
     sync9_add_version(s9, 'v2', s9.leaves, ['[0:0] = "Z"'])
+    sync9_add_version(s9, 'v3', s9.leaves, ['[3:3] = "Y"'])
     
-    //sync9_space_dag_prune(sync9_space_dag_get(s9.val.S, 0).S, (a, b) => true)
+    sync9_space_dag_prune(sync9_space_dag_get(s9.val.S, 0).S, (a, b) => true)
     console.log(sync9_space_dag_get(s9.val.S, 0))
 }
 
