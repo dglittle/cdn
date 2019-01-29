@@ -28,16 +28,19 @@ function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b) {
             if (nexts[0].stop == 0 && nexts[0].nexts.length > 0) {
                 node.nexts = nexts[0].nexts
                 node.next = nexts[0].next || nexts[1] || next
-                if (node.next != next) {
-                    var backend = node.next
+            } else {
+                node.nexts = []
+                node.next = nexts[0]
+            }
+            if (node.next != next) {
+                var backend = node.next
+                while (backend.next) backend = backend.next
+                for (var i = (node.next == nexts[1]) ? 2 : 1; i < nexts.length; i++) {
+                    backend.next = nexts[i]
+                    backend = nexts[i]
                     while (backend.next) backend = backend.next
-                    for (var i = nexts[0].next ? 1 : 2; i < nexts.length; i++) {
-                        backend.next = nexts[i]
-                        backend = nexts[i]
-                        while (backend.next) backend = backend.next
-                    }
-                    backend.next = next
                 }
+                backend.next = next
             }
             return true
         }
