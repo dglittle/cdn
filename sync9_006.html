@@ -30,7 +30,7 @@ function create_client() {
     return c
 }
 
-var server = create_server()
+var s = create_server()
 var clients = []
 for (var i = 0; i < 4; i++) {
     clients.push(create_client())
@@ -40,7 +40,6 @@ var letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
 function do_something() {
     if (Math.random() < 1/2) {
-        var s = server
         var c = clients[Math.floor(Math.random() * clients.length)]
         
         function on_ack(vid, uid) {
