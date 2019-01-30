@@ -8,24 +8,26 @@
 <script src="https://dglittle.github.io/cdn/utils001.js"></script>
 <script>
 
-throw 'stop'
+// throw 'stop'
 
 var tau = Math.PI * 2
+var W = 300
+var CELLS = 64
 
 var c = document.createElement('canvas')
-c.width = 256
-c.height = 256
+c.width = W
+c.height = W
 var g = c.getContext('2d')
 document.body.append(c)
 
 var cc = document.createElement('canvas')
-cc.width = 256
-cc.height = 256
+cc.width = W
+cc.height = W
 var gg = cc.getContext('2d')
 document.body.append(cc)
 
-var xd = 256 / 64
-var yd = 256 / 64
+var xd = W / CELLS
+var yd = W / CELLS
 var xn = c.width / xd
 var yn = c.height / yd
 
