@@ -133,9 +133,9 @@ function update_it() {
         spins[y2][x2] = nudge_slerp(b, a, tau/15600)
     }
     for (var y = 0; y < yn; y++) {
-        for (var x = 0; x < xn; x++) {
+        for (var x = 0; x < 1; x++) {
             update_pair_vel(x, y, (x + 1) % xn, y)
-            update_pair_vel(x, y, x, (y + 1) % yn)
+            //update_pair_vel(x, y, x, (y + 1) % yn)
         }
     }
 }
@@ -336,7 +336,7 @@ function nudge_slerp(v0, v1, factor) {
     //var theta = theta_0*t          // theta = angle between v0 and result
     
     // work here
-    var theta = factor * Math.sin(theta_0)
+    var theta = factor * Math.sin(theta_0) / 2
 
     
     var sin_theta = Math.sin(theta)     // compute this value only once
