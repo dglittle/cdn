@@ -134,7 +134,7 @@ function do_something() {
                 if (Object.keys(s.unACKed[msg.vid]).length == 0) {
                     c.incoming.push({
                         t : 'ACK II',
-                        vid : msg.version.vid
+                        vid : msg.vid
                     })
                 }
             }
@@ -163,16 +163,6 @@ function do_something() {
                 changes : changes
             }
             c.unACKed.push(v)
-            
-            
-
-            // work here            
-            if (vid == 'wrBK7tPNBhxql0i') {
-                debugger
-            }
-            
-            
-            
             
             if (c.connected) {
                 c.outgoing.push({
