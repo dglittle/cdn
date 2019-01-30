@@ -4,11 +4,11 @@
 <script>
 // Math.randomSeed(126)
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.6.1/gl-matrix-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"></script>
 <script src="https://dglittle.github.io/cdn/utils001.js"></script>
 <script>
 
-// throw 'stop'
+throw 'stop'
 
 var tau = Math.PI * 2
 
@@ -43,6 +43,8 @@ for (var y = 0; y < yn; y++) {
     prevs.push(prow)
 }
 
+var iteration = 0
+
 function loop() {
     update_it()
     paint_it()
@@ -50,87 +52,28 @@ function loop() {
 }
 loop()
 
-var iteration = 0
 function update_it() {
-    
-    return
-    
-    var dt = 5
-    function update_pair_vel(x1, y1, x2, y2) {
-        var x = spins[y1][x1]
-        var y = spinsB[y1][x1]
-        var z = vec3.cross(vec3.create(), x, y)
-        var m1 = mat3.fromValues(x[0], x[1], x[2], y[0], y[1], y[2], z[0], z[1], z[2])
-        a = mat3_to_quat(m1)
-        
-        var x = spins[y2][x2]
-        var y = spinsB[y2][x2]
-        var z = vec3.cross(vec3.create(), x, y)
-        var m2 = mat3.fromValues(x[0], x[1], x[2], y[0], y[1], y[2], z[0], z[1], z[2])
-        b = mat3_to_quat(m2)
-        
-        var swap = a; a = b; b = swap
-        var c = [
-            a[0]*b[0] + a[1]*b[1] + a[2]*b[2] + a[3]*b[3],
-            a[1]*b[0] - a[0]*b[1] + a[3]*b[2] - a[2]*b[3],
-            a[2]*b[0] - a[3]*b[1] - a[0]*b[2] + a[1]*b[3],
-            a[3]*b[0] + a[2]*b[1] - a[1]*b[2] - a[0]*b[3],
-            ]
-        
-        var angle_axis = quat_to_angle_axis(c)
-        var angle = angle_axis[0]
-        if (angle > tau/2) angle -= tau
-        if (angle < -tau/2) angle += tau
-        
-        var temp = vec3.transformMat3(vec3.create(), vec3.fromValues(angle_axis[1], angle_axis[2], angle_axis[3]), m1)
-        angle_axis[1] = temp[0]
-        angle_axis[2] = temp[1]
-        angle_axis[3] = temp[2]
-        
-        var axis = vec3.fromValues(angle_axis[1], angle_axis[2], angle_axis[3])
-        
-        if (angle < 0) {
-            angle = -angle
-            vec3.negate(axis, axis)
+    for (var y = 0; y < yn; y++) {
+        for (var x = 0; x < xn; x++) {
+            var prev = prevs[y][x]
+            prevs[y][x] = spins[y][x]
+            spins[y][x] = slerp(prev, spins[y][x], 2)
         }
-        
-        var mag = Math.sin(angle) * dt / 1000
-        
-        vec3.scaleAndAdd(vels[y1][x1], vels[y1][x1], vec3.negate(vec3.create(), axis), mag)
-        vec3.scaleAndAdd(vels[y2][x2], vels[y2][x2], axis, mag)
     }
     
+    function update_pair_vel(x1, y1, x2, y2) {
+        var a = spins[y1][x1]
+        var b = spins[y2][x2]
+        
+        spins[y1][x1] = nudge_slerp(a, b)
+        spins[y2][x2] = nudge_slerp(b, a)
+    }
     for (var y = 0; y < yn; y++) {
         for (var x = 0; x < xn; x++) {
             update_pair_vel(x, y, (x + 1) % xn, y)
             update_pair_vel(x, y, x, (y + 1) % yn)
         }
     }
-    
-    iteration++
-    if (iteration < 1000) {
-        for (var y = 0; y < yn; y++) {
-            for (var x = 0; x < xn; x++) {
-                vec3.scale(vels[y][x], vels[y][x], 1 - 1/(iteration/3 + 1))
-            }
-        }
-    }
-    
-    for (var y = 0; y < yn; y++) {
-        for (var x = 0; x < xn; x++) {
-            var length = vec3.length(vels[y][x])
-            if (length > 0.001) {
-                var unit = vec3.scale(vec3.create(), vels[y][x], 1 / length)
-                var Q = quat.setAxisAngle(quat.create(), unit, length * dt)
-                var M = mat3.fromQuat(mat3.create(), Q)
-                vec3.transformMat3(spins[y][x], spins[y][x], M)
-                vec3.transformMat3(spinsB[y][x], spinsB[y][x], M)
-            }
-        }
-    }
-    
-    // vec3.scale(vels[0][0], vels[0][0], 0.5)
-    // vec3.scale(vels[0][1], vels[0][1], 0.5)
 }
 
 function paint_it() {
@@ -230,6 +173,103 @@ function quat_to_angle_axis(q) {
             q[2] / s,
             q[3] / s]
     }
+}
+
+function nudge_slerp(v0, v1) {
+// function slerp(v0, v1, t) {
+    // Only unit quaternions are valid rotations.
+    // Normalize to avoid undefined behavior.
+    v0 = vec4.normalize(vec4.create(), v0)
+    v1 = vec4.normalize(vec4.create(), v1)
+
+    // Compute the cosine of the angle between the two vectors.
+    var dot = vec4.dot(v0, v1)
+
+    // If the dot product is negative, slerp won't take
+    // the shorter path. Note that v1 and -v1 are equivalent when
+    // the negation is applied to all four components. Fix by 
+    // reversing one quaternion.
+    
+    // if (dot < 0) {
+    //     vec4.scale(v1, v1, -1)
+    //     dot = -dot
+    // }  
+
+    var DOT_THRESHOLD = 0.9995
+    if (dot > DOT_THRESHOLD || dot < -DOT_THRESHOLD) {
+        // If the inputs are too close for comfort, linearly interpolate
+        // and normalize the result.
+        
+        // work here
+        t = 0.5
+        
+        var result = vec4.lerp(vec4.create(), v0, v1, t)
+        vec4.normalize(result, result)
+        return result
+    }
+
+    // Since dot is in range [0, DOT_THRESHOLD], acos is safe
+    var theta_0 = Math.acos(dot)        // theta_0 = angle between input vectors
+    
+    
+    
+    //var theta = theta_0*t          // theta = angle between v0 and result
+    
+    // work here
+    theta = tau / 200 * Math.sin(theta_0)
+
+    
+    var sin_theta = Math.sin(theta)     // compute this value only once
+    var sin_theta_0 = Math.sin(theta_0) // compute this value only once
+
+    var s0 = Math.cos(theta) - dot * sin_theta / sin_theta_0  // == sin(theta_0 - theta) / sin(theta_0)
+    var s1 = sin_theta / sin_theta_0
+
+    return vec4.add(vec4.create(),
+        vec4.scale(v0, v0, s0),
+        vec4.scale(v1, v1, s1))
+}
+
+function slerp(v0, v1, t) {
+    // Only unit quaternions are valid rotations.
+    // Normalize to avoid undefined behavior.
+    v0 = vec4.normalize(vec4.create(), v0)
+    v1 = vec4.normalize(vec4.create(), v1)
+
+    // Compute the cosine of the angle between the two vectors.
+    var dot = vec4.dot(v0, v1)
+
+    // If the dot product is negative, slerp won't take
+    // the shorter path. Note that v1 and -v1 are equivalent when
+    // the negation is applied to all four components. Fix by 
+    // reversing one quaternion.
+    
+    // if (dot < 0) {
+    //     vec4.scale(v1, v1, -1)
+    //     dot = -dot
+    // }  
+
+    var DOT_THRESHOLD = 0.9995
+    if (dot > DOT_THRESHOLD || dot < -DOT_THRESHOLD) {
+        // If the inputs are too close for comfort, linearly interpolate
+        // and normalize the result.
+        var result = vec4.lerp(vec4.create(), v0, v1, t)
+        vec4.normalize(result, result)
+        return result
+    }
+
+    // Since dot is in range [0, DOT_THRESHOLD], acos is safe
+    var theta_0 = Math.acos(dot)        // theta_0 = angle between input vectors
+    var theta = theta_0*t          // theta = angle between v0 and result
+    var sin_theta = Math.sin(theta)     // compute this value only once
+    var sin_theta_0 = Math.sin(theta_0) // compute this value only once
+
+    var s0 = Math.cos(theta) - dot * sin_theta / sin_theta_0  // == sin(theta_0 - theta) / sin(theta_0)
+    var s1 = sin_theta / sin_theta_0
+
+    return vec4.add(vec4.create(),
+        vec4.scale(v0, v0, s0),
+        vec4.scale(v1, v1, s1))
 }
 
 </script>
