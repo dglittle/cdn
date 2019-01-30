@@ -129,8 +129,8 @@ function update_it() {
         var a = spins[y1][x1]
         var b = spins[y2][x2]
         
-        spins[y1][x1] = nudge_slerp(a, b)
-        spins[y2][x2] = nudge_slerp(b, a)
+        spins[y1][x1] = nudge_slerp(a, b, tau/3200)
+        spins[y2][x2] = nudge_slerp(b, a, tau/3200)
     }
     for (var y = 0; y < yn; y++) {
         for (var x = 0; x < xn; x++) {
@@ -269,7 +269,7 @@ function quat_to_angle_axis(q) {
     }
 }
 
-function nudge_slerp(v0, v1) {
+function nudge_slerp(v0, v1, factor) {
 // function slerp(v0, v1, t) {
     // Only unit quaternions are valid rotations.
     // Normalize to avoid undefined behavior.
@@ -310,7 +310,7 @@ function nudge_slerp(v0, v1) {
     //var theta = theta_0*t          // theta = angle between v0 and result
     
     // work here
-    theta = tau / 200 * Math.sin(theta_0)
+    theta = factor * Math.sin(theta_0)
 
     
     var sin_theta = Math.sin(theta)     // compute this value only once
