@@ -64,11 +64,13 @@ function do_something() {
         
         if (!c.connected && s.online[c.uid] && Math.random() < 0.3) {
             delete s.online[c.uid]
+            s.save_for[c.uid] = Object.assign({}, s.s9.leaves)
             Object.values(s.online).forEach(c => {
                 if (c.connected) {
                     c.incoming.push({
                         t : 'save_for',
-                        uid : c.uid
+                        uid : c.uid,
+                        leaves : s.save_for[c.uid]
                     })
                 }
             })
@@ -78,12 +80,24 @@ function do_something() {
                 }
             })
         } else if (c.connected && c.outgoing.length > 0 && Math.random() < 0.8) {
+            
             var msg = c.outgoing.shift()
             if (msg.t == 'join') {
                 s.online[c.uid] = c
                 c.incoming.push({
                     t : 'welcome',
-                    s9 : JSON.stringify(s.s9)
+                    s9 : JSON.stringify(s.s9),
+                    save_for : JSON.stringify(s.save_for)
+                })
+            } else if (msg.t == 'welcome ACK') {
+                delete s.save_for[c.uid]
+                Object.values(s.online).forEach(c => {
+                    if (c.connected) {
+                        c.incoming.push({
+                            t : 'unsave_for',
+                            uid : c.uid
+                        })
+                    }
                 })
             } else if (msg.t == 'add_version') {
                 c.incoming.push({
@@ -161,6 +175,7 @@ function do_something() {
             var msg = c.incoming.shift()
             if (msg.t == 'welcome') {
                 c.s9 = JSON.parse(msg.s9)
+                c.save_for = JSON.parse(msg.save_for)
                 c.unACKed.forEach(v => {
                     sync9_add_version(c.s9, v.vid, v.parents, v.changes)
                 })
@@ -182,9 +197,9 @@ function do_something() {
             } else if (msg.t == 'ACK II') {
                 c.ACKIIed[msg.vid] = true
             } else if (msg.t == 'save_for') {
-                c.save_for[msg.uid] = Object.assign({}, c.s9.leaves)
+                c.save_for[msg.uid] = msg.leaves
             } else if (msg.t == 'unsave_for') {
-                delete c.save_for[msg.vid]
+                delete c.save_for[msg.uid]
             }
         }
     }
