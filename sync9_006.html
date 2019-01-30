@@ -166,9 +166,12 @@ function do_something() {
             c.connected = true
             join()
         } else if (c.connected && Math.random() < 0.1) {
-            c.connected = false
-            c.incoming = []
-            c.outgoing = []
+            
+            // work here
+            
+            // c.connected = false
+            // c.incoming = []
+            // c.outgoing = []
         } else if (!c.connected && Math.random() < 0.1) {
             c.connected = true
             join()
@@ -208,7 +211,7 @@ function do_something() {
 
 
 
-for (var i = 0; i < 50; i++) {
+for (var i = 0; i < 100; i++) {
     console.log('i = ' + i)
     do_something()
 }
