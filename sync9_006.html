@@ -63,6 +63,32 @@ function do_something() {
             }
         }
         
+        function on_add_version(v) {
+            c.incoming.push({
+                t : 'ACK I',
+                vid : v.vid
+            })
+            if (s.s9.T[v.vid]) return
+            s.unACKed[v.vid] = {}
+            
+            sync9_add_version(s.s9, v.vid, v.parents, v.changes)
+            Object.values(s.online).forEach(cc => {
+                if (c != cc && cc.connected) {
+                    cc.incoming.push({
+                        t : 'add_version',
+                        version : v
+                    })
+                    s.unACKed[v.vid][cc.uid] = true
+                }
+            })
+            if (Object.keys(s.unACKed[v.vid]).length == 0) {
+                c.incoming.push({
+                    t : 'ACK II',
+                    vid : v.vid
+                })
+            }
+        }
+        
         if (!c.connected && s.online[c.uid] && Math.random() < 0.3) {
             delete s.online[c.uid]
             s.save_for[c.uid] = Object.assign({}, s.s9.leaves)
@@ -90,6 +116,7 @@ function do_something() {
                     s9 : JSON.stringify(s.s9),
                     save_for : JSON.stringify(s.save_for)
                 })
+                msg.versions.forEach(v => on_add_version(v))
             } else if (msg.t == 'welcome ACK') {
                 delete s.save_for[c.uid]
                 Object.values(s.online).forEach(c => {
@@ -101,25 +128,7 @@ function do_something() {
                     }
                 })
             } else if (msg.t == 'add_version') {
-                c.incoming.push({
-                    t : 'ACK I',
-                    vid : msg.version.vid
-                })
-                if (s.s9.T[msg.version.vid]) return
-                s.unACKed[msg.version.vid] = {}
-                sync9_add_version(s.s9, msg.version.vid, msg.version.parents, msg.version.changes)
-                clients.forEach(cc => {
-                    if (cc.connected) {
-                        cc.incoming.push(msg)
-                        s.unACKed[msg.version.vid][cc.uid] = true
-                    }
-                })
-                if (Object.keys(s.unACKed[msg.version.vid]).length == 0) {
-                    c.incoming.push({
-                        t : 'ACK II',
-                        vid : msg.version.vid
-                    })
-                }
+                on_add_version(msg.version)
             } else if (msg.t == 'ACK I') {
                 delete s.unACKed[msg.vid][c.uid]
                 if (Object.keys(s.unACKed[msg.vid]).length == 0) {
@@ -154,6 +163,17 @@ function do_something() {
                 changes : changes
             }
             c.unACKed.push(v)
+            
+            
+
+            // work here            
+            if (vid == 'wrBK7tPNBhxql0i') {
+                debugger
+            }
+            
+            
+            
+            
             if (c.connected) {
                 c.outgoing.push({
                     t : 'add_version',
@@ -210,8 +230,9 @@ function do_something() {
 }
 
 
-
+var trial = 0
 for (var i = 0; i < 100; i++) {
+    trial = i
     console.log('i = ' + i)
     do_something()
 }
