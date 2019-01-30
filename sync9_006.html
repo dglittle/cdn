@@ -10,6 +10,7 @@ console.log('-------------------')
 function create_server() {
     var s = {}
     s.s9 = sync9_create()
+    sync9_add_version(s.s9, 'v1', c.s9.leaves, [' = ""'])
     s.unACKed = {}
     s.online = {}
     return s
