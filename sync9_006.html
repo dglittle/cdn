@@ -203,6 +203,14 @@ for (var i = 0; i < clients.length; i++) {
     console.log('CLIENT: ' + JSON.stringify(sync9_space_dag_get(c.s9.val.S, 0), null, '  '))
 }
 
+
+for (var i = 0; i < clients.length; i++) {
+    var c = clients[i]
+    console.log('CLIENT incoming: ' + JSON.stringify(c.incoming, null, '  '))
+    console.log('CLIENT outgoing: ' + JSON.stringify(c.outgoing, null, '  '))
+}
+
+
 console.log('SERVER: ' + sync9_read(s.s9))
 for (var i = 0; i < clients.length; i++) {
     var c = clients[i]
