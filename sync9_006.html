@@ -29,6 +29,7 @@ function create_client() {
     c.unACKed = []
     c.ACKIIed = {}
     c.save_for = {}
+    c.letters = ''
     return c
 }
 
@@ -38,7 +39,10 @@ for (var i = 0; i < 4; i++) {
     clients.push(create_client())
 }
 
-var letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+clients[0].letters = 'abcABC'
+clients[1].letters = 'xyzXYZ'
+clients[2].letters = 'efgEFG'
+clients[3].letters = 'uvwUVW'
 
 function do_something() {
     if (Math.random() < 1/2) {
@@ -124,11 +128,10 @@ function do_something() {
             
             var start = Math.floor(Math.random() * (str.length + 1))
             var del = Math.floor(Math.random() * (str.length - start + 1))
-            var ins = letters[Math.floor(Math.random() * letters.length)].repeat(Math.floor(Math.random() * 4) + (del == 0 ? 1 : 0))
+            var ins = c.letters[Math.floor(Math.random() * c.letters.length)].repeat(Math.floor(Math.random() * 4) + (del == 0 ? 1 : 0))
             
             var vid = sync9_guid()
             var changes = [`[${start}:${start + del}] = ` + JSON.stringify(ins)]
-            sync9_add_version(c.s9, vid, c.s9.leaves, changes)
             
             var v = {
                 vid : vid,
@@ -142,7 +145,7 @@ function do_something() {
                     version : v
                 })
             }
-            
+            sync9_add_version(c.s9, vid, c.s9.leaves, changes)
         } else if (!c.init) {
             c.init = true
             c.connected = true
@@ -191,19 +194,21 @@ function do_something() {
 
 for (var i = 0; i < 50; i++) {
     console.log('i = ' + i)
-    
-    // work here
-    if (i == 27) {
-        debugger
-    }
-    
     do_something()
 }
+
 console.log('SERVER: ' + JSON.stringify(sync9_space_dag_get(s.s9.val.S, 0), null, '  '))
 for (var i = 0; i < clients.length; i++) {
     var c = clients[i]
     console.log('CLIENT: ' + JSON.stringify(sync9_space_dag_get(c.s9.val.S, 0), null, '  '))
 }
+
+console.log('SERVER: ' + sync9_read(s.s9))
+for (var i = 0; i < clients.length; i++) {
+    var c = clients[i]
+    console.log('CLIENT: ' + sync9_read(c.s9))
+}
+
 console.log('-------------------')
 
 function sync9_create() {
