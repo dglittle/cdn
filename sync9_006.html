@@ -5,6 +5,7 @@
 <body></body>
 <script>
 
+Math.randomSeed(123)
 console.log('-------------------')
 
 function create_server() {
@@ -188,7 +189,14 @@ function do_something() {
 
 
 
-for (var i = 0; i < 1; i++) {
+for (var i = 0; i < 50; i++) {
+    console.log('i = ' + i)
+    
+    // work here
+    if (i == 27) {
+        debugger
+    }
+    
     do_something()
 }
 console.log('SERVER: ' + JSON.stringify(sync9_space_dag_get(s.s9.val.S, 0), null, '  '))
