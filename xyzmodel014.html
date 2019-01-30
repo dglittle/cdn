@@ -129,8 +129,8 @@ function update_it() {
         var a = spins[y1][x1]
         var b = spins[y2][x2]
         
-        spins[y1][x1] = nudge_slerp(a, b, tau/3200)
-        spins[y2][x2] = nudge_slerp(b, a, tau/3200)
+        spins[y1][x1] = nudge_slerp(a, b, tau/15600)
+        spins[y2][x2] = nudge_slerp(b, a, tau/15600)
     }
     for (var y = 0; y < yn; y++) {
         for (var x = 0; x < xn; x++) {
@@ -203,14 +203,47 @@ function paint_it() {
 function loop() {
     update_it()
     paint_it()
+    
+    
+    // var rot = angle_axis_to_matrix([tau/3600, 0, 0, 1])
+    // mat3.mul(camera, camera, rot)
+    
     setTimeout(loop, 100)
 }
 loop()
+
+
+
+
 
 function fmod(a, b) {
     var m = a % b
     if (m < 0) return m + b
     return m
+}
+
+function angle_axis_to_matrix(angle_axis) {
+    let x = angle_axis[1], y = angle_axis[2], z = angle_axis[3]
+    let len = Math.sqrt(x * x + y * y + z * z)
+    let s, c, t
+    len = 1 / len
+    x *= len
+    y *= len
+    z *= len
+    s = Math.sin(angle_axis[0])
+    c = Math.cos(angle_axis[0])
+    t = 1 - c
+    var out = mat3.create()
+    out[0] = x * x * t + c
+    out[1] = y * x * t + z * s
+    out[2] = z * x * t - y * s
+    out[3] = x * y * t - z * s;
+    out[4] = y * y * t + c;
+    out[5] = z * y * t + x * s;
+    out[6] = x * z * t + y * s;
+    out[7] = y * z * t - x * s;
+    out[8] = z * z * t + c;
+    return out
 }
 
 // http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/
@@ -273,6 +306,7 @@ function nudge_slerp(v0, v1, factor) {
 // function slerp(v0, v1, t) {
     // Only unit quaternions are valid rotations.
     // Normalize to avoid undefined behavior.
+    
     v0 = vec4.normalize(vec4.create(), v0)
     v1 = vec4.normalize(vec4.create(), v1)
 
@@ -284,22 +318,14 @@ function nudge_slerp(v0, v1, factor) {
     // the negation is applied to all four components. Fix by 
     // reversing one quaternion.
     
-    // if (dot < 0) {
-    //     vec4.scale(v1, v1, -1)
-    //     dot = -dot
-    // }  
+    if (dot < 0) {
+        vec4.scale(v1, v1, -1)
+        dot = -dot
+    }  
 
     var DOT_THRESHOLD = 0.9995
     if (dot > DOT_THRESHOLD || dot < -DOT_THRESHOLD) {
-        // If the inputs are too close for comfort, linearly interpolate
-        // and normalize the result.
-        
-        // work here
-        t = 0.5
-        
-        var result = vec4.lerp(vec4.create(), v0, v1, t)
-        vec4.normalize(result, result)
-        return result
+        return v0
     }
 
     // Since dot is in range [0, DOT_THRESHOLD], acos is safe
@@ -310,7 +336,7 @@ function nudge_slerp(v0, v1, factor) {
     //var theta = theta_0*t          // theta = angle between v0 and result
     
     // work here
-    theta = factor * Math.sin(theta_0)
+    var theta = factor * Math.sin(theta_0)
 
     
     var sin_theta = Math.sin(theta)     // compute this value only once
@@ -338,10 +364,10 @@ function slerp(v0, v1, t) {
     // the negation is applied to all four components. Fix by 
     // reversing one quaternion.
     
-    // if (dot < 0) {
-    //     vec4.scale(v1, v1, -1)
-    //     dot = -dot
-    // }  
+    if (dot < 0) {
+        vec4.scale(v1, v1, -1)
+        dot = -dot
+    }  
 
     var DOT_THRESHOLD = 0.9995
     if (dot > DOT_THRESHOLD || dot < -DOT_THRESHOLD) {
