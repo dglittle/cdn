@@ -45,7 +45,6 @@ function do_something() {
     if (s.peers.length > 0 && Math.random() < 0.5) {
         var c = s.peers[Math.floor(Math.random() * s.peers.length)]
         if (c.outgoing.length > 0) {
-            throw 'stop'
             var msg = c.outgoing.shift()
             if (msg.t == 'join') {
                 c.incoming.push({
@@ -86,8 +85,8 @@ function do_something() {
     } else {
         var c = clients[Math.floor(Math.random() * clients.length)]
         if (!c.connected) {
-            s.peers.push(c)
             if (Math.random() < 0.3) {
+                s.peers.push(c)
                 c.connected = true
                 c.outgoing.push({ t : 'join' })
             }
