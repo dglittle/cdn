@@ -3,6 +3,7 @@
 <script src="https://dglittle.github.io/cdn/random001.js"></script>
 <script>
 Math.randomSeed(126)
+//Math.randomSeed(128)
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"></script>
 <script src="https://dglittle.github.io/cdn/utils001.js"></script>
@@ -208,7 +209,7 @@ function loop() {
     // var rot = angle_axis_to_matrix([tau/3600, 0, 0, 1])
     // mat3.mul(camera, camera, rot)
     
-    setTimeout(loop, 100)
+    setTimeout(loop, 1)
 }
 loop()
 
