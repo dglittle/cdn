@@ -42,7 +42,7 @@ clients[2].letters = 'efgEFG'
 clients[3].letters = 'uvwUVW'
 
 function do_something() {
-    if (Math.random() < 0.5) {
+    if (s.peers.length > 0 && Math.random() < 0.5) {
         var c = s.peers[Math.floor(Math.random() * s.peers.length)]
         if (c.incoming.length > 0) {
             var msg = c.outgoing.shift()
