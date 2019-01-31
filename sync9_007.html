@@ -21,8 +21,7 @@ function create_server() {
 function create_client() {
     var c = {}
     c.uid = sync9_guid()
-    c.s9 = sync9_create()
-    sync9_add_version(c.s9, 'v1', c.s9.leaves, [' = ""'])
+    c.s9 = null
     c.connected = false
     c.ACKIIed = {}
     c.incoming = []
@@ -87,7 +86,7 @@ function do_something() {
                     if (sync9_space_dag_prune(sync9_space_dag_get(s.s9.val.S, 0).S, (a, b) => s.ACKIIed[b])) {
                         
                         prune_count++
-                        if (prune_count == 2) {
+                        if (prune_count == 4) {
                             console.log('-------------------')
                             console.log(old)
                             console.log('-------------------')
@@ -109,7 +108,7 @@ function do_something() {
                 c.connected = true
                 c.outgoing.push({ t : 'join' })
             }
-        } else if (Math.random() < 0.1) {
+        } else if (c.s9 && Math.random() < 0.1) {
             var str = sync9_read(c.s9)
             
             var start = Math.floor(Math.random() * (str.length + 1))
@@ -621,7 +620,9 @@ function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b) {
             Object.keys(node.deleted_by).length == 0 &&
             Object.keys(next.deleted_by).length == 0) {
             node.elems = node.elems.concat(next.elems)
-            node.stop = node.elems.length * 2 + ((next.stop % 2 == 1) ? 1 : 0)
+            if (node.stop % 2 == 1) node.stop--
+            node.stop += node.elems.length * 2
+            if (next.stop % 2 == 1) node.stop++
             node.nexts = next.nexts
             node.next = next.next
             return true
