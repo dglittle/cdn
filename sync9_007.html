@@ -79,7 +79,7 @@ function do_something() {
                             vid : vid
                         })
                     })
-                    // sync9_space_dag_prune(sync9_space_dag_get(s.s9.val.S, 0), (a, b) => s.ACKIIed[b])
+                    sync9_space_dag_prune(sync9_space_dag_get(s.s9.val.S, 0), (a, b) => s.ACKIIed[b])
                 }
             }
         }
@@ -123,7 +123,7 @@ function do_something() {
                 })
             } else if (msg.t == 'ACK II') {
                 c.ACKIIed[msg.vid] = true
-                // sync9_space_dag_prune(sync9_space_dag_get(c.s9.val.S, 0), (a, b) => c.ACKIIed[b])
+                sync9_space_dag_prune(sync9_space_dag_get(c.s9.val.S, 0), (a, b) => c.ACKIIed[b])
             }
         }
     }
