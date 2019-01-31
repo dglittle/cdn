@@ -85,16 +85,16 @@ function do_something() {
                     var old = JSON.stringify(sync9_space_dag_get(s.s9.val.S, 0).S, null, '    ')
                     if (sync9_space_dag_prune(sync9_space_dag_get(s.s9.val.S, 0).S, (a, b) => s.ACKIIed[b])) {
                         
-                        prune_count++
-                        if (prune_count == 4) {
-                            console.log('-------------------')
-                            console.log(old)
-                            console.log('-------------------')
-                            console.log(JSON.stringify(sync9_space_dag_get(s.s9.val.S, 0).S, null, '    '))
-                            console.log('-------------------')
+                        // prune_count++
+                        // if (prune_count == 15) {
+                        //     console.log('-------------------')
+                        //     console.log(old)
+                        //     console.log('-------------------')
+                        //     console.log(JSON.stringify(sync9_space_dag_get(s.s9.val.S, 0).S, null, '    '))
+                        //     console.log('-------------------')
                             
-                            throw 'stop'
-                        }
+                        //     throw 'stop'
+                        // }
                         
                     }
                     
@@ -149,7 +149,7 @@ function do_something() {
 }
 
 var trial = 0
-for (var i = 0; i < 200; i++) {
+for (var i = 0; i < 1000; i++) {
     trial = i
     console.log('i = ' + i)
     do_something()
