@@ -5,7 +5,7 @@
 <body></body>
 <script>
 
-Math.randomSeed(124)
+Math.randomSeed(125)
 console.log('-------------------')
 
 function create_server() {
@@ -42,7 +42,7 @@ clients[3].letters = 'uvwUVW'
 
 var prune_count = 0
 
-function do_something() {
+function do_something(calm_mode) {
     var c = clients[Math.floor(Math.random() * clients.length)]
     if (Math.random() < 0.5) {
         if (c.outgoing.length > 0) {
@@ -108,7 +108,7 @@ function do_something() {
                 c.connected = true
                 c.outgoing.push({ t : 'join' })
             }
-        } else if (c.s9 && Math.random() < 0.1) {
+        } else if (!calm_mode && c.s9 && Math.random() < 0.1) {
             var str = sync9_read(c.s9)
             
             var start = Math.floor(Math.random() * (str.length + 1))
@@ -149,11 +149,20 @@ function do_something() {
 }
 
 var trial = 0
-for (var i = 0; i < 1000; i++) {
+for (var i = 0; i < 300; i++) {
     trial = i
     console.log('i = ' + i)
     do_something()
 }
+console.log('-- CALM MODE --')
+for (var i = 0; i < 300; i++) {
+    trial = i
+    console.log('i = ' + i)
+    do_something(true)
+}
+
+
+
 
 console.log('SERVER: ' + JSON.stringify(sync9_space_dag_get(s.s9.val.S, 0), null, '  '))
 for (var i = 0; i < clients.length; i++) {
@@ -580,8 +589,6 @@ function sync9_create_proxy(x, cb, path) {
 
 function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b) {
     function process_node(node, offset) {
-        console.log('processing: ' + node.vid)
-        
         var nexts = node.nexts
         var next = node.next
         
