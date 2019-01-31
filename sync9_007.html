@@ -42,11 +42,12 @@ clients[2].letters = 'efgEFG'
 clients[3].letters = 'uvwUVW'
 
 function do_something() {
-    if (s.peers.length > 0 && Math.random() < 0.5) {
-        var c = s.peers[Math.floor(Math.random() * s.peers.length)]
+    var c = clients[Math.floor(Math.random() * clients.length)]
+    if (Math.random() < 0.5) {
         if (c.outgoing.length > 0) {
             var msg = c.outgoing.shift()
             if (msg.t == 'join') {
+                s.peers.push(c)
                 c.incoming.push({
                     t : 'welcome',
                     s9 : JSON.stringify(s.s9),
@@ -83,10 +84,8 @@ function do_something() {
             }
         }
     } else {
-        var c = clients[Math.floor(Math.random() * clients.length)]
         if (!c.connected) {
             if (Math.random() < 0.3) {
-                s.peers.push(c)
                 c.connected = true
                 c.outgoing.push({ t : 'join' })
             }
@@ -140,21 +139,21 @@ for (var i = 0; i < 100; i++) {
 console.log('SERVER: ' + JSON.stringify(sync9_space_dag_get(s.s9.val.S, 0), null, '  '))
 for (var i = 0; i < clients.length; i++) {
     var c = clients[i]
-    console.log('CLIENT: ' + JSON.stringify(sync9_space_dag_get(c.s9.val.S, 0), null, '  '))
+    console.log(i + 'CLIENT: ' + JSON.stringify(sync9_space_dag_get(c.s9.val.S, 0), null, '  '))
 }
 
 
 for (var i = 0; i < clients.length; i++) {
     var c = clients[i]
-    console.log('CLIENT incoming: ' + JSON.stringify(c.incoming, null, '  '))
-    console.log('CLIENT outgoing: ' + JSON.stringify(c.outgoing, null, '  '))
+    console.log(i + 'CLIENT incoming: ' + JSON.stringify(c.incoming, null, '  '))
+    console.log(i + 'CLIENT outgoing: ' + JSON.stringify(c.outgoing, null, '  '))
 }
 
 
 console.log('SERVER: ' + sync9_read(s.s9))
 for (var i = 0; i < clients.length; i++) {
     var c = clients[i]
-    console.log('CLIENT: ' + sync9_read(c.s9))
+    console.log(i + 'CLIENT: ' + sync9_read(c.s9))
 }
 
 console.log('-------------------')
