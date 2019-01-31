@@ -57,7 +57,6 @@ function do_something() {
                 var v = msg.version
                 if (s.s9.T[v.vid]) throw 'bad'
                 sync9_add_version(s.s9, v.vid, v.parents, v.changes)
-                // sync9_space_dag_prune(sync9_space_dag_get(s.s9.val.S, 0), (a, b) => ACKIIed[b])
                 s.unACKed[v.vid] = {}
                 s.unACKed[v.vid][c.uid] = true
                 s.peers.forEach(cc => {
@@ -80,150 +79,18 @@ function do_something() {
                             vid : vid
                         })
                     })
+                    // sync9_space_dag_prune(sync9_space_dag_get(s.s9.val.S, 0), (a, b) => s.ACKIIed[b])
                 }
             }
         }
     } else {
         var c = clients[Math.floor(Math.random() * clients.length)]
-        
-        
-    }
-        
-        
-        
-            var msg = c.outgoing.shift()
-            if (msg.t == 'join') {
-                s.online[c.uid] = c
-                c.incoming.push({
-                    t : 'welcome',
-                    s9 : JSON.stringify(s.s9),
-                    save_for : JSON.stringify(s.save_for)
-                })
-                msg.versions.forEach(v => on_add_version(v))
-            } else if (msg.t == 'welcome ACK') {
-                delete s.save_for[c.uid]
-                Object.values(s.online).forEach(c => {
-                    if (c.connected) {
-                        c.incoming.push({
-                            t : 'unsave_for',
-                            uid : c.uid
-                        })
-                    }
-                })
-            } else if (msg.t == 'add_version') {
-                on_add_version(msg.version)
-            } else if (msg.t == 'ACK I') {
-                delete s.unACKed[msg.vid][c.uid]
-                if (Object.keys(s.unACKed[msg.vid]).length == 0) {
-                    c.incoming.push({
-                        t : 'ACK II',
-                        vid : msg.vid
-                    })
-                }
+        if (!c.connected) {
+            if (Math.random() < 0.3) {
+                c.connected = true
+                c.outgoing.push({ t : 'join' })
             }
-        
-        
-        
-        
-        function on_ack(vid, uid) {
-            delete s.unACKed[vid][uid]
-            if (Object.keys(s.unACKed[vid]).length == 0) {
-                Object.values(s.online).forEach(c => {
-                    if (c.connected) {
-                        c.incoming.push({
-                            t : 'ACK II',
-                            vid : vid
-                        })
-                    }
-                })
-            }
-        }
-        
-        function on_add_version(v) {
-            c.incoming.push({
-                t : 'ACK I',
-                vid : v.vid
-            })
-            if (s.s9.T[v.vid]) return
-            s.unACKed[v.vid] = {}
-            
-            sync9_add_version(s.s9, v.vid, v.parents, v.changes)
-            Object.values(s.online).forEach(cc => {
-                if (c != cc && cc.connected) {
-                    cc.incoming.push({
-                        t : 'add_version',
-                        version : v
-                    })
-                    s.unACKed[v.vid][cc.uid] = true
-                }
-            })
-            if (Object.keys(s.unACKed[v.vid]).length == 0) {
-                c.incoming.push({
-                    t : 'ACK II',
-                    vid : v.vid
-                })
-            }
-        }
-        
-        if (!c.connected && s.online[c.uid] && Math.random() < 0.3) {
-            delete s.online[c.uid]
-            s.save_for[c.uid] = Object.assign({}, s.s9.leaves)
-            Object.values(s.online).forEach(c => {
-                if (c.connected) {
-                    c.incoming.push({
-                        t : 'save_for',
-                        uid : c.uid,
-                        leaves : s.save_for[c.uid]
-                    })
-                }
-            })
-            Object.entries(s.unACKed).forEach(([vid, unACKed]) => {
-                if (unACKed[c.uid]) {
-                    on_ack(vid, c.uid)
-                }
-            })
-        } else if (c.connected && c.outgoing.length > 0 && Math.random() < 0.8) {
-            
-            var msg = c.outgoing.shift()
-            if (msg.t == 'join') {
-                s.online[c.uid] = c
-                c.incoming.push({
-                    t : 'welcome',
-                    s9 : JSON.stringify(s.s9),
-                    save_for : JSON.stringify(s.save_for)
-                })
-                msg.versions.forEach(v => on_add_version(v))
-            } else if (msg.t == 'welcome ACK') {
-                delete s.save_for[c.uid]
-                Object.values(s.online).forEach(c => {
-                    if (c.connected) {
-                        c.incoming.push({
-                            t : 'unsave_for',
-                            uid : c.uid
-                        })
-                    }
-                })
-            } else if (msg.t == 'add_version') {
-                on_add_version(msg.version)
-            } else if (msg.t == 'ACK I') {
-                delete s.unACKed[msg.vid][c.uid]
-                if (Object.keys(s.unACKed[msg.vid]).length == 0) {
-                    c.incoming.push({
-                        t : 'ACK II',
-                        vid : msg.vid
-                    })
-                }
-            }
-        }
-    } else {
-        var c = clients[Math.floor(Math.random() * clients.length)]
-        function join() {
-            c.outgoing.push({
-                t : 'join',
-                versions : c.unACKed.slice(0)
-            })
-        }
-        if (Math.random() < 0.2) {
+        } else if (Math.random() < 0.2) {
             var str = sync9_read(c.s9)
             
             var start = Math.floor(Math.random() * (str.length + 1))
@@ -238,63 +105,30 @@ function do_something() {
                 parents : Object.assign({}, c.s9.leaves),
                 changes : changes
             }
-            c.unACKed.push(v)
-            
-            if (c.connected) {
-                c.outgoing.push({
-                    t : 'add_version',
-                    version : v
-                })
-            }
+            c.outgoing.push({
+                t : 'add_version',
+                version : v
+            })
             sync9_add_version(c.s9, vid, c.s9.leaves, changes)
-        } else if (!c.init) {
-            c.init = true
-            c.connected = true
-            join()
-        } else if (c.connected && Math.random() < 0.1) {
-            
-            // work here
-            
-            // c.connected = false
-            // c.incoming = []
-            // c.outgoing = []
-        } else if (!c.connected && Math.random() < 0.1) {
-            c.connected = true
-            join()
-        } else if (c.connected && c.incoming.length > 0) {
+        } else if (c.incoming.length > 0) {
             var msg = c.incoming.shift()
             if (msg.t == 'welcome') {
                 c.s9 = JSON.parse(msg.s9)
-                c.save_for = JSON.parse(msg.save_for)
-                c.unACKed.forEach(v => {
-                    sync9_add_version(c.s9, v.vid, v.parents, v.changes)
-                })
-                if (c.connected) {
-                    c.outgoing.push({
-                        t : 'welcome ACK'
-                    })
-                }
+                c.ACKIIed = JSON.parse(msg.ACKIIed)
             } else if (msg.t == 'add_version') {
-                sync9_add_version(c.s9, msg.version.vid, msg.version.parents, msg.version.changes)
-                if (c.connected) {
-                    c.outgoing.push({
-                        t : 'ACK I',
-                        vid : msg.version.vid
-                    })
-                }
-            } else if (msg.t == 'ACK I') {
-                c.unACKed = c.unACKed.filter(x => x.vid != msg.vid)
+                var v = msg.version
+                sync9_add_version(c.s9, v.vid, v.parents, v.changes)
+                c.outgoing.push({
+                    t : 'ACK I',
+                    vid : v.vid
+                })
             } else if (msg.t == 'ACK II') {
                 c.ACKIIed[msg.vid] = true
-            } else if (msg.t == 'save_for') {
-                c.save_for[msg.uid] = msg.leaves
-            } else if (msg.t == 'unsave_for') {
-                delete c.save_for[msg.uid]
+                // sync9_space_dag_prune(sync9_space_dag_get(c.s9.val.S, 0), (a, b) => c.ACKIIed[b])
             }
         }
     }
 }
-
 
 var trial = 0
 for (var i = 0; i < 100; i++) {
