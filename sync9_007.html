@@ -5,7 +5,7 @@
 <body></body>
 <script>
 
-Math.randomSeed(123)
+Math.randomSeed(124)
 console.log('-------------------')
 
 function create_server() {
@@ -87,7 +87,7 @@ function do_something() {
                     if (sync9_space_dag_prune(sync9_space_dag_get(s.s9.val.S, 0).S, (a, b) => s.ACKIIed[b])) {
                         
                         prune_count++
-                        if (prune_count == 3) {
+                        if (prune_count == 2) {
                             console.log('-------------------')
                             console.log(old)
                             console.log('-------------------')
@@ -109,7 +109,7 @@ function do_something() {
                 c.connected = true
                 c.outgoing.push({ t : 'join' })
             }
-        } else if (Math.random() < 0.2) {
+        } else if (Math.random() < 0.1) {
             var str = sync9_read(c.s9)
             
             var start = Math.floor(Math.random() * (str.length + 1))
