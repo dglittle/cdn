@@ -41,6 +41,8 @@ clients[1].letters = 'xyzXYZ'
 clients[2].letters = 'efgEFG'
 clients[3].letters = 'uvwUVW'
 
+var prune_count = 0
+
 function do_something() {
     var c = clients[Math.floor(Math.random() * clients.length)]
     if (Math.random() < 0.5) {
@@ -84,13 +86,17 @@ function do_something() {
                     var old = JSON.stringify(sync9_space_dag_get(s.s9.val.S, 0).S, null, '    ')
                     if (sync9_space_dag_prune(sync9_space_dag_get(s.s9.val.S, 0).S, (a, b) => s.ACKIIed[b])) {
                         
-                        console.log('-------------------')
-                        console.log(old)
-                        console.log('-------------------')
-                        console.log(JSON.stringify(sync9_space_dag_get(s.s9.val.S, 0).S, null, '    '))
-                        console.log('-------------------')
+                        prune_count++
+                        if (prune_count == 3) {
+                            console.log('-------------------')
+                            console.log(old)
+                            console.log('-------------------')
+                            console.log(JSON.stringify(sync9_space_dag_get(s.s9.val.S, 0).S, null, '    '))
+                            console.log('-------------------')
+                            
+                            throw 'stop'
+                        }
                         
-                        throw 'stop'
                     }
                     
                     
@@ -144,7 +150,7 @@ function do_something() {
 }
 
 var trial = 0
-for (var i = 0; i < 100; i++) {
+for (var i = 0; i < 200; i++) {
     trial = i
     console.log('i = ' + i)
     do_something()
@@ -326,13 +332,13 @@ function sync9_create_space_dag_node(vid, elems, start, stop) {
     return {
         vid : vid,
         elems : elems,
+        deleted_by : {}
+        
         start : start,
         stop : stop,
         
         nexts : [],
         next : null,
-        
-        deleted_by : {}
     }
 }
 
