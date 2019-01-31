@@ -332,13 +332,13 @@ function sync9_create_space_dag_node(vid, elems, start, stop) {
     return {
         vid : vid,
         elems : elems,
-        deleted_by : {}
+        deleted_by : {},
         
         start : start,
         stop : stop,
         
         nexts : [],
-        next : null,
+        next : null
     }
 }
 
@@ -588,6 +588,7 @@ function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b) {
         
         if (nexts.length > 0 && nexts.every(x =>
             has_everyone_whos_seen_a_seen_b(node.vid, x.vid))) {
+            if (node.stop % 2 == 1) node.stop--
             if (nexts[0].stop == 0 && nexts[0].nexts.length > 0) {
                 node.nexts = nexts[0].nexts
                 node.next = nexts[0].next || nexts[1] || next
