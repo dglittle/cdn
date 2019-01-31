@@ -621,7 +621,7 @@ function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b) {
             Object.keys(next.deleted_by).length == 0) {
             node.elems = node.elems.concat(next.elems)
             if (node.stop % 2 == 1) node.stop--
-            node.stop += node.elems.length * 2
+            node.stop += next.elems.length * 2
             if (next.stop % 2 == 1) node.stop++
             node.nexts = next.nexts
             node.next = next.next
