@@ -79,7 +79,21 @@ function do_something() {
                             vid : vid
                         })
                     })
-                    sync9_space_dag_prune(sync9_space_dag_get(s.s9.val.S, 0).S, (a, b) => s.ACKIIed[b])
+                    
+                    
+                    var old = JSON.stringify(sync9_space_dag_get(s.s9.val.S, 0).S, null, '    ')
+                    if (sync9_space_dag_prune(sync9_space_dag_get(s.s9.val.S, 0).S, (a, b) => s.ACKIIed[b])) {
+                        
+                        console.log('-------------------')
+                        console.log(old)
+                        console.log('-------------------')
+                        console.log(JSON.stringify(sync9_space_dag_get(s.s9.val.S, 0).S, null, '    '))
+                        console.log('-------------------')
+                        
+                        throw 'stop'
+                    }
+                    
+                    
                 }
             }
         }
@@ -596,7 +610,8 @@ function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b) {
         
         if (nexts.length == 0 && next &&
             !(next.stop == 0 && next.nexts.length > 0) &&
-            (next.start == 0 || next.start % 2 == 1)) {
+            Object.keys(node.deleted_by).length == 0 &&
+            Object.keys(next.deleted_by).length == 0) {
             node.elems = node.elems.concat(next.elems)
             node.stop = node.elems.length * 2 + ((next.stop % 2 == 1) ? 1 : 0)
             node.nexts = next.nexts
@@ -604,9 +619,13 @@ function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b) {
             return true
         }
     }
+    var did_something = false
     sync9_trav_space_dag(S, () => true, (node, offset) => {
-        while (process_node(node, offset)) {}
+        while (process_node(node, offset)) {
+            did_something = true
+        }
     }, true)
+    return did_something
 }
 
 // modified from https://stackoverflow.com/questions/22697936/binary-search-in-javascript
