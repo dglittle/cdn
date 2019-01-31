@@ -325,7 +325,16 @@ function nudge_slerp(v0, v1, factor) {
 
     var DOT_THRESHOLD = 0.9995
     if (dot > DOT_THRESHOLD || dot < -DOT_THRESHOLD) {
-        return v0
+        if (dot < -1) dot = -1
+        if (dot > 1) dot = 1
+        var theta_0 = Math.acos(dot)
+        var theta = factor * Math.sin(theta_0)
+        
+        var t = lerp(0, 0, theta_0, 1, theta)
+        
+        var result = vec4.lerp(vec4.create(), v0, v1, t)
+        vec4.normalize(result, result)
+        return result
     }
 
     // Since dot is in range [0, DOT_THRESHOLD], acos is safe
