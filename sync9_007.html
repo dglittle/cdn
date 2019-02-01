@@ -14,7 +14,7 @@ function create_server() {
     sync9_add_version(s.s9, 'v1', s.s9.leaves, [' = ""'])
     s.peers = []
     s.unACKed = {}
-    s.ACKIIed = {}
+    s.ACKIIed = { root : true, v1 : true }
     return s
 }
 
@@ -83,7 +83,7 @@ function do_something(calm_mode) {
                     
                     
                     var old = JSON.stringify(sync9_space_dag_get(s.s9.val.S, 0).S, null, '    ')
-                    if (false && sync9_space_dag_prune(sync9_space_dag_get(s.s9.val.S, 0).S, (a, b) => s.ACKIIed[b])) {
+                    if (sync9_space_dag_prune(sync9_space_dag_get(s.s9.val.S, 0).S, (a, b) => s.ACKIIed[b])) {
                         
                         // prune_count++
                         // if (prune_count == 15) {
@@ -142,14 +142,14 @@ function do_something(calm_mode) {
                 })
             } else if (msg.t == 'ACK II') {
                 c.ACKIIed[msg.vid] = true
-                // sync9_space_dag_prune(sync9_space_dag_get(c.s9.val.S, 0).S, (a, b) => c.ACKIIed[b])
+                sync9_space_dag_prune(sync9_space_dag_get(c.s9.val.S, 0).S, (a, b) => c.ACKIIed[b])
             }
         }
     }
 }
 
 var trial = 0
-for (var i = 0; i < 200; i++) {
+for (var i = 0; i < 196; i++) {
     trial = i
     console.log('i = ' + i)
     do_something()
@@ -165,7 +165,7 @@ for (var i = 0; i < 200; i++) {
     
 }
 console.log('-- CALM MODE --')
-for (var i = 0; i < 300; i++) {
+for (var i = 0; i < 13/*82*/; i++) {
     trial = i
     console.log('i = ' + i)
     do_something(true)
@@ -396,7 +396,7 @@ function sync9_space_dag_add_version(S, vid, parents, splices, is_anc) {
             var elems_divide = add_to.elems.length - ((add_to.stop + (add_to.stop % 2 == 0 ? 1 : 0) - loc) >> 1)
             
             var tail = sync9_create_space_dag_node(add_to.vid, subseq(add_to.elems, elems_divide), loc + 1, add_to.stop)
-            
+            Object.assign(tail.deleted_by, add_to.deleted_by)
             tail.nexts = add_to.nexts
             tail.next = add_to.next
             
@@ -419,6 +419,7 @@ function sync9_space_dag_add_version(S, vid, parents, splices, is_anc) {
             var elems_divide = add_to.elems.length - ((add_to.stop + (add_to.stop % 2 == 0 ? 2 : 1) - loc) >> 1)
             
             var tail = sync9_create_space_dag_node(add_to.vid, subseq(add_to.elems, elems_divide), loc, add_to.stop)
+            Object.assign(tail.deleted_by, add_to.deleted_by)
             tail.nexts = add_to.nexts
             tail.next = add_to.next
             
@@ -644,8 +645,8 @@ function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b) {
         
         if (nexts.length == 0 && next &&
             !(next.stop == 0 && next.nexts.length > 0) &&
-            Object.keys(node.deleted_by).length == 0 &&
-            Object.keys(next.deleted_by).length == 0) {
+            ((Object.keys(node.deleted_by).length == 0) ==
+            (Object.keys(next.deleted_by).length == 0))) {
             node.elems = node.elems.concat(next.elems)
             if (node.stop % 2 == 1) node.stop--
             node.stop += next.elems.length * 2
