@@ -5,7 +5,7 @@
 <body></body>
 <script>
 
-Math.randomSeed(126)
+Math.randomSeed(130)
 console.log('-------------------')
 
 function create_server() {
@@ -149,7 +149,7 @@ function do_something(calm_mode) {
 }
 
 var trial = 0
-for (var i = 0; i < 279/*300*/; i++) {
+for (var i = 0; i < 300; i++) {
     trial = i
     console.log('i = ' + i)
     do_something()
@@ -165,7 +165,7 @@ for (var i = 0; i < 279/*300*/; i++) {
     
 }
 console.log('-- CALM MODE --')
-for (var i = 0; i < 0; i++) {
+for (var i = 0; i < 36; i++) {
     trial = i
     console.log('i = ' + i)
     do_something(true)
@@ -465,14 +465,12 @@ function sync9_space_dag_add_version(S, vid, parents, splices, is_anc) {
         }
         
         if (delete_up_to > offset) {
-            node.deleted_by[vid] = true
-            if (delete_up_to > offset + node.elems.length) return
-            
-            if (delete_up_to < offset + node.elems.length) {
-                add_incoming(node, node.stop - ((offset + node.elems.length - delete_up_to) * 2) + (node.stop % 2 == 0 ? 1 : 0))
+            if (delete_up_to <= offset + node.elems.length)                 if (delete_up_to < offset + node.elems.length) {
+                    add_incoming(node, node.stop - ((offset + node.elems.length - delete_up_to) * 2) + (node.stop % 2 == 0 ? 1 : 0))
+                }
+                si++
             }
-            
-            si++
+            node.deleted_by[vid] = true
             return
         }
     })
