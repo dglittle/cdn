@@ -83,7 +83,7 @@ function do_something(calm_mode) {
                     
                     
                     var old = JSON.stringify(sync9_space_dag_get(s.s9.val.S, 0).S, null, '    ')
-                    if (sync9_space_dag_prune(sync9_space_dag_get(s.s9.val.S, 0).S, (a, b) => s.ACKIIed[b])) {
+                    if (false && sync9_space_dag_prune(sync9_space_dag_get(s.s9.val.S, 0).S, (a, b) => s.ACKIIed[b])) {
                         
                         // prune_count++
                         // if (prune_count == 15) {
@@ -142,23 +142,43 @@ function do_something(calm_mode) {
                 })
             } else if (msg.t == 'ACK II') {
                 c.ACKIIed[msg.vid] = true
-                sync9_space_dag_prune(sync9_space_dag_get(c.s9.val.S, 0).S, (a, b) => c.ACKIIed[b])
+                // sync9_space_dag_prune(sync9_space_dag_get(c.s9.val.S, 0).S, (a, b) => c.ACKIIed[b])
             }
         }
     }
 }
 
 var trial = 0
-for (var i = 0; i < 300; i++) {
+for (var i = 0; i < 200; i++) {
     trial = i
     console.log('i = ' + i)
     do_something()
+    
+    // var ii = i
+    // console.log('SERVER: ' + sync9_read(s.s9))
+    // for (var i = 0; i < clients.length; i++) {
+    //     var c = clients[i]
+    //     if (!c.s9) continue
+    //     console.log(i + 'CLIENT: ' + sync9_read(c.s9))
+    // }
+    // i = ii
+    
 }
 console.log('-- CALM MODE --')
 for (var i = 0; i < 300; i++) {
     trial = i
     console.log('i = ' + i)
     do_something(true)
+    
+    // var ii = i
+    // console.log('SERVER: ' + sync9_read(s.s9))
+    // for (var i = 0; i < clients.length; i++) {
+    //     var c = clients[i]
+    //     if (!c.s9) continue
+    //     console.log(i + 'CLIENT: ' + sync9_read(c.s9))
+    // }
+    // i = ii
+    
 }
 
 
