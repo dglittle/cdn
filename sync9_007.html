@@ -149,7 +149,7 @@ function do_something(calm_mode) {
 }
 
 var trial = 0
-for (var i = 0; i < 196; i++) {
+for (var i = 0; i < 279/*300*/; i++) {
     trial = i
     console.log('i = ' + i)
     do_something()
@@ -165,7 +165,7 @@ for (var i = 0; i < 196; i++) {
     
 }
 console.log('-- CALM MODE --')
-for (var i = 0; i < 13/*82*/; i++) {
+for (var i = 0; i < 0; i++) {
     trial = i
     console.log('i = ' + i)
     do_something(true)
@@ -645,8 +645,8 @@ function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b) {
         
         if (nexts.length == 0 && next &&
             !(next.stop == 0 && next.nexts.length > 0) &&
-            ((Object.keys(node.deleted_by).length == 0) ==
-            (Object.keys(next.deleted_by).length == 0))) {
+            Object.keys(node.deleted_by).every(x => next.deleted_by[x]) &&
+            Object.keys(next.deleted_by).every(x => node.deleted_by[x])) {
             node.elems = node.elems.concat(next.elems)
             if (node.stop % 2 == 1) node.stop--
             node.stop += next.elems.length * 2
