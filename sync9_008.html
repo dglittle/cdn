@@ -204,7 +204,7 @@ for (var i = 0; i < clients.length; i++) {
     console.log(i + 'CLIENT: ' + sync9_read(c.s9))
 }
 
-console.log('T: ' + JSON.stringify(s.s9.T, null, '  '))
+// console.log('T: ' + JSON.stringify(s.s9.T, null, '  '))
 
 console.log('-------------------')
 
@@ -614,6 +614,36 @@ function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b) {
         var nexts = node.nexts
         var next = node.next
         
+        
+        // if (nexts.length > 0 && nexts.every(x => has_everyone_whos_seen_a_seen_b(node.vid, x.vid))) {
+        //     if (node.stop % 2 == 1) {
+        //         if (node.start == node.stop) node.start--
+        //         node.stop--
+        //     }
+        //     if (nexts[0].stop == 0 && nexts[0].nexts.length > 0) {
+        //         node.nexts = nexts[0].nexts
+        //         node.next = nexts[0].next || nexts[1] || next
+        //     } else {
+        //         node.nexts = []
+        //         node.next = nexts[0]
+        //     }
+        //     if (node.next != next) {
+        //         var backend = node.next
+        //         while (backend.next) backend = backend.next
+        //         for (var i = (node.next == nexts[1]) ? 2 : 1; i < nexts.length; i++) {
+        //             backend.next = nexts[i]
+        //             backend = nexts[i]
+        //             while (backend.next) backend = backend.next
+        //         }
+        //         backend.next = next
+        //     }
+        //     return true
+        // }
+        
+        // goal: yyyaaaaaaEZzzaa
+        
+        // yyyaaaaEZazzcZaa
+        
         var first_prunable = nexts.findIndex(x => has_everyone_whos_seen_a_seen_b(node.vid, x.vid))
         if (first_prunable >= 0) {
             var gamma = next
@@ -623,10 +653,6 @@ function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b) {
                 gamma.next = next
             }
             if (first_prunable == 0) {
-                if (node.stop % 2 == 1) {
-                    if (node.start == node.stop) node.start--
-                    node.stop--
-                }
                 if (nexts[0].stop == 0 && nexts[0].nexts.length > 0) {
                     var beta = gamma
                     if (nexts[0].next) {
@@ -637,6 +663,12 @@ function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b) {
                     node.next = beta
                 } else {
                     node.nexts = []
+                    
+                    // if (node.stop % 2 == 1) {
+                    //     if (node.start == node.stop) node.start--
+                    //     node.stop--
+                    // }
+                    
                     node.next = nexts[0]
                     node.next.next = gamma
                 }
@@ -647,6 +679,10 @@ function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b) {
             }
             return true
         }
+        
+        
+        
+        
         
         if (next && !next.nexts[0] && (Object.keys(next.deleted_by).some(k => has_everyone_whos_seen_a_seen_b(node.vid, k)) || next.elems.length == 0)) {
             node.next = next.next
