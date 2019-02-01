@@ -5,7 +5,7 @@
 <body></body>
 <script>
 
-Math.randomSeed(130)
+Math.randomSeed(150)
 console.log('-------------------')
 
 function create_server() {
@@ -112,7 +112,7 @@ function do_something(calm_mode) {
             var str = sync9_read(c.s9)
             
             var start = Math.floor(Math.random() * (str.length + 1))
-            var del = Math.floor(Math.random() * (str.length - start + 1))
+            var del = Math.floor(Math.random() * Math.random() * (str.length - start + 1))
             var ins = c.letters[Math.floor(Math.random() * c.letters.length)].repeat(Math.floor(Math.random() * 4) + (del == 0 ? 1 : 0))
             
             var vid = sync9_guid()
@@ -149,7 +149,7 @@ function do_something(calm_mode) {
 }
 
 var trial = 0
-for (var i = 0; i < 300; i++) {
+for (var i = 0; i < 1000; i++) {
     trial = i
     console.log('i = ' + i)
     do_something()
@@ -165,7 +165,7 @@ for (var i = 0; i < 300; i++) {
     
 }
 console.log('-- CALM MODE --')
-for (var i = 0; i < 36; i++) {
+for (var i = 0; i < 200; i++) {
     trial = i
     console.log('i = ' + i)
     do_something(true)
@@ -465,7 +465,8 @@ function sync9_space_dag_add_version(S, vid, parents, splices, is_anc) {
         }
         
         if (delete_up_to > offset) {
-            if (delete_up_to <= offset + node.elems.length)                 if (delete_up_to < offset + node.elems.length) {
+            if (delete_up_to <= offset + node.elems.length) {
+                if (delete_up_to < offset + node.elems.length) {
                     add_incoming(node, node.stop - ((offset + node.elems.length - delete_up_to) * 2) + (node.stop % 2 == 0 ? 1 : 0))
                 }
                 si++
