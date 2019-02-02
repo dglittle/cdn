@@ -45,14 +45,24 @@ var prune_count = 0
 function do_something(calm_mode) {
     var c = clients[Math.floor(Math.random() * clients.length)]
     function on_prune(x) {
+        
+        var old = JSON.parse(JSON.stringify(x.s9))
+        
         sync9_space_dag_prune(sync9_space_dag_get(x.s9.val.S, 0).S, (a, b) => x.ACKIIed[b], true)
-        var version_a = sync9_read(s.s9)
+        var version_a = sync9_read(x.s9)
         
         var s9_clone = JSON.parse(JSON.stringify(x.s9))
         sync9_space_dag_prune(sync9_space_dag_get(s9_clone.val.S, 0).S, (a, b) => x.ACKIIed[b], false)
         var version_b = sync9_read(s9_clone)
         
         if (version_a != version_b) {
+            
+            console.log('old:' + JSON.stringify(old, null, '    '))
+            console.log('A:' + JSON.stringify(x.s9, null, '    '))
+            console.log('B:' + JSON.stringify(s9_clone, null, '    '))
+            
+            debugger
+            
             throw 'BLOOP!'
         }
         
@@ -144,6 +154,8 @@ function do_something(calm_mode) {
     }
 }
 
+try {
+    
 var trial = 0
 for (var i = 0; i < 1000; i++) {
     trial = i
@@ -177,6 +189,7 @@ for (var i = 0; i < 200; i++) {
     
 }
 
+} catch (e) {}
 
 
 
