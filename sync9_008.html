@@ -44,6 +44,19 @@ var prune_count = 0
 
 function do_something(calm_mode) {
     var c = clients[Math.floor(Math.random() * clients.length)]
+    function on_prune(x) {
+        sync9_space_dag_prune(sync9_space_dag_get(x.s9.val.S, 0).S, (a, b) => x.ACKIIed[b], true)
+        var version_a = sync9_read(s.s9)
+        
+        var s9_clone = JSON.parse(JSON.stringify(x.s9))
+        sync9_space_dag_prune(sync9_space_dag_get(s9_clone.val.S, 0).S, (a, b) => x.ACKIIed[b], false)
+        var version_b = sync9_read(s9_clone)
+        
+        if (version_a != version_b) {
+            throw 'BLOOP!'
+        }
+        
+    }
     if (Math.random() < 0.5) {
         if (c.outgoing.length > 0) {
             var msg = c.outgoing.shift()
@@ -81,16 +94,7 @@ function do_something(calm_mode) {
                         })
                     })
                     
-                    sync9_space_dag_prune(sync9_space_dag_get(s.s9.val.S, 0).S, (a, b) => s.ACKIIed[b], true)
-                    var version_a = sync9_read(s.s9)
-                    
-                    var s9_clone = JSON.parse(JSON.stringify(s.s9))
-                    sync9_space_dag_prune(sync9_space_dag_get(s9_clone.val.S, 0).S, (a, b) => s.ACKIIed[b], true)
-                    var version_b = sync9_read(s9_clone)
-                    
-                    if (version_a != version_b) {
-                        throw 'BLOOP!'
-                    }
+                    on_prune(s)
                 }
             }
         }
@@ -134,7 +138,7 @@ function do_something(calm_mode) {
                 })
             } else if (msg.t == 'ACK II') {
                 c.ACKIIed[msg.vid] = true
-                sync9_space_dag_prune(sync9_space_dag_get(c.s9.val.S, 0).S, (a, b) => c.ACKIIed[b])
+                on_prune(c)
             }
         }
     }
