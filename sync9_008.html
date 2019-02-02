@@ -44,7 +44,7 @@ var _s = create_server()
 _s.prune_type = false
 var _clients = []
 for (var i = 0; i < 4; i++) {
-    clients.push(create_client(letter_list[i]))
+    _clients.push(create_client(letter_list[i]))
 }
 
 function do_something(s, clients, calm_mode) {
@@ -145,13 +145,23 @@ var trial = 0
 for (var i = 0; i < 1000; i++) {
     trial = i
     console.log('i = ' + i)
+    
+    
+    if (i == 86) {
+        debugger
+    }
+    
+    
     Math.randomSeed(random_seed_base + i)
-    do_something(s, clients, true)
+    do_something(s, clients, false)
     
     Math.randomSeed(random_seed_base + i)
     do_something(_s, _clients, false)
     
     if (sync9_read(s.s9) != sync9_read(_s.s9)) {
+        
+        
+        
         throw 'stop'
     }
     
@@ -173,7 +183,7 @@ for (var i = 0; i < 200; i++) {
     do_something(s, clients, true)
     
     Math.randomSeed(random_seed_base + i)
-    do_something(_s, _clients, false)
+    do_something(_s, _clients, true)
     
     if (sync9_read(s.s9) != sync9_read(_s.s9)) {
         throw 'stop'
