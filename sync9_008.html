@@ -18,7 +18,7 @@ function create_server() {
     return s
 }
 
-function create_client() {
+function create_client(letters) {
     var c = {}
     c.uid = sync9_guid()
     c.s9 = null
@@ -27,46 +27,30 @@ function create_client() {
     c.ACKIIed = {}
     c.incoming = []
     c.outgoing = []
+    c.letters = letters
     return c
 }
 
+var letter_list = ['abcABC', 'xyzXYZ', 'efgEFG', 'uvwUVW']
+
 var s = create_server()
+s.prune_type = true
 var clients = []
 for (var i = 0; i < 4; i++) {
-    clients.push(create_client())
+    clients.push(create_client(letter_list[i]))
 }
 
-clients[0].letters = 'abcABC'
-clients[1].letters = 'xyzXYZ'
-clients[2].letters = 'efgEFG'
-clients[3].letters = 'uvwUVW'
+var _s = create_server()
+_s.prune_type = false
+var _clients = []
+for (var i = 0; i < 4; i++) {
+    clients.push(create_client(letter_list[i]))
+}
 
-var prune_count = 0
-
-function do_something(calm_mode) {
+function do_something(s, clients, calm_mode) {
     var c = clients[Math.floor(Math.random() * clients.length)]
     function on_prune(x) {
-        
-        var old = JSON.parse(JSON.stringify(x.s9))
-        
-        sync9_space_dag_prune(sync9_space_dag_get(x.s9.val.S, 0).S, (a, b) => x.ACKIIed[b], false)
-        var version_a = sync9_read(x.s9)
-        
-        var s9_clone = JSON.parse(JSON.stringify(x.s9))
-        sync9_space_dag_prune(sync9_space_dag_get(s9_clone.val.S, 0).S, (a, b) => x.ACKIIed[b], true)
-        var version_b = sync9_read(s9_clone)
-        
-        if (version_a != version_b) {
-            
-            console.log('old:' + JSON.stringify(old, null, '    '))
-            console.log('A:' + JSON.stringify(x.s9, null, '    '))
-            console.log('B:' + JSON.stringify(s9_clone, null, '    '))
-            
-            debugger
-            
-            throw 'BLOOP!'
-        }
-        
+        sync9_space_dag_prune(sync9_space_dag_get(x.s9.val.S, 0).S, (a, b) => x.ACKIIed[b], s.prune_type)
     }
     if (Math.random() < 0.5) {
         if (c.outgoing.length > 0) {
@@ -164,16 +148,14 @@ for (var i = 0; i < 1000; i++) {
     trial = i
     console.log('i = ' + i)
     Math.randomSeed(random_seed_base + i)
-    do_something()
+    do_something(s, clients, true)
     
-    clients.forEach(c => {
-        var swap = c.s9; c.s9 = c._s9; c._s9 = swap
-    })
     Math.randomSeed(random_seed_base + i)
-    do_something()
-    clients.forEach(c => {
-        var swap = c.s9; c.s9 = c._s9; c._s9 = swap
-    })
+    do_something(_s, _clients, false)
+    
+    if (sync9_read(s.s9) != sync9_read(_s.s9)) {
+        throw 'stop'
+    }
     
     // var ii = i
     // console.log('SERVER: ' + sync9_read(s.s9))
@@ -190,16 +172,14 @@ for (var i = 0; i < 200; i++) {
     trial = i
     console.log('i = ' + i)
     Math.randomSeed(random_seed_base + i)
-    do_something(true)
+    do_something(s, clients, true)
     
-    clients.forEach(c => {
-        var swap = c.s9; c.s9 = c._s9; c._s9 = swap
-    })
     Math.randomSeed(random_seed_base + i)
-    do_something(true)
-    clients.forEach(c => {
-        var swap = c.s9; c.s9 = c._s9; c._s9 = swap
-    })
+    do_something(_s, _clients, false)
+    
+    if (sync9_read(s.s9) != sync9_read(_s.s9)) {
+        throw 'stop'
+    }
     
     // var ii = i
     // console.log('SERVER: ' + sync9_read(s.s9))
