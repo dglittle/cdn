@@ -83,22 +83,19 @@ function do_something(calm_mode) {
                     
                     
                     var old = JSON.stringify(sync9_space_dag_get(s.s9.val.S, 0).S, null, '    ')
-                    if (sync9_space_dag_prune(sync9_space_dag_get(s.s9.val.S, 0).S, (a, b) => s.ACKIIed[b])) {
-                        
-                        // prune_count++
-                        // if (prune_count == 15) {
-                        //     console.log('-------------------')
-                        //     console.log(old)
-                        //     console.log('-------------------')
-                        //     console.log(JSON.stringify(sync9_space_dag_get(s.s9.val.S, 0).S, null, '    '))
-                        //     console.log('-------------------')
-                            
-                        //     throw 'stop'
-                        // }
-                        
+                    
+                    
+                    sync9_space_dag_prune(sync9_space_dag_get(s.s9.val.S, 0).S, (a, b) => s.ACKIIed[b], true)
+                    
+                    var s9_clone = JSON.parse(JSON.stringify(s.s9))
+                    sync9_space_dag_prune(sync9_space_dag_get(s9_clone.val.S, 0).S, (a, b) => s.ACKIIed[b], true)
+                    
+                    var version_a = sync9_read(s.s9)
+                    var version_b = sync9_read(s9_clone)
+                    
+                    if (version_a != version_b) {
+                        throw 'BLOOP!'
                     }
-                    
-                    
                 }
             }
         }
@@ -609,75 +606,73 @@ function sync9_create_proxy(x, cb, path) {
     })
 }
 
-function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b) {
+function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b, temp_toggle) {
     function process_node(node, offset) {
         var nexts = node.nexts
         var next = node.next
         
-        
-        // if (nexts.length > 0 && nexts.every(x => has_everyone_whos_seen_a_seen_b(node.vid, x.vid))) {
-        //     if (node.stop % 2 == 1) {
-        //         if (node.start == node.stop) node.start--
-        //         node.stop--
-        //     }
-        //     if (nexts[0].stop == 0 && nexts[0].nexts.length > 0) {
-        //         node.nexts = nexts[0].nexts
-        //         node.next = nexts[0].next || nexts[1] || next
-        //     } else {
-        //         node.nexts = []
-        //         node.next = nexts[0]
-        //     }
-        //     if (node.next != next) {
-        //         var backend = node.next
-        //         while (backend.next) backend = backend.next
-        //         for (var i = (node.next == nexts[1]) ? 2 : 1; i < nexts.length; i++) {
-        //             backend.next = nexts[i]
-        //             backend = nexts[i]
-        //             while (backend.next) backend = backend.next
-        //         }
-        //         backend.next = next
-        //     }
-        //     return true
-        // }
-        
-        // goal: yyyaaaaaaEZzzaa
-        
-        // yyyaaaaEZazzcZaa
-        
-        var first_prunable = nexts.findIndex(x => has_everyone_whos_seen_a_seen_b(node.vid, x.vid))
-        if (first_prunable >= 0) {
-            var gamma = next
-            if (first_prunable + 1 < nexts.length) {
-                gamma = sync9_create_space_dag_node(node.vid, typeof(node.elems) == 'string' ? '' : [])
-                gamma.nexts = nexts.slice(first_prunable + 1)
-                gamma.next = next
-            }
-            if (first_prunable == 0) {
+
+        if (temp_toggle) {
+            if (nexts.length > 0 && nexts.every(x => has_everyone_whos_seen_a_seen_b(node.vid, x.vid))) {
+                if (node.stop % 2 == 1) {
+                    if (node.start == node.stop) node.start--
+                    node.stop--
+                }
                 if (nexts[0].stop == 0 && nexts[0].nexts.length > 0) {
-                    var beta = gamma
-                    if (nexts[0].next) {
-                        beta = nexts[0].next
-                        beta.next = gamma
-                    }
                     node.nexts = nexts[0].nexts
-                    node.next = beta
+                    node.next = nexts[0].next || nexts[1] || next
                 } else {
                     node.nexts = []
-                    
-                    // if (node.stop % 2 == 1) {
-                    //     if (node.start == node.stop) node.start--
-                    //     node.stop--
-                    // }
-                    
                     node.next = nexts[0]
+                }
+                if (node.next != next) {
+                    var backend = node.next
+                    while (backend.next) backend = backend.next
+                    for (var i = (node.next == nexts[1]) ? 2 : 1; i < nexts.length; i++) {
+                        backend.next = nexts[i]
+                        backend = nexts[i]
+                        while (backend.next) backend = backend.next
+                    }
+                    backend.next = next
+                }
+                return true
+            }
+        } else {
+            var first_prunable = nexts.findIndex(x => has_everyone_whos_seen_a_seen_b(node.vid, x.vid))
+            if (first_prunable >= 0) {
+                var gamma = next
+                if (first_prunable + 1 < nexts.length) {
+                    gamma = sync9_create_space_dag_node(node.vid, typeof(node.elems) == 'string' ? '' : [])
+                    gamma.nexts = nexts.slice(first_prunable + 1)
+                    gamma.next = next
+                }
+                if (first_prunable == 0) {
+                    if (nexts[0].stop == 0 && nexts[0].nexts.length > 0) {
+                        var beta = gamma
+                        if (nexts[0].next) {
+                            beta = nexts[0].next
+                            beta.next = gamma
+                        }
+                        node.nexts = nexts[0].nexts
+                        node.next = beta
+                    } else {
+                        node.nexts = []
+                        
+                        // if (node.stop % 2 == 1) {
+                        //     if (node.start == node.stop) node.start--
+                        //     node.stop--
+                        // }
+                        
+                        node.next = nexts[0]
+                        node.next.next = gamma
+                    }
+                } else {
+                    node.nexts = nexts.slice(0, first_prunable)
+                    node.next = nexts[first_prunable]
                     node.next.next = gamma
                 }
-            } else {
-                node.nexts = nexts.slice(0, first_prunable)
-                node.next = nexts[first_prunable]
-                node.next.next = gamma
+                return true
             }
-            return true
         }
         
         
