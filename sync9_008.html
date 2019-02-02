@@ -81,16 +81,11 @@ function do_something(calm_mode) {
                         })
                     })
                     
-                    
-                    var old = JSON.stringify(sync9_space_dag_get(s.s9.val.S, 0).S, null, '    ')
-                    
-                    
                     sync9_space_dag_prune(sync9_space_dag_get(s.s9.val.S, 0).S, (a, b) => s.ACKIIed[b], true)
+                    var version_a = sync9_read(s.s9)
                     
                     var s9_clone = JSON.parse(JSON.stringify(s.s9))
                     sync9_space_dag_prune(sync9_space_dag_get(s9_clone.val.S, 0).S, (a, b) => s.ACKIIed[b], true)
-                    
-                    var version_a = sync9_read(s.s9)
                     var version_b = sync9_read(s9_clone)
                     
                     if (version_a != version_b) {
