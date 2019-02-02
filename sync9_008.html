@@ -22,6 +22,7 @@ function create_client() {
     var c = {}
     c.uid = sync9_guid()
     c.s9 = null
+    c._s9 = null
     c.connected = false
     c.ACKIIed = {}
     c.incoming = []
@@ -48,11 +49,11 @@ function do_something(calm_mode) {
         
         var old = JSON.parse(JSON.stringify(x.s9))
         
-        sync9_space_dag_prune(sync9_space_dag_get(x.s9.val.S, 0).S, (a, b) => x.ACKIIed[b], true)
+        sync9_space_dag_prune(sync9_space_dag_get(x.s9.val.S, 0).S, (a, b) => x.ACKIIed[b], false)
         var version_a = sync9_read(x.s9)
         
         var s9_clone = JSON.parse(JSON.stringify(x.s9))
-        sync9_space_dag_prune(sync9_space_dag_get(s9_clone.val.S, 0).S, (a, b) => x.ACKIIed[b], false)
+        sync9_space_dag_prune(sync9_space_dag_get(s9_clone.val.S, 0).S, (a, b) => x.ACKIIed[b], true)
         var version_b = sync9_read(s9_clone)
         
         if (version_a != version_b) {
@@ -155,12 +156,24 @@ function do_something(calm_mode) {
 }
 
 try {
-    
+
+var random_seed_base = 'hi' + Math.random()
+
 var trial = 0
 for (var i = 0; i < 1000; i++) {
     trial = i
     console.log('i = ' + i)
+    Math.randomSeed(random_seed_base + i)
     do_something()
+    
+    clients.forEach(c => {
+        var swap = c.s9; c.s9 = c._s9; c._s9 = swap
+    })
+    Math.randomSeed(random_seed_base + i)
+    do_something()
+    clients.forEach(c => {
+        var swap = c.s9; c.s9 = c._s9; c._s9 = swap
+    })
     
     // var ii = i
     // console.log('SERVER: ' + sync9_read(s.s9))
@@ -176,7 +189,17 @@ console.log('-- CALM MODE --')
 for (var i = 0; i < 200; i++) {
     trial = i
     console.log('i = ' + i)
+    Math.randomSeed(random_seed_base + i)
     do_something(true)
+    
+    clients.forEach(c => {
+        var swap = c.s9; c.s9 = c._s9; c._s9 = swap
+    })
+    Math.randomSeed(random_seed_base + i)
+    do_something(true)
+    clients.forEach(c => {
+        var swap = c.s9; c.s9 = c._s9; c._s9 = swap
+    })
     
     // var ii = i
     // console.log('SERVER: ' + sync9_read(s.s9))
