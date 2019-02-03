@@ -2,12 +2,14 @@
 <body style="margin:0px">
 <script src="https://dglittle.github.io/cdn/random001.js"></script>
 <script>
-Math.randomSeed(126)
+Math.randomSeed(128)
 //Math.randomSeed(128)
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"></script>
 <script src="https://dglittle.github.io/cdn/utils001.js"></script>
 <script>
+
+//throw 'stop'
 
 // Math.randomSeed(124)
 
@@ -116,12 +118,21 @@ function drawAxes() {
     })
 }
 
+var first_vel = 0
+
 var iteration = 0
 function update_it() {
     for (var y = 0; y < yn; y++) {
         for (var x = 0; x < xn; x++) {
             var prev = prevs[y][x]
             prevs[y][x] = spins[y][x]
+            
+            
+            
+            first_vel = vec4.length(vec4.subtract(vec4.create(), prev, spins[y][x]))
+            
+            
+            
             spins[y][x] = slerp(prev, spins[y][x], 2)
         }
     }
@@ -132,6 +143,14 @@ function update_it() {
         
         spins[y1][x1] = nudge_slerp(a, b, tau/15600)
         spins[y2][x2] = nudge_slerp(b, a, tau/15600)
+        
+        if (v_isNaN(spins[y1][x1]) || v_isNaN(spins[y2][x2])) {
+            
+            
+            console.log('it happened!')
+            throw 'stop'
+            
+        }
     }
     for (var y = 0; y < yn; y++) {
         for (var x = 0; x < 1; x++) {
@@ -201,15 +220,33 @@ function paint_it() {
     // }
 }
 
+var t = 0
+
 function loop() {
     update_it()
     paint_it()
+
+
+    // if (t % 20 == 0)     {
+    //     console.log('t = ' + t)
+        console.log('first_vel = ' + first_vel)
+    // }
+    
+    if (t > 200) {
+    // if (t > 180) {
+        console.log('t = ' + t)
+        console.log('first_vel = ' + first_vel)
+        
+        throw 'stop'
+    }
+    
     
     
     // var rot = angle_axis_to_matrix([tau/3600, 0, 0, 1])
     // mat3.mul(camera, camera, rot)
-    
-    setTimeout(loop, 1)
+
+    t++    
+    setTimeout(loop, 32)
 }
 loop()
 
