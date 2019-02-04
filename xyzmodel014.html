@@ -9,6 +9,10 @@ Math.randomSeed(128)
 <script src="https://dglittle.github.io/cdn/utils001.js"></script>
 <script>
 
+function v_isNaN(v) {
+    return v.some(x => isNaN(x))
+}
+
 //throw 'stop'
 
 // Math.randomSeed(124)
@@ -148,6 +152,7 @@ function update_it() {
             
             
             console.log('it happened!')
+            debugger
             throw 'stop'
             
         }
