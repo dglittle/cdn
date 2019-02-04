@@ -572,7 +572,7 @@ function slerp(v0, v1, t) {
         dot = -dot
     }  
 
-    var DOT_THRESHOLD = 0.9995
+    var DOT_THRESHOLD = 0.99995
     if (dot > DOT_THRESHOLD || dot < -DOT_THRESHOLD) {
         // If the inputs are too close for comfort, linearly interpolate
         // and normalize the result.
