@@ -210,7 +210,7 @@ function nudge_slerp(v0, v1) {
         if (dot < -1) dot = -1
         if (dot > 1) dot = 1
         var theta_0 = Math.acos(dot)
-        var theta = tau / 200 * Math.sin(theta_0)
+        var theta = tau / 3000 * Math.sin(theta_0)
         
         var t = lerp(0, 0, theta_0, 1, theta)
         
@@ -227,7 +227,7 @@ function nudge_slerp(v0, v1) {
     //var theta = theta_0*t          // theta = angle between v0 and result
     
     // work here
-    theta = tau / 200 * Math.sin(theta_0)
+    theta = tau / 3000 * Math.sin(theta_0)
 
     
     var sin_theta = Math.sin(theta)     // compute this value only once
