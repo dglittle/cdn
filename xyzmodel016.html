@@ -2,11 +2,13 @@
 <body style="margin:0px">
 <script src="https://dglittle.github.io/cdn/random001.js"></script>
 <script>
-// Math.randomSeed(126)
+Math.randomSeed(129)
 //Math.randomSeed(128)
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"></script>
 <script>
+
+// throw 'stop'
 
 function lerp(t0, v0, t1, v1, t) {
     if (t0 == t1) return v0
@@ -16,8 +18,6 @@ function lerp(t0, v0, t1, v1, t) {
 function v_isNaN(v) {
     return v.some(x => isNaN(x))
 }
-
-//throw 'stop'
 
 // Math.randomSeed(124)
 
@@ -95,16 +95,41 @@ for (var y = 0; y < yn; y++) {
     var vrow = []
     
     for (var x = 0; x < xn; x++) {
-        var v = vec4.random(vec4.create())
-        q_row.push(v)
-        q_rowB.push(vec4.clone(v))
-        
         var v = vec3.random(vec3.create())
         row.push(v)
         rowB.push(vec3.normalize(vec3.create(),
             vec3.cross(vec3.create(), v, vec3.random(vec3.create()))
         ))
         vrow.push(vec3.create())
+        
+        
+        var xx = row[row.length - 1]
+        var y = rowB[rowB.length - 1]
+        var z = vec3.cross(vec3.create(), xx, y)
+        var m1 = mat3_from_axes(xx, y)
+        // var m1 = mat3.fromValues(xx[0], xx[1], xx[2], y[0], y[1], y[2], z[0], z[1], z[2])
+        var v = mat3_to_quat_2(m1)
+        
+        
+        
+        //var v = quat.fromMat3(quat.create(), m1)
+        //v = [v[3], v[0], v[1], v[2]]
+        
+        
+        //debugger
+        //work here
+        
+        //var m = angle_axis_to_matrix(quat_to_angle_axis(v))
+        
+        var aa = quat_to_angle_axis(v)
+        
+        var m2 = angle_axis_to_matrix(aa)
+        
+        var m = mat3.fromQuat(mat3.create(), quat.fromValues(v[1], v[2], v[3], v[0]))
+        
+        //var v = mat3_to_quat(mat3_from_axes(row[row.length - 1], rowB[rowB.length - 1]))
+        q_row.push(v)
+        q_rowB.push(vec4.clone(v))
     }
     q_spins.push(q_row)
     q_prevs.push(q_rowB)
@@ -154,7 +179,7 @@ function drawAxes(c, g) {
 
 var iteration = 0
 function update_it() {
-    var dt = 0.1
+    var dt = 1
     function update_pair_vel(x1, y1, x2, y2) {
         var x = spins[y1][x1]
         var y = spinsB[y1][x1]
@@ -181,6 +206,13 @@ function update_it() {
         if (angle > tau/2) angle -= tau
         if (angle < -tau/2) angle += tau
         
+        
+        
+        if (iteration == 0) {
+            console.log('upper angle: ' + angle)
+        }
+        
+        
         var temp = vec3.transformMat3(vec3.create(), vec3.fromValues(angle_axis[1], angle_axis[2], angle_axis[3]), m1)
         angle_axis[1] = temp[0]
         angle_axis[2] = temp[1]
@@ -200,13 +232,12 @@ function update_it() {
     }
     
     for (var y = 0; y < yn; y++) {
-        for (var x = 0; x < xn; x++) {
+        for (var x = 0; x < 1; x++) {
             update_pair_vel(x, y, (x + 1) % xn, y)
-            update_pair_vel(x, y, x, (y + 1) % yn)
+            //update_pair_vel(x, y, x, (y + 1) % yn)
         }
     }
     
-    // iteration++
     // if (iteration < 1000) {
     //     for (var y = 0; y < yn; y++) {
     //         for (var x = 0; x < xn; x++) {
@@ -247,8 +278,8 @@ function update_it() {
         var a = q_spins[y1][x1]
         var b = q_spins[y2][x2]
         
-        q_spins[y1][x1] = nudge_slerp(a, b, tau/15600)
-        q_spins[y2][x2] = nudge_slerp(b, a, tau/15600)
+        q_spins[y1][x1] = nudge_slerp(a, b, 1/1600)
+        q_spins[y2][x2] = nudge_slerp(b, a, 1/1600)
     }
     for (var y = 0; y < yn; y++) {
         for (var x = 0; x < 1; x++) {
@@ -256,7 +287,8 @@ function update_it() {
             // q_update_pair_vel(x, y, x, (y + 1) % yn)
         }
     }
-    
+ 
+    iteration++
 }
 
 function mat3_from_axes(x, y) {
@@ -290,27 +322,33 @@ function paint_it() {
     drawAxes(cc, gg)
     
     
-    var s = q_spins[0][0]
-    var v = vec3.transformQuat(vec3.create(), vec3.fromValues(1, 0, 0), quat.fromValues(s[1], s[2], s[3], s[0]))
-    var x = v
-    
-    var v = vec3.transformQuat(vec3.create(), vec3.fromValues(0, 1, 0), quat.fromValues(s[1], s[2], s[3], s[0]))
-    var y = v
-    
-    drawFlag(mat3_from_axes(x, y), 'red', cc, gg)
+    var m = angle_axis_to_matrix(quat_to_angle_axis(q_spins[0][0]))
+    drawFlag(m, 'red', cc, gg)
     
     
-    var s = q_spins[0][1]
-    var v = vec3.transformQuat(vec3.create(), vec3.fromValues(1, 0, 0), quat.fromValues(s[1], s[2], s[3], s[0]))
-    var x = v
-    
-    var v = vec3.transformQuat(vec3.create(), vec3.fromValues(0, 1, 0), quat.fromValues(s[1], s[2], s[3], s[0]))
-    var y = v
-    
-    drawFlag(mat3_from_axes(x, y), 'orange', cc, gg)
+    var m = angle_axis_to_matrix(quat_to_angle_axis(q_spins[0][1]))
+    drawFlag(m, 'orange', cc, gg)
     
     
     
+    // var s = q_spins[0][0]
+    // var v = vec3.transformQuat(vec3.create(), vec3.fromValues(1, 0, 0), quat.fromValues(s[1], s[2], s[3], s[0]))
+    // var x = v
+    
+    // var v = vec3.transformQuat(vec3.create(), vec3.fromValues(0, 1, 0), quat.fromValues(s[1], s[2], s[3], s[0]))
+    // var y = v
+    
+    // drawFlag(mat3_from_axes(x, y), 'red', cc, gg)
+    
+    
+    // var s = q_spins[0][1]
+    // var v = vec3.transformQuat(vec3.create(), vec3.fromValues(1, 0, 0), quat.fromValues(s[1], s[2], s[3], s[0]))
+    // var x = v
+    
+    // var v = vec3.transformQuat(vec3.create(), vec3.fromValues(0, 1, 0), quat.fromValues(s[1], s[2], s[3], s[0]))
+    // var y = v
+    
+    // drawFlag(mat3_from_axes(x, y), 'orange', cc, gg)
     
     
     
@@ -392,6 +430,11 @@ function angle_axis_to_matrix(angle_axis) {
     out[7] = y * z * t - x * s;
     out[8] = z * z * t + c;
     return out
+}
+
+function mat3_to_quat_2(m) {
+    var q = quat.fromMat3(quat.create(), m)
+    return [q[3], q[0], q[1], q[2]]
 }
 
 // http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/
@@ -489,6 +532,9 @@ function nudge_slerp(v0, v1, factor) {
     var theta_0 = Math.acos(dot)        // theta_0 = angle between input vectors
     
     
+    if (iteration == 0) {
+        console.log('lower theta: ' + theta_0)
+    }
     
     //var theta = theta_0*t          // theta = angle between v0 and result
     
