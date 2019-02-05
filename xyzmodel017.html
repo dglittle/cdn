@@ -1,35 +1,8 @@
 
 <body style="margin:0px">
-<script src="https://dglittle.github.io/cdn/random001.js"></script>
-<script>
-Math.randomSeed(129)
-</script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"></script>
 <script>
 
 var tau = Math.PI * 2
-
-function lerp(t0, v0, t1, v1, t) {
-    if (t0 == t1) return v0
-    return (t - t0) * (v1 - v0) / (t1 - t0) + v0
-}
-
-function v_isNaN(v) {
-    return v.some(x => isNaN(x))
-}
-
-function v_lenSq(v) {
-    return v.reduce((a, b) => a + b*b, 0)
-}
-
-function v_len(v) {
-    return Math.sqrt(v_lenSq(v))
-}
-
-function v_normalize(v) {
-    var len = v_len(v)
-    v.forEach((vv, i) => v[i] = vv / len)
-}
 
 var c = document.createElement('canvas')
 c.width = 200
@@ -48,6 +21,9 @@ var xn = 2
 var q_spins = []
 var q_prevs = []
 
+var qq_spins = []
+var qq_prevs = []
+
 var spins = []
 var vels = []
 for (var x = 0; x < xn; x++) {
@@ -56,11 +32,13 @@ for (var x = 0; x < xn; x++) {
     q_spins.push(val)
     q_prevs.push(val)
     
+    qq_spins.push(val)
+    qq_prevs.push(val)
+    
     spins.push(val)
     vels.push(0)
 }
 
-var iteration = 0
 function update_it() {
     var x0 = spins[0]
     var x1 = spins[1]
@@ -79,11 +57,6 @@ function update_it() {
     
 
 
-    for (var x = 0; x < xn; x++) {
-        var prev = q_prevs[x]
-        q_prevs[x] = q_spins[x]
-        q_spins[x] = lerp(0, prev, 1, q_spins[x], 2)
-    }
     
     var a = q_spins[0]
     var b = q_spins[1]
@@ -97,12 +70,46 @@ function update_it() {
         q_spins[1] -= mag
     }
     
- 
-    iteration++
+    for (var x = 0; x < xn; x++) {
+        var prev = q_prevs[x]
+        q_prevs[x] = q_spins[x]
+        q_spins[x] = lerp(0, prev, 1, q_spins[x], 2)
+    }
+
+
+
+
+
+    var a = qq_spins[0]
+    var b = qq_spins[1]
+    var angle = Math.abs(a - b)
+    var mag = 1/1000 * Math.sin(angle)
+    if (a > b) {
+        qq_spins[0] -= mag
+        qq_spins[1] += mag
+    } else {
+        qq_spins[0] += mag
+        qq_spins[1] -= mag
+    }
+    
+    for (var x = 0; x < xn; x++) {
+        var prev = qq_prevs[x]
+        qq_prevs[x] = qq_spins[x]
+        qq_spins[x] = lerp(0, prev, 1, qq_spins[x], 2)
+    }
+
+    if (a > b) {
+        qq_spins[0] += mag
+        qq_spins[1] -= mag
+    } else {
+        qq_spins[0] -= mag
+        qq_spins[1] += mag
+    }
+    
 }
 
 function paint_it() {
-    var x = iteration / 10
+    var x = t / 10
     
     g.fillStyle = 'rgba(255, 255, 255, 0.01)'
     g.fillRect(0, 0, c.width, c.height)
@@ -133,57 +140,17 @@ function paint_it() {
     
     
     
-    // var s = q_spins[0][0]
-    // var v = vec3.transformQuat(vec3.create(), vec3.fromValues(1, 0, 0), quat.fromValues(s[1], s[2], s[3], s[0]))
-    // var x = v
     
-    // var v = vec3.transformQuat(vec3.create(), vec3.fromValues(0, 1, 0), quat.fromValues(s[1], s[2], s[3], s[0]))
-    // var y = v
-    
-    // drawFlag(mat3_from_axes(x, y), 'red', cc, gg)
-    
-    
-    // var s = q_spins[0][1]
-    // var v = vec3.transformQuat(vec3.create(), vec3.fromValues(1, 0, 0), quat.fromValues(s[1], s[2], s[3], s[0]))
-    // var x = v
-    
-    // var v = vec3.transformQuat(vec3.create(), vec3.fromValues(0, 1, 0), quat.fromValues(s[1], s[2], s[3], s[0]))
-    // var y = v
-    
-    // drawFlag(mat3_from_axes(x, y), 'orange', cc, gg)
-    
-    
-    
-    
-    
-    
-    // g.fillStyle = 'white'
-    // g.fillRect(0, 0, c.width, c.height)
-    // for (var y = 0; y < yn; y++) {
-    //     for (var x = 0; x < xn; x++) {
-    //         var s = spins[y][x]
+    gg.fillStyle = 'cyan'
+    gg.beginPath()
+    gg.arc(x, lerp(0, c.height, 3, 0, qq_spins[0]), 3, 0, tau)
+    gg.fill()
 
-    //         var R = lerp(-1, 0, 1, 1, s[0])
-    //         var G = lerp(-1, 0, 1, 1, s[1])
-    //         var B = lerp(-1, 0, 1, 1, s[2])
-    //         g.fillStyle = 'rgb(' + Math.floor(255 * R) + ', ' + Math.floor(255 * G) + ', ' + Math.floor(255 * B) + ')'
-    //         g.fillRect(x * xd, y * yd, xd, yd)
-    //     }
-    // }
-
-    // gg.fillStyle = 'white'
-    // gg.fillRect(0, 0, c.width, c.height)
-    // for (var y = 0; y < yn; y++) {
-    //     for (var x = 0; x < xn; x++) {
-    //         var s = spinsB[y][x]
-
-    //         var R = lerp(-1, 0, 1, 1, s[0])
-    //         var G = lerp(-1, 0, 1, 1, s[1])
-    //         var B = lerp(-1, 0, 1, 1, s[2])
-    //         gg.fillStyle = 'rgb(' + Math.floor(255 * R) + ', ' + Math.floor(255 * G) + ', ' + Math.floor(255 * B) + ')'
-    //         gg.fillRect(x * xd, y * yd, xd, yd)
-    //     }
-    // }
+    gg.fillStyle = 'green'
+    gg.beginPath()
+    gg.arc(x, lerp(0, c.height, 3, 0, qq_spins[1]), 3, 0, tau)
+    gg.fill()
+    
 }
 
 var t = 0
@@ -192,22 +159,14 @@ function loop() {
     update_it()
     paint_it()
 
-    // var rot = angle_axis_to_matrix([tau/3600, 0, 0, 1])
-    // mat3.mul(camera, camera, rot)
-
     t++    
     setTimeout(loop, 100)
 }
 loop()
 
-
-
-
-
-function fmod(a, b) {
-    var m = a % b
-    if (m < 0) return m + b
-    return m
+function lerp(t0, v0, t1, v1, t) {
+    if (t0 == t1) return v0
+    return (t - t0) * (v1 - v0) / (t1 - t0) + v0
 }
 
 </script>
