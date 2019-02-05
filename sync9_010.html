@@ -655,29 +655,43 @@ function sync9_create_proxy(x, cb, path) {
 }
 
 function sync9_prune(x, has_everyone_whos_seen_a_seen_b) {
+    var collect_seen_nodes = {}
     function rec(x) {
         if (x && typeof(x) == 'object') {
             if (!x.t && x.val) {
                 rec(x.val)
             } else if (x.t == 'val') {
-                sync9_space_dag_prune(x.S, has_everyone_whos_seen_a_seen_b)
+                sync9_space_dag_prune(x.S, has_everyone_whos_seen_a_seen_b, collect_seen_nodes)
                 rec(sync9_space_dag_get(x.S, 0))
             } else if (x.t == 'obj') {
                 Object.values(x.S).forEach(v => rec(v))
             } else if (x.t == 'arr') {
-                sync9_space_dag_prune(x.S, has_everyone_whos_seen_a_seen_b)
+                sync9_space_dag_prune(x.S, has_everyone_whos_seen_a_seen_b, collect_seen_nodes)
                 sync9_trav_space_dag(x.S, () => true, node => {
                     node.elems.forEach(e => rec(e))
                 })
             } else if (x.t == 'str') {
-                sync9_space_dag_prune(x.S, has_everyone_whos_seen_a_seen_b)
+                sync9_space_dag_prune(x.S, has_everyone_whos_seen_a_seen_b, collect_seen_nodes)
             }
         }
     }
     rec(x)
+    
+    
+    
+    
+    collect_seen_nodes
+    work here
+    work here
+    
+    if everyone that has seen some node,
+        has seen some child of that node,
+        then we know this node won't be anything direct parent,
+        so the only reason to keep it is if it appears somewhere in a space dag, so check that, and delete it otherwise
+    
 }
 
-function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b) {
+function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b, collect_seen_nodes) {
     function set_nnnext(node, next) {
         while (node.next) node = node.next
         node.next = next
@@ -740,7 +754,8 @@ function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b) {
         }
     }
     var did_something = false
-    sync9_trav_space_dag(S, () => true, (node, offset) => {
+    sync9_trav_space_dag(S, () => true, (node, offset, has_nexts, prev) => {
+        if (!prev) collect_seen_nodes[node.vid] = true
         while (process_node(node, offset)) {
             did_something = true
         }
