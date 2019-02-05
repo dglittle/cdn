@@ -53,13 +53,6 @@ function do_something(s, clients, calm_mode, temp_toggle) {
     function on_prune(x) {
         sync9_space_dag_prune(sync9_space_dag_get(x.s9.val.S, 0).S, (a, b) => x.ACKIIed[b], s.prune_type)
 
-
-        // work here : do it twice
-        sync9_space_dag_prune(sync9_space_dag_get(x.s9.val.S, 0).S, (a, b) => x.ACKIIed[b], s.prune_type)
-        sync9_space_dag_prune(sync9_space_dag_get(x.s9.val.S, 0).S, (a, b) => x.ACKIIed[b], s.prune_type)
-        sync9_space_dag_prune(sync9_space_dag_get(x.s9.val.S, 0).S, (a, b) => x.ACKIIed[b], s.prune_type)
-        
-
         if (temp_toggle) {
             var deleted = {}
             Object.keys(x.ACKIIed).forEach(vid => {
@@ -119,14 +112,6 @@ function do_something(s, clients, calm_mode, temp_toggle) {
                             vid : vid
                         })
                     })
-                    
-                    
-                    // work here
-                    if (vid == 'Bqc82u8B4FXlbpn') {
-                        debugger
-                    }
-
-                    
                     on_prune(s)
                 }
             }
@@ -186,11 +171,11 @@ for (var i = 0; i < 1000; i++) {
     trial = i
     console.log('i = ' + i)
     
-    if (i == 539) {
+    // if (i == 539) {
         // early_break = true
         // break
-        debugger
-    }
+        // debugger
+    // }
     
     Math.randomSeed(random_seed_base + i)
     do_something(s, clients, false)
@@ -725,13 +710,13 @@ function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b, temp_toggle) 
             return true
         }
         
-        // if (Object.keys(node.deleted_by).some(k => has_everyone_whos_seen_a_seen_b(node.vid, k))) {
-        //     node.deleted_by = {}
-        //     node.elems = typeof(node.elems) == 'string' ? '' : []
-        //     node.start = 0
-        //     node.stop = node.stop % 2
-        //     return true
-        // }
+        if (Object.keys(node.deleted_by).some(k => has_everyone_whos_seen_a_seen_b(node.vid, k))) {
+            node.deleted_by = {}
+            node.elems = typeof(node.elems) == 'string' ? '' : []
+            node.start = 0
+            node.stop = node.stop % 2
+            return true
+        }
         
         if (next && !next.nexts[0] && (Object.keys(next.deleted_by).some(k => has_everyone_whos_seen_a_seen_b(node.vid, k)) || next.elems.length == 0)) {
             node.next = next.next
