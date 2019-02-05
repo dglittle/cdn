@@ -5,7 +5,7 @@
 <body></body>
 <script>
 
-Math.randomSeed(154)
+Math.randomSeed(158)
 console.log('-------------------')
 
 function create_server() {
@@ -51,9 +51,12 @@ for (var i = 0; i < 4; i++) {
 function do_something(s, clients, calm_mode, temp_toggle) {
     var c = clients[Math.floor(Math.random() * clients.length)]
     function on_prune(x) {
-        sync9_space_dag_prune(sync9_space_dag_get(x.s9.val.S, 0).S, (a, b) => x.ACKIIed[b], s.prune_type)
+        
+        // sync9_space_dag_prune(sync9_space_dag_get(x.s9.val.S, 0).S, , s.prune_type)
 
         if (temp_toggle) {
+            sync9_prune(x.s9, (a, b) => x.ACKIIed[b])
+            
             var deleted = {}
             Object.keys(x.ACKIIed).forEach(vid => {
                 Object.keys(x.s9.T[vid]).forEach(pid => {
@@ -167,7 +170,7 @@ var random_seed_base = 'hi' + Math.random()
 var early_break = false
 
 var trial = 0
-for (var i = 0; i < 1000; i++) {
+for (var i = 0; i < 2000; i++) {
     trial = i
     console.log('i = ' + i)
     
@@ -262,7 +265,8 @@ for (var i = 0; i < _clients.length; i++) {
 // console.log('_s')
 // console.log(JSON.stringify(_s, null, '    '))
 
-// console.log('T: ' + JSON.stringify(s.s9.T, null, '  '))
+// console.log('T1: ' + JSON.stringify(s.s9.T, null, '  '))
+console.log('T2: ' + JSON.stringify(_s.s9.T, null, '  '))
 
 console.log('-------------------')
 
@@ -667,7 +671,30 @@ function sync9_create_proxy(x, cb, path) {
     })
 }
 
-function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b, temp_toggle) {
+function sync9_prune(x, has_everyone_whos_seen_a_seen_b) {
+    function rec(x) {
+        if (x && typeof(x) == 'object') {
+            if (!x.t && x.val) {
+                rec(x.val)
+            } else if (x.t == 'val') {
+                sync9_space_dag_prune(x.S, has_everyone_whos_seen_a_seen_b)
+                rec(sync9_space_dag_get(x.S, 0))
+            } else if (x.t == 'obj') {
+                Object.values(x.S).forEach(v => rec(v))
+            } else if (x.t == 'arr') {
+                sync9_space_dag_prune(x.S, has_everyone_whos_seen_a_seen_b)
+                sync9_trav_space_dag(x.S, () => true, node => {
+                    node.elems.forEach(e => rec(e))
+                })
+            } else if (x.t == 'str') {
+                sync9_space_dag_prune(x.S, has_everyone_whos_seen_a_seen_b)
+            }
+        }
+    }
+    rec(x)
+}
+
+function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b) {
     function set_nnnext(node, next) {
         while (node.next) node = node.next
         node.next = next
