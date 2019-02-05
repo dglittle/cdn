@@ -130,6 +130,11 @@ function do_something(s, clients, calm_mode, temp_toggle) {
             var ins = c.letters[Math.floor(Math.random() * c.letters.length)].repeat(Math.floor(Math.random() * 4) + (del == 0 ? 1 : 0))
             
             var vid = sync9_guid()
+            
+            if (vid == 'TLGQQpWp94JDoRE') {
+                debugger
+            }
+            
             var changes = [`[${start}:${start + del}] = ` + JSON.stringify(ins)]
             
             var v = {
