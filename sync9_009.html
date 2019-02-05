@@ -56,6 +56,8 @@ function do_something(s, clients, calm_mode, temp_toggle) {
 
         // work here : do it twice
         sync9_space_dag_prune(sync9_space_dag_get(x.s9.val.S, 0).S, (a, b) => x.ACKIIed[b], s.prune_type)
+        sync9_space_dag_prune(sync9_space_dag_get(x.s9.val.S, 0).S, (a, b) => x.ACKIIed[b], s.prune_type)
+        sync9_space_dag_prune(sync9_space_dag_get(x.s9.val.S, 0).S, (a, b) => x.ACKIIed[b], s.prune_type)
         
 
         if (temp_toggle) {
@@ -118,6 +120,13 @@ function do_something(s, clients, calm_mode, temp_toggle) {
                         })
                     })
                     
+                    
+                    // work here
+                    if (vid == 'Bqc82u8B4FXlbpn') {
+                        debugger
+                    }
+
+                    
                     on_prune(s)
                 }
             }
@@ -177,11 +186,11 @@ for (var i = 0; i < 1000; i++) {
     trial = i
     console.log('i = ' + i)
     
-    // if (i == 539) {
-    //     early_break = true
-    //     break
-    //     //debugger
-    // }
+    if (i == 539) {
+        // early_break = true
+        // break
+        debugger
+    }
     
     Math.randomSeed(random_seed_base + i)
     do_something(s, clients, false)
@@ -720,7 +729,7 @@ function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b, temp_toggle) 
         //     node.deleted_by = {}
         //     node.elems = typeof(node.elems) == 'string' ? '' : []
         //     node.start = 0
-        //     node.stop = 0
+        //     node.stop = node.stop % 2
         //     return true
         // }
         
