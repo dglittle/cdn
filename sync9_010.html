@@ -174,11 +174,14 @@ for (var i = 0; i < 1000; i++) {
     trial = i
     console.log('i = ' + i)
     
-    if (i == 802) {
+    // if (i == 802) {
         // early_break = true
         // break
-        debugger
-    }
+        
+        //console.log(JSON.stringify(s.s9.val.S.elems[0], null, '    '))
+        
+        //debugger
+    // }
     
     Math.randomSeed(random_seed_base + i)
     do_something(s, clients, false)
@@ -208,7 +211,7 @@ for (var i = 0; i < 1000; i++) {
     
 }
 console.log('-- CALM MODE --')
-for (var i = 0; !early_break && i < 0; i++) {
+for (var i = 0; !early_break && i < 500; i++) {
     trial = i
     console.log('i = ' + i)
     Math.randomSeed(random_seed_base + i)
@@ -234,11 +237,11 @@ for (var i = 0; !early_break && i < 0; i++) {
 
 
 
-console.log('SERVER: ' + JSON.stringify(sync9_space_dag_get(s.s9.val.S, 0), null, '  '))
-for (var i = 0; i < clients.length; i++) {
-    var c = clients[i]
+console.log('SERVER: ' + JSON.stringify(_s.s9, null, '  '))
+for (var i = 0; i < _clients.length; i++) {
+    var c = _clients[i]
     if (!c.s9) continue
-    console.log(i + 'CLIENT: ' + JSON.stringify(sync9_space_dag_get(c.s9.val.S, 0), null, '  '))
+    console.log(i + 'CLIENT: ' + JSON.stringify(c.s9, null, '  '))
 }
 
 
@@ -466,6 +469,7 @@ function sync9_space_dag_add_version(S, vid, parents, splices, is_anc) {
         
         node.elems = subseq(node.elems, 0, x)
         node.end_cap = end_cap
+        if (end_cap) tail.gash = true
         node.nexts = new_next ? [new_next] : []
         node.next = tail
         
@@ -498,13 +502,12 @@ function sync9_space_dag_add_version(S, vid, parents, splices, is_anc) {
             if (d >= 0) return
             delete_up_to = s[0] + s[1]
             var new_node = sync9_create_space_dag_node(vid, s[2])
-            if (s[0] == offset && Object.keys(node.deleted_by).length > 0) {
+            if (s[0] == offset && node.gash) {
                 if (!prev.end_cap) throw 'no end_cap?'
                 add_to_nexts(prev.nexts, new_node)
             } else {
                 break_node(node, s[0] - offset, true, new_node)
                 return
-                
             }
         }
         
