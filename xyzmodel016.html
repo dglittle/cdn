@@ -19,6 +19,19 @@ function v_isNaN(v) {
     return v.some(x => isNaN(x))
 }
 
+function v_lenSq(v) {
+    return v.reduce((a, b) => a + b*b, 0)
+}
+
+function v_len(v) {
+    return Math.sqrt(v_lenSq(v))
+}
+
+function v_normalize(v) {
+    var len = v_len(v)
+    v.forEach((vv, i) => v[i] = vv / len)
+}
+
 // Math.randomSeed(124)
 
 
@@ -109,6 +122,7 @@ for (var y = 0; y < yn; y++) {
         var m1 = mat3_from_axes(xx, y)
         // var m1 = mat3.fromValues(xx[0], xx[1], xx[2], y[0], y[1], y[2], z[0], z[1], z[2])
         var v = mat3_to_quat_2(m1)
+        v_normalize(v)
         
         
         
@@ -121,11 +135,11 @@ for (var y = 0; y < yn; y++) {
         
         //var m = angle_axis_to_matrix(quat_to_angle_axis(v))
         
-        var aa = quat_to_angle_axis(v)
+        // var aa = quat_to_angle_axis(v)
         
-        var m2 = angle_axis_to_matrix(aa)
+        // var m2 = angle_axis_to_matrix(aa)
         
-        var m = mat3.fromQuat(mat3.create(), quat.fromValues(v[1], v[2], v[3], v[0]))
+        // var m = mat3.fromQuat(mat3.create(), quat.fromValues(v[1], v[2], v[3], v[0]))
         
         //var v = mat3_to_quat(mat3_from_axes(row[row.length - 1], rowB[rowB.length - 1]))
         q_row.push(v)
