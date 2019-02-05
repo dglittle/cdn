@@ -170,15 +170,15 @@ var random_seed_base = 'hi' + Math.random()
 var early_break = false
 
 var trial = 0
-for (var i = 0; i < 2000; i++) {
+for (var i = 0; i < 1000; i++) {
     trial = i
     console.log('i = ' + i)
     
-    // if (i == 824) {
+    if (i == 802) {
         // early_break = true
         // break
-    //     debugger
-    // }
+        debugger
+    }
     
     Math.randomSeed(random_seed_base + i)
     do_something(s, clients, false)
@@ -208,7 +208,7 @@ for (var i = 0; i < 2000; i++) {
     
 }
 console.log('-- CALM MODE --')
-for (var i = 0; !early_break && i < 500; i++) {
+for (var i = 0; !early_break && i < 0; i++) {
     trial = i
     console.log('i = ' + i)
     Math.randomSeed(random_seed_base + i)
@@ -234,18 +234,19 @@ for (var i = 0; !early_break && i < 500; i++) {
 
 
 
-// console.log('SERVER: ' + JSON.stringify(sync9_space_dag_get(s.s9.val.S, 0), null, '  '))
-// for (var i = 0; i < clients.length; i++) {
-//     var c = clients[i]
-//     console.log(i + 'CLIENT: ' + JSON.stringify(sync9_space_dag_get(c.s9.val.S, 0), null, '  '))
-// }
+console.log('SERVER: ' + JSON.stringify(sync9_space_dag_get(s.s9.val.S, 0), null, '  '))
+for (var i = 0; i < clients.length; i++) {
+    var c = clients[i]
+    if (!c.s9) continue
+    console.log(i + 'CLIENT: ' + JSON.stringify(sync9_space_dag_get(c.s9.val.S, 0), null, '  '))
+}
 
 
-// for (var i = 0; i < clients.length; i++) {
-//     var c = clients[i]
-//     console.log(i + 'CLIENT incoming: ' + JSON.stringify(c.incoming, null, '  '))
-//     console.log(i + 'CLIENT outgoing: ' + JSON.stringify(c.outgoing, null, '  '))
-// }
+for (var i = 0; i < clients.length; i++) {
+    var c = clients[i]
+    console.log(i + 'CLIENT incoming: ' + JSON.stringify(c.incoming, null, '  '))
+    console.log(i + 'CLIENT outgoing: ' + JSON.stringify(c.outgoing, null, '  '))
+}
 
 
 console.log('SERVER: ' + sync9_read(s.s9))
