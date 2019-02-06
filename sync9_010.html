@@ -658,30 +658,41 @@ function sync9_prune(x, has_everyone_whos_seen_a_seen_b) {
     rec(x)
 
     var visited = {}    
-    var forwards = {}
-    function f(vid, delete_me) {
+    var delete_us = {}
+    function f(vid) {
         if (visited[vid]) return
         visited[vid] = true
-        if (delete_me) {
-            forwards[vid] = {}
-        }
         Object.keys(x.T[vid]).forEach(pid => {
-            var delete_parent = has_everyone_whos_seen_a_seen_b(pid, vid) && !seen_nodes[pid]
-            f(pid, delete_parent)
-            if (delete_me) {
-                if (forwards[pid]) {
+            if (has_everyone_whos_seen_a_seen_b(pid, vid) && !seen_nodes[pid]) {
+                delete_us[pid] = true
+            }
+            f(pid)
+        })
+    }
+    Object.keys(x.leaves).forEach(f)
+
+    var visited = {}
+    var forwards = {}
+    function g(vid) {
+        if (visited[vid]) return
+        visited[vid] = true
+        if (delete_us[vid])
+            forwards[vid] = {}
+        Object.keys(x.T[vid]).forEach(pid => {
+            g(pid)
+            if (delete_us[vid]) {
+                if (delete_us[pid])
                     Object.assign(forwards[vid], forwards[pid])
-                } else {
+                else
                     forwards[vid][pid] = true
-                }
-            } else if (delete_parent) {
+            } else if (delete_us[pid]) {
                 delete x.T[vid][pid]
                 Object.assign(x.T[vid], forwards[pid])
             }
         })
     }
-    Object.keys(x.leaves).forEach(f)
-    Object.keys(forwards).forEach(vid => delete x.T[vid])
+    Object.keys(x.leaves).forEach(g)
+    Object.keys(delete_us).forEach(vid => delete x.T[vid])
 }
 
 function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b, seen_nodes) {
