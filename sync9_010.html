@@ -15,7 +15,7 @@ function create_server() {
     s.peers = []
     s.unACKed = {}
     s.ACKIIed = { root : true, v1 : true }
-    sync9_space_dag_prune(s.s9.val.S, (a, b) => s.ACKIIed[b])
+    sync9_prune(s.s9, (a, b) => s.ACKIIed[b])
     return s
 }
 
