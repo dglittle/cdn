@@ -56,27 +56,7 @@ function do_something(s, clients, calm_mode, temp_toggle) {
 
         if (temp_toggle) {
             sync9_prune(x.s9, (a, b) => x.ACKIIed[b])
-            
-            var deleted = {}
-            Object.keys(x.ACKIIed).forEach(vid => {
-                Object.keys(x.s9.T[vid]).forEach(pid => {
-                    if (pid != 'root') {
-                        delete x.s9.T[pid]
-                        deleted[pid] = true
-                    }
-                })
-                x.s9.T[vid] = { root : true }
-                if (vid != 'root')
-                    delete x.ACKIIed[vid]
-            })
-            Object.entries(x.s9.T).forEach(([vid, parents]) => {
-                Object.keys(parents).forEach(pid => {
-                    if (deleted[pid]) {
-                        delete parents[pid]
-                        parents.root = true
-                    }
-                })
-            })
+            x.ACKIIed = {}
         }
     }
     if (Math.random() < 0.5) {
@@ -676,35 +656,32 @@ function sync9_prune(x, has_everyone_whos_seen_a_seen_b) {
         }
     }
     rec(x)
-    
-    function process_node(vid) {
-        
-        
+
+    var visited = {}    
+    var forwards = {}
+    function f(vid, delete_me) {
+        if (visited[vid]) return
+        visited[vid] = true
+        if (delete_me) {
+            forwards[vid] = {}
+        }
         Object.keys(x.T[vid]).forEach(pid => {
-            if (has_everyone_whos_seen_a_seen_b(pid, vid) && !seen_nodes[pid]) {
+            var delete_parent = has_everyone_whos_seen_a_seen_b(pid, vid) && !seen_nodes[pid]
+            f(pid, delete_parent)
+            if (delete_me) {
+                if (forwards[pid]) {
+                    Object.assign(forwards[vid], forwards[pid])
+                } else {
+                    forwards[vid][pid] = true
+                }
+            } else if (delete_parent) {
                 delete x.T[vid][pid]
-                Object.keys(x.T[pid]).forEach(gid => {
-                    x.T[vid][gid] = true
-                })
+                Object.assign(x.T[vid], forwards[pid])
             }
         })
-        
-        
-        if (has_everyone_whos_seen_a_seen_b()
     }
-    Object.keys(x.leaves).forEach(process_node)
-    
-    
-    
-    collect_seen_nodes
-    work here
-    work here
-    
-    if everyone that has seen some node,
-        has seen some child of that node,
-        then we know this node won't be anything direct parent,
-        so the only reason to keep it is if it appears somewhere in a space dag, so check that, and delete it otherwise
-    
+    Object.keys(x.leaves).forEach(f)
+    Object.keys(forwards).forEach(vid => delete x.T[vid])
 }
 
 function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b, seen_nodes) {
