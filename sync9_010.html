@@ -655,28 +655,44 @@ function sync9_create_proxy(x, cb, path) {
 }
 
 function sync9_prune(x, has_everyone_whos_seen_a_seen_b) {
-    var collect_seen_nodes = {}
+    var seen_nodes = {}
     function rec(x) {
         if (x && typeof(x) == 'object') {
             if (!x.t && x.val) {
                 rec(x.val)
             } else if (x.t == 'val') {
-                sync9_space_dag_prune(x.S, has_everyone_whos_seen_a_seen_b, collect_seen_nodes)
+                sync9_space_dag_prune(x.S, has_everyone_whos_seen_a_seen_b, seen_nodes)
                 rec(sync9_space_dag_get(x.S, 0))
             } else if (x.t == 'obj') {
                 Object.values(x.S).forEach(v => rec(v))
             } else if (x.t == 'arr') {
-                sync9_space_dag_prune(x.S, has_everyone_whos_seen_a_seen_b, collect_seen_nodes)
+                sync9_space_dag_prune(x.S, has_everyone_whos_seen_a_seen_b, seen_nodes)
                 sync9_trav_space_dag(x.S, () => true, node => {
                     node.elems.forEach(e => rec(e))
                 })
             } else if (x.t == 'str') {
-                sync9_space_dag_prune(x.S, has_everyone_whos_seen_a_seen_b, collect_seen_nodes)
+                sync9_space_dag_prune(x.S, has_everyone_whos_seen_a_seen_b, seen_nodes)
             }
         }
     }
     rec(x)
     
+    function process_node(vid) {
+        
+        
+        Object.keys(x.T[vid]).forEach(pid => {
+            if (has_everyone_whos_seen_a_seen_b(pid, vid) && !seen_nodes[pid]) {
+                delete x.T[vid][pid]
+                Object.keys(x.T[pid]).forEach(gid => {
+                    x.T[vid][gid] = true
+                })
+            }
+        })
+        
+        
+        if (has_everyone_whos_seen_a_seen_b()
+    }
+    Object.keys(x.leaves).forEach(process_node)
     
     
     
@@ -691,7 +707,7 @@ function sync9_prune(x, has_everyone_whos_seen_a_seen_b) {
     
 }
 
-function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b, collect_seen_nodes) {
+function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b, seen_nodes) {
     function set_nnnext(node, next) {
         while (node.next) node = node.next
         node.next = next
@@ -755,7 +771,7 @@ function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b, collect_seen_
     }
     var did_something = false
     sync9_trav_space_dag(S, () => true, (node, offset, has_nexts, prev) => {
-        if (!prev) collect_seen_nodes[node.vid] = true
+        if (!prev) seen_nodes[node.vid] = true
         while (process_node(node, offset)) {
             did_something = true
         }
