@@ -2,104 +2,46 @@
 <body style="margin:0px">
 <script>
 
-throw 'stop'
+// throw 'stop'
 
 var tau = Math.PI * 2
 
 var c = document.createElement('canvas')
-c.width = 200
+c.width = 100
 c.height = 400
 document.body.append(c)
 var g = c.getContext('2d')
 
 var cc = document.createElement('canvas')
-cc.width = 200
+cc.width = 100
 cc.height = 400
 document.body.append(cc)
 var gg = cc.getContext('2d')
 
-var xn = 2
-
-var q_spins = []
-var q_prevs = []
-
-var qq_spins = []
-var qq_prevs = []
-
-var spins = []
-var vels = []
-for (var x = 0; x < xn; x++) {
-    var val = 3 * x
-    
-    q_spins.push(val)
-    q_prevs.push(val)
-    
-    qq_spins.push(val)
-    qq_prevs.push(val)
-    
-    spins.push(val)
-    vels.push(0)
-}
+var spin = 1
+var vel = 0
+var q_spin = 1
+var q_prev = 1
 
 function update_it() {
-    
-    //debugger
-    
-    var x0 = spins[0]
-    var x1 = spins[1]
-    var mag = Math.abs(x0 - x1)/1000
-    if (x0 > x1) {
-        vels[0] -= mag
-        vels[1] += mag
-    } else {
-        vels[0] += mag
-        vels[1] -= mag
-    }
-    
-    spins[0] += vels[0]
-    spins[1] += vels[1]
-    
+    var mag = Math.abs(spin)/1000
+    if (spin > 0)
+        vel -= mag
+    else
+        vel += mag
+    spin += vel
 
 
     
-    var a = q_spins[0]
-    var b = q_spins[1]
-    var mag = Math.abs(a - b)/1000
-    if (a > b) {
-        q_spins[0] -= mag
-        q_spins[1] += mag
-    } else {
-        q_spins[0] += mag
-        q_spins[1] -= mag
-    }
+    var mag = Math.abs(q_spin)/1000
+    if (q_spin > 0)
+        q_spin -= mag
+    else
+        q_spin += mag
     
-    for (var x = 0; x < xn; x++) {
-        var prev = q_prevs[x]
-        q_prevs[x] = q_spins[x]
-        q_spins[x] = lerp(0, prev, 1, q_spins[x], 2)
-    }
-
-
-
-
-    
-    for (var x = 0; x < xn; x++) {
-        var prev = qq_prevs[x]
-        qq_prevs[x] = qq_spins[x]
-        qq_spins[x] = lerp(0, prev, 1, qq_spins[x], 2)
-    }
-
-    var a = qq_spins[0]
-    var b = qq_spins[1]
-    var mag = Math.abs(a - b)/2000
-    if (a > b) {
-        qq_spins[0] -= mag
-        qq_spins[1] += mag
-    } else {
-        qq_spins[0] += mag
-        qq_spins[1] -= mag
-    }
-    
+    var prev = q_prev
+    q_prev = q_spin
+    q_spin = lerp(0, prev, 1, q_spin, 2)
 }
 
 function paint_it() {
@@ -108,43 +50,29 @@ function paint_it() {
     g.fillStyle = 'rgba(255, 255, 255, 0.01)'
     g.fillRect(0, 0, c.width, c.height)
     
-    g.fillStyle = 'red'
+    g.fillStyle = 'magenta'
     g.beginPath()
-    g.arc(x, lerp(0, c.height, 3, 0, spins[0]), 3, 0, tau)
+    g.arc(x, lerp(-1, c.height, 1, 0, spin), 3, 0, tau)
     g.fill()
-
-    g.fillStyle = 'orange'
+    
+    g.fillStyle = 'cyan'
     g.beginPath()
-    g.arc(x, lerp(0, c.height, 3, 0, spins[1]), 3, 0, tau)
+    g.arc(x, lerp(-1, c.height, 1, 0, vel * 20), 3, 0, tau)
     g.fill()
     
     
     gg.fillStyle = 'rgba(255, 255, 255, 0.01)'
     gg.fillRect(0, 0, cc.width, cc.height)
     
-    gg.fillStyle = 'red'
+    gg.fillStyle = 'violet'
     gg.beginPath()
-    gg.arc(x, lerp(0, c.height, 3, 0, q_spins[0]), 3, 0, tau)
-    gg.fill()
-
-    gg.fillStyle = 'orange'
-    gg.beginPath()
-    gg.arc(x, lerp(0, c.height, 3, 0, q_spins[1]), 3, 0, tau)
+    gg.arc(x, lerp(-1, c.height, 1, 0, q_spin), 3, 0, tau)
     gg.fill()
     
-    
-    
-    
-    gg.fillStyle = 'cyan'
+    gg.fillStyle = 'blue'
     gg.beginPath()
-    gg.arc(x, lerp(0, c.height, 3, 0, qq_spins[0]), 3, 0, tau)
+    gg.arc(x, lerp(-1, c.height, 1, 0, 20*(q_spin - q_prev)), 3, 0, tau)
     gg.fill()
-
-    gg.fillStyle = 'green'
-    gg.beginPath()
-    gg.arc(x, lerp(0, c.height, 3, 0, qq_spins[1]), 3, 0, tau)
-    gg.fill()
-    
 }
 
 var t = 0
