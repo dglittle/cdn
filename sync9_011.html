@@ -8,59 +8,72 @@
 Math.randomSeed(1)
 console.log('-------------------')
 
-
-
-
 function sync9_rebase(x, changes, parents, new_parents) {
     
 }
 
 function sync9_space_dag_rebase(S, splices, is_anc, is_new_anc) {
     var si = 0
+    var s = splices[si]
+    
+    var result = []
+    function add_result(offset, del, ins) {
+        if (result.length > 0) {
+            var prev = result[result.length - 1]
+            if (prev[0] == offset) {
+                prev[1] += del
+                prev[2] += ins
+                return
+            }
+        }
+        result.push([offset, del, ins])
+    }
+    
     var offset_a = 0
     var offset_b = 0
+    var delete_up_to = 0
     sync9_trav_space_dag(S, is_new_anc, (node) => {
-        var deleted_by_a = Object.keys(node.deleted_by).some(x => is_anc(x))
+        if (Object.keys(node.deleted_by).some(x => is_anc(x))) return
         var deleted_by_b = Object.keys(node.deleted_by).some(x => is_new_anc(x))
-
-        if (is_anc(node.vid) && !deleted_by_a) {
-            
-            while (true) {
-                var s = splices[si]
-                if ((s[1] == 0) &&
-                    (s[0] <= offset_a + node.elems.length)) {
-                    if (!deleted_by_b) {
-                        s[0] = offset_b + (s[0] - offset_a)
+        if (is_anc(node.vid)) {
+            while (s) {
+                if (s[1] == 0) {
+                    if (s[0] <= offset_a + node.elems.length) {
+                        add_result(offset_b + (deleted_by_b ? 0 : (s[0] - offset_a)), s[1], s[2])
+                        s = splices[si++]
+                    } else break
+                } else {
+                    if (delete_up_to) {
+                        if (delete_up_to > offset_a + node.elems.length) {
+                            if (deleted_by_b)
+                                result[result.length - 1][1] -= node.elems.length
+                            break
+                        } else {
+                            if (deleted_by_b)
+                                result[result.length - 1][1] -= delete_up_to - offset_a
+                            s = splices[si++]
+                            delete_up_to = 0
+                        }
                     } else {
-                        s[0] = offset_b
-                    }
-                } else if ((s[1] != 0) &&
-                    (s[0] < offset_a + node.elems.length)) {
-                    if (!deleted_by_b) {
-                        s[0] = offset_b + (s[0] - offset_a)
-                    } else {
-                        s[0] = offset_b
-                        s[1] = work here
+                        if (s[0] < offset_a + node.elems.length) {
+                            add_result(offset_b + (deleted_by_b ? 0 : (s[0] - offset_a)), s[1], s[2])
+                            delete_up_to = s[0] + s[1]
+                            if (delete_up_to <= offset_a + node.elems.length) {
+                                if (deleted_by_b)
+                                    result[result.length - 1][1] -= delete_up_to - s[0]
+                                s = splices[si++]
+                                delete_up_to = 0
+                            } else break
+                        } else break
                     }
                 }
             }
-            
-            
             offset_a += node.elems.length
         }
         if (!deleted_by_b)
             offset_b += node.elems.length
     }, true)
-    
-    
-    
-    
-    
-    work here
 }
-
-
-
 
 function create_server() {
     var s = {}
