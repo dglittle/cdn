@@ -5,7 +5,7 @@
 <body></body>
 <script>
 
-Math.randomSeed(1)
+Math.randomSeed(8)
 console.log('-------------------')
 
 // var s = {}
@@ -31,6 +31,10 @@ function create_random_edit(s) {
     
     var vid = sync9_guid()
     var changes = [`[${start}:${start + del}] = ` + JSON.stringify(ins)]
+    
+    console.log('vid = ' + vid)
+    console.log('    = ' + changes[0])
+    
     return {
         vid : vid,
         parents : Object.assign({}, s.leaves),
@@ -39,7 +43,7 @@ function create_random_edit(s) {
 }
 
 function randomly_edit(s) {
-    for (var i = 0; i < 10; i++) {
+    for (var i = 0; i < 6; i++) {
         var v = create_random_edit(s)
         sync9_add_version(s, v.vid, v.parents, v.changes)
     }
@@ -84,6 +88,7 @@ console.log(sync9_read(clone1))
 console.log('-=-=-=-=-=-=-=-=-')
 console.log(sync9_read(clone2))
 console.log('-=-=-=-=-=-=-=-=-')
+console.log(sync9_read(clone1) == sync9_read(clone2))
 
 
 
