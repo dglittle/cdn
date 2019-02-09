@@ -98,7 +98,7 @@ function update_it() {
         for (var x = 0; x < xn; x++) {
             var prev = prevs[y][x]
             prevs[y][x] = spins[y][x]
-            if (iteration < 1000)
+            if (iteration < 200)
                 spins[y][x] = slerp(prev, spins[y][x], 2 - 1/(iteration/3 + 1))
             else
                 spins[y][x] = slerp(prev, spins[y][x], 2)
@@ -109,8 +109,8 @@ function update_it() {
         var a = prevs[y1][x1]
         var b = prevs[y2][x2]
         
-        var aa = nudge_slerp(a, b, tau / 1000)
-        var bb = nudge_slerp(b, a, tau / 1000)
+        var aa = nudge_slerp(a, b, tau / 200)
+        var bb = nudge_slerp(b, a, tau / 200)
         
         spins[y1][x1] = q_mul(spins[y1][x1], q_mul(q_inv(a), aa))
         v_normalize(spins[y1][x1])
