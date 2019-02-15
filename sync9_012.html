@@ -184,70 +184,24 @@ function sync9_space_dag_rebase(S, vid, splices, is_anc, is_new_anc) {
                     var d = delete_up_to - (node.offset_a + node.elems.length)
                     if (!deleted_by_b) {
                         var start = node.offset_b + Math.max(0, s[0] - node.offset_a)
-                        var stop = node.offset_b + node.elems.length
-                        if (d < 0) stop += d
+                        var stop = node.offset_b + node.elems.length + Math.min(0, d)
                         add_result(start, stop - start, '')
                     }
                     if (d <= 0) {
                         s = splices[si++]
                     } else break
-                }                    
-                    
-                    
-                    
-                    work here
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    if (s[0] <= offset_a + node.elems.length) {
-                        add_result(offset_b + (deleted_by_b ? 0 : (s[0] - offset_a)), s[1], s[2])
-                        s = splices[si++]
-                    } else break
-                } else {
-                    if (delete_up_to) {
-                        if (delete_up_to > offset_a + node.elems.length) {
-                            if (deleted_by_b)
-                                result[result.length - 1][1] -= node.elems.length
-                            break
-                        } else {
-                            if (deleted_by_b)
-                                result[result.length - 1][1] -= delete_up_to - offset_a
-                            s = splices[si++]
-                            delete_up_to = 0
-                        }
-                    } else {
-                        if (s[0] < offset_a + node.elems.length) {
-                            add_result(offset_b + (deleted_by_b ? 0 : (s[0] - offset_a)), s[1], s[2])
-                            delete_up_to = s[0] + s[1]
-                            if (delete_up_to <= offset_a + node.elems.length) {
-                                if (deleted_by_b)
-                                    result[result.length - 1][1] -= delete_up_to - s[0]
-                                s = splices[si++]
-                                delete_up_to = 0
-                            } else break
-                        } else break
-                    }
                 }
             }
         }
     }, true)
+    
+    sync9_trav_space_dag(S, is_new_anc, (node, offset, has_nexts, prev, vid) => {
+        if (Object.keys(node.deleted_by).some(x => is_anc(x))) return
+        delete node.offset_a
+        delete node.offset_b
+        delete node.real_next
+    }, true)
+    
     return result
 }
 
