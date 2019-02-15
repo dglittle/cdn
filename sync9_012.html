@@ -77,13 +77,14 @@ for (var t = 0; t < 100; t++) {
     var test_v2 = sync9_space_dag_rebase(sync9_space_dag_get(s.val.S, 0).S, test_v.vid, spl, get_is_anc_func(s, test_v.parents), get_is_anc_func(s, s.leaves))
     
     console.log(test_v2)
+    test_v2 = test_v2.map(x => `[${x[0]}:${x[0] + x[1]}] = ` + JSON.stringify(x[2]))
     
     var clone1 = JSON.parse(JSON.stringify(s))
     var clone2 = JSON.parse(JSON.stringify(s))
     
     sync9_add_version(clone1, test_v.vid, test_v.parents, test_v.changes)
     
-    sync9_add_version(clone2, test_v.vid, clone2.leaves, [`[${test_v2[0][0]}:${test_v2[0][0] + test_v2[0][1]}] = ` + JSON.stringify(test_v2[0][2])])
+    sync9_add_version(clone2, test_v.vid, clone2.leaves, test_v2)
     
     console.log('-=-=-=-=-=-=-=-=-')
     console.log(sync9_read(clone1))
@@ -165,6 +166,7 @@ function sync9_space_dag_rebase(S, vid, splices, is_anc, is_new_anc) {
                             return 0
                         })
                         add_result((nexts[i] && nexts[i].offset_b) ||
+                            (node.next && node.next.offset_b) ||
                             (node.real_next && node.real_next.offset_b) ||
                             offset_b, 0, s[2])
                     } else {
