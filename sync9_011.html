@@ -102,28 +102,6 @@ function sync9_rebase(x, changes, parents, new_parents) {
 }
 
 function sync9_space_dag_rebase(S, splices, is_anc, is_new_anc) {
-    
-    work here
-    
-    var offset_a = 0
-    var offset_b = 0
-    sync9_trav_space_dag(S, is_new_anc, (node, offset, has_nexts, prev, vid) => {
-        if (Object.keys(node.deleted_by).some(x => is_anc(x))) return
-        var deleted_by_b = Object.keys(node.deleted_by).some(x => is_new_anc(x))
-        
-        node.offset_a = offset_a
-        node.offset_b = offset_b
-        
-        if (is_anc(vid))
-            offset_a += node.elems.length
-        if (!deleted_by_b)
-            offset_b += node.elems.length
-    }, true)    
-    
-    
-    
-    
-    
     var si = 0
     var s = splices[si++]
     
