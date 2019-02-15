@@ -5,7 +5,6 @@
 <body></body>
 <script>
 
-Math.randomSeed(8)
 console.log('-------------------')
 
 // var s = {}
@@ -29,8 +28,8 @@ function create_random_edit(s) {
     var vid = sync9_guid()
     var changes = [`[${start}:${start + del}] = ` + JSON.stringify(ins)]
     
-    console.log('vid = ' + vid)
-    console.log('    = ' + changes[0])
+    // console.log('vid = ' + vid)
+    // console.log('    = ' + changes[0])
     
     return {
         vid : vid,
@@ -40,7 +39,7 @@ function create_random_edit(s) {
 }
 
 function randomly_edit(s) {
-    for (var i = 0; i < 6; i++) {
+    for (var i = 0; i < 10; i++) {
         var v = create_random_edit(s)
         sync9_add_version(s, v.vid, v.parents, v.changes)
     }
@@ -59,8 +58,9 @@ function get_is_anc_func(s, parents) {
 }
 
 
-for (var t = 0; t < 100; t++) {
+for (var t = 0; t < 200; t++) {
     console.log('t = ' + t)
+    Math.randomSeed(t + 3000)
     
     var s = sync9_create()
     sync9_add_version(s, 'v1', s.leaves, [' = "hello"'])
@@ -68,15 +68,16 @@ for (var t = 0; t < 100; t++) {
     randomly_edit(s)
     var test_v = create_random_edit(s)
     randomly_edit(s)
+    var new_leaves = s.leaves
     
     var p = sync9_parse_change(test_v.changes[0])
     var spl = [[p.range[0], p.range[1] - p.range[0], p.val]]
     
-    console.log(spl)
+    // console.log(spl)
     
     var test_v2 = sync9_space_dag_rebase(sync9_space_dag_get(s.val.S, 0).S, test_v.vid, spl, get_is_anc_func(s, test_v.parents), get_is_anc_func(s, s.leaves))
     
-    console.log(test_v2)
+    // console.log(test_v2)
     test_v2 = test_v2.map(x => `[${x[0]}:${x[0] + x[1]}] = ` + JSON.stringify(x[2]))
     
     var clone1 = JSON.parse(JSON.stringify(s))
