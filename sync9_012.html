@@ -60,6 +60,8 @@ function get_is_anc_func(s, parents) {
 
 
 for (var t = 0; t < 100; t++) {
+    console.log('t = ' + t)
+    
     var s = sync9_create()
     sync9_add_version(s, 'v1', s.leaves, [' = "hello"'])
     
@@ -107,22 +109,25 @@ function sync9_rebase(x, changes, parents, new_parents) {
 function sync9_space_dag_rebase(S, vid, splices, is_anc, is_new_anc) {
     var offset_a = 0
     var offset_b = 0
-    var real_prev = null
+    var set_us = []
     sync9_trav_space_dag(S, is_new_anc, (node, offset, has_nexts, prev, vid) => {
         if (Object.keys(node.deleted_by).some(x => is_anc(x))) return
         var deleted_by_b = Object.keys(node.deleted_by).some(x => is_new_anc(x))
         
         node.offset_a = offset_a
         node.offset_b = offset_b
-        if (real_prev)
-            real_prev.real_next = node
-        real_prev = node
+        if (set_us.length > 0) {
+            set_us.forEach(n => n.real_next = node)
+            set_us = []
+        }
         
         if (is_anc(vid))
             offset_a += node.elems.length
         if (!deleted_by_b)
             offset_b += node.elems.length
-    }, true)
+    }, true, node => {
+        set_us.push(node)
+    })
     
     var si = 0
     var s = splices[si++]
@@ -159,14 +164,9 @@ function sync9_space_dag_rebase(S, vid, splices, is_anc, is_new_anc) {
                             if (new_vid > x.vid) return 1
                             return 0
                         })
-                        var n = null
-                        if (i >= nexts.length) {
-                            n = nexts[nexts.length - 1]
-                            while (n.next) n = n.next
-                            n = n.real_next
-                        }
                         add_result((nexts[i] && nexts[i].offset_b) ||
-                            (n && n.offset_b) || offset_b, 0, s[2])
+                            (node.real_next && node.real_next.offset_b) ||
+                            offset_b, 0, s[2])
                     } else {
                         add_result(node.offset_b + (deleted_by_b ? 0 : (s[0] - node.offset_a)), 0, s[2])
                     }
@@ -463,7 +463,7 @@ function sync9_space_dag_add_version(S, vid, splices, is_anc) {
     })
 }
 
-function sync9_trav_space_dag(S, f, cb, view_deleted) {
+function sync9_trav_space_dag(S, f, cb, view_deleted, tail_cb) {
     var exit_early = {}
     var offset = 0
     function helper(node, prev, vid) {
@@ -477,6 +477,7 @@ function sync9_trav_space_dag(S, f, cb, view_deleted) {
         for (var next of node.nexts)
             if (f(next.vid)) helper(next)
         if (node.next) helper(node.next, node, vid || node.vid)
+        else if (tail_cb) tail_cb(node)
     }
     try {
         helper(S)
