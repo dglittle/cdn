@@ -7,6 +7,25 @@
 
 console.log('-------------------')
 
+
+client
+    on_change -> message (add version)
+    on_add_version -> message (ACK I)
+
+
+server
+    on_connect uid -> JSON dump welcome info
+    on_disconnect uid -> array of message (ACK II's)
+    on_add_version -> array of messages (add version)
+    on_ack -> array of messages (ACK II's)
+
+    
+
+
+
+
+
+
 // var s = {}
 // s = sync9_create()
 // sync9_add_version(s, 'v1', s.leaves, [' = "hello"'])
