@@ -7,48 +7,43 @@
 
 console.log('-------------------')
 
+var server = sync9_create_server((uid, s9_json, ackiied) => {
+    clients[uid].on_welcome(s9_json, ackiied)
+}, (uid, vid, parents, changes) => {
+    clients[uid].on_add_version(vid, parents, changes)
+}, (uid, vid) => {
+    clients[uid].on_acki(vid)
+}, (uid, vid) => {
+    clients[uid].on_ackii(vid)
+})
 
-client
-    on_change -> message (add version)
-    on_add_version -> message (ACK I)
-
-
-server
-    on_connect uid -> JSON dump welcome info
-    on_disconnect uid -> array of message (ACK II's)
-    on_add_version -> array of messages (add version)
-    on_ack -> array of messages (ACK II's)
-
-    
-
-function sync9_create_client() {
-    var c = {}
-    c.change = () => {
-        
-    }
-    c.add_version = () => {
-    }
-    c.ackii = () => {
-    }
-    return c
+var n_clients = 4
+var clients = {}
+for (var i = 0; i < n_clients; i++) {
+    var c = sync9_create_client((uid) => {
+        server.on_join(uid)
+    }, (uid) => {
+        server.on_welcome_ack(uid)
+    }, (uid, vid, parents, changes) => {
+        server.on_add_version(uid, vid, parents, changes)
+    }, (uid, vid) => {
+        server.on_acki(uid, vid)
+    })
+    clients[c.uid] = c
+    c.on_connect()
 }
 
-function sync9_create_server() {
-}
+Object.values(clients).forEach((x, i) => {
+    if (i == 0) {
+        var edit = create_random_edit(x.s9)
+        x.on_local_add_version(edit.vid, edit.parents, edit.changes)
+    }
+})
 
+Object.values(clients).forEach((x, i) => {
+    console.log(x)
+})
 
-
-
-// var s = {}
-// s = sync9_create()
-// sync9_add_version(s, 'v1', s.leaves, [' = "hello"'])
-// sync9_add_version(s, 'v2', s.leaves, ['[3:3] = "ABC"'])
-// sync9_add_version(s, 'v3', s.leaves, ['[1:2] = ""'])
-// console.log('blah = ' + JSON.stringify(s, null, '    '))
-
-// debugger
-// var x = sync9_space_dag_rebase(sync9_space_dag_get(s.val.S, 0).S, [[4, 0, 'yo']], x => (x == 'root' || x == 'v1'), x => (x == 'root' || x.match(/^v[123]$/)))
-// console.log('x = ' + JSON.stringify(x, null, '    '))
 
 function create_random_edit(s) {
     var letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -60,9 +55,6 @@ function create_random_edit(s) {
     var vid = sync9_guid()
     var changes = [`[${start}:${start + del}] = ` + JSON.stringify(ins)]
     
-    // console.log('vid = ' + vid)
-    // console.log('    = ' + changes[0])
-    
     return {
         vid : vid,
         parents : Object.assign({}, s.leaves),
@@ -70,74 +62,131 @@ function create_random_edit(s) {
     }
 }
 
-function randomly_edit(s) {
-    for (var i = 0; i < 10; i++) {
-        var v = create_random_edit(s)
-        sync9_add_version(s, v.vid, v.parents, v.changes)
+
+
+
+function sync9_create_client(on_join, on_welcome_ack, on_add_version, on_acki) {
+    var c = {}
+    c.uid = sync9_guid()
+    c.unackied = []
+    
+    c.on_connect = () => {
+        on_join(c.uid)
     }
+    c.on_welcome = (s9_json, ackiied) => {
+        c.s9 = JSON.parse(s9_json)
+        on_welcome_ack(c.uid)
+        c.unackied.forEach(x => {
+            x.changes = sync9_rebase(c.s9, x.vid, x.parents, x.changes, c.s9.leaves)
+            x.parents = Object.assign({}, c.s9.leaves)
+            sync9_add_version(c.s9, x.vid, c.s9.leaves, x.changes)
+            on_add_version(c.uid, x.vid, x.parents, x.changes)
+        })
+        sync9_prune(c.s9, (a, b) => ackiied[b])
+    }
+    c.on_disconnect = () => {
+    }
+    c.on_local_add_version = (vid, parents, changes) => {
+        sync9_add_version(c.s9, vid, parents, changes)
+        on_add_version(c.uid, vid, parents, changes)
+    }
+    c.on_add_version = (vid, parents, changes) => {
+        sync9_add_version(c.s9, vid, parents, changes)
+        on_acki(c.uid, vid)
+    }
+    c.on_acki = (vid) => {
+        c.unackied = c.unackied.filter(x => x.vid != vid)
+    }
+    c.on_ackii = (vid) => {
+        sync9_prune(c.s9, (a, b) => b == vid)
+    }
+    return c
 }
 
-function get_is_anc_func(s, parents) {
-    var ancs = {}
-    function mark_ancs(key) {
-        if (!ancs[key]) {
-            ancs[key] = true
-            Object.keys(s.T[key]).forEach(k => mark_ancs(k))
+function sync9_create_server(on_welcome, on_add_version, on_acki, on_ackii) {
+    var s = {}
+    
+    s.s9 = sync9_create()
+    
+    sync9_add_version(s.s9, 'v1', { root : true }, [' = "hello"'])
+    sync9_prune(s.s9, (a, b) => true)
+    
+    s.peers = {}
+    s.unackied = {}
+    s.saved = {}
+    
+    function prune() {
+        sync9_prune(s.s9, (a, b) => !s.saved[a] && !s.saved[b] && !s.unackied[a] && !s.unackied[b])
+    }
+    
+    s.on_join = (uid) => {
+        s.peers[uid] = true
+        var ackiied = {}
+        Object.keys(s.saved).forEach(x => ackiied[x] = true)
+        on_welcome(uid, JSON.stringify(s.s9), ackiied)
+    }
+    s.on_welcome_ack = (uid) => {
+        Object.entries(s.saved).forEach(x => {
+            delete x[1][uid]
+            if (Object.keys(x[1]).length == 0)
+                delete s.saved[x[0]]
+        })
+        prune()
+    }
+    s.on_disconnect = (uid) => {
+        Object.keys(s.unackied).forEach(x => {
+            if (!s.saved[x]) s.saved[x] = {}
+            s.saved[x][uid] = true
+            s.on_acki(uid, x)
+        })
+        delete s.peers[uid]
+    }
+    s.on_add_version = (uid, vid, parents, changes) => {
+        sync9_add_version(s.s9, vid, parents, changes)
+        on_acki(uid, vid)
+        s.unackied[vid] = {}
+        Object.keys(s.peers).forEach(x => {
+            s.unackied[vid][x] = true
+            if (x != uid) {
+                on_add_version(x, vid, parents, changes)
+            }
+        })
+        s.on_acki(uid, vid)
+    }
+    s.on_acki = (uid, vid) => {
+        delete s.unackied[vid][uid]
+        if (Object.keys(s.unackied[vid]).length == 0) {
+            delete s.unackied[vid]
+            Object.keys(s.peers).forEach(x => on_ackii(x, vid))
         }
+        prune()
     }
-    Object.keys(parents).forEach(k => mark_ancs(k))
-    return _vid => ancs[_vid]
-}
-
-
-for (var t = 0; t < 200; t++) {
-    console.log('t = ' + t)
-    Math.randomSeed(t + 3000)
-    
-    var s = sync9_create()
-    sync9_add_version(s, 'v1', s.leaves, [' = "hello"'])
-    
-    randomly_edit(s)
-    var test_v = create_random_edit(s)
-    randomly_edit(s)
-    var new_leaves = s.leaves
-    
-    var p = sync9_parse_change(test_v.changes[0])
-    var spl = [[p.range[0], p.range[1] - p.range[0], p.val]]
-    
-    // console.log(spl)
-    
-    var test_v2 = sync9_space_dag_rebase(sync9_space_dag_get(s.val.S, 0).S, test_v.vid, spl, get_is_anc_func(s, test_v.parents), get_is_anc_func(s, s.leaves))
-    
-    // console.log(test_v2)
-    test_v2 = test_v2.map(x => `[${x[0]}:${x[0] + x[1]}] = ` + JSON.stringify(x[2]))
-    
-    var clone1 = JSON.parse(JSON.stringify(s))
-    var clone2 = JSON.parse(JSON.stringify(s))
-    
-    sync9_add_version(clone1, test_v.vid, test_v.parents, test_v.changes)
-    
-    sync9_add_version(clone2, test_v.vid, clone2.leaves, test_v2)
-    
-    console.log('-=-=-=-=-=-=-=-=-')
-    console.log(sync9_read(clone1))
-    console.log('-=-=-=-=-=-=-=-=-')
-    console.log(sync9_read(clone2))
-    console.log('-=-=-=-=-=-=-=-=-')
-    var b = sync9_read(clone1) == sync9_read(clone2)
-    console.log(b)
-    if (!b) throw 'wtf?'
+    return s
 }
 
 
 
 
-
-
-
-
-function sync9_rebase(x, changes, parents, new_parents) {
+function sync9_rebase(x, vid, parents, changes, new_parents) {
+    // work here
+    function get_is_anc_func(s, parents) {
+        var ancs = {}
+        function mark_ancs(key) {
+            if (!ancs[key]) {
+                ancs[key] = true
+                Object.keys(s.T[key]).forEach(k => mark_ancs(k))
+            }
+        }
+        Object.keys(parents).forEach(k => mark_ancs(k))
+        return _vid => ancs[_vid]
+    }
     
+    return sync9_space_dag_rebase(sync9_space_dag_get(x.val.S, 0).S, vid, changes.map(x => {
+        var p = sync9_parse_change(x)
+        return [p.range[0], p.range[1] - p.range[0], p.val]
+    }), get_is_anc_func(x, parents), get_is_anc_func(x, new_parents)).map(x => {
+        return `[${x[0]}:${x[0] + x[1]}] = ${JSON.stringify(x[2])}`
+    })
 }
 
 function sync9_space_dag_rebase(S, vid, splices, is_anc, is_new_anc) {
