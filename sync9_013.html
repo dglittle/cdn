@@ -71,7 +71,7 @@ for (var i = 0; i < n_clients; i++) {
             c.outgoing.push(() => {
                 
             if (vid == 'Zqm9aXwFGgIhoBx') {
-                console.log('Zqm9aXwFGgIhoBx -> ACK I server')
+                console.log('Zqm9aXwFGgIhoBx -> ACK I server from ' + c.uid)
             }
             
                 server.on_acki(uid, vid)
@@ -80,7 +80,7 @@ for (var i = 0; i < n_clients; i++) {
             c.outgoing.push(() => {
                 
             if (vid == 'Zqm9aXwFGgIhoBx') {
-                console.log('Zqm9aXwFGgIhoBx -> ACK I ACK server')
+                console.log('Zqm9aXwFGgIhoBx -> ACK I ACK server from ' + c.uid)
             }
             
                 server.on_ackiack(uid, vid)
