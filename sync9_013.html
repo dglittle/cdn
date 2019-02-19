@@ -127,6 +127,13 @@ for (var t = 0; t < 10000; t++) {
             c.on_local_add_version(edit.vid, edit.parents, edit.changes)
         } else {
             if (c.state == 'disconnected') {
+        
+
+                if (c.uid == 'WF54L4AtNSrNhJ8') {
+                    console.log('WF54L4AtNSrNhJ8 connING')
+                }
+        
+        
                 c.state = 'connecting'
                 c.on_connect()
             } else if (c.state == 'connecting') {
