@@ -36,12 +36,12 @@ var server = sync9_create_server((uid, s9_json, ackiied) => {
         clients[uid].on_acki(vid)
     })
 }, (uid, vid) => {
+    clients[uid].incoming.push(() => {
         
         if (vid == 'Zqm9aXwFGgIhoBx') {
             console.log('Zqm9aXwFGgIhoBx -> ACK II ' + uid)
         }
         
-    clients[uid].incoming.push(() => {
         clients[uid].on_ackii(vid)
     })
 })
