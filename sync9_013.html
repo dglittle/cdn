@@ -146,6 +146,9 @@ function sync9_create_client(on_join, on_welcome_ack, on_add_version, on_acki) {
         on_welcome_ack(c.uid)
         c.unackied.forEach(x => {
             console.log('ABOUT TO REBASE')
+            
+            throw 'hello'
+            
             x.changes = sync9_rebase(c.s9, x.vid, x.parents, x.changes, c.s9.leaves)
             x.parents = Object.assign({}, c.s9.leaves)
             sync9_add_version(c.s9, x.vid, c.s9.leaves, x.changes)
