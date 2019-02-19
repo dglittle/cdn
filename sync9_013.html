@@ -20,18 +20,40 @@ var server = sync9_create_server((uid, s9_json, ackiied) => {
 var n_clients = 4
 var clients = {}
 for (var i = 0; i < n_clients; i++) {
-    var c = sync9_create_client((uid) => {
-        server.on_join(uid)
-    }, (uid) => {
-        server.on_welcome_ack(uid)
-    }, (uid, vid, parents, changes) => {
-        server.on_add_version(uid, vid, parents, changes)
-    }, (uid, vid) => {
-        server.on_acki(uid, vid)
-    })
-    clients[c.uid] = c
-    c.on_connect()
+    ;(() => {
+        var c = sync9_create_client((uid) => {
+            c.outgoing.push(() => {
+                server.on_join(uid)
+            })
+        }, (uid) => {
+            c.outgoing.push(() => {
+                server.on_welcome_ack(uid)
+            })
+        }, (uid, vid, parents, changes) => {
+            c.outgoing.push(() => {
+                server.on_add_version(uid, vid, parents, changes)
+            })
+        }, (uid, vid) => {
+            c.outgoing.push(() => {
+                server.on_acki(uid, vid)
+            })
+        })
+        c.incoming = []
+        c.outgoing = []
+        clients[c.uid] = c
+        c.on_connect()
+    })()
 }
+
+for (var t = 0; t < 100; t++) {
+    if (Math.random() < 0.1) {
+        var c = Object.values(clients)
+        
+        var edit = create_random_edit(x.s9)
+        
+    }
+}
+
 
 Object.values(clients).forEach((x, i) => {
     if (i == 0) {
