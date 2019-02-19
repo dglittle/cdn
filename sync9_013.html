@@ -43,6 +43,12 @@ for (var i = 0; i < n_clients; i++) {
         var c = sync9_create_client((uid) => {
             c.outgoing.push(() => {
                 server.on_join(uid)
+                
+                // work here
+                if (c.uid == 'lqd9LdWaHtVXrFC') {
+                    console.log('SERVER SEES OUR GUY!')
+                }
+                
             })
         }, (uid) => {
             c.outgoing.push(() => {
