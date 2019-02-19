@@ -26,6 +26,13 @@ var server = sync9_create_server((uid, s9_json, ackiied) => {
     })
 }, (uid, vid, parents, changes) => {
     clients[uid].incoming.push(() => {
+        
+        
+        if (uid == '8VjjyS7LuQVRnt7' && vid == '1jNkfbYNVLB4urA') {
+            console.log('OUR GUY GOT GEN !?')
+        }
+        
+        
         clients[uid].on_add_version(vid, parents, changes)
     })
 }, (uid, vid) => {
