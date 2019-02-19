@@ -63,6 +63,11 @@ for (var i = 0; i < n_clients; i++) {
             })
         }, (uid, vid, parents, changes) => {
             c.outgoing.push(() => {
+                
+                if (vid == '1jNkfbYNVLB4urA') {
+                    console.log('SERVER GOT GEN GEN')
+                }
+                
                 server.on_add_version(uid, vid, parents, changes)
             })
         }, (uid, vid) => {
