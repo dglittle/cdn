@@ -59,11 +59,6 @@ for (var i = 0; i < n_clients; i++) {
 
 var how_long_add_new = 1000
 for (var t = 0; t < 10000; t++) {
-    
-    if (t == 502) {
-        debugger
-    }
-    
     console.log('t = ' + t)
     var i = Math.floor(Math.random() * n_clients)
     var c = Object.values(clients)[i]
@@ -77,7 +72,6 @@ for (var t = 0; t < 10000; t++) {
                 var edit = create_random_edit(c.s9)
                 c.on_local_add_version(edit.vid, edit.parents, edit.changes)
             } else {
-                console.log('ABOUT TO disconnected')
                 c.state = 'disconnected'
                 c.state_note = 'had been connected'
                 c.incoming = []
