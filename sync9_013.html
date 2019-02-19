@@ -55,10 +55,11 @@ for (var i = 0; i < n_clients; i++) {
     })()
 }
 
-for (var t = 0; t < 100; t++) {
+var how_long_add_new = 100
+for (var t = 0; ; t++) {
     var i = Math.floor(Math.random() * n_clients)
     var c = Object.values(clients)[i]
-    if (Math.random() < 0.1) {
+    if (t < how_long_add_new && Math.random() < 0.1) {
         if (c.state == 'disconnected') {
             c.state = 'connecting'
             c.on_connect()
@@ -74,6 +75,11 @@ for (var t = 0; t < 100; t++) {
         } else {
             if (c.outgoing.length > 0)
                 c.outgoing.shift()()
+        }
+    }
+    if (t >= how_long_add_new) {
+        if (Object.values(clients).every(x => x.incoming.length == 0 && x.outgoing.length == 0)) {
+            break
         }
     }
 }
