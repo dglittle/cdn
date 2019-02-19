@@ -289,10 +289,11 @@ function sync9_create_server(on_welcome, on_add_version, on_acki, on_ackii) {
         prune()
     }
     s.on_disconnect = (uid) => {
-        Object.keys(s.unackied).forEach(x => {
-            if (!s.saved[x]) s.saved[x] = {}
-            s.saved[x][uid] = true
-            s.on_acki(uid, x)
+        Object.entries(s.unackied).forEach(x => {
+            if (!x[1][uid]) return
+            if (!s.saved[x[0]]) s.saved[x[0]] = {}
+            s.saved[x[0]][uid] = true
+            s.on_acki(uid, x[0])
         })
         delete s.peers[uid]
     }
