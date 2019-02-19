@@ -63,7 +63,10 @@ for (var t = 0; t < 10000; t++) {
     if (t == 814) {
         var k = server
         var S = sync9_space_dag_get(k.s9.val.S, 0)
-        debugger
+        
+        console.log(JSON.stringify(S, null, '    '))
+        
+        //debugger
     }
     
     console.log('t = ' + t)
@@ -99,7 +102,10 @@ for (var t = 0; t < 10000; t++) {
         sync9_trav_space_dag(sync9_space_dag_get(c.s9.val.S, 0).S, () => true, (node, offset, has_nexts, prev, vid) => {
             if (node.gash && node.elems && (Object.keys(node.deleted_by).length == 0)) {
                 var S = sync9_space_dag_get(c.s9.val.S, 0).S
-                debugger
+        
+                console.log(JSON.stringify(S, null, '    '))
+        
+                // debugger
                 throw 'stop the pressees!'
             }
         })
