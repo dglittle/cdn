@@ -280,7 +280,7 @@ function sync9_create_server(on_welcome, on_add_version, on_acki, on_ackii) {
     s.on_join = (uid) => {
         s.peers[uid] = true
         var ackiied = {}
-        Object.keys(s.saved).forEach(x => {
+        Object.keys(s.s9.T).forEach(x => {
             if (!s.unackied[x])
                 ackiied[x] = true
         })
