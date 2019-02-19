@@ -11,19 +11,19 @@ var n_clients = 4
 var clients = {}
 
 var server = sync9_create_server((uid, s9_json, ackiied) => {
-    clients.incoming.push(() => {
+    clients[uid].incoming.push(() => {
         clients[uid].on_welcome(s9_json, ackiied)
     })
 }, (uid, vid, parents, changes) => {
-    clients.incoming.push(() => {
+    clients[uid].incoming.push(() => {
         clients[uid].on_add_version(vid, parents, changes)
     })
 }, (uid, vid) => {
-    clients.incoming.push(() => {
+    clients[uid].incoming.push(() => {
         clients[uid].on_acki(vid)
     })
 }, (uid, vid) => {
-    clients.incoming.push(() => {
+    clients[uid].incoming.push(() => {
         clients[uid].on_ackii(vid)
     })
 })
