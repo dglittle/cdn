@@ -13,6 +13,7 @@ var clients = {}
 var server = sync9_create_server((uid, s9_json, ackiied) => {
     clients[uid].incoming.push(() => {
         clients[uid].on_welcome(s9_json, ackiied)
+        clients[uid].state = 'connected'
     })
 }, (uid, vid, parents, changes) => {
     clients[uid].incoming.push(() => {
@@ -47,10 +48,10 @@ for (var i = 0; i < n_clients; i++) {
                 server.on_acki(uid, vid)
             })
         })
+        c.state = 'disconnected'
         c.incoming = []
         c.outgoing = []
         clients[c.uid] = c
-        c.on_connect()
     })()
 }
 
@@ -58,8 +59,14 @@ for (var t = 0; t < 100; t++) {
     var i = Math.floor(Math.random() * n_clients)
     var c = Object.values(clients)[i]
     if (Math.random() < 0.1) {
-        var edit = create_random_edit(c.s9)
-        c.on_local_add_version(edit.vid, edit.parents, edit.changes)
+        if (c.state == 'disconnected') {
+            c.state = 'connecting'
+            c.on_connect()
+        } else if (c.state == 'connecting') {
+        } else if (c.state == 'connected') {
+            var edit = create_random_edit(c.s9)
+            c.on_local_add_version(edit.vid, edit.parents, edit.changes)
+        }
     } else {
         if (Math.random() < 0.5) {
             if (c.incoming.length > 0)
