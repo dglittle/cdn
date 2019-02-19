@@ -21,6 +21,9 @@ var server = sync9_create_server((uid, s9_json, ackiied) => {
         if (uid == "8VjjyS7LuQVRnt7") {
             console.log('OUR GUY CONNECTED!!!')
         }
+        if (uid == "WF54L4AtNSrNhJ8") {
+            console.log('B GUY CONNECTED!!!')
+        }
                 
         
     })
@@ -63,6 +66,10 @@ for (var i = 0; i < n_clients; i++) {
                 if (c.uid == '8VjjyS7LuQVRnt7') {
                     console.log('SERVER SEES OUR GUY!')
                 }
+                if (c.uid == 'WF54L4AtNSrNhJ8') {
+                    console.log('SERVER SEES B GUY!')
+                }
+                
                 
             })
         }, (uid) => {
@@ -112,6 +119,9 @@ for (var t = 0; t < 10000; t++) {
                 if (c.uid == "8VjjyS7LuQVRnt7") {
                     console.log('OUR GUY CONNECTING')
                 }
+                if (c.uid == 'WF54L4AtNSrNhJ8') {
+                    console.log('B GUY CONNECTING')
+                }
                 
                 c.state = 'connecting'
                 c.on_connect()
@@ -121,6 +131,9 @@ for (var t = 0; t < 10000; t++) {
                 // work here
                 if (c.uid == "8VjjyS7LuQVRnt7") {
                     console.log('OUR GUY DISCONNECTING')
+                }
+                if (c.uid == 'WF54L4AtNSrNhJ8') {
+                    console.log('B GUY DISCONNECTING')
                 }
                 
                 c.state = 'disconnected'
