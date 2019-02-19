@@ -115,7 +115,7 @@ for (var t = 0; t < 10000; t++) {
 
 var check_val = null
 var check_good = true
-[server].concat(Object.values(clients)).forEach((x, i) => {
+;[server].concat(Object.values(clients)).forEach((x, i) => {
     console.log(x)
     var val = sync9_read(x.s9)
     console.log(val)
