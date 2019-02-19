@@ -73,10 +73,22 @@ for (var t = 0; t < 10000; t++) {
             c.on_local_add_version(edit.vid, edit.parents, edit.changes)
         } else {
             if (c.state == 'disconnected') {
+                
+                // work here
+                if (c.uid == "lqd9LdWaHtVXrFC") {
+                    console.log('OUR GUY CONNECTING')
+                }
+                
                 c.state = 'connecting'
                 c.on_connect()
             } else if (c.state == 'connecting') {
             } else if (c.state == 'connected') {
+                
+                // work here
+                if (c.uid == "lqd9LdWaHtVXrFC") {
+                    console.log('OUR GUY DISCONNECTING')
+                }
+                
                 c.state = 'disconnected'
                 c.state_note = 'had been connected'
                 c.incoming = []
@@ -128,6 +140,7 @@ function create_random_edit(s) {
     var vid = sync9_guid()
     var changes = [`[${start}:${start + del}] = ` + JSON.stringify(ins)]
     
+    // work here
     if (vid == '1jNkfbYNVLB4urA') {
         console.log('GEN   GEN   GEN!')
     }
