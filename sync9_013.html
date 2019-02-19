@@ -158,7 +158,16 @@ function sync9_create_client(on_join, on_welcome_ack, on_add_version, on_acki, o
         on_welcome_ack(c.uid, Object.assign({}, c.s9.leaves))
         c.unackied = c.unackied.filter(x => !c.s9.T[x.vid])
         c.unackied.forEach(x => {
+            try {
             x.changes = sync9_rebase(c.s9, x.vid, x.parents, x.changes, c.s9.leaves)
+            } catch (e) {
+                
+                var yo1 = s9_json
+                var yo2 = ackiied
+                
+                debugger
+                throw 'bad'
+            }
             x.parents = Object.assign({}, c.s9.leaves)
             sync9_add_version(c.s9, x.vid, c.s9.leaves, x.changes)
             on_add_version(c.uid, x.vid, x.parents, x.changes)
