@@ -59,6 +59,11 @@ for (var i = 0; i < n_clients; i++) {
 
 var how_long_add_new = 1000
 for (var t = 0; t < 10000; t++) {
+    
+    if (t == 502) {
+        debugger
+    }
+    
     console.log('t = ' + t)
     var i = Math.floor(Math.random() * n_clients)
     var c = Object.values(clients)[i]
@@ -192,7 +197,10 @@ function sync9_create_server(on_welcome, on_add_version, on_acki, on_ackii) {
     s.on_join = (uid) => {
         s.peers[uid] = true
         var ackiied = {}
-        Object.keys(s.saved).forEach(x => ackiied[x] = true)
+        Object.keys(s.saved).forEach(x => {
+            if (!s.unackied[x])
+                ackiied[x] = true
+        })
         on_welcome(uid, JSON.stringify(s.s9), ackiied)
     }
     s.on_welcome_ack = (uid) => {
