@@ -19,13 +19,28 @@ var server = sync9_create_server((uid, s9_json, ackiied) => {
     })
 }, (uid, vid, parents, changes) => {
     clients[uid].incoming.push(() => {
+        
+        if (vid == 'Zqm9aXwFGgIhoBx') {
+            console.log('Zqm9aXwFGgIhoBx -> ' + uid)
+        }
+        
         clients[uid].on_add_version(vid, parents, changes)
     })
 }, (uid, vid) => {
     clients[uid].incoming.push(() => {
+        
+        if (vid == 'Zqm9aXwFGgIhoBx') {
+            console.log('Zqm9aXwFGgIhoBx -> ACK I ' + uid)
+        }
+        
         clients[uid].on_acki(vid)
     })
 }, (uid, vid) => {
+        
+        if (vid == 'Zqm9aXwFGgIhoBx') {
+            console.log('Zqm9aXwFGgIhoBx -> ACK II ' + uid)
+        }
+        
     clients[uid].incoming.push(() => {
         clients[uid].on_ackii(vid)
     })
@@ -44,15 +59,30 @@ for (var i = 0; i < n_clients; i++) {
         }, (uid, vid, parents, changes) => {
             if (c.state == 'connected') {
                 c.outgoing.push(() => {
+        
+        if (vid == 'Zqm9aXwFGgIhoBx') {
+            console.log('Zqm9aXwFGgIhoBx -> server')
+        }
+        
                     server.on_add_version(uid, vid, parents, changes)
                 })
             }
         }, (uid, vid) => {
             c.outgoing.push(() => {
+                
+            if (vid == 'Zqm9aXwFGgIhoBx') {
+                console.log('Zqm9aXwFGgIhoBx -> ACK I server')
+            }
+            
                 server.on_acki(uid, vid)
             })
         }, (uid, vid) => {
             c.outgoing.push(() => {
+                
+            if (vid == 'Zqm9aXwFGgIhoBx') {
+                console.log('Zqm9aXwFGgIhoBx -> ACK I ACK server')
+            }
+            
                 server.on_ackiack(uid, vid)
             })
         })
