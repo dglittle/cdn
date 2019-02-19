@@ -104,7 +104,7 @@ for (var t = 0; t < 10000; t++) {
     console.log('t = ' + t)
 
     // work here    
-    if (t == 436) {
+    if (t == 536) {
         debugger
     }
     
@@ -190,7 +190,8 @@ function create_random_edit(s) {
     var changes = [`[${start}:${start + del}] = ` + JSON.stringify(ins)]
     
     // work here
-    if (vid == 'tMur6WO19CW7gG3') {
+    if (vid == '1jNkfbYNVLB4urA') {
+        debugger
         console.log('GEN   GEN   GEN!')
     }
     
@@ -215,6 +216,11 @@ function sync9_create_client(on_join, on_welcome_ack, on_add_version, on_acki) {
     c.on_welcome = (s9_json, ackiied) => {
         c.s9 = JSON.parse(s9_json)
         on_welcome_ack(c.uid)
+        
+        if (c.uid == 'lqd9LdWaHtVXrFC') {
+            debugger
+        }
+        
         c.unackied.forEach(x => {
             console.log('ABOUT TO REBASE')
             
