@@ -7,6 +7,8 @@
 
 console.log('-------------------')
 
+Math.randomSeed(126)
+
 var n_clients = 4
 var clients = {}
 
@@ -86,11 +88,18 @@ for (var t = 0; t < 10000; t++) {
 }
 
 
-
+var check_val = null
+var check_good = true
 Object.values(clients).forEach((x, i) => {
     console.log(x)
-    console.log(sync9_read(x.s9))
+    var val = sync9_read(x.s9)
+    console.log(val)
+    if (i == 0)
+        check_val = val
+    else if (val != check_val)
+        check_good = false
 })
+console.log('check_good: ' + check_good)
 
 
 
