@@ -64,6 +64,10 @@ for (var t = 0; t < 10000; t++) {
     var c = Object.values(clients)[i]
     if (t < how_long_add_new && Math.random() < 0.1) {
         if (c.state == 'disconnected') {
+            if (c.state_note) {
+                console.log('BLOOP')
+                throw 'blop'
+            }
             c.state = 'connecting'
             c.on_connect()
         } else if (c.state == 'connecting') {
@@ -74,6 +78,7 @@ for (var t = 0; t < 10000; t++) {
             } else {
                 console.log('ABOUT TO disconnected')
                 c.state = 'disconnected'
+                c.state_note = 'had been connected'
                 c.incoming = []
                 c.outgoing = []
                 server.on_disconnect(c.uid)
