@@ -14,6 +14,11 @@ var clients = {}
 
 var server = sync9_create_server((uid, s9_json, ackiied) => {
     clients[uid].incoming.push(() => {
+
+        if (uid == 'WF54L4AtNSrNhJ8') {
+            console.log('WF54L4AtNSrNhJ8 CONN')
+        }
+        
         clients[uid].state = 'connected'
         clients[uid].on_welcome(s9_json, ackiied)
     })
@@ -107,6 +112,13 @@ for (var t = 0; t < 10000; t++) {
     
     if (t >= how_long_add_new && Object.values(clients).some(x => x.state == 'disconnected')) {
         var c = Object.values(clients).find(x => x.state == 'disconnected')
+        
+
+                if (c.uid == 'WF54L4AtNSrNhJ8') {
+                    console.log('WF54L4AtNSrNhJ8 connING')
+                }
+        
+        
         c.state = 'connecting'
         c.on_connect()
     } else if (t < how_long_add_new && Math.random() < 0.1) {
@@ -119,6 +131,14 @@ for (var t = 0; t < 10000; t++) {
                 c.on_connect()
             } else if (c.state == 'connecting') {
             } else if (c.state == 'connected') {
+                
+
+                if (c.uid == 'WF54L4AtNSrNhJ8') {
+                    console.log('WF54L4AtNSrNhJ8 DISconn')
+                }
+        
+                
+                
                 c.state = 'disconnected'
                 c.state_note = 'had been connected'
                 c.incoming = []
