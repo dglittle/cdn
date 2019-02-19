@@ -64,10 +64,6 @@ for (var t = 0; t < 10000; t++) {
     var c = Object.values(clients)[i]
     if (t < how_long_add_new && Math.random() < 0.1) {
         if (c.state == 'disconnected') {
-            if (c.state_note) {
-                console.log('BLOOP')
-                throw 'blop'
-            }
             c.state = 'connecting'
             c.on_connect()
         } else if (c.state == 'connecting') {
@@ -149,6 +145,17 @@ function sync9_create_client(on_join, on_welcome_ack, on_add_version, on_acki) {
     c.on_welcome = (s9_json, ackiied) => {
         c.s9 = JSON.parse(s9_json)
         on_welcome_ack(c.uid)
+        
+        
+        // work here
+        if (c.state_note) {
+            console.log('BLOOP2')
+            throw 'blop'
+        }
+        
+        
+        
+        
         c.unackied.forEach(x => {
             // console.log('ABOUT TO REBASE')
             // x.changes = sync9_rebase(c.s9, x.vid, x.parents, x.changes, c.s9.leaves)
