@@ -14,8 +14,8 @@ var clients = {}
 
 var server = sync9_create_server((uid, s9_json, ackiied) => {
     clients[uid].incoming.push(() => {
-        clients[uid].on_welcome(s9_json, ackiied)
         clients[uid].state = 'connected'
+        clients[uid].on_welcome(s9_json, ackiied)
                 
         // work here
         if (uid == "8VjjyS7LuQVRnt7") {
