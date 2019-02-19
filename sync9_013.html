@@ -158,8 +158,6 @@ function sync9_create_client(on_join, on_welcome_ack, on_add_version, on_acki, o
         on_welcome_ack(c.uid, Object.assign({}, c.s9.leaves))
         c.unackied = c.unackied.filter(x => !c.s9.T[x.vid])
         c.unackied.forEach(x => {
-            console.log('ABOUT TO REBASE')
-            
             x.changes = sync9_rebase(c.s9, x.vid, x.parents, x.changes, c.s9.leaves)
             x.parents = Object.assign({}, c.s9.leaves)
             sync9_add_version(c.s9, x.vid, c.s9.leaves, x.changes)
@@ -253,21 +251,7 @@ function sync9_create_server(on_welcome, on_add_version, on_acki, on_ackii) {
         s.on_acki(uid, vid)
     }
     s.on_acki = (uid, vid) => {
-        
-        
-        if (vid == 'MhlXJFJ4Y1v9vnC') {
-            debugger
-        }
-
-        // work here        
-        try {
         delete s.unackied[vid][uid]
-        } catch (e) {
-            debugger
-        }
-        
-        
-        
         if (Object.keys(s.unackied[vid]).length == 0) {
             delete s.unackied[vid]
             Object.keys(s.peers).forEach(x => on_ackii(x, vid))
