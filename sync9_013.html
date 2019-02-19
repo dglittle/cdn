@@ -93,6 +93,7 @@ for (var t = 0; t < 10000; t++) {
     
     // work here
     Object.values(clients).forEach(c => {
+        if (!c.s9) return
         sync9_trav_space_dag(sync9_space_dag_get(c.s9.val.S, 0).S, () => true, (node, offset, has_nexts, prev, vid) => {
             if (node.gash && (Object.keys(node.deleted_by).length == 0)) {
                 throw 'stop the pressees!'
