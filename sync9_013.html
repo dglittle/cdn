@@ -77,7 +77,7 @@ for (var i = 0; i < n_clients; i++) {
                 server.on_welcome_ack(uid)
             })
         }, (uid, vid, parents, changes) => {
-            if (c.state == 'connected') {
+            if (c.state != 'disconnected') {
                 c.outgoing.push(() => {
                     
                     if (vid == 'tMur6WO19CW7gG3') {
