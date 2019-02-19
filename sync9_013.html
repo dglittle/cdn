@@ -29,7 +29,7 @@ var server = sync9_create_server((uid, s9_json, ackiied) => {
         
         
         if (uid == '8VjjyS7LuQVRnt7' && vid == '1jNkfbYNVLB4urA') {
-            console.log('OUR GUY GOT GEN !?')
+            console.log('OUR GUY GOT Nk !?')
         }
         
         
@@ -41,6 +41,14 @@ var server = sync9_create_server((uid, s9_json, ackiied) => {
     })
 }, (uid, vid) => {
     clients[uid].incoming.push(() => {
+        
+        
+        if (uid == '8VjjyS7LuQVRnt7' && vid == '1jNkfbYNVLB4urA') {
+            console.log('OUR GUY GOT ACK II Nk !?')
+        }
+        
+        
+        
         clients[uid].on_ackii(vid)
     })
 })
@@ -87,9 +95,9 @@ for (var t = 0; t < 10000; t++) {
     console.log('t = ' + t)
 
     // work here    
-    if (t == 679) {
-        debugger
-    }
+    // if (t == 679) {
+    //     debugger
+    // }
     
     var i = Math.floor(Math.random() * n_clients)
     var c = Object.values(clients)[i]
