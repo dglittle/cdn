@@ -16,26 +16,9 @@ var server = sync9_create_server((uid, s9_json, ackiied) => {
     clients[uid].incoming.push(() => {
         clients[uid].state = 'connected'
         clients[uid].on_welcome(s9_json, ackiied)
-                
-        // work here
-        if (uid == "8VjjyS7LuQVRnt7") {
-            console.log('OUR GUY CONNECTED!!!')
-        }
-        if (uid == "WF54L4AtNSrNhJ8") {
-            console.log('B GUY CONNECTED!!!')
-        }
-                
-        
     })
 }, (uid, vid, parents, changes) => {
     clients[uid].incoming.push(() => {
-        
-        
-        if (uid == '8VjjyS7LuQVRnt7' && vid == '1jNkfbYNVLB4urA') {
-            console.log('OUR GUY GOT Nk !?')
-        }
-        
-        
         clients[uid].on_add_version(vid, parents, changes)
     })
 }, (uid, vid) => {
@@ -44,14 +27,6 @@ var server = sync9_create_server((uid, s9_json, ackiied) => {
     })
 }, (uid, vid) => {
     clients[uid].incoming.push(() => {
-        
-        
-        if (vid == '1jNkfbYNVLB4urA') {
-            console.log('SOME GUY GOT ACK II Nk !?')
-        }
-        
-        
-        
         clients[uid].on_ackii(vid)
     })
 })
@@ -61,16 +36,6 @@ for (var i = 0; i < n_clients; i++) {
         var c = sync9_create_client((uid) => {
             c.outgoing.push(() => {
                 server.on_join(uid)
-                
-                // work here
-                if (c.uid == '8VjjyS7LuQVRnt7') {
-                    console.log('SERVER SEES OUR GUY!')
-                }
-                if (c.uid == 'WF54L4AtNSrNhJ8') {
-                    console.log('SERVER SEES B GUY!')
-                }
-                
-                
             })
         }, (uid, leaves) => {
             c.outgoing.push(() => {
@@ -79,11 +44,6 @@ for (var i = 0; i < n_clients; i++) {
         }, (uid, vid, parents, changes) => {
             if (c.state == 'connected') {
                 c.outgoing.push(() => {
-                    
-                    if (vid == 'tMur6WO19CW7gG3') {
-                        console.log('SERVER GOT GEN GEN')
-                    }
-                    
                     server.on_add_version(uid, vid, parents, changes)
                 })
             }
@@ -120,28 +80,10 @@ for (var t = 0; t < 10000; t++) {
             c.on_local_add_version(edit.vid, edit.parents, edit.changes)
         } else {
             if (c.state == 'disconnected') {
-                
-                // work here
-                if (c.uid == "8VjjyS7LuQVRnt7") {
-                    console.log('OUR GUY CONNECTING')
-                }
-                if (c.uid == 'WF54L4AtNSrNhJ8') {
-                    console.log('B GUY CONNECTING')
-                }
-                
                 c.state = 'connecting'
                 c.on_connect()
             } else if (c.state == 'connecting') {
             } else if (c.state == 'connected') {
-                
-                // work here
-                if (c.uid == "8VjjyS7LuQVRnt7") {
-                    console.log('OUR GUY DISCONNECTING')
-                }
-                if (c.uid == 'WF54L4AtNSrNhJ8') {
-                    console.log('B GUY DISCONNECTING')
-                }
-                
                 c.state = 'disconnected'
                 c.state_note = 'had been connected'
                 c.incoming = []
@@ -193,12 +135,6 @@ function create_random_edit(s) {
     var vid = sync9_guid()
     var changes = [`[${start}:${start + del}] = ` + JSON.stringify(ins)]
     
-    // work here
-    if (vid == '1jNkfbYNVLB4urA') {
-        //debugger
-        console.log('GEN   GEN   GEN!')
-    }
-    
     return {
         vid : vid,
         parents : Object.assign({}, s.leaves),
@@ -220,11 +156,6 @@ function sync9_create_client(on_join, on_welcome_ack, on_add_version, on_acki, o
     c.on_welcome = (s9_json, ackiied) => {
         c.s9 = JSON.parse(s9_json)
         on_welcome_ack(c.uid, Object.assign({}, c.s9.leaves))
-        
-        if (c.uid == 'lqd9LdWaHtVXrFC') {
-            // debugger
-        }
-        
         c.unackied = c.unackied.filter(x => !c.s9.T[x.vid])
         c.unackied.forEach(x => {
             console.log('ABOUT TO REBASE')
