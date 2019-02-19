@@ -18,7 +18,7 @@ var server = sync9_create_server((uid, s9_json, ackiied) => {
         clients[uid].state = 'connected'
                 
         // work here
-        if (uid == "lqd9LdWaHtVXrFC") {
+        if (uid == "8VjjyS7LuQVRnt7") {
             console.log('OUR GUY CONNECTED!!!')
         }
                 
@@ -26,13 +26,6 @@ var server = sync9_create_server((uid, s9_json, ackiied) => {
     })
 }, (uid, vid, parents, changes) => {
     clients[uid].incoming.push(() => {
-        
-        
-        if (uid == 'lqd9LdWaHtVXrFC' && vid == '1jNkfbYNVLB4urA') {
-            console.log('OUR GUY RECEIVING THE ONE!?')
-        }
-        
-        
         clients[uid].on_add_version(vid, parents, changes)
     })
 }, (uid, vid) => {
@@ -52,7 +45,7 @@ for (var i = 0; i < n_clients; i++) {
                 server.on_join(uid)
                 
                 // work here
-                if (c.uid == 'lqd9LdWaHtVXrFC') {
+                if (c.uid == '8VjjyS7LuQVRnt7') {
                     console.log('SERVER SEES OUR GUY!')
                 }
                 
@@ -64,7 +57,7 @@ for (var i = 0; i < n_clients; i++) {
         }, (uid, vid, parents, changes) => {
             c.outgoing.push(() => {
                 
-                if (vid == '1jNkfbYNVLB4urA') {
+                if (vid == 'tMur6WO19CW7gG3') {
                     console.log('SERVER GOT GEN GEN')
                 }
                 
@@ -101,7 +94,7 @@ for (var t = 0; t < 10000; t++) {
             if (c.state == 'disconnected') {
                 
                 // work here
-                if (c.uid == "lqd9LdWaHtVXrFC") {
+                if (c.uid == "8VjjyS7LuQVRnt7") {
                     console.log('OUR GUY CONNECTING')
                 }
                 
@@ -111,7 +104,7 @@ for (var t = 0; t < 10000; t++) {
             } else if (c.state == 'connected') {
                 
                 // work here
-                if (c.uid == "lqd9LdWaHtVXrFC") {
+                if (c.uid == "8VjjyS7LuQVRnt7") {
                     console.log('OUR GUY DISCONNECTING')
                 }
                 
@@ -167,12 +160,8 @@ function create_random_edit(s) {
     var changes = [`[${start}:${start + del}] = ` + JSON.stringify(ins)]
     
     // work here
-    if (vid == '1jNkfbYNVLB4urA') {
+    if (vid == 'tMur6WO19CW7gG3') {
         console.log('GEN   GEN   GEN!')
-    }
-    
-    if (vid == 'jnZHms4uv0Q74cS') {
-        console.log('OTHER GEN GEN GEN')
     }
     
     return {
