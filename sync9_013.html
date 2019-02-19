@@ -77,14 +77,16 @@ for (var i = 0; i < n_clients; i++) {
                 server.on_welcome_ack(uid)
             })
         }, (uid, vid, parents, changes) => {
-            c.outgoing.push(() => {
-                
-                if (vid == 'tMur6WO19CW7gG3') {
-                    console.log('SERVER GOT GEN GEN')
-                }
-                
-                server.on_add_version(uid, vid, parents, changes)
-            })
+            if (c.state == 'connected') {
+                c.outgoing.push(() => {
+                    
+                    if (vid == 'tMur6WO19CW7gG3') {
+                        console.log('SERVER GOT GEN GEN')
+                    }
+                    
+                    server.on_add_version(uid, vid, parents, changes)
+                })
+            }
         }, (uid, vid) => {
             c.outgoing.push(() => {
                 server.on_acki(uid, vid)
