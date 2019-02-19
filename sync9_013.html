@@ -309,7 +309,17 @@ function sync9_create_server(on_welcome, on_add_version, on_acki, on_ackii) {
         s.on_acki(uid, vid)
     }
     s.on_acki = (uid, vid) => {
+        
+
+        // work here        
+        try {
         delete s.unackied[vid][uid]
+        } catch (e) {
+            debugger
+        }
+        
+        
+        
         if (Object.keys(s.unackied[vid]).length == 0) {
             delete s.unackied[vid]
             Object.keys(s.peers).forEach(x => on_ackii(x, vid))
