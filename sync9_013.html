@@ -72,9 +72,9 @@ for (var i = 0; i < n_clients; i++) {
                 
                 
             })
-        }, (uid) => {
+        }, (uid, leaves) => {
             c.outgoing.push(() => {
-                server.on_welcome_ack(uid)
+                server.on_welcome_ack(uid, leaves)
             })
         }, (uid, vid, parents, changes) => {
             if (c.state == 'connected') {
@@ -90,6 +90,10 @@ for (var i = 0; i < n_clients; i++) {
         }, (uid, vid) => {
             c.outgoing.push(() => {
                 server.on_acki(uid, vid)
+            })
+        }, (uid, vid) => {
+            c.outgoing.push(() => {
+                server.on_ackiack(uid, vid)
             })
         })
         c.state = 'disconnected'
@@ -205,7 +209,7 @@ function create_random_edit(s) {
 
 
 
-function sync9_create_client(on_join, on_welcome_ack, on_add_version, on_acki) {
+function sync9_create_client(on_join, on_welcome_ack, on_add_version, on_acki, on_ackiack) {
     var c = {}
     c.uid = sync9_guid()
     c.unackied = []
@@ -215,7 +219,7 @@ function sync9_create_client(on_join, on_welcome_ack, on_add_version, on_acki) {
     }
     c.on_welcome = (s9_json, ackiied) => {
         c.s9 = JSON.parse(s9_json)
-        on_welcome_ack(c.uid)
+        on_welcome_ack(c.uid, Object.assign({}, c.s9.leaves))
         
         if (c.uid == 'lqd9LdWaHtVXrFC') {
             // debugger
@@ -248,6 +252,7 @@ function sync9_create_client(on_join, on_welcome_ack, on_add_version, on_acki) {
     }
     c.on_acki = (vid) => {
         c.unackied = c.unackied.filter(x => x.vid != vid)
+        on_ackiack(c.uid, vid)
     }
     c.on_ackii = (vid) => {
         sync9_prune(c.s9, (a, b) => b == vid)
@@ -265,10 +270,11 @@ function sync9_create_server(on_welcome, on_add_version, on_acki, on_ackii) {
     
     s.peers = {}
     s.unackied = {}
+    s.unackiacked = {}
     s.saved = {}
     
     function prune() {
-        sync9_prune(s.s9, (a, b) => !s.saved[a] && !s.saved[b] && !s.unackied[a] && !s.unackied[b])
+        sync9_prune(s.s9, (a, b) => !s.saved[a] && !s.saved[b] && !s.unackied[a] && !s.unackied[b] && !s.unackiacked[a] && !s.unackiacked[b])
     }
     
     s.on_join = (uid) => {
@@ -280,7 +286,11 @@ function sync9_create_server(on_welcome, on_add_version, on_acki, on_ackii) {
         })
         on_welcome(uid, JSON.stringify(s.s9), ackiied)
     }
-    s.on_welcome_ack = (uid) => {
+    s.on_welcome_ack = (uid, leaves) => {
+        Object.keys(sync9_get_ancestors(s.s9, leaves)).forEach(x => {
+            if (s.unackiacked[x] == uid)
+                delete s.unackiacked[x]
+        })
         Object.entries(s.saved).forEach(x => {
             delete x[1][uid]
             if (Object.keys(x[1]).length == 0)
@@ -299,6 +309,7 @@ function sync9_create_server(on_welcome, on_add_version, on_acki, on_ackii) {
     }
     s.on_add_version = (uid, vid, parents, changes) => {
         sync9_add_version(s.s9, vid, parents, changes)
+        s.unackiacked[vid] = uid
         on_acki(uid, vid)
         s.unackied[vid] = {}
         Object.keys(s.peers).forEach(x => {
@@ -331,23 +342,18 @@ function sync9_create_server(on_welcome, on_add_version, on_acki, on_ackii) {
         }
         prune()
     }
+    s.on_ackiack = (uid, vid) => {
+        if (s.unackiacked[vid] != uid) throw 'mismatch'
+        delete s.unackiacked[vid]
+        prune()
+    }
     return s
 }
-
-
-
 
 function sync9_rebase(x, vid, parents, changes, new_parents) {
     // work here
     function get_is_anc_func(s, parents) {
-        var ancs = {}
-        function mark_ancs(key) {
-            if (!ancs[key]) {
-                ancs[key] = true
-                Object.keys(s.T[key]).forEach(k => mark_ancs(k))
-            }
-        }
-        Object.keys(parents).forEach(k => mark_ancs(k))
+        var ancs = sync9_get_ancestors(s, parents)
         return _vid => ancs[_vid]
     }
     
@@ -488,14 +494,7 @@ function sync9_add_version(x, vid, parents, changes) {
     if (parents == x.leaves) {
         is_anc = (_vid) => _vid != vid
     } else {
-        var ancs = {}
-        function mark_ancs(key) {
-            if (!ancs[key]) {
-                ancs[key] = true
-                Object.keys(x.T[key]).forEach(k => mark_ancs(k))
-            }
-        }
-        Object.keys(parents).forEach(k => mark_ancs(k))
+        var ancs = sync9_get_ancestors(x, parents)
         is_anc = _vid => ancs[_vid]
     }
     
@@ -738,6 +737,18 @@ function sync9_trav_space_dag(S, f, cb, view_deleted, tail_cb) {
     } catch (e) {
         if (e != exit_early) throw e
     }
+}
+
+function sync9_get_ancestors(x, vids) {
+    var ancs = {}
+    function mark_ancs(key) {
+        if (!ancs[key]) {
+            ancs[key] = true
+            Object.keys(x.T[key]).forEach(k => mark_ancs(k))
+        }
+    }
+    Object.keys(vids).forEach(k => mark_ancs(k))
+    return ancs
 }
 
 function sync9_parse_change(change) {
