@@ -7,18 +7,27 @@
 
 console.log('-------------------')
 
-var server = sync9_create_server((uid, s9_json, ackiied) => {
-    clients[uid].on_welcome(s9_json, ackiied)
-}, (uid, vid, parents, changes) => {
-    clients[uid].on_add_version(vid, parents, changes)
-}, (uid, vid) => {
-    clients[uid].on_acki(vid)
-}, (uid, vid) => {
-    clients[uid].on_ackii(vid)
-})
-
 var n_clients = 4
 var clients = {}
+
+var server = sync9_create_server((uid, s9_json, ackiied) => {
+    clients.incoming.push(() => {
+        clients[uid].on_welcome(s9_json, ackiied)
+    })
+}, (uid, vid, parents, changes) => {
+    clients.incoming.push(() => {
+        clients[uid].on_add_version(vid, parents, changes)
+    })
+}, (uid, vid) => {
+    clients.incoming.push(() => {
+        clients[uid].on_acki(vid)
+    })
+}, (uid, vid) => {
+    clients.incoming.push(() => {
+        clients[uid].on_ackii(vid)
+    })
+})
+
 for (var i = 0; i < n_clients; i++) {
     ;(() => {
         var c = sync9_create_client((uid) => {
@@ -46,25 +55,30 @@ for (var i = 0; i < n_clients; i++) {
 }
 
 for (var t = 0; t < 100; t++) {
+    var i = Math.floor(Math.random() * n_clients)
+    var c = Object.values(clients)[i]
     if (Math.random() < 0.1) {
-        var c = Object.values(clients)
-        
-        var edit = create_random_edit(x.s9)
-        
+        var edit = create_random_edit(c.s9)
+        c.on_local_add_version(edit.vid, edit.parents, edit.changes)
+    } else {
+        if (Math.random() < 0.5) {
+            if (c.incoming.length > 0)
+                c.incoming.shift()()
+        } else {
+            if (c.outgoing.length > 0)
+                c.outgoing.shift()()
+        }
     }
 }
 
 
-Object.values(clients).forEach((x, i) => {
-    if (i == 0) {
-        var edit = create_random_edit(x.s9)
-        x.on_local_add_version(edit.vid, edit.parents, edit.changes)
-    }
-})
 
 Object.values(clients).forEach((x, i) => {
     console.log(x)
 })
+
+
+
 
 
 function create_random_edit(s) {
