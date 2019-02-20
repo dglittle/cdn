@@ -159,35 +159,48 @@ function sync9_create_client(on_connect, on_add_version, on_ack) {
     c.uid = sync9_guid()
     c.server_v = 0
     c.client_v = 0
+    c.unacked = []
     
     c.on_connect = () => {
         on_connect(c.server_v, c.client_v)
     }
     
     function prune(server_v, client_v) {
-        var cv = sync9_parse_version(client_v)[1]
         prune(c.s9, (a, b) => {
-            if (b == server_v) return true
             var p = sync9_parse_version(b)
-            if (p[0] == 'c' && p[1] <= cv) return true
+            return (p[0] == 's' && p[1] <= server_v) ||
+                (p[0] == 'c' && p[1] <= client_v)
         })
         c.server_v = server_v
     }
     
-    c.on_welcome = (server_v, client_v, changes) => {
-        sync9_add_version(server_v, {[c.server_v] : true}, changes)
+    c.on_welcome = (server_v, changes, client_v) => {
+        sync9_add_version('s' + server_v, {['s' + c.server_v] : true, ['c' + client_v] : true}, changes)
         prune(server_v, client_v)
+        
+        c.unacked = c.unacked.slice(c.unacked.findIndex(x => sync9_parse_version(x.vid)[1] > client_v))
+        c.unacked.forEach(x => {
+            on_add_version(x.vid, x.parents, x.changes)
+        })
     }
     
     c.on_add_version = (server_v, changes) => {
-        sync9_add_version(server_v, {[c.server_v] : true}, changes)
+        sync9_add_version('s' + server_v, {['s' + c.server_v] : true}, changes)
+        prune(server_v, 0)
+    }
+    
+    c.on_local_add_version = (changes) => {
+        c.unacked.push({
+            vid : 'c' + c.client_v++,
+            parents : { : true},
+            changes : changes })
         
         
-        
+        work here
     }
     
     c.on_ack = (server_v, client_v) => {
-        sync9_add_version(server_v, {[c.server_v] : true}, [])
+        sync9_add_version(server_v, {['s' + c.server_v] : true, ['c' + client_v] : true}, [])
         prune(server_v, client_v)
     }
     
