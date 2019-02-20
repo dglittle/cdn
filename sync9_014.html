@@ -144,9 +144,11 @@ function create_random_edit(s) {
 }
 
 
+function sync9_parse_version(vid) {
+    return [vid[0], parseInt(vid.substr(1))]
+}
 
-
-function sync9_create_client(on_add_version, on_ack) {
+function sync9_create_client(on_connect, on_add_version, on_ack) {
     var c = {}
     
     c.s9 = sync9_create()
@@ -155,6 +157,50 @@ function sync9_create_client(on_add_version, on_ack) {
     sync9_prune(c.s9, (a, b) => true)
     
     c.uid = sync9_guid()
+    c.server_v = 0
+    c.client_v = 0
+    
+    c.on_connect = () => {
+        on_connect(c.server_v, c.client_v)
+    }
+    
+    function prune(server_v, client_v) {
+        var cv = sync9_parse_version(client_v)[1]
+        prune(c.s9, (a, b) => {
+            if (b == server_v) return true
+            var p = sync9_parse_version(b)
+            if (p[0] == 'c' && p[1] <= cv) return true
+        })
+        c.server_v = server_v
+    }
+    
+    c.on_welcome = (server_v, client_v, changes) => {
+        sync9_add_version(server_v, {[c.server_v] : true}, changes)
+        prune(server_v, client_v)
+    }
+    
+    c.on_add_version = (server_v, changes) => {
+        sync9_add_version(server_v, {[c.server_v] : true}, changes)
+        
+        
+        
+    }
+    
+    c.on_ack = (server_v, client_v) => {
+        sync9_add_version(server_v, {[c.server_v] : true}, [])
+        prune(server_v, client_v)
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     c.unacked = []
     
     c.on_welcome = (vid, parent, changes) => {
