@@ -11,22 +11,31 @@ var sync9_ROOT = 0
 
 Math.randomSeed(1)
 
-var n_clients = 4
+var n_clients = 1
 var clients = {}
 
 var server = sync9_create_server({
     welcome : (uid, sv, cv, changes) => {
         clients[uid].incoming.push(() => {
+            
+            console.log(`c.welcome ${uid} ${sv} ${cv}`)
+            
             clients[uid].welcome(sv, cv, changes)
         })
     },
     add_version : (uid, sv, changes) => {
         clients[uid].incoming.push(() => {
+            
+            console.log(`c.add_version ${uid} ${sv}`)
+            
             clients[uid].add_version(sv, changes)
         })
     },
     ack : (uid, sv, cv) => {
         clients[uid].incoming.push(() => {
+            
+            console.log(`c.ack ${uid} ${sv} ${cv}`)
+            
             clients[uid].ack(sv, cv)
         })
     }
@@ -37,29 +46,26 @@ for (var i = 0; i < n_clients; i++) {
         var c = sync9_create_client({
             join : (uid, sv) => {
                 c.outgoing.push(() => {
-                    
-                    // work here
-                    console.log('JOIN ' + uid)
-                    
+            
+                    console.log(`s.join ${uid} ${sv}`)
+            
                     server.join(uid, sv)
                 })
             },
             add_version : (uid, cv, sv, changes) => {
                 if (c.state == 'disconnected') return
                 c.outgoing.push(() => {
-                    
-                    // work here
-                    console.log('ADD ' + uid)
-                    
+            
+                    console.log(`s.add ${uid} ${cv} ${sv}`)
+            
                     server.add_version(uid, cv, sv, changes)
                 })
             },
             ack : (uid, sv) => {
                 c.outgoing.push(() => {
-                    
-                    // work here
-                    console.log('ACK ' + uid)
-                    
+            
+                    console.log(`s.ack ${uid} ${sv}`)
+            
                     server.ack(uid, sv)
                 })
             }
@@ -75,9 +81,9 @@ var how_long_add_new = 311 // 1000
 for (var t = 0; t < 10000; t++) {
     console.log('t = ' + t)
     
-    if (t == 139) {
-        //debugger
-    }
+    // if (t == 82) {
+    //     debugger
+    // }
 
     var i = Math.floor(Math.random() * n_clients)
     var c = Object.values(clients)[i]
