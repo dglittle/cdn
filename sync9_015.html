@@ -75,8 +75,8 @@ var how_long_add_new = 311 // 1000
 for (var t = 0; t < 10000; t++) {
     console.log('t = ' + t)
     
-    if (t == 55) {
-        //debugger
+    if (t == 67) {
+        debugger
     }
 
     var i = Math.floor(Math.random() * n_clients)
@@ -176,7 +176,7 @@ function sync9_create_client(s_funcs) {
     }
     
     function prune(sv, cv) {
-        prune(c.s9, (a, b) => b <= sv && b >= cv)
+        sync9_prune(c.s9, (a, b) => b <= sv && b >= cv)
         c.sv = sv
     }
     
