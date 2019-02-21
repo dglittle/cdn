@@ -62,6 +62,8 @@ for (var i = 0; i < n_clients; i++) {
                     console.log(JSON.stringify(changes))
             
                     server.add_version(uid, cv, sv, changes)
+                    
+                    console.log(JSON.stringify(server.s9.val.S))
                 })
             },
             ack : (uid, sv) => {
@@ -102,6 +104,11 @@ for (var t = 0; t < 10000; t++) {
         if (Math.random() < 0.9) {
             var edit = create_random_edit(c.s9)
             c.local_add_version(edit.changes)
+            
+            
+            console.log(`NEW VERSION`)
+            console.log(JSON.stringify(c.s9.val.S))
+            
         } else {
             if (c.state == 'disconnected') {
             
