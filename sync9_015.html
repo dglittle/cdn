@@ -37,16 +37,28 @@ for (var i = 0; i < n_clients; i++) {
         var c = sync9_create_client({
             join : (uid, sv) => {
                 c.outgoing.push(() => {
+                    
+                    // work here
+                    console.log('JOIN ' + uid)
+                    
                     server.join(uid, sv)
                 })
             },
             add_version : (uid, cv, sv, changes) => {
                 c.outgoing.push(() => {
+                    
+                    // work here
+                    console.log('ADD ' + uid)
+                    
                     server.add_version(uid, cv, sv, changes)
                 })
             },
             ack : (uid, sv) => {
                 c.outgoing.push(() => {
+                    
+                    // work here
+                    console.log('ACK ' + uid)
+                    
                     server.ack(uid, sv)
                 })
             }
@@ -62,8 +74,8 @@ var how_long_add_new = 311 // 1000
 for (var t = 0; t < 10000; t++) {
     console.log('t = ' + t)
     
-    if (t == 5) {
-        // debugger
+    if (t == 9) {
+        debugger
     }
 
     var i = Math.floor(Math.random() * n_clients)
