@@ -9,7 +9,7 @@ console.log('-------------------')
 
 var sync9_ROOT = 0
 
-Math.randomSeed(1)
+Math.randomSeed(2)
 
 var n_clients = 1
 var clients = {}
@@ -82,7 +82,7 @@ for (var i = 0; i < n_clients; i++) {
     })()
 }
 
-var how_long_add_new = 33 // 1000
+var how_long_add_new = 955 // 1000
 for (var t = 0; t < 10000; t++) {
     console.log('t = ' + t)
     
@@ -209,6 +209,7 @@ function sync9_create_client(s_funcs) {
     }
     
     function prune(sv, cv) {
+        c.unacked = c.unacked.filter(x => x.cv < cv)
         sync9_prune(c.s9, (a, b) => b <= sv && b >= cv)
         c.sv = sv
     }
