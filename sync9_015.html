@@ -59,7 +59,7 @@ for (var i = 0; i < n_clients; i++) {
     })()
 }
 
-var how_long_add_new = 304 // 1000
+var how_long_add_new = 476 // 1000
 for (var t = 0; t < 10000; t++) {
     console.log('t = ' + t)
     
@@ -274,7 +274,7 @@ function sync9_create_server(c_funcs) {
         s.sv++
         p.acked_s = sv
         p.c_to_s[cv] = s.sv
-        sync9_add_version(s.s9, s.sv, {[s.sv - 1] : true}, changes, (x) => x <= sv || known[x])
+        sync9_add_version(s.s9, cv, {[s.sv - 1] : true}, changes, (x) => x <= sv || known[x], s.sv)
         Object.entries(s.peers).forEach(x => {
             if (x[0] != uid && x[1].online) {
                 x[1].unacked[s.sv] = true
@@ -480,7 +480,7 @@ function sync9_create() {
     }
 }
 
-function sync9_add_version(x, vid, parents, changes, is_anc) {
+function sync9_add_version(x, vid, parents, changes, is_anc, vid_override) {
     if (x.T[vid]) return
     x.T[vid] = Object.assign({}, parents)
     
@@ -518,13 +518,13 @@ function sync9_add_version(x, vid, parents, changes, is_anc) {
         })
         if (!parse.range) {
             if (cur.t != 'val') throw 'bad'
-            sync9_space_dag_add_version(cur.S, vid, [[0, 0, [sync9_wrap(parse.val, vid)]]], is_anc)
+            sync9_space_dag_add_version(cur.S, vid, [[0, 0, [sync9_wrap(parse.val, vid)]]], is_anc, vid_override)
         } else {
             if (cur.t == 'val') cur = sync9_space_dag_get(cur.S, 0, is_anc)
             if (parse.val instanceof Array && cur.t != 'arr') throw 'bad'
             if (parse.val instanceof String && cur.t != 'str') throw 'bad'
             if (parse.val instanceof Array) parse.val = parse.val.map(x => sync9_wrap(x, vid))
-            sync9_space_dag_add_version(cur.S, vid, [[parse.range[0], parse.range[1] - parse.range[0], parse.val]], is_anc)
+            sync9_space_dag_add_version(cur.S, vid, [[parse.range[0], parse.range[1] - parse.range[0], parse.val]], is_anc, vid_override)
         }
     })
 }
@@ -636,7 +636,8 @@ function sync9_space_dag_get(S, i, is_anc) {
     return ret
 }
 
-function sync9_space_dag_add_version(S, vid, splices, is_anc) {
+function sync9_space_dag_add_version(S, vid, splices, is_anc, vid_override) {
+    if (vid_override == undefined) vid_override = vid
     
     function subseq(x, start, stop) {
         return (x instanceof Array) ?
@@ -650,6 +651,7 @@ function sync9_space_dag_add_version(S, vid, splices, is_anc) {
             if (to.vid > x.vid) return 1
             return 0
         })
+        to.vid = vid_override
         nexts.splice(i, 0, to)
     }
     
@@ -710,7 +712,7 @@ function sync9_space_dag_add_version(S, vid, splices, is_anc) {
                 }
                 si++
             }
-            node.deleted_by[vid] = true
+            node.deleted_by[vid_override] = true
             return
         }
     })
