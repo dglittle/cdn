@@ -59,12 +59,13 @@ for (var i = 0; i < n_clients; i++) {
     })()
 }
 
-var how_long_add_new = 476 // 1000
-for (var t = 0; t < 10000; t++) {
+var how_long_add_new = 15 // 1000
+for (var t = 0; t < 27; t++) {
+// for (var t = 0; t < 10000; t++) {
     console.log('t = ' + t)
     
-    if (t == 329) {
-        // debugger
+    if (t == 26) {
+        debugger
     }
 
     var i = Math.floor(Math.random() * n_clients)
@@ -481,17 +482,18 @@ function sync9_create() {
 }
 
 function sync9_add_version(x, vid, parents, changes, is_anc, vid_override) {
-    if (x.T[vid]) return
-    x.T[vid] = Object.assign({}, parents)
+    if (vid_override == undefined) vid_override = vid
+    if (x.T[vid_override]) return
+    x.T[vid_override] = Object.assign({}, parents)
     
     Object.keys(parents).forEach(k => {
         if (x.leaves[k]) delete x.leaves[k]
     })
-    x.leaves[vid] = true
+    x.leaves[vid_override] = true
     
     if (!is_anc) {
         if (parents == x.leaves) {
-            is_anc = (_vid) => _vid != vid
+            is_anc = (_vid) => _vid != vid_override
         } else {
             var ancs = sync9_get_ancestors(x, parents)
             is_anc = _vid => ancs[_vid]
