@@ -19,6 +19,7 @@ var server = sync9_create_server({
         clients[uid].incoming.push(() => {
             
             console.log(`c.welcome ${uid} ${sv} ${cv}`)
+            console.log(JSON.stringify(changes))
             
             clients[uid].welcome(sv, cv, changes)
         })
@@ -27,6 +28,7 @@ var server = sync9_create_server({
         clients[uid].incoming.push(() => {
             
             console.log(`c.add_version ${uid} ${sv}`)
+            console.log(JSON.stringify(changes))
             
             clients[uid].add_version(sv, changes)
         })
@@ -57,6 +59,7 @@ for (var i = 0; i < n_clients; i++) {
                 c.outgoing.push(() => {
             
                     console.log(`s.add ${uid} ${cv} ${sv}`)
+                    console.log(JSON.stringify(changes))
             
                     server.add_version(uid, cv, sv, changes)
                 })
@@ -77,7 +80,7 @@ for (var i = 0; i < n_clients; i++) {
     })()
 }
 
-var how_long_add_new = 100 // 1000
+var how_long_add_new = 33 // 1000
 for (var t = 0; t < 10000; t++) {
     console.log('t = ' + t)
     
