@@ -25,8 +25,8 @@ var server = sync9_create_server({
             
             clients[uid].welcome(sv, cv, changes)
             
-            if (uid == 'FoWxQpjGwcrSe1x')
-                keep.push(sv + ' ' + sync9_read(clients[uid].s9))
+            // if (uid == 'FoWxQpjGwcrSe1x')
+            //     keep.push(sv + ' ' + sync9_read(clients[uid].s9))
             
         })
     },
@@ -38,8 +38,8 @@ var server = sync9_create_server({
             
             clients[uid].add_version(sv, changes)
             
-            if (uid == 'FoWxQpjGwcrSe1x')
-                keep.push(sv + ' ' + sync9_read(clients[uid].s9))
+            // if (uid == 'FoWxQpjGwcrSe1x')
+            //     keep.push(sv + ' ' + sync9_read(clients[uid].s9))
             
         })
     },
@@ -73,6 +73,11 @@ for (var i = 0; i < n_clients; i++) {
                     // console.log(sync9_read(server.s9))
                     
                     server.add_version(uid, cv, sv, changes)
+                    
+
+                    keep.push('-----')
+                    keep.push(JSON.stringify(changes))
+                    keep.push(server.sv + ' ' + sync9_read(clients[uid].s9) + ' ' + cv + ',' + sv + ',' + c.uid + ' ' + (server.peers[c.uid].seen_c))
                     
                     //console.log(JSON.stringify(sync9_space_dag_get(server.s9.val.S, 0).S))
                 })
