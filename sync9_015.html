@@ -61,6 +61,10 @@ for (var i = 0; i < n_clients; i++) {
 var how_long_add_new = 311 // 1000
 for (var t = 0; t < 10000; t++) {
     console.log('t = ' + t)
+    
+    if (t == 5) {
+        debugger
+    }
 
     var i = Math.floor(Math.random() * n_clients)
     var c = Object.values(clients)[i]
@@ -183,8 +187,9 @@ function sync9_create_client(s_funcs) {
     }
     
     c.local_add_version = (changes) => {
+        c.cv--
         var x = {
-            cv : c.cv--,
+            cv : c.cv,
             sv : c.sv,
             changes : changes
         }
