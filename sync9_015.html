@@ -37,6 +37,14 @@ for (var i = 0; i < n_clients; i++) {
         var c = sync9_create_client({
             join : (uid, sv) => {
                 c.outgoing.push(() => {
+                    
+            
+            if (uid == 'pZIV07iZ9e5obol') {
+                debugger
+                
+            }
+            
+                    
                     server.join(uid, sv)
                 })
             },
@@ -668,6 +676,7 @@ function sync9_space_dag_add_version(S, vid, splices, is_anc, vid_override) {
         node.elems = subseq(node.elems, 0, x)
         node.end_cap = end_cap
         if (end_cap) tail.gash = true
+        new_next.vid = vid_override
         node.nexts = new_next ? [new_next] : []
         node.next = tail
         
