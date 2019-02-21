@@ -14,6 +14,8 @@ Math.randomSeed(1)
 var n_clients = 2
 var clients = {}
 
+var keep = []
+
 var server = sync9_create_server({
     welcome : (uid, sv, cv, changes) => {
         clients[uid].incoming.push(() => {
@@ -22,6 +24,10 @@ var server = sync9_create_server({
             // console.log(JSON.stringify(changes))
             
             clients[uid].welcome(sv, cv, changes)
+            
+            if (uid == 'FoWxQpjGwcrSe1x')
+                keep.push(sv + ' ' + sync9_read(clients[uid].s9))
+            
         })
     },
     add_version : (uid, sv, changes) => {
@@ -31,6 +37,10 @@ var server = sync9_create_server({
             // console.log(JSON.stringify(changes))
             
             clients[uid].add_version(sv, changes)
+            
+            if (uid == 'FoWxQpjGwcrSe1x')
+                keep.push(sv + ' ' + sync9_read(clients[uid].s9))
+            
         })
     },
     ack : (uid, sv, cv) => {
@@ -83,7 +93,7 @@ for (var i = 0; i < n_clients; i++) {
     })()
 }
 
-var how_long_add_new = 300 // 1000
+var how_long_add_new = 163 // 1000
 for (var t = 0; t < 10000; t++) {
     console.log('t = ' + t)
     
@@ -162,6 +172,8 @@ var check_good = true
         check_good = false
 })
 console.log('check_good: ' + check_good)
+
+console.log(keep.join('\n'))
 
 
 
