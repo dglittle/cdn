@@ -158,136 +158,137 @@ function create_random_edit(s) {
 }
 
 
-function sync9_parse_version(vid) {
-    return [vid[0], parseInt(vid.substr(1))]
-}
 
-function sync9_create_client(on_connect, on_add_version, on_ack) {
+
+function sync9_create_client(s_funcs) {
     var c = {}
     
     c.s9 = sync9_create()
     
-    sync9_add_version(c.s9, 'v1', { root : true }, [' = "hello"'])
+    sync9_add_version(c.s9, 'v1', {0 : true}, [' = "hello"'])
     sync9_prune(c.s9, (a, b) => true)
     
     c.uid = sync9_guid()
-    c.server_v = 0
-    c.client_v = 0
+    c.sv = 0
+    c.cv = 0
     c.unacked = []
     
-    c.on_connect = () => {
-        on_connect(c.server_v, c.client_v)
-    }
-    
-    function prune(server_v, client_v) {
-        prune(c.s9, (a, b) => {
-            var p = sync9_parse_version(b)
-            return (p[0] == 's' && p[1] <= server_v) ||
-                (p[0] == 'c' && p[1] <= client_v)
-        })
-        c.server_v = server_v
-    }
-    
-    c.on_welcome = (server_v, changes, client_v) => {
-        sync9_add_version('s' + server_v, {['s' + c.server_v] : true, ['c' + client_v] : true}, changes)
-        prune(server_v, client_v)
-        
-        c.unacked = c.unacked.slice(c.unacked.findIndex(x => sync9_parse_version(x.vid)[1] > client_v))
+    c.join = () => {
+        s_funcs.join(c.uid, c.sv)
         c.unacked.forEach(x => {
-            on_add_version(x.vid, x.parents, x.changes)
+            s_funcs.add_version(c.uid, x.cv, x.sv, x.changes)
         })
     }
     
-    c.on_add_version = (server_v, changes) => {
-        sync9_add_version('s' + server_v, {['s' + c.server_v] : true}, changes)
-        prune(server_v, 0)
+    function prune(sv, cv) {
+        prune(c.s9, (a, b) => b <= sv && b >= cv)
+        c.sv = sv
     }
     
-    c.on_local_add_version = (changes) => {
-        c.unacked.push({
-            vid : 'c' + c.client_v++,
-            parents : { : true},
-            changes : changes })
-        
-        
-        work here
+    c.welcome = (sv, cv, changes) => {
+        if (c.sv == sv) return
+        sync9_add_version(sv, {[c.sv] : true, [cv] : true}, changes)
+        prune(sv, cv)
+        s_funcs.ack(c.uid, sv)
     }
     
-    c.on_ack = (server_v, client_v) => {
-        sync9_add_version(server_v, {['s' + c.server_v] : true, ['c' + client_v] : true}, [])
-        prune(server_v, client_v)
+    c.add_version = (sv, changes) => {
+        sync9_add_version(sv, {[c.sv] : true}, changes)
+        prune(sv, 0)
+        s_funcs.ack(c.uid, sv)
     }
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    c.unacked = []
-    
-    c.on_welcome = (vid, parent, changes) => {
-        var parents = {}
-        parents[parent] = true
-        sync9_add_version(c.s9, vid, parents, changes)
-        
-        c.unacked = c.unackied.filter(x => !c.s9.T[x.vid])
-        c.unackied.forEach(x => {
-            x.changes = sync9_rebase(c.s9, x.vid, x.parents, x.changes, c.s9.leaves)
-            x.parents = Object.assign({}, c.s9.leaves)
-            sync9_add_version(c.s9, x.vid, c.s9.leaves, x.changes)
-            on_add_version(c.uid, x.vid, x.parents, x.changes)
-        })
-        sync9_prune(c.s9, (a, b) => ackiied[b])
+    c.ack = (sv, cv) => {
+        sync9_add_version(sv, {[c.sv] : true, [cv] : true}, [])
+        prune(sv, cv)
+        s_funcs.ack(c.uid, sv)
     }
-    c.on_disconnect = () => {
+    
+    c.local_add_version = (changes) => {
+        var x = {
+            cv : c.cv++,
+            sv : c.sv,
+            changes : changes
+        }
+        sync9_add_version(x.cv, {[x.cv - 1] : true, [x.sv] : true}, x.changes)
+        c.unacked.push(x)
+        s_funcs.add_version(c.uid, x.cv, x.sv, x.changes)
     }
-    c.on_local_add_version = (vid, parents, changes) => {
-        sync9_add_version(c.s9, vid, parents, changes)
-        c.unacked.push({ vid : vid, parents : parents, changes : changes })
-        on_add_version(c.uid, vid, parents, changes)
-    }
-    c.on_add_version = (vid, parents, changes) => {
-        sync9_add_version(c.s9, vid, parents, changes)
-        on_ack(c.uid, vid)
-    }
-    c.on_ack = (vid) => {
-        if (c.unacked[0].vid != vid) throw 'bad'
-        c.unacked.shift()
-    }
+    
     return c
 }
 
-function sync9_create_server(on_welcome, on_add_version, on_acki, on_ackii) {
+function sync9_create_server(c_funcs) {
     var s = {}
     
     s.s9 = sync9_create()
     
-    sync9_add_version(s.s9, 'v1', { root : true }, [' = "hello"'])
+    sync9_add_version(s.s9, 'v1', {0 : true}, [' = "hello"'])
     sync9_prune(s.s9, (a, b) => true)
-    
+
+    s.sv = 0
     s.peers = {}
-    s.unackied = {}
-    s.unackiacked = {}
-    s.saved = {}
     
     function prune() {
-        sync9_prune(s.s9, (a, b) => !s.saved[a] && !s.saved[b] && !s.unackied[a] && !s.unackied[b] && !s.unackiacked[a] && !s.unackiacked[b])
+        var saved = {}
+        Object.values(s.peers).forEach(x => {
+            for (var i = x.acked_s; i <= x.sent_s; i++) {
+                saved[i] = true
+            }
+            Object.values(x.c_to_s).forEach(x => saved[x] = true)
+        })
+        sync9_prune(s.s9, (a, b) => !saved[a] && !saved[b])
     }
     
-    s.on_join = (uid) => {
-        s.peers[uid] = true
-        var ackiied = {}
-        Object.keys(s.s9.T).forEach(x => {
-            if (!s.unackied[x])
-                ackiied[x] = true
-        })
-        on_welcome(uid, JSON.stringify(s.s9), ackiied)
+    s.join = (uid, sv) => {
+        var p = s.peers[uid]
+        if (!p) {
+            s.peers[uid] = p = {
+                sent_s : 0,
+                seen_c : 0,
+                c_to_s : {}
+            }
+        }
+        p.acked_s = sv
+        p.online = true
+        var known = new Set(Object.values(p.c_to_s))
+        var changes = sync9_space_dag_diff(s.s9, (x) => x <= sv || known.has(x), (x) => true)
+        c_funcs.welcome(s.sv, p.seen_c, changes)
     }
+    
+    s.add_version = (uid, cv, sv, changes) => {
+        s.sv++
+        sync9_add_version(s.s9, s.sv, {[s.sv - 1] : true}, work here)
+        
+        
+        sync9_add_version(s.s9, s.sv++, changes)
+        
+        
+        
+        s.unackiacked[vid] = uid
+        on_acki(uid, vid)
+        s.unackied[vid] = {}
+        Object.keys(s.peers).forEach(x => {
+            s.unackied[vid][x] = true
+            if (x != uid) {
+                on_add_version(x, vid, parents, changes)
+            }
+        })
+        s.on_acki(uid, vid)
+    }
+    
+    s.on_acki = (uid, vid) => {
+        delete s.unackied[vid][uid]
+        if (Object.keys(s.unackied[vid]).length == 0) {
+            delete s.unackied[vid]
+            Object.keys(s.peers).forEach(x => on_ackii(x, vid))
+        }
+        prune()
+    }
+    
+    
+    
+    
     s.on_welcome_ack = (uid, leaves) => {
         Object.keys(sync9_get_ancestors(s.s9, leaves)).forEach(x => {
             if (s.unackiacked[x] == uid)
@@ -309,27 +310,6 @@ function sync9_create_server(on_welcome, on_add_version, on_acki, on_ackii) {
             if (x[1][uid]) s.on_acki(uid, x[0])
         })
         delete s.peers[uid]
-    }
-    s.on_add_version = (uid, vid, parents, changes) => {
-        sync9_add_version(s.s9, vid, parents, changes)
-        s.unackiacked[vid] = uid
-        on_acki(uid, vid)
-        s.unackied[vid] = {}
-        Object.keys(s.peers).forEach(x => {
-            s.unackied[vid][x] = true
-            if (x != uid) {
-                on_add_version(x, vid, parents, changes)
-            }
-        })
-        s.on_acki(uid, vid)
-    }
-    s.on_acki = (uid, vid) => {
-        delete s.unackied[vid][uid]
-        if (Object.keys(s.unackied[vid]).length == 0) {
-            delete s.unackied[vid]
-            Object.keys(s.peers).forEach(x => on_ackii(x, vid))
-        }
-        prune()
     }
     s.on_ackiack = (uid, vid) => {
         if (s.unackiacked[vid] != uid) throw 'mismatch'
@@ -462,10 +442,12 @@ function sync9_space_dag_rebase(S, vid, splices, is_anc, is_new_anc) {
     return result
 }
 
+var sync9_ROOT = 0
+
 function sync9_create() {
     return {
-        T : { 'root' : {} },
-        leaves : { 'root' : true },
+        T : {[sync9_ROOT] : {} },
+        leaves : {[sync9_ROOT] : true },
         val : sync9_create_val()
     }
 }
@@ -576,7 +558,7 @@ function sync9_wrap(x, vid) {
 function sync9_create_val() {
     return {
         t : 'val',
-        S : sync9_create_space_dag_node('root', [])
+        S : sync9_create_space_dag_node(sync9_ROOT, [])
     }
 }
 
@@ -590,14 +572,14 @@ function sync9_create_obj() {
 function sync9_create_arr() {
     return {
         t : 'arr',
-        S : sync9_create_space_dag_node('root', [])
+        S : sync9_create_space_dag_node(sync9_ROOT, [])
     }
 }
 
 function sync9_create_str() {
     return {
         t : 'str',
-        S : sync9_create_space_dag_node('root', '')
+        S : sync9_create_space_dag_node(sync9_ROOT, '')
     }
 }
 
