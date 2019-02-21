@@ -73,15 +73,15 @@ for (var i = 0; i < n_clients; i++) {
                     // console.log(sync9_read(server.s9))
                     
                     
-                    keep.push('-----')
-                    keep.push(JSON.stringify(changes))
+                    // keep.push('-----')
+                    // keep.push(JSON.stringify(changes))
                     
                     
                     
                     server.add_version(uid, cv, sv, changes)
                     
 
-                    keep.push(server.sv + ' ' + sync9_read(server.s9) + ' ' + cv + ',' + sv + ',' + c.uid + ' ' + (server.peers[c.uid].seen_c))
+                    // keep.push(server.sv + ' ' + sync9_read(server.s9) + ' ' + cv + ',' + sv + ',' + c.uid + ' ' + (server.peers[c.uid].seen_c))
                     
                     //console.log(JSON.stringify(sync9_space_dag_get(server.s9.val.S, 0).S))
                 })
@@ -102,7 +102,7 @@ for (var i = 0; i < n_clients; i++) {
     })()
 }
 
-var how_long_add_new = 163 // 1000
+var how_long_add_new = 500 // 1000
 for (var t = 0; t < 10000; t++) {
     console.log('t = ' + t)
     
@@ -138,13 +138,13 @@ for (var t = 0; t < 10000; t++) {
                 c.join()
             } else if (c.state == 'connected') {
             
-                console.log(`c.leave`)
+                // console.log(`c.leave`)
             
-                c.state = 'disconnected'
-                c.state_note = 'had been connected'
-                c.incoming = []
-                c.outgoing = []
-                server.leave(c.uid)
+                // c.state = 'disconnected'
+                // c.state_note = 'had been connected'
+                // c.incoming = []
+                // c.outgoing = []
+                // server.leave(c.uid)
             }
         }
     } else {
