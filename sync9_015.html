@@ -45,6 +45,7 @@ for (var i = 0; i < n_clients; i++) {
                 })
             },
             add_version : (uid, cv, sv, changes) => {
+                if (c.state == 'disconnected') return
                 c.outgoing.push(() => {
                     
                     // work here
