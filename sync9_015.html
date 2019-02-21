@@ -59,7 +59,7 @@ for (var i = 0; i < n_clients; i++) {
     })()
 }
 
-var how_long_add_new = 30 // 1000
+var how_long_add_new = 50 // 1000
 for (var t = 0; t < 1000; t++) {
     console.log('t = ' + t)
     
@@ -668,7 +668,7 @@ function sync9_space_dag_add_version(S, vid, splices, is_anc, vid_override) {
         node.elems = subseq(node.elems, 0, x)
         node.end_cap = end_cap
         if (end_cap) tail.gash = true
-        new_next.vid = vid_override
+        if (new_next) new_next.vid = vid_override
         node.nexts = new_next ? [new_next] : []
         node.next = tail
         
