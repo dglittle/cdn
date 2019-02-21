@@ -173,6 +173,7 @@ function sync9_create_client(s_funcs) {
     c.uid = sync9_guid()
     c.sv = 0
     c.cv = 0
+    c.acked_c = 0
     c.unacked = []
     
     c.join = () => {
@@ -189,7 +190,12 @@ function sync9_create_client(s_funcs) {
     
     c.welcome = (sv, cv, changes) => {
         if (c.sv == sv) return
-        sync9_add_version(c.s9, sv, {[c.sv] : true, [cv] : true}, changes)
+        var parents = {[c.sv] : true}
+        if (cv < c.acked_c) {
+            c.acked_c = cv
+            parents[cv] = true
+        }
+        sync9_add_version(c.s9, sv, parents, changes)
         prune(sv, cv)
         s_funcs.ack(c.uid, sv)
     }
@@ -201,6 +207,7 @@ function sync9_create_client(s_funcs) {
     }
     
     c.ack = (sv, cv) => {
+        c.acked_c = cv
         sync9_add_version(c.s9, sv, {[c.sv] : true, [cv] : true}, [])
         prune(sv, cv)
         s_funcs.ack(c.uid, sv)
