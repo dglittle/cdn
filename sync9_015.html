@@ -292,10 +292,11 @@ function sync9_create_server(c_funcs) {
     
     s.add_version = (uid, cv, sv, changes) => {
         var p = s.peers[uid]
+        if (cv >= p.seen_c) return
+        p.seen_c = cv
         var known = new Set(Object.values(p.c_to_s))
         var changes = sync9_rebase(s.s9, cv, changes, (x) => x <= sv || known.has(x), (x) => true)
         s.sv++
-        p.seen_c = cv
         p.acked_s = sv
         p.c_to_s[cv] = s.sv
         sync9_add_version(s.s9, s.sv, {[s.sv - 1] : true}, changes)
