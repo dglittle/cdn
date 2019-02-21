@@ -59,17 +59,9 @@ for (var i = 0; i < n_clients; i++) {
                 c.outgoing.push(() => {
             
                     console.log(`s.add ${uid} ${cv} ${sv}`)
-                    console.log(JSON.stringify(changes))
-                    console.log(sync9_read(server.s9))
+                    // console.log(JSON.stringify(changes))
+                    // console.log(sync9_read(server.s9))
                     
-                    
-                    if (cv == -78) {
-                        console.log(JSON.stringify(server.s9.val.S.elems[0].S))
-                        debugger
-                    }
-            
-            
-            
                     server.add_version(uid, cv, sv, changes)
                     
                     //console.log(JSON.stringify(sync9_space_dag_get(server.s9.val.S, 0).S))
