@@ -200,9 +200,6 @@ function sync9_create_server(c_funcs) {
     var s = {}
     
     s.s9 = sync9_create()
-    
-    debugger
-    
     sync9_add_version(s.s9, 'v1', {0 : true}, [' = "hello"'])
     sync9_prune(s.s9, (a, b) => true)
 
