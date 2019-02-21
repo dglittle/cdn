@@ -13,65 +13,42 @@ var n_clients = 4
 var clients = {}
 
 var server = sync9_create_server({
-    welcome : (sv, cv, changes) => {
+    welcome : (uid, sv, cv, changes) => {
         clients[uid].incoming.push(() => {
             clients[uid].welcome(sv, cv, changes)
         })
     },
-    add : (sv, changes) => {
-        
+    add_version : (uid, sv, changes) => {
+        clients[uid].incoming.push(() => {
+            clients[uid].add_version(sv, changes)
+        })
     },
-    ack : (sv, cv) => {
+    ack : (uid, sv, cv) => {
+        clients[uid].incoming.push(() => {
+            clients[uid].ack(sv, cv)
+        })
     }
-})
-
-    
-    
-    
-    (uid, s9_json, ackiied) => {
-    clients[uid].incoming.push(() => {
-        clients[uid].state = 'connected'
-        clients[uid].on_welcome(s9_json, ackiied)
-    })
-}, (uid, vid, parents, changes) => {
-    clients[uid].incoming.push(() => {
-        clients[uid].on_add_version(vid, parents, changes)
-    })
-}, (uid, vid) => {
-    clients[uid].incoming.push(() => {
-        clients[uid].on_acki(vid)
-    })
-}, (uid, vid) => {
-    clients[uid].incoming.push(() => {
-        clients[uid].on_ackii(vid)
-    })
 })
 
 for (var i = 0; i < n_clients; i++) {
     ;(() => {
-        var c = sync9_create_client((uid) => {
-            c.outgoing.push(() => {
-                server.on_join(uid)
-            })
-        }, (uid, leaves) => {
-            c.outgoing.push(() => {
-                server.on_welcome_ack(uid, leaves)
-            })
-        }, (uid, vid, parents, changes) => {
-            if (c.state == 'connected') {
+        var c = sync9_create_client({
+            join : (uid, sv) => {
                 c.outgoing.push(() => {
-                    server.on_add_version(uid, vid, parents, changes)
+                    server.join(uid, sv)
+                })
+            },
+            add_version : (uid, cv, sv, changes) => {
+                c.outgoing.push(() => {
+                    server.add_version(uid, cv, sv, changes)
+                })
+            },
+            ack : (uid, sv) => {
+                c.outgoing.push(() => {
+                    server.ack(uid, sv)
                 })
             }
-        }, (uid, vid) => {
-            c.outgoing.push(() => {
-                server.on_acki(uid, vid)
-            })
-        }, (uid, vid) => {
-            c.outgoing.push(() => {
-                server.on_ackiack(uid, vid)
-            })
-        })
+        }
         c.state = 'disconnected'
         c.incoming = []
         c.outgoing = []
@@ -88,23 +65,22 @@ for (var t = 0; t < 10000; t++) {
     
     if (t >= how_long_add_new && Object.values(clients).some(x => x.state == 'disconnected')) {
         var c = Object.values(clients).find(x => x.state == 'disconnected')
-        c.state = 'connecting'
-        c.on_connect()
+        c.state = 'connected'
+        c.join()
     } else if (t < how_long_add_new && Math.random() < 0.1) {
-        if (c.s9 && Math.random() < 0.9) {
+        if (Math.random() < 0.9) {
             var edit = create_random_edit(c.s9)
-            c.on_local_add_version(edit.vid, edit.parents, edit.changes)
+            c.local_add_version(edit.changes)
         } else {
             if (c.state == 'disconnected') {
-                c.state = 'connecting'
-                c.on_connect()
-            } else if (c.state == 'connecting') {
+                c.state = 'connected'
+                c.join()
             } else if (c.state == 'connected') {
                 c.state = 'disconnected'
                 c.state_note = 'had been connected'
                 c.incoming = []
                 c.outgoing = []
-                server.on_disconnect(c.uid)
+                server.leave(c.uid)
             }
         }
     } else {
@@ -229,12 +205,17 @@ function sync9_create_server(c_funcs) {
     s.sv = 0
     s.peers = {}
     
-    function prune() {
+    function prune(c) {
+        Object.keys(c.unacked).forEach(x => {
+            if (x <= c.acked_s) delete c.unacked[x]
+        })
+        Object.entries(c.c_to_s).forEach(x => {
+            if (x[1] <= c.acked_s) delete c.c_to_s[x[0]]
+        })
+        
         var saved = {}
         Object.values(s.peers).forEach(x => {
-            for (var i = x.acked_s; i <= x.sent_s; i++) {
-                saved[i] = true
-            }
+            Object.assign(saved, x.unacked)
             Object.values(x.c_to_s).forEach(x => saved[x] = true)
         })
         sync9_prune(s.s9, (a, b) => !saved[a] && !saved[b])
@@ -244,7 +225,7 @@ function sync9_create_server(c_funcs) {
         var p = s.peers[uid]
         if (!p) {
             s.peers[uid] = p = {
-                sent_s : 0,
+                unacked : {},
                 seen_c : 0,
                 c_to_s : {}
             }
@@ -252,84 +233,50 @@ function sync9_create_server(c_funcs) {
         p.acked_s = sv
         p.online = true
         var known = new Set(Object.values(p.c_to_s))
-        var changes = sync9_space_dag_diff(s.s9, (x) => x <= sv || known.has(x), (x) => true)
+        var changes = sync9_gen_diff(s.s9, (x) => x <= sv || known.has(x), (x) => true)
+        p.unacked[s.sv] = true
         c_funcs.welcome(s.sv, p.seen_c, changes)
+        prune(p)
     }
     
     s.add_version = (uid, cv, sv, changes) => {
+        var p = s.peers[uid]
+        var known = new Set(Object.values(p.c_to_s))
+        var changes = sync9_rebase(s.s9, cv, changes, (x) => x <= sv || known.has(x), (x) => true)
         s.sv++
-        sync9_add_version(s.s9, s.sv, {[s.sv - 1] : true}, work here)
-        
-        
-        sync9_add_version(s.s9, s.sv++, changes)
-        
-        
-        
-        s.unackiacked[vid] = uid
-        on_acki(uid, vid)
-        s.unackied[vid] = {}
-        Object.keys(s.peers).forEach(x => {
-            s.unackied[vid][x] = true
-            if (x != uid) {
-                on_add_version(x, vid, parents, changes)
+        p.seen_c = cv
+        p.acked_s = sv
+        p.c_to_s[cv] = s.sv
+        sync9_add_version(s.s9, s.sv, {[s.sv - 1] : true}, changes)
+        Object.entries(peers).forEach(x => {
+            if (x[0] != uid && x.online) {
+                x[1].unacked[s.sv] = true
+                c_funcs.add_version(x[0], s.sv, changes)
             }
         })
-        s.on_acki(uid, vid)
+        c_funcs.ack(uid, s.sv, cv)
+        prune(p)
     }
     
-    s.on_acki = (uid, vid) => {
-        delete s.unackied[vid][uid]
-        if (Object.keys(s.unackied[vid]).length == 0) {
-            delete s.unackied[vid]
-            Object.keys(s.peers).forEach(x => on_ackii(x, vid))
-        }
-        prune()
+    s.ack = (uid, sv) => {
+        var p = s.peers[uid]
+        p.acked_s = sv
+        prune(p)
     }
     
-    
-    
-    
-    s.on_welcome_ack = (uid, leaves) => {
-        Object.keys(sync9_get_ancestors(s.s9, leaves)).forEach(x => {
-            if (s.unackiacked[x] == uid)
-                delete s.unackiacked[x]
-        })
-        Object.entries(s.saved).forEach(x => {
-            delete x[1][uid]
-            if (Object.keys(x[1]).length == 0)
-                delete s.saved[x[0]]
-        })
-        prune()
+    s.leave = (uid) => {
+        var p = s.peers[uid]
+        p.online = false
     }
-    s.on_disconnect = (uid) => {
-        Object.keys(s.s9.T).forEach(x => {
-            if (!s.saved[x]) s.saved[x] = {}
-            s.saved[x][uid] = true
-        })
-        Object.entries(s.unackied).forEach(x => {
-            if (x[1][uid]) s.on_acki(uid, x[0])
-        })
-        delete s.peers[uid]
-    }
-    s.on_ackiack = (uid, vid) => {
-        if (s.unackiacked[vid] != uid) throw 'mismatch'
-        delete s.unackiacked[vid]
-        prune()
-    }
+    
     return s
 }
 
-function sync9_rebase(x, vid, parents, changes, new_parents) {
-    // work here
-    function get_is_anc_func(s, parents) {
-        var ancs = sync9_get_ancestors(s, parents)
-        return _vid => ancs[_vid]
-    }
-    
+function sync9_rebase(x, vid, changes, is_anc, is_new_anc) {
     return sync9_space_dag_rebase(sync9_space_dag_get(x.val.S, 0).S, vid, changes.map(x => {
         var p = sync9_parse_change(x)
         return [p.range[0], p.range[1] - p.range[0], p.val]
-    }), get_is_anc_func(x, parents), get_is_anc_func(x, new_parents)).map(x => {
+    }), is_anc, is_new_anc).map(x => {
         return `[${x[0]}:${x[0] + x[1]}] = ${JSON.stringify(x[2])}`
     })
 }
