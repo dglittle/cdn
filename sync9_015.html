@@ -291,6 +291,55 @@ function sync9_create_server(c_funcs) {
     return s
 }
 
+
+
+
+
+
+function sync9_gen_diff(x, is_anc, is_new_anc) {
+    return sync9_space_dag_gen_diff(sync9_space_dag_get(x.val.S, 0).S, is_anc, is_new_anc).map(x => {
+        return `[${x[0]}:${x[0] + x[1]}] = ${JSON.stringify(x[2])}`
+    })
+}
+
+function sync9_space_dag_gen_diff(S, is_anc, is_new_anc) {
+    var result = []
+    function add_result(offset, del, ins) {
+        if (result.length > 0) {
+            var prev = result[result.length - 1]
+            if (prev[0] + prev[1] == offset) {
+                prev[1] += del
+                prev[2] = prev[2].concat(ins)
+                return
+            }
+        }
+        result.push([offset, del, ins])
+    }
+    
+    var offset_a = 0
+    sync9_trav_space_dag(S, is_new_anc, (node, offset, has_nexts, prev, vid) => {
+        if (Object.keys(node.deleted_by).some(x => is_anc(x))) return
+        var deleted_by_b = Object.keys(node.deleted_by).some(x => is_new_anc(x))
+        
+        if (!is_anc(vid) && !deleted_by_b) {
+            add_result(offset_a, 0, node.elems)
+        } else if (is_anc(vid) && deleted_by_b) {
+            add_result(offset_a, node.elems.length, node.elems.slice(0, 0))
+        }
+        
+        if (is_anc(vid))
+            offset_a += node.elems.length
+    }, true)
+    
+    return result
+}
+
+
+
+
+
+
+
 function sync9_rebase(x, vid, changes, is_anc, is_new_anc) {
     return sync9_space_dag_rebase(sync9_space_dag_get(x.val.S, 0).S, vid, changes.map(x => {
         var p = sync9_parse_change(x)
@@ -332,7 +381,7 @@ function sync9_space_dag_rebase(S, vid, splices, is_anc, is_new_anc) {
             var prev = result[result.length - 1]
             if (prev[0] + prev[1] == offset) {
                 prev[1] += del
-                prev[2] += ins
+                prev[2] = prev[2].concat(ins)
                 return
             }
         }
@@ -407,6 +456,13 @@ function sync9_space_dag_rebase(S, vid, splices, is_anc, is_new_anc) {
     
     return result
 }
+
+
+
+
+
+
+
 
 function sync9_create() {
     return {
