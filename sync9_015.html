@@ -59,13 +59,12 @@ for (var i = 0; i < n_clients; i++) {
     })()
 }
 
-var how_long_add_new = 15 // 1000
-for (var t = 0; t < 27; t++) {
-// for (var t = 0; t < 10000; t++) {
+var how_long_add_new = 30 // 1000
+for (var t = 0; t < 1000; t++) {
     console.log('t = ' + t)
     
     if (t == 26) {
-        debugger
+        // debugger
     }
 
     var i = Math.floor(Math.random() * n_clients)
@@ -75,6 +74,9 @@ for (var t = 0; t < 27; t++) {
         var c = Object.values(clients).find(x => x.state == 'disconnected')
         c.state = 'connected'
         c.join()
+        
+        console.log('CONN: ' + c.uid)
+        
     } else if (t < how_long_add_new && Math.random() < 0.1) {
         if (Math.random() < 0.9) {
             var edit = create_random_edit(c.s9)
@@ -238,7 +240,7 @@ function sync9_create_server(c_funcs) {
             if (x[1] <= c.acked_s) delete c.c_to_s[x[0]]
         })
         
-        var saved = {}
+        var saved = {0 : true}
         Object.values(s.peers).forEach(x => {
             Object.assign(saved, x.unacked)
             Object.values(x.c_to_s).forEach(x => saved[x] = true)
