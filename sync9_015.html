@@ -7,6 +7,8 @@
 
 console.log('-------------------')
 
+var sync9_ROOT = 0
+
 Math.randomSeed(1)
 
 var n_clients = 4
@@ -199,6 +201,8 @@ function sync9_create_server(c_funcs) {
     
     s.s9 = sync9_create()
     
+    debugger
+    
     sync9_add_version(s.s9, 'v1', {0 : true}, [' = "hello"'])
     sync9_prune(s.s9, (a, b) => true)
 
@@ -388,8 +392,6 @@ function sync9_space_dag_rebase(S, vid, splices, is_anc, is_new_anc) {
     
     return result
 }
-
-var sync9_ROOT = 0
 
 function sync9_create() {
     return {
