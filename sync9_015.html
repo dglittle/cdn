@@ -107,7 +107,7 @@ for (var t = 0; t < 10000; t++) {
             
             
             console.log(`NEW VERSION`)
-            console.log(JSON.stringify(sync9_space_dag_get(c.s9.val.S, 0).S))
+            // console.log(JSON.stringify(sync9_space_dag_get(c.s9.val.S, 0).S))
             
         } else {
             if (c.state == 'disconnected') {
@@ -299,7 +299,7 @@ function sync9_create_server(c_funcs) {
         p.online = true
         var known = {}
         Object.values(p.c_to_s).forEach(x => known[x] = true)
-        var changes = sync9_gen_diff(s.s9, (x) => x <= sv || known.has(x), (x) => true)
+        var changes = sync9_gen_diff(s.s9, (x) => x <= sv || known[x], (x) => true)
         p.unacked[s.sv] = true
         c_funcs.welcome(uid, s.sv, p.seen_c, changes)
         prune(p)
@@ -311,7 +311,7 @@ function sync9_create_server(c_funcs) {
         p.seen_c = cv
         var known = {}
         Object.values(p.c_to_s).forEach(x => known[x] = true)
-        var changes = sync9_rebase(s.s9, cv, changes, (x) => x <= sv || known.has(x), (x) => true)
+        var changes = sync9_rebase(s.s9, cv, changes, (x) => x <= sv || known[x], (x) => true)
         s.sv++
         p.acked_s = sv
         p.c_to_s[cv] = s.sv
