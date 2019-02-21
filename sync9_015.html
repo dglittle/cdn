@@ -184,11 +184,11 @@ function sync9_create_client(s_funcs) {
     
     c.local_add_version = (changes) => {
         var x = {
-            cv : c.cv++,
+            cv : c.cv--,
             sv : c.sv,
             changes : changes
         }
-        sync9_add_version(x.cv, {[x.cv - 1] : true, [x.sv] : true}, x.changes)
+        sync9_add_version(x.cv, {[x.cv + 1] : true, [x.sv] : true}, x.changes)
         c.unacked.push(x)
         s_funcs.add_version(c.uid, x.cv, x.sv, x.changes)
     }
