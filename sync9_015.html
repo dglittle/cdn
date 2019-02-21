@@ -75,8 +75,8 @@ var how_long_add_new = 311 // 1000
 for (var t = 0; t < 10000; t++) {
     console.log('t = ' + t)
     
-    if (t == 9) {
-        //debugger
+    if (t == 55) {
+        debugger
     }
 
     var i = Math.floor(Math.random() * n_clients)
@@ -254,7 +254,7 @@ function sync9_create_server(c_funcs) {
         var known = new Set(Object.values(p.c_to_s))
         var changes = sync9_gen_diff(s.s9, (x) => x <= sv || known.has(x), (x) => true)
         p.unacked[s.sv] = true
-        c_funcs.welcome(s.sv, p.seen_c, changes)
+        c_funcs.welcome(uid, s.sv, p.seen_c, changes)
         prune(p)
     }
     
