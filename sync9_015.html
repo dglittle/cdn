@@ -60,9 +60,17 @@ for (var i = 0; i < n_clients; i++) {
             
                     console.log(`s.add ${uid} ${cv} ${sv}`)
                     // console.log(JSON.stringify(changes))
+                    
+                    
+                    if (cv == -78) {
+                        console.log(JSON.stringify(c.s9.val.S.elems[0].S))
+                    }
+            
+            
             
                     server.add_version(uid, cv, sv, changes)
                     
+                    console.log(sync9_read(server.s9))
                     //console.log(JSON.stringify(sync9_space_dag_get(server.s9.val.S, 0).S))
                 })
             },
@@ -82,11 +90,11 @@ for (var i = 0; i < n_clients; i++) {
     })()
 }
 
-var how_long_add_new = 814 // 1000
+var how_long_add_new = 813 // 1000
 for (var t = 0; t < 10000; t++) {
     console.log('t = ' + t)
     
-    // if (t == 118) {
+    // if (t == 843) {
     //     debugger
     // }
 
