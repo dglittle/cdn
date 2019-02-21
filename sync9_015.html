@@ -94,18 +94,22 @@ for (var i = 0; i < n_clients; i++) {
                     
                     
                     if (uid == 'pZIV07iZ9e5obol') {
-                        if (cv == -12) {
+                        if (cv == -10) {
                             console.log(sync9_read(server.s9))
+                            debugger
                         }
                     }
                     
                     server.add_version(uid, cv, sv, changes)
                     
                     
+                    keep.push(server.sv + ' ' + cv + ' ' + sync9_read(server.s9) + '  <-- ' + uid)
+                    
+                    
                     if (uid == 'pZIV07iZ9e5obol') {
                         if (cv == -12) {
                             console.log(sync9_read(server.s9))
-                            throw 'stop'
+                            // throw 'stop'
                         }
                     }
                     
@@ -156,7 +160,7 @@ for (var t = 0; t < 10000; t++) {
             
             
             if (c.uid == 'pZIV07iZ9e5obol') {
-                if (c.cv == -11) {
+                if (c.cv == -9) {
                     console.log(JSON.stringify(sync9_read(c.s9)))
                 }
             }
@@ -167,7 +171,7 @@ for (var t = 0; t < 10000; t++) {
             
             
             if (c.uid == 'pZIV07iZ9e5obol') {
-                if (c.cv == -12) {
+                if (c.cv == -10) {
                     console.log(JSON.stringify(sync9_read(c.s9)))
                     debugger
                 }
@@ -237,6 +241,7 @@ var check_good = true
 console.log('check_good: ' + check_good)
 
 // console.log(keep.map(x => JSON.stringify(x, null, '    ')).join('\n'))
+console.log(keep.join('\n'))
 
 
 
