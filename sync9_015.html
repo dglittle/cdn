@@ -169,19 +169,19 @@ function sync9_create_client(s_funcs) {
     
     c.welcome = (sv, cv, changes) => {
         if (c.sv == sv) return
-        sync9_add_version(sv, {[c.sv] : true, [cv] : true}, changes)
+        sync9_add_version(c.s9, sv, {[c.sv] : true, [cv] : true}, changes)
         prune(sv, cv)
         s_funcs.ack(c.uid, sv)
     }
     
     c.add_version = (sv, changes) => {
-        sync9_add_version(sv, {[c.sv] : true}, changes)
+        sync9_add_version(c.s9, sv, {[c.sv] : true}, changes)
         prune(sv, 0)
         s_funcs.ack(c.uid, sv)
     }
     
     c.ack = (sv, cv) => {
-        sync9_add_version(sv, {[c.sv] : true, [cv] : true}, [])
+        sync9_add_version(c.s9, sv, {[c.sv] : true, [cv] : true}, [])
         prune(sv, cv)
         s_funcs.ack(c.uid, sv)
     }
@@ -193,7 +193,7 @@ function sync9_create_client(s_funcs) {
             sv : c.sv,
             changes : changes
         }
-        sync9_add_version(x.cv, {[x.cv + 1] : true, [x.sv] : true}, x.changes)
+        sync9_add_version(c.s9, x.cv, {[x.cv + 1] : true, [x.sv] : true}, x.changes)
         c.unacked.push(x)
         s_funcs.add_version(c.uid, x.cv, x.sv, x.changes)
     }
