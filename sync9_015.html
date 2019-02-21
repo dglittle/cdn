@@ -393,15 +393,15 @@ function sync9_create_server(c_funcs) {
         p.seen_c = cv
         var known = {}
         Object.values(p.c_to_s).forEach(x => known[x] = true)
-        var changes = sync9_rebase(s.s9, cv, changes, (x) => x <= sv || known[x], (x) => true)
+        var new_changes = sync9_rebase(s.s9, cv, changes, (x) => x <= sv || known[x], (x) => true)
         s.sv++
         p.acked_s = sv
         p.c_to_s[cv] = s.sv
-        sync9_add_version(s.s9, s.sv, {[s.sv - 1] : true}, changes)
+        sync9_add_version(s.s9, s.sv, {[s.sv - 1] : true}, changes, (x) => x <= sv || known[x])
         Object.entries(s.peers).forEach(x => {
             if (x[0] != uid && x[1].online) {
                 x[1].unacked[s.sv] = true
-                c_funcs.add_version(x[0], s.sv, changes)
+                c_funcs.add_version(x[0], s.sv, new_changes)
             }
         })
         c_funcs.ack(uid, s.sv, cv)
@@ -603,7 +603,7 @@ function sync9_create() {
     }
 }
 
-function sync9_add_version(x, vid, parents, changes) {
+function sync9_add_version(x, vid, parents, changes, is_anc) {
     if (x.T[vid]) return
     x.T[vid] = Object.assign({}, parents)
     
@@ -612,12 +612,13 @@ function sync9_add_version(x, vid, parents, changes) {
     })
     x.leaves[vid] = true
     
-    var is_anc = null
-    if (parents == x.leaves) {
-        is_anc = (_vid) => _vid != vid
-    } else {
-        var ancs = sync9_get_ancestors(x, parents)
-        is_anc = _vid => ancs[_vid]
+    if (!is_anc) {
+        if (parents == x.leaves) {
+            is_anc = (_vid) => _vid != vid
+        } else {
+            var ancs = sync9_get_ancestors(x, parents)
+            is_anc = _vid => ancs[_vid]
+        }
     }
     
     changes.forEach(change => {
