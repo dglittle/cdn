@@ -9,9 +9,9 @@ console.log('-------------------')
 
 var sync9_ROOT = 0
 
-Math.randomSeed(2)
+Math.randomSeed(1)
 
-var n_clients = 1
+var n_clients = 2
 var clients = {}
 
 var server = sync9_create_server({
@@ -83,7 +83,7 @@ for (var i = 0; i < n_clients; i++) {
     })()
 }
 
-var how_long_add_new = 814 // 1000
+var how_long_add_new = 10 // 1000
 for (var t = 0; t < 10000; t++) {
     console.log('t = ' + t)
     
@@ -319,7 +319,7 @@ function sync9_create_server(c_funcs) {
         p.c_to_s[cv] = s.sv
         sync9_add_version(s.s9, s.sv, {[s.sv - 1] : true}, changes)
         Object.entries(s.peers).forEach(x => {
-            if (x[0] != uid && x.online) {
+            if (x[0] != uid && x[1].online) {
                 x[1].unacked[s.sv] = true
                 c_funcs.add_version(x[0], s.sv, changes)
             }
