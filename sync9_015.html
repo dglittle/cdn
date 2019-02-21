@@ -90,6 +90,9 @@ for (var t = 0; t < 10000; t++) {
     
     if (t >= how_long_add_new && Object.values(clients).some(x => x.state == 'disconnected')) {
         var c = Object.values(clients).find(x => x.state == 'disconnected')
+            
+        console.log(`c.join`)
+            
         c.state = 'connected'
         c.join()
     } else if (t < how_long_add_new && Math.random() < 0.1) {
@@ -98,9 +101,15 @@ for (var t = 0; t < 10000; t++) {
             c.local_add_version(edit.changes)
         } else {
             if (c.state == 'disconnected') {
+            
+                console.log(`c.join`)
+            
                 c.state = 'connected'
                 c.join()
             } else if (c.state == 'connected') {
+            
+                console.log(`c.leave`)
+            
                 c.state = 'disconnected'
                 c.state_note = 'had been connected'
                 c.incoming = []
