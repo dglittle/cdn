@@ -19,7 +19,7 @@ var server = sync9_create_server({
         clients[uid].incoming.push(() => {
             
             console.log(`c.welcome ${uid} ${sv} ${cv}`)
-            console.log(JSON.stringify(changes))
+            // console.log(JSON.stringify(changes))
             
             clients[uid].welcome(sv, cv, changes)
         })
@@ -28,7 +28,7 @@ var server = sync9_create_server({
         clients[uid].incoming.push(() => {
             
             console.log(`c.add_version ${uid} ${sv}`)
-            console.log(JSON.stringify(changes))
+            // console.log(JSON.stringify(changes))
             
             clients[uid].add_version(sv, changes)
         })
@@ -59,11 +59,11 @@ for (var i = 0; i < n_clients; i++) {
                 c.outgoing.push(() => {
             
                     console.log(`s.add ${uid} ${cv} ${sv}`)
-                    console.log(JSON.stringify(changes))
+                    // console.log(JSON.stringify(changes))
             
                     server.add_version(uid, cv, sv, changes)
                     
-                    console.log(JSON.stringify(sync9_space_dag_get(server.s9.val.S, 0).S))
+                    //console.log(JSON.stringify(sync9_space_dag_get(server.s9.val.S, 0).S))
                 })
             },
             ack : (uid, sv) => {
@@ -297,7 +297,8 @@ function sync9_create_server(c_funcs) {
         }
         p.acked_s = sv
         p.online = true
-        var known = new Set(Object.values(p.c_to_s))
+        var known = {}
+        Object.values(p.c_to_s).forEach(x => known[x] = true)
         var changes = sync9_gen_diff(s.s9, (x) => x <= sv || known.has(x), (x) => true)
         p.unacked[s.sv] = true
         c_funcs.welcome(uid, s.sv, p.seen_c, changes)
@@ -308,7 +309,8 @@ function sync9_create_server(c_funcs) {
         var p = s.peers[uid]
         if (cv >= p.seen_c) return
         p.seen_c = cv
-        var known = new Set(Object.values(p.c_to_s))
+        var known = {}
+        Object.values(p.c_to_s).forEach(x => known[x] = true)
         var changes = sync9_rebase(s.s9, cv, changes, (x) => x <= sv || known.has(x), (x) => true)
         s.sv++
         p.acked_s = sv
