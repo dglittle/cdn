@@ -9,7 +9,7 @@ console.log('-------------------')
 
 var sync9_ROOT = 0
 
-Math.randomSeed(1)
+Math.randomSeed(3)
 
 var n_clients = 2
 var clients = {}
@@ -59,8 +59,8 @@ for (var i = 0; i < n_clients; i++) {
     })()
 }
 
-var how_long_add_new = 50 // 1000
-for (var t = 0; t < 1000; t++) {
+var how_long_add_new = 121 // 1000
+for (var t = 0; t < 10000; t++) {
     console.log('t = ' + t)
     
     if (t == 26) {
@@ -79,8 +79,24 @@ for (var t = 0; t < 1000; t++) {
         
     } else if (t < how_long_add_new && Math.random() < 0.1) {
         if (Math.random() < 0.9) {
+            
+            
+            
+            console.log(c.uid)
+            console.log(JSON.stringify(sync9_read(c.s9)))
+            
+            
+            
             var edit = create_random_edit(c.s9)
             c.local_add_version(edit.changes)
+            
+            
+            
+            console.log(edit.changes)
+            console.log(JSON.stringify(sync9_read(c.s9)))
+            
+            
+            
         } else {
             if (c.state == 'disconnected') {
                 c.state = 'connected'
@@ -245,6 +261,9 @@ function sync9_create_server(c_funcs) {
             Object.assign(saved, x.unacked)
             Object.values(x.c_to_s).forEach(x => saved[x] = true)
         })
+        
+        debugger
+        
         sync9_prune(s.s9, (a, b) => !saved[a] && !saved[b])
     }
     
@@ -277,7 +296,22 @@ function sync9_create_server(c_funcs) {
         s.sv++
         p.acked_s = sv
         p.c_to_s[cv] = s.sv
+        
+        
+        
+        var A = sync9_read(s.s9)
+        
+        
+        debugger
+        
+        
         sync9_add_version(s.s9, cv, {[s.sv - 1] : true}, changes, (x) => x <= sv || known[x], s.sv)
+        
+        
+        var B = sync9_read(s.s9)
+        
+        
+        
         Object.entries(s.peers).forEach(x => {
             if (x[0] != uid && x[1].online) {
                 x[1].unacked[s.sv] = true
@@ -932,11 +966,11 @@ function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b, seen_nodes) {
         while (node.next) node = node.next
         node.next = next
     }
-    function process_node(node, offset) {
+    function process_node(node, offset, vid) {
         var nexts = node.nexts
         var next = node.next
 
-        var first_prunable = nexts.findIndex(x => has_everyone_whos_seen_a_seen_b(node.vid, x.vid))
+        var first_prunable = nexts.findIndex(x => has_everyone_whos_seen_a_seen_b(vid, x.vid))
         if (first_prunable >= 0) {
             var gamma = next
             if (first_prunable + 1 < nexts.length) {
@@ -967,14 +1001,14 @@ function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b, seen_nodes) {
             return true
         }
         
-        if (Object.keys(node.deleted_by).some(k => has_everyone_whos_seen_a_seen_b(node.vid, k))) {
+        if (Object.keys(node.deleted_by).some(k => has_everyone_whos_seen_a_seen_b(vid, k))) {
             node.deleted_by = {}
             node.elems = typeof(node.elems) == 'string' ? '' : []
             delete node.gash
             return true
         }
         
-        if (next && !next.nexts[0] && (Object.keys(next.deleted_by).some(k => has_everyone_whos_seen_a_seen_b(node.vid, k)) || next.elems.length == 0)) {
+        if (next && !next.nexts[0] && (Object.keys(next.deleted_by).some(k => has_everyone_whos_seen_a_seen_b(vid, k)) || next.elems.length == 0)) {
             node.next = next.next
             return true
         }
@@ -991,9 +1025,9 @@ function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b, seen_nodes) {
         }
     }
     var did_something = false
-    sync9_trav_space_dag(S, () => true, (node, offset, has_nexts, prev) => {
-        if (!prev) seen_nodes[node.vid] = true
-        while (process_node(node, offset)) {
+    sync9_trav_space_dag(S, () => true, (node, offset, has_nexts, prev, vid) => {
+        if (!prev) seen_nodes[vid] = true
+        while (process_node(node, offset, vid)) {
             did_something = true
         }
     }, true)
