@@ -24,16 +24,16 @@ var server = sync9_create_server({
         clients[uid].incoming.push(() => {
             
             
-            console.log(uid)
-            console.log(JSON.stringify(sync9_read(clients[uid].s9)))
+            // console.log(uid)
+            // console.log(JSON.stringify(sync9_read(clients[uid].s9)))
             
             
             clients[uid].add_version(sv, changes)
             
             
             
-            console.log(changes)
-            console.log(JSON.stringify(sync9_read(clients[uid].s9)))
+            // console.log(changes)
+            // console.log(JSON.stringify(sync9_read(clients[uid].s9)))
             
         })
     },
@@ -57,8 +57,8 @@ for (var i = 0; i < n_clients; i++) {
                 c.outgoing.push(() => {
                     
                     
-                    console.log('server chaning')
-                    console.log(JSON.stringify(sync9_read(server.s9)))
+                    // console.log('server chaning')
+                    // console.log(JSON.stringify(sync9_read(server.s9)))
                     
                     
                     
@@ -67,8 +67,8 @@ for (var i = 0; i < n_clients; i++) {
 
 
 
-                    console.log(changes)
-                    console.log(JSON.stringify(sync9_read(server.s9)))
+                    // console.log(changes)
+                    // console.log(JSON.stringify(sync9_read(server.s9)))
 
 
                 })
@@ -86,7 +86,7 @@ for (var i = 0; i < n_clients; i++) {
     })()
 }
 
-for (var t = 0; t < 523; t++) {
+for (var t = 0; t < 1000; t++) {
     console.log('t = ' + t)
     
     var i = Math.floor(Math.random() * n_clients)
@@ -101,8 +101,8 @@ for (var t = 0; t < 523; t++) {
             
             
             
-            console.log(c.uid)
-            console.log(JSON.stringify(sync9_read(c.s9)))
+            // console.log(c.uid)
+            // console.log(JSON.stringify(sync9_read(c.s9)))
             
             
             
@@ -111,8 +111,8 @@ for (var t = 0; t < 523; t++) {
             
             
             
-            console.log(edit.changes)
-            console.log(JSON.stringify(sync9_read(c.s9)))
+            // console.log(edit.changes)
+            // console.log(JSON.stringify(sync9_read(c.s9)))
             
             
             
