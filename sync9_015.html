@@ -9,7 +9,7 @@ console.log('-------------------')
 
 var sync9_ROOT = 0
 
-Math.randomSeed(10)
+Math.randomSeed(26)
 
 var n_clients = 2
 var clients = {}
@@ -86,7 +86,7 @@ for (var i = 0; i < n_clients; i++) {
     })()
 }
 
-for (var t = 0; t < 1000; t++) {
+for (var t = 0; t < 2000; t++) {
     console.log('t = ' + t)
     
     var i = Math.floor(Math.random() * n_clients)
@@ -580,7 +580,14 @@ function sync9_add_version(x, vid, parents, changes, is_anc, vid_override) {
                 } else if (i < parse.keys.length - 1 && cur.t == 'arr') {
                     cur = sync9_space_dag_get(cur.S, key, is_anc)
                 } else throw 'bad'
-            } else throw 'bad'
+            } else {
+             
+             
+                debugger  
+                
+                throw 'bad'
+                
+            }
         })
         if (!parse.range) {
             if (cur.t != 'val') throw 'bad'
