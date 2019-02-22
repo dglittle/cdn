@@ -321,22 +321,7 @@ function sync9_create_server(c_funcs) {
         s.sv++
         p.acked_s = sv
         p.c_to_s[cv] = s.sv
-        
-        
-        
-        var A = sync9_read(s.s9)
-        
-        
-        debugger
-        
-        
         sync9_add_version(s.s9, cv, {[s.sv - 1] : true}, changes, (x) => x <= sv || known[x], s.sv)
-        
-        
-        var B = sync9_read(s.s9)
-        
-        
-        
         Object.entries(s.peers).forEach(x => {
             if (x[0] != uid && x[1].online) {
                 x[1].unacked[s.sv] = true
