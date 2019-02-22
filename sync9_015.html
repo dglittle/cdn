@@ -22,7 +22,19 @@ var server = sync9_create_server({
     },
     add_version : (uid, sv, changes) => {
         clients[uid].incoming.push(() => {
+            
+            
+            console.log(uid)
+            console.log(JSON.stringify(sync9_read(clients[uid].s9)))
+            
+            
             clients[uid].add_version(sv, changes)
+            
+            
+            
+            console.log(changes)
+            console.log(JSON.stringify(sync9_read(clients[uid].s9)))
+            
         })
     },
     ack : (uid, sv, cv) => {
@@ -43,7 +55,22 @@ for (var i = 0; i < n_clients; i++) {
             add_version : (uid, cv, sv, changes) => {
                 if (c.state == 'disconnected') return
                 c.outgoing.push(() => {
+                    
+                    
+                    console.log('server chaning')
+                    console.log(JSON.stringify(sync9_read(server.s9)))
+                    
+                    
+                    
+                    
                     server.add_version(uid, cv, sv, changes)
+
+
+
+                    console.log(changes)
+                    console.log(JSON.stringify(sync9_read(server.s9)))
+
+
                 })
             },
             ack : (uid, sv) => {
