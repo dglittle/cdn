@@ -86,25 +86,17 @@ for (var i = 0; i < n_clients; i++) {
     })()
 }
 
-var how_long_add_new = 523 // 1000
-for (var t = 0; t < 10000; t++) {
+for (var t = 0; t < 523; t++) {
     console.log('t = ' + t)
     
-    if (t == 26) {
-        // debugger
-    }
-
     var i = Math.floor(Math.random() * n_clients)
     var c = Object.values(clients)[i]
     
-    if (t >= how_long_add_new && Object.values(clients).some(x => x.state == 'disconnected')) {
+    if (Object.values(clients).some(x => x.state == 'disconnected')) {
         var c = Object.values(clients).find(x => x.state == 'disconnected')
         c.state = 'connected'
         c.join()
-        
-        console.log('CONN: ' + c.uid)
-        
-    } else if (t < how_long_add_new && Math.random() < 0.1) {
+    } else if (Math.random() < 0.1) {
         if (Math.random() < 0.9) {
             
             
@@ -145,13 +137,22 @@ for (var t = 0; t < 10000; t++) {
                 c.outgoing.shift()()
         }
     }
-    if (t >= how_long_add_new) {
-        if (Object.values(clients).every(x => x.incoming.length == 0 && x.outgoing.length == 0)) {
-            break
-        }
-    }
 }
 
+for (var t = 0; t < 10000; t++) {
+    console.log('tt = ' + t)
+    
+    Object.values(clients).forEach(c => {
+        if (c.state == 'disconnected') {
+            c.state = 'connected'
+            c.join()
+        }
+        while (c.incoming.length > 0) c.incoming.shift()()
+        while (c.outgoing.length > 0) c.outgoing.shift()()
+    })
+    
+    if (Object.values(clients).every(x => x.incoming.length == 0 && x.outgoing.length == 0)) break
+}
 
 var check_val = null
 var check_good = true
