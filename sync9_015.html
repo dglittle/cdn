@@ -289,9 +289,6 @@ function sync9_create_server(c_funcs) {
             Object.assign(saved, x.unacked)
             Object.values(x.c_to_s).forEach(x => saved[x] = true)
         })
-        
-        debugger
-        
         sync9_prune(s.s9, (a, b) => !saved[a] && !saved[b])
     }
     
