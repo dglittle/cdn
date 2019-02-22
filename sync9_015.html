@@ -21,11 +21,22 @@ var server = sync9_create_server({
         })
     },
     add_version : (uid, sv, changes) => {
+        
+        
+        
+            if (changes[0] == '[undefined:NaN] = "QQQ"') {
+                debugger
+            }
+        
+        
+        
+        
         clients[uid].incoming.push(() => {
             
             
             // console.log(uid)
             // console.log(JSON.stringify(sync9_read(clients[uid].s9)))
+            
             
             
             clients[uid].add_version(sv, changes)
