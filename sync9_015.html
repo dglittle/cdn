@@ -25,7 +25,7 @@ var server = sync9_create_server({
         
         
             if (changes[0] == '[undefined:NaN] = "QQQ"') {
-                debugger
+                //debugger
             }
         
         
@@ -323,6 +323,15 @@ function sync9_create_server(c_funcs) {
     }
     
     s.add_version = (uid, cv, sv, changes) => {
+        
+        
+        
+        if (changes[0] == '[19:19] = "QQQ"') {
+            //debugger
+        }
+        
+        
+        
         var p = s.peers[uid]
         if (cv >= p.seen_c) return
         p.seen_c = cv
