@@ -241,6 +241,7 @@ function sync9_create_server(c_funcs) {
             if (x[1] <= c.acked_s) delete c.c_to_s[x[0]]
         })
         
+        var saved = {}
         Object.values(s.peers).forEach(x => {
             Object.assign(saved, x.unacked)
             Object.values(x.c_to_s).forEach(x => saved[x] = true)
