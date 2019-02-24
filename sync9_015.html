@@ -84,6 +84,17 @@ for (var i = 0; i < n_clients; i++) {
             },
             ack : (uid, sv) => {
                 c.outgoing.push(() => {
+                    
+                    
+            if (uid == 'J5BIXP8RO5mVbug') {
+                if (sv == 64) {
+                    console.log('YYYYYYYYYYY')
+                }
+            }
+                    
+                    
+                    
+                    
                     server.ack(uid, sv)
                 })
             }
