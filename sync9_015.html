@@ -59,7 +59,7 @@ for (var i = 0; i < n_clients; i++) {
     })()
 }
 
-for (var t = 0; t < 2000; t++) {
+for (var t = 0; t < 819; t++) {
     console.log('t = ' + t)
     
     var i = Math.floor(Math.random() * n_clients)
@@ -94,6 +94,9 @@ for (var t = 0; t < 2000; t++) {
                 c.outgoing.shift()()
         }
     }
+    
+    console.log('serve: ' + sync9_read(server.s9))
+    console.log(c.uid + ': ' + sync9_read(c.s9))
 }
 
 for (var t = 0; t < 10000; t++) {
