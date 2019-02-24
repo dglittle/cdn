@@ -22,6 +22,15 @@ var server = sync9_create_server({
     },
     add_version : (uid, sv, changes) => {
         clients[uid].incoming.push(() => {
+            
+            
+            if (uid == 'J5BIXP8RO5mVbug') {
+                if (sv == 63) {
+                    throw 'stopppppy'
+                }
+            }
+            
+            
             clients[uid].add_version(sv, changes)
         })
     },
