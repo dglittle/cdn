@@ -112,7 +112,7 @@ for (var t = 0; t < 820; t++) {
                 c.state = 'connected'
                 c.join()
         
-                console.log('DISCONNECT ' + c.uid)
+                console.log('JOIN ' + c.uid)
         
             } else if (c.state == 'connected') {
                 c.state = 'disconnected'
@@ -120,6 +120,9 @@ for (var t = 0; t < 820; t++) {
                 c.incoming = []
                 c.outgoing = []
                 server.leave(c.uid)
+        
+                console.log('DISCONNECT ' + c.uid)
+        
             }
         }
     } else {
