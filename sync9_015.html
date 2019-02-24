@@ -89,7 +89,7 @@ for (var i = 0; i < n_clients; i++) {
 for (var t = 0; t < 820; t++) {
     console.log('t = ' + t)
     
-    if (t == 802) {
+    if (t == 797 || t == 802) {
         debugger
     }
     
@@ -134,6 +134,26 @@ for (var t = 0; t < 820; t++) {
                 c.outgoing.shift()()
         }
     }
+    
+    
+    
+    
+    
+    var found = false
+    sync9_trav_space_dag(server.s9.val.S.elems[0].S, () => true, (node) => {
+        if (node.vid == 63 && node.elems == 'CC') {
+            found = true
+        }
+    })
+    if (!found && t >= 798) {
+        throw 'BLOOP!'
+    }
+    
+    
+    
+    
+    
+    
     
     console.log('serve: ' + sync9_read(server.s9))
     console.log(c.uid + ': ' + sync9_read(c.s9))
