@@ -25,7 +25,7 @@ var server = sync9_create_server({
         
         
             if (changes[0] == '[undefined:NaN] = "QQQ"') {
-                //debugger
+                debugger
             }
         
         
@@ -327,7 +327,12 @@ function sync9_create_server(c_funcs) {
         
         
         if (changes[0] == '[19:19] = "QQQ"') {
-            //debugger
+            
+            
+            console.log(JSON.stringify(s.s9, null, '    '))
+            
+            
+            debugger
         }
         
         
@@ -585,7 +590,7 @@ function sync9_add_version(x, vid, parents, changes, is_anc, vid_override) {
             } else {
              
              
-                //debugger  
+                debugger  
                 
                 throw 'bad'
                 
