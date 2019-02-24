@@ -449,6 +449,8 @@ function sync9_space_dag_rebase(S, vid, splices, is_anc, is_new_anc) {
             offset_a += node.elems.length
         if (!deleted_by_b)
             offset_b += node.elems.length
+        if (node.next)
+            set_us.push(node)
     }, true, node => {
         set_us.push(node)
     })
@@ -489,9 +491,8 @@ function sync9_space_dag_rebase(S, vid, splices, is_anc, is_new_anc) {
                             return 0
                         })
                         add_result(nexts[i] ? nexts[i].offset_b :
-                            node.next ? node.next.offset_b :
                             node.real_next ? node.real_next.offset_b :
-                            offset_b, 0, s[2])
+                            node.offset_b + (deleted_by_b ? 0 : (s[0] - node.offset_a)), 0, s[2])
                     } else {
                         add_result(node.offset_b + (deleted_by_b ? 0 : (s[0] - node.offset_a)), 0, s[2])
                     }
