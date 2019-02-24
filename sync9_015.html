@@ -98,8 +98,8 @@ for (var i = 0; i < n_clients; i++) {
 for (var t = 0; t < 820; t++) {
     console.log('t = ' + t)
     
-    if (t == 797 || t == 802 || t == 819) {
-        debugger
+    if (t == 797 || t == 802 || t == 819 || t == 803) {
+        // debugger
     }
     
     var i = Math.floor(Math.random() * n_clients)
@@ -148,15 +148,15 @@ for (var t = 0; t < 820; t++) {
     
     
     
-    var found = false
-    sync9_trav_space_dag(server.s9.val.S.elems[0].S, () => true, (node) => {
-        if (node.vid == 63 && node.elems == 'CC') {
-            found = true
-        }
-    })
-    if (!found && t >= 798) {
-        throw 'BLOOP!'
-    }
+    // var found = false
+    // sync9_trav_space_dag(server.s9.val.S.elems[0].S, () => true, (node) => {
+    //     if (node.vid == 63 && node.elems == 'CC') {
+    //         found = true
+    //     }
+    // })
+    // if (!found && t >= 798) {
+    //     throw 'BLOOP!'
+    // }
     
     
     
