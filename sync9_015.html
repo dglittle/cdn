@@ -78,11 +78,11 @@ for (var t = 0; t < 2000; t++) {
                 c.state = 'connected'
                 c.join()
             } else if (c.state == 'connected') {
-                // c.state = 'disconnected'
-                // c.state_note = 'had been connected'
-                // c.incoming = []
-                // c.outgoing = []
-                // server.leave(c.uid)
+                c.state = 'disconnected'
+                c.state_note = 'had been connected'
+                c.incoming = []
+                c.outgoing = []
+                server.leave(c.uid)
             }
         }
     } else {
