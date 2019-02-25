@@ -22,15 +22,6 @@ var server = sync9_create_server({
     },
     add_version : (uid, sv, changes) => {
         clients[uid].incoming.push(() => {
-            
-            
-            if (uid == 'J5BIXP8RO5mVbug') {
-                if (sv == 63) {
-                    throw 'stopppppy'
-                }
-            }
-            
-            
             clients[uid].add_version(sv, changes)
         })
     },
@@ -50,51 +41,13 @@ for (var i = 0; i < n_clients; i++) {
                 })
             },
             add_version : (uid, cv, sv, changes) => {
-                
-                
-                
-                if (changes.length == 1 && changes[0] == '[19:19] = "PPP"') {
-                    
-                    console.log(JSON.stringify(c.s9, null, '    '))
-                    console.log(sync9_read(c.s9))
-                    
-                    debugger
-                }
-                
-                
-                
-                
-                
                 if (c.state == 'disconnected') return
                 c.outgoing.push(() => {
-                    
-                    
-                    
-                    if (changes.length == 1 && changes[0] == '[19:19] = "PPP"') {
-                        
-                        console.log(JSON.stringify(server.s9, null, '    '))
-                        console.log(sync9_read(server.s9))
-                        
-                        debugger
-                    }
-                    
-                    
                     server.add_version(uid, cv, sv, changes)
                 })
             },
             ack : (uid, sv) => {
                 c.outgoing.push(() => {
-                    
-                    
-            if (uid == 'J5BIXP8RO5mVbug') {
-                if (sv == 64) {
-                    console.log('YYYYYYYYYYY')
-                }
-            }
-                    
-                    
-                    
-                    
                     server.ack(uid, sv)
                 })
             }
@@ -109,19 +62,35 @@ for (var i = 0; i < n_clients; i++) {
 for (var t = 0; t < 820; t++) {
     console.log('t = ' + t)
     
-    if (t == 797 || t == 802 || t == 819 || t == 803) {
+    if (t == 797) {
         // debugger
     }
     
     var i = Math.floor(Math.random() * n_clients)
     var c = Object.values(clients)[i]
+
+
+
+
+
+
+
+    // work here : this keep connecting people too fast
+    
+    
+    
+    
     
     if (Object.values(clients).some(x => x.state == 'disconnected')) {
         var c = Object.values(clients).find(x => x.state == 'disconnected')
         c.state = 'connected'
         c.join()
         
-        console.log('JOIN ' + c.uid)
+        
+        
+        
+        
+        
         
     } else if (Math.random() < 0.1) {
         if (Math.random() < 0.9) {
@@ -131,18 +100,12 @@ for (var t = 0; t < 820; t++) {
             if (c.state == 'disconnected') {
                 c.state = 'connected'
                 c.join()
-        
-                console.log('JOIN ' + c.uid)
-        
             } else if (c.state == 'connected') {
                 c.state = 'disconnected'
                 c.state_note = 'had been connected'
                 c.incoming = []
                 c.outgoing = []
                 server.leave(c.uid)
-        
-                console.log('DISCONNECT ' + c.uid)
-        
             }
         }
     } else {
@@ -154,29 +117,6 @@ for (var t = 0; t < 820; t++) {
                 c.outgoing.shift()()
         }
     }
-    
-    
-    
-    
-    
-    // var found = false
-    // sync9_trav_space_dag(server.s9.val.S.elems[0].S, () => true, (node) => {
-    //     if (node.vid == 63 && node.elems == 'CC') {
-    //         found = true
-    //     }
-    // })
-    // if (!found && t >= 798) {
-    //     throw 'BLOOP!'
-    // }
-    
-    
-    
-    
-    
-    
-    
-    console.log('serve: ' + sync9_read(server.s9))
-    console.log(c.uid + ': ' + sync9_read(c.s9))
 }
 
 for (var t = 0; t < 10000; t++) {
@@ -189,13 +129,9 @@ for (var t = 0; t < 10000; t++) {
         }
         while (c.incoming.length > 0) {
             c.incoming.shift()()
-            
-            console.log(c.uid + ': ' + sync9_read(c.s9))
         }
         while (c.outgoing.length > 0) {
             c.outgoing.shift()()
-            
-            console.log('server: ' + sync9_read(server.s9))
         }
     })
     
