@@ -182,16 +182,16 @@ function sync9_create_client(s_funcs) {
     }
     
     c.welcome = (sv, cv, changes) => {
-        if (c.sv == sv) return
-        var parents = {[c.sv] : true}
-        if (cv < c.acked_c) {
-            c.acked_c = cv
-            parents[cv] = true
+        if (sv > c.sv) {
+            var parents = {[c.sv] : true}
+            if (cv < c.acked_c) {
+                c.acked_c = cv
+                parents[cv] = true
+            }
+            sync9_add_version(c.s9, sv, parents, changes)
+            prune(sv, cv)
+            s_funcs.ack(c.uid, sv)
         }
-        sync9_add_version(c.s9, sv, parents, changes)
-        prune(sv, cv)
-        s_funcs.ack(c.uid, sv)
-        
         
         c.unacked = c.unacked.filter(x => x.cv < cv)
         c.unacked.forEach(x => {
