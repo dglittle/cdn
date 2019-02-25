@@ -17,6 +17,7 @@ var clients = {}
 var server = sync9_create_server({
     welcome : (uid, sv, cv, changes) => {
         clients[uid].incoming.push(() => {
+            clients[uid].state = 'connected'            
             clients[uid].welcome(sv, cv, changes)
         })
     },
@@ -83,7 +84,6 @@ for (var t = 0; t < 820; t++) {
     
     if (Object.values(clients).some(x => x.state == 'disconnected')) {
         var c = Object.values(clients).find(x => x.state == 'disconnected')
-        c.state = 'connected'
         c.join()
         
         
@@ -98,7 +98,6 @@ for (var t = 0; t < 820; t++) {
             c.local_add_version(edit.changes)
         } else {
             if (c.state == 'disconnected') {
-                c.state = 'connected'
                 c.join()
             } else if (c.state == 'connected') {
                 c.state = 'disconnected'
@@ -124,7 +123,6 @@ for (var t = 0; t < 10000; t++) {
     
     Object.values(clients).forEach(c => {
         if (c.state == 'disconnected') {
-            c.state = 'connected'
             c.join()
         }
         while (c.incoming.length > 0) {
@@ -192,9 +190,6 @@ function sync9_create_client(s_funcs) {
     
     c.join = () => {
         s_funcs.join(c.uid, c.sv)
-        c.unacked.forEach(x => {
-            s_funcs.add_version(c.uid, x.cv, x.sv, x.changes)
-        })
     }
     
     function prune(sv, cv) {
@@ -213,6 +208,14 @@ function sync9_create_client(s_funcs) {
         sync9_add_version(c.s9, sv, parents, changes)
         prune(sv, cv)
         s_funcs.ack(c.uid, sv)
+        
+        
+        c.unacked = c.unacked.filter(x => x.cv < cv)
+        c.unacked.forEach(x => {
+            x.changes = sync9_rebase(c.s9, x.cv, x.changes, vid => vid > x.cv && vid <= x.sv, vid => vid > x.cv && vid <= sv)
+            x.sv = sv
+            s_funcs.add_version(c.uid, x.cv, x.sv, x.changes)
+        })
     }
     
     c.add_version = (sv, changes) => {
