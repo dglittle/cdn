@@ -99,7 +99,7 @@ for (var t = 0; t < 37; t++) {
     }
     
     console.log('server: ' + sync9_read(server.s9))
-    console.log('client: ' + sync9_read(c.s9))
+    console.log('client: ' + sync9_read(c.s9) + ' ' + c.uid)
 }
 
 for (var t = 0; t < 10000; t++) {
@@ -112,9 +112,14 @@ for (var t = 0; t < 10000; t++) {
         }
         while (c.incoming.length > 0) {
             c.incoming.shift()()
+            
+            console.log('client: ' + sync9_read(c.s9) + ' ' + c.uid)
+            
         }
         while (c.outgoing.length > 0) {
             c.outgoing.shift()()
+            
+            console.log('server: ' + sync9_read(server.s9))
         }
     })
     
