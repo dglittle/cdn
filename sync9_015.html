@@ -103,20 +103,24 @@ for (var t = 0; t < 37; t++) {
 }
 
 for (var t = 0; t < 10000; t++) {
-    console.log('tt = ' + t)
-    
     Object.values(clients).forEach(c => {
         if (c.state == 'disconnected') {
+            console.log('tt = ' + t++)
+            
             c.state = 'connecting'
             c.join()
         }
         while (c.incoming.length > 0) {
+            console.log('tt = ' + t++)
+            
             c.incoming.shift()()
             
             console.log('client: ' + sync9_read(c.s9) + ' ' + c.uid)
             
         }
         while (c.outgoing.length > 0) {
+            console.log('tt = ' + t++)
+            
             c.outgoing.shift()()
             
             console.log('server: ' + sync9_read(server.s9))
