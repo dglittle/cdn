@@ -44,10 +44,11 @@ for (var i = 0; i < n_clients; i++) {
                 })
             },
             add_version : (uid, cv, sv, changes) => {
-                if (c.state == 'disconnected') return
-                c.outgoing.push(() => {
-                    server.add_version(uid, cv, sv, changes)
-                })
+                if (c.state == 'connected') {
+                    c.outgoing.push(() => {
+                        server.add_version(uid, cv, sv, changes)
+                    })
+                }
             },
             ack : (uid, sv) => {
                 c.outgoing.push(() => {
@@ -62,7 +63,7 @@ for (var i = 0; i < n_clients; i++) {
     })()
 }
 
-for (var t = 0; t < 814; t++) {
+for (var t = 0; t < 815; t++) {
     debug_output.push('t = ' + t)
     
     var i = Math.floor(Math.random() * n_clients)
@@ -112,6 +113,11 @@ Object.values(clients).forEach(x => {
 })
 
 for (var t = 0; t < 10000; t++) {
+    
+    if (t == 0) {
+        debugger
+    }
+    
     Object.values(clients).forEach(c => {
         if (c.state == 'disconnected') {
             debug_output.push('tt = ' + t++)
