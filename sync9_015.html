@@ -14,6 +14,8 @@ Math.randomSeed(36)
 var n_clients = 2
 var clients = {}
 
+var debug_output = []
+
 var server = sync9_create_server({
     welcome : (uid, sv, cv, changes) => {
         clients[uid].incoming.push(() => {
@@ -68,13 +70,13 @@ for (var t = 0; t < 814; t++) {
 
     if (Math.random() < 0.1) {
         if (Math.random() < 0.9) {
-            console.log('NEW VERSION: ' + c.uid)
-            console.log(sync9_read(c.s9))
+            debug_output.push('NEW VERSION: ' + c.uid)
+            debug_output.push(sync9_read(c.s9))
             
             var edit = create_random_edit(c.s9)
             c.local_add_version(edit.changes)
             
-            console.log(sync9_read(c.s9))
+            debug_output.push(sync9_read(c.s9))
         } else {
             if (c.state == 'disconnected') {
                 c.state = 'connecting'
@@ -92,13 +94,13 @@ for (var t = 0; t < 814; t++) {
         if (Math.random() < 0.5) {
             if (c.incoming.length > 0) {
                 c.incoming.shift()()
-                console.log(c.uid)
-                console.log('client: ' + sync9_read(c.s9) + ' ' + c.uid)
+                debug_output.push(c.uid)
+                debug_output.push('client: ' + sync9_read(c.s9) + ' ' + c.uid)
             }
         } else {
             if (c.outgoing.length > 0) {
                 c.outgoing.shift()()
-                console.log('server: ' + sync9_read(server.s9))
+                debug_output.push('server: ' + sync9_read(server.s9))
             }
         }
     }
@@ -107,24 +109,24 @@ for (var t = 0; t < 814; t++) {
 for (var t = 0; t < 10000; t++) {
     Object.values(clients).forEach(c => {
         if (c.state == 'disconnected') {
-            console.log('tt = ' + t++)
+            debug_output.push('tt = ' + t++)
             
             c.state = 'connecting'
             c.join()
         }
         while (c.incoming.length > 0) {
-            console.log('tt = ' + t++ + ' ' + c.uid)
+            debug_output.push('tt = ' + t++ + ' ' + c.uid)
             
             c.incoming.shift()()
             
-            console.log('client: ' + sync9_read(c.s9))
+            debug_output.push('client: ' + sync9_read(c.s9))
         }
         while (c.outgoing.length > 0) {
-            console.log('tt = ' + t++)
+            debug_output.push('tt = ' + t++)
             
             c.outgoing.shift()()
             
-            console.log('server: ' + sync9_read(server.s9))
+            debug_output.push('server: ' + sync9_read(server.s9))
         }
     })
     
@@ -143,6 +145,10 @@ var check_good = true
         check_good = false
 })
 console.log('check_good: ' + check_good)
+
+
+
+console.log(debug_output.join('\n'))
 
 
 
