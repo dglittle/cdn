@@ -121,6 +121,7 @@ for (var t = 0; t < 10000; t++) {
         }
         while (c.incoming.length > 0) {
             debug_output.push('tt = ' + t++ + ' ' + c.uid)
+            debug_output.push('client: ' + sync9_read(c.s9))
             
             c.incoming.shift()()
             
@@ -128,6 +129,7 @@ for (var t = 0; t < 10000; t++) {
         }
         while (c.outgoing.length > 0) {
             debug_output.push('tt = ' + t++)
+            debug_output.push('server: ' + sync9_read(server.s9))
             
             c.outgoing.shift()()
             
