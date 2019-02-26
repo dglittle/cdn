@@ -60,7 +60,7 @@ for (var i = 0; i < n_clients; i++) {
     })()
 }
 
-for (var t = 0; t < 37; t++) {
+for (var t = 0; t < 814; t++) {
     console.log('t = ' + t)
     
     var i = Math.floor(Math.random() * n_clients)
@@ -90,16 +90,18 @@ for (var t = 0; t < 37; t++) {
         }
     } else {
         if (Math.random() < 0.5) {
-            if (c.incoming.length > 0)
+            if (c.incoming.length > 0) {
                 c.incoming.shift()()
+                console.log(c.uid)
+                console.log('client: ' + sync9_read(c.s9) + ' ' + c.uid)
+            }
         } else {
-            if (c.outgoing.length > 0)
+            if (c.outgoing.length > 0) {
                 c.outgoing.shift()()
+                console.log('server: ' + sync9_read(server.s9))
+            }
         }
     }
-    
-    console.log('server: ' + sync9_read(server.s9))
-    console.log('client: ' + sync9_read(c.s9) + ' ' + c.uid)
 }
 
 for (var t = 0; t < 10000; t++) {
@@ -111,12 +113,11 @@ for (var t = 0; t < 10000; t++) {
             c.join()
         }
         while (c.incoming.length > 0) {
-            console.log('tt = ' + t++)
+            console.log('tt = ' + t++ + ' ' + c.uid)
             
             c.incoming.shift()()
             
-            console.log('client: ' + sync9_read(c.s9) + ' ' + c.uid)
-            
+            console.log('client: ' + sync9_read(c.s9))
         }
         while (c.outgoing.length > 0) {
             console.log('tt = ' + t++)
