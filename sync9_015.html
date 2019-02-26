@@ -9,7 +9,7 @@ console.log('-------------------')
 
 var sync9_ROOT = 0
 
-Math.randomSeed(36)
+Math.randomSeed(37)
 
 var n_clients = 2
 var clients = {}
@@ -63,8 +63,12 @@ for (var i = 0; i < n_clients; i++) {
     })()
 }
 
-for (var t = 0; t < 815; t++) {
+for (var t = 0; t < 710; t++) {
     debug_output.push('t = ' + t)
+    
+    if (t == 709) {
+        debugger
+    }
     
     var i = Math.floor(Math.random() * n_clients)
     var c = Object.values(clients)[i]
@@ -113,11 +117,6 @@ Object.values(clients).forEach(x => {
 })
 
 for (var t = 0; t < 10000; t++) {
-    
-    if (t == 0) {
-        debugger
-    }
-    
     Object.values(clients).forEach(c => {
         if (c.state == 'disconnected') {
             debug_output.push('tt = ' + t++)
@@ -177,7 +176,7 @@ console.log('check_good: ' + check_good)
 
 
 
-console.log(debug_output.join('\n'))
+// console.log(debug_output.join('\n'))
 
 
 
