@@ -77,6 +77,7 @@ for (var t = 0; t < 814; t++) {
             c.local_add_version(edit.changes)
             
             debug_output.push(sync9_read(c.s9))
+            debug_output.push(c.state)
         } else {
             if (c.state == 'disconnected') {
                 c.state = 'connecting'
@@ -118,6 +119,11 @@ for (var t = 0; t < 10000; t++) {
             
             c.state = 'connecting'
             c.join()
+            
+Object.values(clients).forEach(x => {
+    debug_output.push(x.uid + ' i:' + x.incoming.length + ' o:' + x.outgoing.length)
+})
+            
         }
         while (c.incoming.length > 0) {
             debug_output.push('tt = ' + t++ + ' ' + c.uid)
@@ -126,6 +132,11 @@ for (var t = 0; t < 10000; t++) {
             c.incoming.shift()()
             
             debug_output.push('client: ' + sync9_read(c.s9))
+
+
+Object.values(clients).forEach(x => {
+    debug_output.push(x.uid + ' i:' + x.incoming.length + ' o:' + x.outgoing.length)
+})
         }
         while (c.outgoing.length > 0) {
             debug_output.push('tt = ' + t++)
@@ -134,6 +145,11 @@ for (var t = 0; t < 10000; t++) {
             c.outgoing.shift()()
             
             debug_output.push('server: ' + sync9_read(server.s9))
+
+
+Object.values(clients).forEach(x => {
+    debug_output.push(x.uid + ' i:' + x.incoming.length + ' o:' + x.outgoing.length)
+})
         }
     })
     
