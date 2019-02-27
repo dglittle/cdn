@@ -96,7 +96,7 @@ for (var i = 0; i < n_clients; i++) {
     })()
 }
     
-for (var t = 0; t < 38; t++) {
+for (var t = 0; t < 28; t++) {
     debug_output.push('t = ' + t)
     
     if (t == 709) {
@@ -210,7 +210,7 @@ var check_good = true
 })
 console.log('check_good: ' + check_good)
 
-// console.log(debug_output.join('\n'))
+console.log(debug_output.join('\n'))
 
 if (!check_good) throw 'bad'
 
@@ -374,6 +374,15 @@ function sync9_create_server(c_funcs) {
         p.acked_s = sv
         p.c_to_s[cv] = s.sv
         // sync9_add_version(s.s9, cv, {[s.sv - 1] : true}, changes, (x) => x <= sv || known[x], s.sv)
+        
+        
+        debug_output.push(JSON.stringify({
+            sv : s.sv,
+            parents : s.s9.leaves,
+            new_changes : new_changes
+        }, null, '    '))
+        
+        
         sync9_add_version(s.s9, s.sv, s.s9.leaves, new_changes)
         Object.entries(s.peers).forEach(x => {
             if (x[0] != uid && x[1].online) {
