@@ -55,7 +55,7 @@ for (var i = 0; i < n_clients; i++) {
         var c = sync9_create_client({
             join : (uid, sv) => {
                 c.outgoing.push(() => {
-                    debug_output.push('server join')
+                    debug_output.push('server join: ' + uid + ' sv:' + sv)
                     
                     server.join(uid, sv)
                 })
@@ -96,7 +96,7 @@ for (var i = 0; i < n_clients; i++) {
     })()
 }
     
-for (var t = 0; t < 28; t++) {
+for (var t = 0; t < 40; t++) {
     debug_output.push('t = ' + t)
     
     if (t == 709) {
@@ -114,19 +114,6 @@ for (var t = 0; t < 28; t++) {
             debug_output.push(sync9_read(c.s9))
             
             var edit = create_random_edit(c.s9, c.letters[c.letters_i++])
-            
-            
-            
-            
-            if (c.uid == 'axTzvm2ygaERMjW') {
-                if (c.cv < 0) {
-                    debug_output.push('SkIP')
-                    continue
-                }
-            }
-            
-            
-            
             
             c.local_add_version(edit.changes)
             
@@ -222,7 +209,7 @@ var check_good = true
 })
 console.log('check_good: ' + check_good)
 
-console.log(debug_output.join('\n'))
+//console.log(debug_output.join('\n'))
 
 if (!check_good) throw 'bad'
 
@@ -365,7 +352,6 @@ function sync9_create_server(c_funcs) {
                 saved : null
             }
         }
-        p.acked_s = sv
         p.online = true
         var known = {}
         Object.values(p.c_to_s).forEach(x => known[x] = true)
