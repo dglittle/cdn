@@ -9,7 +9,12 @@ console.log('-------------------')
 
 var sync9_ROOT = 0
 
-Math.randomSeed(37)
+
+for (var ttt = 0; ttt < 1000; ttt++) {
+
+var seed = 181 + ttt
+Math.randomSeed(seed)
+console.log('seed ' + seed)
 
 var n_clients = 2
 var clients = {}
@@ -73,8 +78,8 @@ for (var i = 0; i < n_clients; i++) {
         clients[c.uid] = c
     })()
 }
-
-for (var t = 0; t < 710; t++) {
+    
+for (var t = 0; t < 20; t++) {
     debug_output.push('t = ' + t)
     
     if (t == 709) {
@@ -169,7 +174,11 @@ var check_good = true
 })
 console.log('check_good: ' + check_good)
 
-console.log(debug_output.join('\n'))
+if (!check_good) throw 'bad'
+
+}
+
+// console.log(debug_output.join('\n'))
 
 
 
@@ -348,10 +357,12 @@ function sync9_create_server(c_funcs) {
     
     s.leave = (uid) => {
         var p = s.peers[uid]
-        p.online = false
-        
-        p.saved = {}
-        Object.keys(s.s9.T).forEach(x => p.saved[x] = true)
+        if (p) {
+            p.online = false
+            
+            p.saved = {}
+            Object.keys(s.s9.T).forEach(x => p.saved[x] = true)
+        }
     }
     
     return s
