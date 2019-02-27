@@ -178,6 +178,10 @@ for (var t = 0; t < 10000; t++) {
             debug_output.push('tt = ' + t++)
             debug_output.push('server: ' + sync9_read(server.s9))
             
+            if (tt == 3) {
+                debugger
+            }
+            
             c.outgoing.shift()()
             
             debug_output.push('server: ' + sync9_read(server.s9))
