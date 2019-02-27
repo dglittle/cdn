@@ -110,18 +110,24 @@ for (var t = 0; t < 38; t++) {
         if (Math.random() < 0.9) {
             
             
+            debug_output.push('NEW VERSION: ' + c.uid)
+            debug_output.push(sync9_read(c.s9))
+            
+            var edit = create_random_edit(c.s9, c.letters[c.letters_i++])
+            
+            
+            
+            
             if (c.uid == 'axTzvm2ygaERMjW') {
-                if (c.cv < -1) {
+                if (c.cv < 0) {
                     debug_output.push('SkIP')
                     continue
                 }
             }
             
             
-            debug_output.push('NEW VERSION: ' + c.uid)
-            debug_output.push(sync9_read(c.s9))
             
-            var edit = create_random_edit(c.s9, c.letters[c.letters_i++])
+            
             c.local_add_version(edit.changes)
             
             debug_output.push(sync9_read(c.s9))
@@ -204,10 +210,9 @@ var check_good = true
 })
 console.log('check_good: ' + check_good)
 
-console.log(debug_output.join('\n'))
+// console.log(debug_output.join('\n'))
 
 if (!check_good) throw 'bad'
-throw 'bad'
 
 }
 
@@ -368,7 +373,8 @@ function sync9_create_server(c_funcs) {
         s.sv++
         p.acked_s = sv
         p.c_to_s[cv] = s.sv
-        sync9_add_version(s.s9, cv, {[s.sv - 1] : true}, changes, (x) => x <= sv || known[x], s.sv)
+        // sync9_add_version(s.s9, cv, {[s.sv - 1] : true}, changes, (x) => x <= sv || known[x], s.sv)
+        sync9_add_version(s.s9, s.sv, s.s9.leaves, new_changes)
         Object.entries(s.peers).forEach(x => {
             if (x[0] != uid && x[1].online) {
                 x[1].unacked[s.sv] = true
