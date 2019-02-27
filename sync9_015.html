@@ -178,10 +178,6 @@ for (var t = 0; t < 10000; t++) {
             debug_output.push('tt = ' + t++)
             debug_output.push('server: ' + sync9_read(server.s9))
             
-            if (tt == 3) {
-                debugger
-            }
-            
             c.outgoing.shift()()
             
             debug_output.push('server: ' + sync9_read(server.s9))
@@ -372,18 +368,15 @@ function sync9_create_server(c_funcs) {
         s.sv++
         p.acked_s = sv
         p.c_to_s[cv] = s.sv
-        // sync9_add_version(s.s9, cv, {[s.sv - 1] : true}, changes, (x) => x <= sv || known[x], s.sv)
         
+        // work here
+        if (changes.length != 1) throw 'bad'
+        if (sync9_parse_change(changes[0]).range) {
+            sync9_add_version(s.s9, cv, {[s.sv - 1] : true}, changes, (x) => x <= sv || known[x], s.sv)
+        } else {
+            sync9_add_version(s.s9, s.sv, s.s9.leaves, new_changes)
+        }
         
-        // debug_output.push(JSON.stringify({
-        //     sv : s.sv,
-        //     parents : s.s9.leaves,
-        //     new_changes : new_changes,
-        //     c_to_s : p.c_to_s
-        // }, null, '    '))
-        
-        
-        sync9_add_version(s.s9, s.sv, s.s9.leaves, new_changes)
         Object.entries(s.peers).forEach(x => {
             if (x[0] != uid && x[1].online) {
                 x[1].unacked[s.sv] = true
