@@ -19,16 +19,22 @@ var debug_output = []
 var server = sync9_create_server({
     welcome : (uid, sv, cv, changes) => {
         clients[uid].incoming.push(() => {
+            debug_output.push('client welcome')
+            
             clients[uid].welcome(sv, cv, changes)
         })
     },
     add_version : (uid, sv, changes) => {
         clients[uid].incoming.push(() => {
+            debug_output.push('client add version')
+            
             clients[uid].add_version(sv, changes)
         })
     },
     ack : (uid, sv, cv) => {
         clients[uid].incoming.push(() => {
+            debug_output.push('client ack')
+            
             clients[uid].ack(sv, cv)
         })
     }
@@ -39,18 +45,24 @@ for (var i = 0; i < n_clients; i++) {
         var c = sync9_create_client({
             join : (uid, sv) => {
                 c.outgoing.push(() => {
+                    debug_output.push('server join')
+                    
                     server.join(uid, sv)
                 })
             },
             add_version : (uid, cv, sv, changes) => {
                 if (c.state == 'connected') {
                     c.outgoing.push(() => {
+                        debug_output.push('server add version')
+                    
                         server.add_version(uid, cv, sv, changes)
                     })
                 }
             },
             ack : (uid, sv) => {
                 c.outgoing.push(() => {
+                    debug_output.push('server ack')
+
                     server.ack(uid, sv)
                 })
             }
@@ -66,7 +78,7 @@ for (var t = 0; t < 710; t++) {
     debug_output.push('t = ' + t)
     
     if (t == 709) {
-        debugger
+        // debugger
     }
     
     var i = Math.floor(Math.random() * n_clients)
@@ -157,7 +169,7 @@ var check_good = true
 })
 console.log('check_good: ' + check_good)
 
-// console.log(debug_output.join('\n'))
+console.log(debug_output.join('\n'))
 
 
 
