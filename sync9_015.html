@@ -158,6 +158,9 @@ for (var t = 0; t < 28; t++) {
             }
         }
     }
+    
+    
+    debug_output.push(JSON.stringify(server.peers, null, '    '))
 }
 
 Object.values(clients).forEach(x => {
