@@ -29,26 +29,23 @@ var debug_output = []
 var server = sync9_create_server({
     welcome : (uid, sv, cv, changes) => {
         clients[uid].incoming.push(() => {
-            debug_output.push('client welcome')
+            debug_output.push('client welcome ' + uid)
             
             clients[uid].welcome(sv, cv, changes)
         })
     },
     add_version : (uid, sv, changes) => {
         clients[uid].incoming.push(() => {
-            debug_output.push('client add version')
-            
-            
-            debug_output.push(JSON.stringify({sv, changes}, null, '    '))
+            debug_output.push('client add version ' + uid)
+            // debug_output.push(JSON.stringify({sv, changes}, null, '    '))
             //debug_output.push(JSON.stringify(clients[uid].s9, null, '    '))
-            
             
             clients[uid].add_version(sv, changes)
         })
     },
     ack : (uid, sv, cv) => {
         clients[uid].incoming.push(() => {
-            debug_output.push('client ack: ' + sv + ', ' + cv)
+            debug_output.push('client ack: ' + uid + ' ' + sv + ', ' + cv)
             
             clients[uid].ack(sv, cv)
         })
@@ -68,11 +65,10 @@ for (var i = 0; i < n_clients; i++) {
             add_version : (uid, cv, sv, changes) => {
                 if (c.state == 'connected') {
                     c.outgoing.push(() => {
-                        debug_output.push('server add version')
+                        debug_output.push('server add version from ' + uid)
                     
                         debug_output.push(JSON.stringify({cv, sv, changes}, null, '    '))
                         //debug_output.push(JSON.stringify(server.s9, null, '    '))
-                    
                     
                         server.add_version(uid, cv, sv, changes)
                     })
@@ -80,7 +76,7 @@ for (var i = 0; i < n_clients; i++) {
             },
             ack : (uid, sv) => {
                 c.outgoing.push(() => {
-                    debug_output.push('server ack: ' + sv)
+                    debug_output.push('server ack: ' + sv + ' from ' + uid)
 
                     server.ack(uid, sv)
                 })
@@ -141,19 +137,17 @@ for (var t = 0; t < 50; t++) {
         if (Math.random() < 0.5) {
             if (c.incoming.length > 0) {
                 c.incoming.shift()()
-                debug_output.push(c.uid)
-                debug_output.push('client: ' + sync9_read(c.s9) + ' ' + c.uid)
+                
+                debug_output.push(c.uid + ' -> ' + sync9_read(c.s9))
             }
         } else {
             if (c.outgoing.length > 0) {
                 c.outgoing.shift()()
-                debug_output.push('server: ' + sync9_read(server.s9))
+                
+                debug_output.push('server -> ' + sync9_read(server.s9))
             }
         }
     }
-    
-    
-    debug_output.push(JSON.stringify(server.peers, null, '    '))
 }
 
 Object.values(clients).forEach(x => {
@@ -171,9 +165,6 @@ for (var t = 0; t < 10000; t++) {
             
             c.state = 'connected'
             c.join()
-            
-    debug_output.push(JSON.stringify(server.peers, null, '    '))
-            
         }
         while (c.incoming.length > 0) {
             debug_output.push('tt = ' + t++ + ' ' + c.uid)
@@ -182,9 +173,6 @@ for (var t = 0; t < 10000; t++) {
             c.incoming.shift()()
             
             debug_output.push('client: ' + sync9_read(c.s9))
-            
-    debug_output.push(JSON.stringify(server.peers, null, '    '))
-            
         }
         while (c.outgoing.length > 0) {
             debug_output.push('tt = ' + t++)
@@ -193,9 +181,6 @@ for (var t = 0; t < 10000; t++) {
             c.outgoing.shift()()
             
             debug_output.push('server: ' + sync9_read(server.s9))
-            
-    debug_output.push(JSON.stringify(server.peers, null, '    '))
-            
         }
     })
     
