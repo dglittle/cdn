@@ -67,7 +67,7 @@ for (var i = 0; i < n_clients; i++) {
                     c.outgoing.push(() => {
                         debug_output.push('server add version from ' + uid)
                     
-                        debug_output.push(JSON.stringify({cv, sv, changes}, null, '    '))
+                        debug_output.push(`cv: ${cv}, sv: ${sv}, changes: ${changes}`)
                         //debug_output.push(JSON.stringify(server.s9, null, '    '))
                     
                         server.add_version(uid, cv, sv, changes)
