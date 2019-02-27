@@ -33,6 +33,11 @@ var server = sync9_create_server({
         clients[uid].incoming.push(() => {
             debug_output.push('client add version')
             
+            
+            debug_output.push(JSON.stringify({sv, changes}, null, '    '))
+            debug_output.push(JSON.stringify(clients[uid].s9, null, '    '))
+            
+            
             clients[uid].add_version(sv, changes)
         })
     },
@@ -60,6 +65,10 @@ for (var i = 0; i < n_clients; i++) {
                     c.outgoing.push(() => {
                         debug_output.push('server add version')
                     
+                        debug_output.push(JSON.stringify({cv, sv, changes}, null, '    '))
+                        debug_output.push(JSON.stringify(server.s9, null, '    '))
+                    
+                    
                         server.add_version(uid, cv, sv, changes)
                     })
                 }
@@ -76,6 +85,14 @@ for (var i = 0; i < n_clients; i++) {
         c.incoming = []
         c.outgoing = []
         clients[c.uid] = c
+        
+        if (i == 0) {
+            c.letters = 'abcdefghijklmnopqrstuvwxyz'
+            c.letters_i = 0
+        } else {
+            c.letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+            c.letters_i = 0
+        }
     })()
 }
     
@@ -94,7 +111,7 @@ for (var t = 0; t < 38; t++) {
             debug_output.push('NEW VERSION: ' + c.uid)
             debug_output.push(sync9_read(c.s9))
             
-            var edit = create_random_edit(c.s9)
+            var edit = create_random_edit(c.s9, c.letters[c.letters_i++])
             c.local_add_version(edit.changes)
             
             debug_output.push(sync9_read(c.s9))
@@ -133,6 +150,9 @@ Object.values(clients).forEach(x => {
 
 for (var t = 0; t < 10000; t++) {
     Object.values(clients).forEach(c => {
+        
+        debug_output.push('PROCESSING: ' + c.uid)
+        
         if (c.state == 'disconnected') {
             debug_output.push('tt = ' + t++)
             debug_output.push('JOIN')
@@ -184,8 +204,8 @@ throw 'bad'
 
 
 
-function create_random_edit(s) {
-    var letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+function create_random_edit(s, letters) {
+    letters = letters || 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
     var str = sync9_read(s)
     var start = Math.floor(Math.random() * (str.length + 1))
     var del = Math.floor(Math.random() * Math.random() * (str.length - start + 1))
