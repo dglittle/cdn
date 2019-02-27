@@ -10,9 +10,10 @@ console.log('-------------------')
 var sync9_ROOT = 0
 
 
-for (var ttt = 0; ttt < 1; ttt++) {
+for (var ttt = 0; ttt < 1000; ttt++) {
 
-var seed = 37 + ttt
+var seed = 9999 + ttt
+// var seed = 37 + ttt
 Math.randomSeed(seed)
 console.log('seed ' + seed)
 
@@ -20,10 +21,10 @@ var n_clients = 2
 var clients = {}
 
 var debug_output = []
-debug_output = {}
-debug_output.push = function (x) {
-    console.log(x)
-}
+// debug_output = {}
+// debug_output.push = function (x) {
+//     console.log(x)
+// }
 
 var server = sync9_create_server({
     welcome : (uid, sv, cv, changes) => {
@@ -39,7 +40,7 @@ var server = sync9_create_server({
             
             
             debug_output.push(JSON.stringify({sv, changes}, null, '    '))
-            debug_output.push(JSON.stringify(clients[uid].s9, null, '    '))
+            //debug_output.push(JSON.stringify(clients[uid].s9, null, '    '))
             
             
             clients[uid].add_version(sv, changes)
@@ -70,7 +71,7 @@ for (var i = 0; i < n_clients; i++) {
                         debug_output.push('server add version')
                     
                         debug_output.push(JSON.stringify({cv, sv, changes}, null, '    '))
-                        debug_output.push(JSON.stringify(server.s9, null, '    '))
+                        //debug_output.push(JSON.stringify(server.s9, null, '    '))
                     
                     
                         server.add_version(uid, cv, sv, changes)
@@ -100,7 +101,8 @@ for (var i = 0; i < n_clients; i++) {
     })()
 }
     
-for (var t = 0; t < 1000; t++) {
+for (var t = 0; t < 40; t++) {
+// for (var t = 0; t < 682; t++) {
     debug_output.push('t = ' + t)
     
     if (t == 709) {
@@ -218,6 +220,8 @@ if (!check_good) {
         var val = sync9_read(x.s9)
         console.log(val)
     })
+    
+    console.log(debug_output.join('\n'))
     
     throw 'bad'
 }
