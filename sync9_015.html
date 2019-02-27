@@ -178,6 +178,9 @@ for (var t = 0; t < 10000; t++) {
             
             c.state = 'connected'
             c.join()
+            
+    debug_output.push(JSON.stringify(server.peers, null, '    '))
+            
         }
         while (c.incoming.length > 0) {
             debug_output.push('tt = ' + t++ + ' ' + c.uid)
@@ -186,6 +189,9 @@ for (var t = 0; t < 10000; t++) {
             c.incoming.shift()()
             
             debug_output.push('client: ' + sync9_read(c.s9))
+            
+    debug_output.push(JSON.stringify(server.peers, null, '    '))
+            
         }
         while (c.outgoing.length > 0) {
             debug_output.push('tt = ' + t++)
@@ -194,6 +200,9 @@ for (var t = 0; t < 10000; t++) {
             c.outgoing.shift()()
             
             debug_output.push('server: ' + sync9_read(server.s9))
+            
+    debug_output.push(JSON.stringify(server.peers, null, '    '))
+            
         }
     })
     
