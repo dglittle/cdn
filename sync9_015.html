@@ -379,7 +379,8 @@ function sync9_create_server(c_funcs) {
         debug_output.push(JSON.stringify({
             sv : s.sv,
             parents : s.s9.leaves,
-            new_changes : new_changes
+            new_changes : new_changes,
+            c_to_s : p.c_to_s
         }, null, '    '))
         
         
