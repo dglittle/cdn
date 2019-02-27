@@ -371,12 +371,12 @@ function sync9_create_server(c_funcs) {
         // sync9_add_version(s.s9, cv, {[s.sv - 1] : true}, changes, (x) => x <= sv || known[x], s.sv)
         
         
-        debug_output.push(JSON.stringify({
-            sv : s.sv,
-            parents : s.s9.leaves,
-            new_changes : new_changes,
-            c_to_s : p.c_to_s
-        }, null, '    '))
+        // debug_output.push(JSON.stringify({
+        //     sv : s.sv,
+        //     parents : s.s9.leaves,
+        //     new_changes : new_changes,
+        //     c_to_s : p.c_to_s
+        // }, null, '    '))
         
         
         sync9_add_version(s.s9, s.sv, s.s9.leaves, new_changes)
