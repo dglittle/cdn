@@ -19,7 +19,6 @@ var debug_output = []
 var server = sync9_create_server({
     welcome : (uid, sv, cv, changes) => {
         clients[uid].incoming.push(() => {
-            clients[uid].state = 'connected'            
             clients[uid].welcome(sv, cv, changes)
         })
     },
@@ -85,9 +84,8 @@ for (var t = 0; t < 710; t++) {
             debug_output.push(c.state)
         } else {
             if (c.state == 'disconnected') {
-                c.state = 'connecting'
+                c.state = 'connected'
                 c.join()
-            } else if (c.state == 'connecting') {
             } else if (c.state == 'connected') {
                 c.state = 'disconnected'
                 c.state_note = 'had been connected'
@@ -122,13 +120,8 @@ for (var t = 0; t < 10000; t++) {
             debug_output.push('tt = ' + t++)
             debug_output.push('JOIN')
             
-            c.state = 'connecting'
+            c.state = 'connected'
             c.join()
-            
-Object.values(clients).forEach(x => {
-    debug_output.push(x.uid + ' i:' + x.incoming.length + ' o:' + x.outgoing.length)
-})
-            
         }
         while (c.incoming.length > 0) {
             debug_output.push('tt = ' + t++ + ' ' + c.uid)
@@ -137,11 +130,6 @@ Object.values(clients).forEach(x => {
             c.incoming.shift()()
             
             debug_output.push('client: ' + sync9_read(c.s9))
-
-
-Object.values(clients).forEach(x => {
-    debug_output.push(x.uid + ' i:' + x.incoming.length + ' o:' + x.outgoing.length)
-})
         }
         while (c.outgoing.length > 0) {
             debug_output.push('tt = ' + t++)
@@ -150,11 +138,6 @@ Object.values(clients).forEach(x => {
             c.outgoing.shift()()
             
             debug_output.push('server: ' + sync9_read(server.s9))
-
-
-Object.values(clients).forEach(x => {
-    debug_output.push(x.uid + ' i:' + x.incoming.length + ' o:' + x.outgoing.length)
-})
         }
     })
     
@@ -173,8 +156,6 @@ var check_good = true
         check_good = false
 })
 console.log('check_good: ' + check_good)
-
-
 
 // console.log(debug_output.join('\n'))
 
@@ -219,6 +200,9 @@ function sync9_create_client(s_funcs) {
     
     c.join = () => {
         s_funcs.join(c.uid, c.sv)
+        c.unacked.forEach(x => {
+            s_funcs.add_version(c.uid, x.cv, x.sv, x.changes)
+        })
     }
     
     function prune(sv, cv) {
@@ -238,13 +222,6 @@ function sync9_create_client(s_funcs) {
             prune(sv, cv)
             s_funcs.ack(c.uid, sv)
         }
-        
-        c.unacked = c.unacked.filter(x => x.cv < cv)
-        c.unacked.forEach(x => {
-            x.changes = sync9_rebase(c.s9, x.cv, x.changes, vid => vid > x.cv && vid <= x.sv, vid => vid > x.cv && vid <= sv)
-            x.sv = sv
-            s_funcs.add_version(c.uid, x.cv, x.sv, x.changes)
-        })
     }
     
     c.add_version = (sv, changes) => {
@@ -304,6 +281,7 @@ function sync9_create_server(c_funcs) {
         Object.values(s.peers).forEach(x => {
             Object.assign(saved, x.unacked)
             Object.values(x.c_to_s).forEach(x => saved[x] = true)
+            if (x.saved) Object.assign(saved, x.saved)
         })
         sync9_prune(s.s9, (a, b) => !saved[a] && !saved[b])
     }
@@ -314,7 +292,8 @@ function sync9_create_server(c_funcs) {
             s.peers[uid] = p = {
                 unacked : {},
                 seen_c : 0,
-                c_to_s : {}
+                c_to_s : {},
+                saved : null
             }
         }
         p.acked_s = sv
@@ -351,12 +330,16 @@ function sync9_create_server(c_funcs) {
     s.ack = (uid, sv) => {
         var p = s.peers[uid]
         p.acked_s = sv
+        p.saved = null
         prune(p)
     }
     
     s.leave = (uid) => {
         var p = s.peers[uid]
         p.online = false
+        
+        p.saved = {}
+        Object.keys(s.s9.T).forEach(x => p.saved[x] = true)
     }
     
     return s
