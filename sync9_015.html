@@ -43,7 +43,7 @@ var server = sync9_create_server({
     },
     ack : (uid, sv, cv) => {
         clients[uid].incoming.push(() => {
-            debug_output.push('client ack')
+            debug_output.push('client ack: ' + sv + ', ' + cv)
             
             clients[uid].ack(sv, cv)
         })
@@ -75,7 +75,7 @@ for (var i = 0; i < n_clients; i++) {
             },
             ack : (uid, sv) => {
                 c.outgoing.push(() => {
-                    debug_output.push('server ack')
+                    debug_output.push('server ack: ' + sv)
 
                     server.ack(uid, sv)
                 })
@@ -108,6 +108,16 @@ for (var t = 0; t < 38; t++) {
 
     if (Math.random() < 0.1) {
         if (Math.random() < 0.9) {
+            
+            
+            if (c.uid == 'axTzvm2ygaERMjW') {
+                if (c.cv < -1) {
+                    debug_output.push('SkIP')
+                    continue
+                }
+            }
+            
+            
             debug_output.push('NEW VERSION: ' + c.uid)
             debug_output.push(sync9_read(c.s9))
             
