@@ -10,7 +10,7 @@ console.log('-------------------')
 var sync9_ROOT = 0
 
 
-for (var ttt = 0; ttt < 1; ttt++) {
+for (var ttt = 0; ttt < 1000; ttt++) {
 
 var seed = 6467 + ttt
 Math.randomSeed(seed)
@@ -208,11 +208,14 @@ var check_good = true
         check_good = false
 })
 console.log('check_good: ' + check_good)
-
-//console.log(debug_output.join('\n'))
-
-if (!check_good) throw 'bad'
-
+if (!check_good) {
+    ;[server].concat(Object.values(clients)).forEach((x, i) => {
+        console.log(x)
+        var val = sync9_read(x.s9)
+        console.log(val)
+    })
+    
+    throw 'bad'
 }
 
 
