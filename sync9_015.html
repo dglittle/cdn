@@ -12,8 +12,8 @@ var sync9_ROOT = 0
 
 for (var ttt = 0; ttt < 1; ttt++) {
 
-var seed = 51449 + ttt
-// var seed = 37 + ttt
+var seed = 51902 + ttt
+//var seed = 101 + ttt
 Math.randomSeed(seed)
 console.log('seed ' + seed)
 
@@ -29,7 +29,7 @@ var debug_output = []
 var server = sync9_create_server({
     welcome : (uid, sv, cv, changes) => {
         clients[uid].incoming.push(() => {
-            debug_output.push('client welcome ' + uid)
+            debug_output.push('client welcome ' + uid + ' ' + changes)
             
             clients[uid].welcome(sv, cv, changes)
         })
@@ -97,8 +97,8 @@ for (var i = 0; i < n_clients; i++) {
     })()
 }
     
-for (var t = 0; t < 50; t++) {
-// for (var t = 0; t < 682; t++) {
+// for (var t = 0; t < 50; t++) {
+for (var t = 0; t < 39; t++) {
     debug_output.push('t = ' + t)
     
     if (t == 709) {
@@ -170,11 +170,22 @@ for (var t = 0; t < 10000; t++) {
             debug_output.push('tt = ' + t++ + ' ' + c.uid)
             debug_output.push('client: ' + sync9_read(c.s9))
             
+            if (t == 26) {
+                debugger
+            }
+            
             c.incoming.shift()()
             
             debug_output.push('client: ' + sync9_read(c.s9))
         }
         while (c.outgoing.length > 0) {
+            
+            
+            if (t == 2) {
+                debugger
+            }
+            
+            
             debug_output.push('tt = ' + t++)
             debug_output.push('server: ' + sync9_read(server.s9))
             
@@ -371,7 +382,8 @@ function sync9_create_server(c_funcs) {
         
         // work here
         if (changes.length != 1) throw 'bad'
-        if (sync9_parse_change(changes[0]).range) {
+        var parse = sync9_parse_change(changes[0])
+        if (parse.range && parse.range[0] != parse.range[1]) {
             sync9_add_version(s.s9, cv, {[s.sv - 1] : true}, changes, (x) => x <= sv || known[x], s.sv)
         } else {
             sync9_add_version(s.s9, s.sv, s.s9.leaves, new_changes)
