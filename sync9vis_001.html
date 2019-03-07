@@ -13,20 +13,7 @@ c.style.border = '1px solid green'
 var g = c.getContext('2d')
 
 var cell_size = 24
-var i = 0
-sync9_trav_space_dag(get_test_S(), () => true, (node, offset, has_nexts, prev, vid) => {
-    console.log('hi!')
-    if (!node.elems) return
-    node.elems.split('').forEach(x => {
-        g.fillStyle = 'grey'
-        g.fillRect(i * cell_size, 0, cell_size, cell_size)
-        g.fillStyle = 'black'
-        g.textAlign = 'center'
-        g.textBaseline = 'middle'
-        g.fillText(x, i * cell_size + cell_size/2, cell_size/2)
-        i++
-    })
-})
+my_trav_space_dag(get_test_S())
 
 var offset = 0
 function my_trav_space_dag(S) {
