@@ -13,56 +13,86 @@ c.style.border = '1px solid green'
 var g = c.getContext('2d')
 
 var cell_size = 24
-my_trav_space_dag(get_test_S())
 
-var offset = 0
-function my_trav_space_dag(S) {
-    function helper(node, depth) {
-        node.elems.split('').forEach(x => {
-            g.fillStyle = 'grey'
-            g.fillRect(offset * cell_size, 0, cell_size, cell_size)
-            g.fillStyle = 'black'
-            g.textAlign = 'center'
-            g.textBaseline = 'middle'
-            g.fillText(x, offset * cell_size + cell_size/2, cell_size/2)
-            offset++
-        })
+draw_space_dag(get_test_S(), cell_size, c, g)
+
+
+
+function draw_space_dag(S, cell_size, c, g) {
+    var max_height = 0
+    var helper = (node, height) => {
+        if (height > max_height) max_height = height
         
         var add = node.nexts.length
         for (var x of node.nexts) {
-            helper(x, depth + add)
+            helper(x, height + add)
             add--
         }
-        if (node.next) helper(node.next)
+        if (node.next) helper(node.next, height)
     }
-    helper(S, 0)
+    helper(S, 1)
+    
+    console.log('max_height: ' + max_height)
 }
 
 
 
+// var offset = 0
 
-function sync9_trav_space_dag(S, f, cb, view_deleted, tail_cb) {
-    var exit_early = {}
-    var offset = 0
-    function helper(node, prev, vid) {
-        var has_nexts = node.nexts.find(next => f(next.vid))
-        if (view_deleted ||
-            !Object.keys(node.deleted_by).some(vid => f(vid))) {
-            if (cb(node, offset, has_nexts, prev, vid) == false)
-                throw exit_early
-            offset += node.elems.length
-        }
-        for (var next of node.nexts)
-            if (f(next.vid)) helper(next, null, next.vid)
-        if (node.next) helper(node.next, node, vid)
-        else if (tail_cb) tail_cb(node)
-    }
-    try {
-        helper(S, null, S.vid)
-    } catch (e) {
-        if (e != exit_early) throw e
-    }
-}
+// my_trav_space_dag(get_test_S())
+
+
+
+// function my_trav_space_dag(S) {
+//     function helper(node, depth) {
+        
+//         console.log('depth: ' + depth)
+        
+//         node.elems.split('').forEach(x => {
+//             g.fillStyle = 'grey'
+//             g.fillRect(offset * cell_size, depth * cell_size, cell_size, cell_size)
+//             g.fillStyle = 'black'
+//             g.textAlign = 'center'
+//             g.textBaseline = 'middle'
+//             g.fillText(x, offset * cell_size + cell_size/2, cell_size/2 + depth * cell_size)
+//             offset++
+//         })
+        
+//         var add = node.nexts.length
+//         for (var x of node.nexts) {
+//             helper(x, depth + add)
+//             add--
+//         }
+//         if (node.next) helper(node.next, depth)
+//     }
+//     helper(S, 0)
+// }
+
+
+
+
+// function sync9_trav_space_dag(S, f, cb, view_deleted, tail_cb) {
+//     var exit_early = {}
+//     var offset = 0
+//     function helper(node, prev, vid) {
+//         var has_nexts = node.nexts.find(next => f(next.vid))
+//         if (view_deleted ||
+//             !Object.keys(node.deleted_by).some(vid => f(vid))) {
+//             if (cb(node, offset, has_nexts, prev, vid) == false)
+//                 throw exit_early
+//             offset += node.elems.length
+//         }
+//         for (var next of node.nexts)
+//             if (f(next.vid)) helper(next, null, next.vid)
+//         if (node.next) helper(node.next, node, vid)
+//         else if (tail_cb) tail_cb(node)
+//     }
+//     try {
+//         helper(S, null, S.vid)
+//     } catch (e) {
+//         if (e != exit_early) throw e
+//     }
+// }
 
 function get_test_S() {
     return {"vid":0,"elems":"","deleted_by":{},"nexts":[{"vid":1,"elems":"","deleted_by":{},"end_cap":false,"nexts":[{"vid":3,"elems":"","deleted_by":{},"end_cap":false,"nexts":[{"vid":8,"elems":"FFFF","deleted_by":{},"nexts":[],"next":null}],"next":{"vid":null,"elems":"aaa","deleted_by":{},"end_cap":false,"nexts":[{"vid":4,"elems":"bbb","deleted_by":{},"nexts":[],"next":null}],"next":{"vid":null,"elems":"a","deleted_by":{},"nexts":[],"next":null}}}],"next":{"vid":null,"elems":"","deleted_by":{},"end_cap":true,"nexts":[{"vid":7,"elems":"EE","deleted_by":{},"nexts":[],"next":null}],"next":{"vid":null,"elems":"AAA","deleted_by":{"7":true},"end_cap":false,"nexts":[{"vid":2,"elems":"","deleted_by":{"7":true},"end_cap":false,"nexts":[{"vid":5,"elems":"CCCC","deleted_by":{"7":true},"nexts":[],"next":null,"real_next":{"vid":null,"elems":"D","deleted_by":{},"nexts":[],"next":null}}],"next":{"vid":null,"elems":"","deleted_by":{"7":true},"end_cap":true,"nexts":[{"vid":6,"elems":"D","deleted_by":{"7":true},"nexts":[],"next":{"vid":null,"elems":"D","deleted_by":{},"nexts":[],"next":null}}],"next":{"vid":null,"elems":"B","deleted_by":{"6":true},"nexts":[],"next":null,"gash":true}}}],"next":{"vid":null,"elems":"A","deleted_by":{"6":true},"nexts":[],"next":null},"gash":true}}}],"next":null}
