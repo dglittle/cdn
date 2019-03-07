@@ -5,27 +5,53 @@
 <body></body>
 <script>
 
-var d = document.createElement('div')
-d.textContent = 'hi!'
-document.body.append(d)
-
 var c = document.createElement('canvas')
 c.width = 500
 c.height = 500
 document.body.append(c)
+c.style.border = '1px solid green'
 var g = c.getContext('2d')
 
-g.beginPath()
-g.moveTo(100, 0)
-g.lineTo(0, 100)
-g.strokeStyle = 'red'
-g.stroke()
-
-
+var cell_size = 24
+var i = 0
 sync9_trav_space_dag(get_test_S(), () => true, (node, offset, has_nexts, prev, vid) => {
     console.log('hi!')
-    g.fillText(node.elems, 100, 100)
+    if (!node.elems) return
+    node.elems.split('').forEach(x => {
+        g.fillStyle = 'grey'
+        g.fillRect(i * cell_size, 0, cell_size, cell_size)
+        g.fillStyle = 'black'
+        g.textAlign = 'center'
+        g.textBaseline = 'middle'
+        g.fillText(x, i * cell_size + cell_size/2, cell_size/2)
+        i++
+    })
 })
+
+var offset = 0
+function my_trav_space_dag(S) {
+    function helper(node, depth) {
+        node.elems.split('').forEach(x => {
+            g.fillStyle = 'grey'
+            g.fillRect(offset * cell_size, 0, cell_size, cell_size)
+            g.fillStyle = 'black'
+            g.textAlign = 'center'
+            g.textBaseline = 'middle'
+            g.fillText(x, offset * cell_size + cell_size/2, cell_size/2)
+            offset++
+        })
+        
+        var add = node.nexts.length
+        for (var x of node.nexts) {
+            helper(x, depth + add)
+            add--
+        }
+        if (node.next) helper(node.next)
+    }
+    helper(S, 0)
+}
+
+
 
 
 function sync9_trav_space_dag(S, f, cb, view_deleted, tail_cb) {
