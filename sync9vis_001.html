@@ -5,16 +5,16 @@
 <body></body>
 <script>
 
-var c = document.createElement('canvas')
-c.width = 500
-c.height = 500
-document.body.append(c)
-c.style.border = '1px solid green'
-var g = c.getContext('2d')
+// var c = document.createElement('canvas')
+// c.width = 1000
+// c.height = 500
+// document.body.append(c)
+// c.style.border = '1px solid green'
+// var g = c.getContext('2d')
 
 var cell_size = 24
 
-draw_space_dag(get_test_S(), cell_size, c, g)
+//draw_space_dag(get_test_S(), cell_size, c, g)
 
 
 
@@ -33,6 +33,46 @@ function draw_space_dag(S, cell_size, c, g) {
     helper(S, 1)
     
     console.log('max_height: ' + max_height)
+    
+    var offset = 0
+    var helper = (node, height, linkX, linkY) => {
+        var y = (max_height - height) * cell_size
+        
+        g.beginPath()
+        g.moveTo(linkX, linkY)
+        g.lineTo(offset * cell_size, y + cell_size/2)
+        g.strokeStyle = 'red'
+        g.stroke()
+        
+        if (node.elems == '') {
+            g.fillStyle = 'lightgrey'
+            g.fillRect(offset * cell_size, y, cell_size, cell_size)
+            offset++
+        } else {
+            node.elems.split('').forEach(x => {
+                g.fillStyle = 'grey'
+                g.fillRect(offset * cell_size, y, cell_size, cell_size)
+                g.fillStyle = 'black'
+                g.textAlign = 'center'
+                g.textBaseline = 'middle'
+                g.fillText(x, offset * cell_size + cell_size/2, cell_size/2 + y)
+                offset++
+            })
+        }
+        
+        var add = node.nexts.length
+        linkX = offset * cell_size
+        linkY = y + cell_size/2
+        
+        offset++
+        
+        for (var x of node.nexts) {
+            helper(x, height + add, linkX, linkY)
+            add--
+        }
+        if (node.next) helper(node.next, height, linkX, linkY)
+    }
+    helper(S, 1)
 }
 
 
@@ -97,6 +137,177 @@ function draw_space_dag(S, cell_size, c, g) {
 function get_test_S() {
     return {"vid":0,"elems":"","deleted_by":{},"nexts":[{"vid":1,"elems":"","deleted_by":{},"end_cap":false,"nexts":[{"vid":3,"elems":"","deleted_by":{},"end_cap":false,"nexts":[{"vid":8,"elems":"FFFF","deleted_by":{},"nexts":[],"next":null}],"next":{"vid":null,"elems":"aaa","deleted_by":{},"end_cap":false,"nexts":[{"vid":4,"elems":"bbb","deleted_by":{},"nexts":[],"next":null}],"next":{"vid":null,"elems":"a","deleted_by":{},"nexts":[],"next":null}}}],"next":{"vid":null,"elems":"","deleted_by":{},"end_cap":true,"nexts":[{"vid":7,"elems":"EE","deleted_by":{},"nexts":[],"next":null}],"next":{"vid":null,"elems":"AAA","deleted_by":{"7":true},"end_cap":false,"nexts":[{"vid":2,"elems":"","deleted_by":{"7":true},"end_cap":false,"nexts":[{"vid":5,"elems":"CCCC","deleted_by":{"7":true},"nexts":[],"next":null,"real_next":{"vid":null,"elems":"D","deleted_by":{},"nexts":[],"next":null}}],"next":{"vid":null,"elems":"","deleted_by":{"7":true},"end_cap":true,"nexts":[{"vid":6,"elems":"D","deleted_by":{"7":true},"nexts":[],"next":{"vid":null,"elems":"D","deleted_by":{},"nexts":[],"next":null}}],"next":{"vid":null,"elems":"B","deleted_by":{"6":true},"nexts":[],"next":null,"gash":true}}}],"next":{"vid":null,"elems":"A","deleted_by":{"6":true},"nexts":[],"next":null},"gash":true}}}],"next":null}
 }
+
+
+var BOX_Y = 22
+
+function create_side_text_boxes(n, show_example) {
+    var size = BOX_Y + 10
+    
+    var grid = document.createElement('div')
+    grid.style.display = 'grid'
+    grid.style['grid-template-columns'] = (size + 10) + 'px ' + (200 - size) + 'px'
+    document.body.append(grid)
+    
+    var s9s = []
+    for (var i = 0; i < n; i++) s9s.push({})
+    each(s9s, function (s9, i) {
+        s9.buffers = new Array(n)
+        s9.buttons = new Array(n)
+        for (var ii = 0; ii < n; ii++)
+            s7.buffers[ii] = []
+
+        function create_circle_icon() {
+            svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+            svg.setAttribute('width', size)
+            svg.setAttribute('height', size)
+            
+            var halo = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
+            halo.style.fill = '#00000000'
+            halo.style.strokeWidth = '2'
+            halo.style.stroke = FOREGROUNDS[i]
+            halo.setAttribute('cx', size / 2)
+            halo.setAttribute('cy', size / 2)
+            halo.setAttribute('r', BOX_Y/2 + 4)
+            svg.append(halo)
+            
+            return svg
+        }
+        grid.append(create_circle_icon())
+        
+        var t = document.createElement('textarea')
+        s9.textarea = t
+        grid.append(t)
+        
+        var nothing = document.createElement('div')
+        grid.append(nothing)
+        
+        var buttons = document.createElement('div')
+        grid.append(buttons)
+        
+        function style_merge_button(b, i, stars) {
+            b.innerHTML = 'M' + (i + 1) + '*'.repeat(stars)
+            b.style.color = stars > 0 ? 'white' : 'inherit'
+            b.style.fontWeight = stars > 0 ? 'bold' : 'inherit'
+            b.style.background = stars > 0 ? FOREGROUNDS[i] : BACKGROUNDS[i]
+        }
+        
+        function commit() {
+            // var msg = sync7.commit(s7, t.value)
+            // if (msg) {
+            //     s7.versions[s7.leaf].uid =
+            //         s7.versions[s7.leaf].column =
+            //         msg[s7.leaf].uid =
+            //         msg[s7.leaf].column = i
+                
+            //     for (var ii = 0; ii < n; ii++) {
+            //         if (ii != i) {
+            //             s7s[ii].buffers[i].push(JSON.parse(JSON.stringify(msg)))
+            //             style_merge_button(s7s[ii].buttons[i], i, s7s[ii].buffers[i].length)
+            //         }
+            //     }
+                
+            //     right.innerHTML = ''
+            //     right.append(sync7_create_visualizations(s7s))
+            // }
+        }
+        
+        var b = document.createElement('button')
+        b.innerHTML = 'C' + (i + 1)
+        b.onclick = function () {
+            commit()
+        }
+        buttons.append(b)
+        s9.c_button = b
+        
+        var iii = 1
+        var temp_array = []
+        for (var i = 0; i < n - 1; i++) temp_array.push(i)
+        temp_array.forEach((_, ii) => {
+            if (ii == i) iii++
+            var iiii = iii
+            iii++
+            
+            var b = document.createElement('button')
+            b.innerHTML = 'M' + iiii
+            b.style.background = BACKGROUNDS[iiii - 1]
+            b.onclick = function () {
+                commit()
+                var x = s9.buffers[iiii - 1].shift()
+                // if (x) {
+                //     sync7.merge(s7, x, null, default_custom_merge_func)
+                //     each(s7.versions, function (c, id) {
+                //         if (c.column == null)
+                //             c.column = i
+                //     })
+                //     t.value = s7.text
+                    
+                //     msg.innerHTML = Object.keys(s7.waiting_versions).length > 0 ? ('pend\'n' + '*'.repeat(Object.keys(s7.waiting_versions).length)) : ''
+                // }
+                style_merge_button(s9.buttons[iiii - 1], iiii - 1, s9.buffers[iiii - 1].length)
+                
+                // right.innerHTML = ''
+                // right.append(sync7_create_visualizations(s7s))
+            }
+            buttons.append(b)
+            s9.buttons[iiii - 1] = b
+        })
+        
+        var msg = document.createElement('span')
+        buttons.append(msg)
+        
+        var d = document.createElement('div')
+        d.style.width = '10px'
+        d.style.height = '20px'
+        grid.append(d)
+        var d = document.createElement('div')
+        d.style.width = '10px'
+        d.style.height = '20px'
+        grid.append(d)
+    })
+    
+    function add_refresh_button() {
+        var b = document.createElement('button')
+        b.textContent = 'reset'
+        b.onclick = function () {
+            document.body.innerHTML = ''
+            create_side_text_boxes(n)
+        }
+        document.body.append(b)
+    }
+    add_refresh_button()
+    
+    // right.innerHTML = ''
+    // right.append(sync7_create_visualizations(s7s))
+    
+    // if (show_example) {
+    //     s7s[0].textarea.value = 'abc'
+    //     s7s[0].c_button.click()
+        
+    //     s7s[0].textarea.value = 'a12c'
+    //     s7s[0].c_button.click()
+        
+        
+    //     s7s[2].buttons[0].click()
+    //     s7s[2].textarea.value = 'XXXbY'
+    //     s7s[2].c_button.click()
+        
+    //     s7s[0].buttons[2].click()
+        
+    //     s7s[1].buttons[0].click()
+    //     s7s[1].buttons[0].click()
+    //     s7s[1].textarea.value = 'w2c'
+    //     s7s[1].c_button.click()
+    //     s7s[1].textarea.value = 'wz'
+    //     s7s[1].c_button.click()
+        
+    //     s7s[0].buttons[1].click()
+    //     s7s[0].buttons[1].click()
+    // }
+}
+
+create_side_text_boxes(4, true)
+
 
 
 
