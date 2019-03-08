@@ -27,8 +27,9 @@ debug_output.push = function (x) {
 var server = sync9_create_server({
     welcome : (uid, acks, versions) => {
         clients[uid].incoming.push(() => {
-            debug_output.push('client welcome ' + uid + ' ' + acks + ' ' + versions)
+            debug_output.push('client welcome ' + uid + ' ' + acks + ' ' + versions + ' TEST')
             
+            c.state = 'connected'
             clients[uid].welcome(acks, versions)
         })
     },
@@ -104,8 +105,9 @@ for (var t = 0; t < 50; t++) {
             debug_output.push(c.state)
         } else {
             if (c.state == 'disconnected') {
-                c.state = 'connected'
+                c.state = 'connecting'
                 c.join()
+            } else if (c.state == 'connecting') {
             } else if (c.state == 'connected') {
                 // c.state = 'disconnected'
                 // c.state_note = 'had been connected'
