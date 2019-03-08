@@ -170,7 +170,7 @@ for (var t = 0; t < 10000; t++) {
         }
         while (c.incoming.length > 0) {
             
-            if (t == 5) {
+            if (t == 5 || t == 4) {
                 debugger
             }
             
@@ -296,7 +296,9 @@ function sync9_create_client(s_funcs) {
         })
         
         var changes = sync9_gen_diff(c.s9, x => c.server_leaves[x], () => true)
-        sync9_trim(c.s9, x => c.server_leaves[x])
+        
+        var ancs = sync9_get_ancestors(c.s9, c.server_leaves)
+        sync9_trim(c.s9, x => ancs[x])
         if (changes.length > 0) {
             var x = {
                 vid : sync9_guid(),
