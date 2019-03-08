@@ -53,7 +53,7 @@ for (var i = 0; i < n_clients; i++) {
         var c = sync9_create_client({
             join : (uid, leaves) => {
                 c.outgoing.push(() => {
-                    debug_output.push('server join: ' + uid + ' leaves:' + leaves)
+                    debug_output.push('server join: ' + uid + ' leaves:' + JSON.stringify(leaves))
                     
                     server.join(uid, leaves)
                 })
@@ -63,7 +63,7 @@ for (var i = 0; i < n_clients; i++) {
                     c.outgoing.push(() => {
                         debug_output.push('server add version from ' + uid)
                     
-                        debug_output.push(`vid: ${vid}, parents: ${parents}, changes: ${changes}`)
+                        debug_output.push(`vid: ${vid}, parents: ${JSON.stringify(parents)}, changes: ${changes}`)
                     
                         server.add_version(uid, vid, parents, changes)
                     })
@@ -219,13 +219,13 @@ function sync9_create_client(s_funcs) {
     
     c.s9 = sync9_create()
     
-    sync9_add_version(c.s9, 'v1', {root : true}, [' = ""'])
+    sync9_add_version(c.s9, 'v1', {root: true}, [' = ""'])
     sync9_prune(c.s9, (a, b) => true)
     delete c.s9.T.v1
-    c.s9.leaves = {root : true}
+    c.s9.leaves = {root: true}
     
     c.uid = sync9_guid()
-    c.server_leaves = {}
+    c.server_leaves = {root: true}
     
     c.join = () => {
         s_funcs.join(c.uid, c.server_leaves)
