@@ -347,6 +347,32 @@ function sync9_create_server(c_funcs) {
 
 
 
+work here
+
+function sync9_extract_versions(x, is_anc_A, is_anc_B) {
+    return sync9_space_dag_extract_versions(sync9_space_dag_get(x.val.S, 0).S, is_anc_A, is_anc_B)
+}
+
+function sync9_space_dag_extract_versions(S, is_anc_A, is_anc_B) {
+    
+    
+    work here
+    
+}
+
+
+function sync9_trim() {
+    throw 'not implemented : work here'
+}
+
+function sync9_space_dag_trim() {
+    throw 'not implemented : work here'
+}
+
+
+
+
+
 
 function sync9_gen_diff(x, is_anc, is_new_anc) {
     return sync9_space_dag_gen_diff(sync9_space_dag_get(x.val.S, 0).S, is_anc, is_new_anc).map(x => {
