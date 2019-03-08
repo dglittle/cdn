@@ -347,8 +347,6 @@ function sync9_create_server(c_funcs) {
 
 
 
-work here
-
 function sync9_extract_versions(x, is_anc_A, is_anc_B) {
     return sync9_space_dag_extract_versions(sync9_space_dag_get(x.val.S, 0).S, is_anc_A, is_anc_B)
 }
@@ -371,77 +369,63 @@ function sync9_space_dag_extract_versions(S, is_anc_A, is_anc_B) {
             v.splices.push([offset, 0, node.elems.concat.apply(node.elems.slice(0, 0), elems)])
         }
         
+        Object.keys(node.deleted_by).forEach(x => {
+            if (!is_anc_A(x) && is_anc_B(x)) {
+                var v = versions[x]
+                if (!v) v = versions[x] = {vid: x, parents: {}, splices: []}
+                v.parents[vid] = true
+                
+                v.splices.push([offset, node.elems.length, node.elems.slice(0, 0)])
+            }
+        })
+        
         for (var next of node.nexts)
             helper(next, vid, next.vid)
         if (node.next) helper(node.next, null, vid)
     }
     helper(S, null, S.vid)
     
-    
-    
-    
-    
-    
-    
-work here    
-    
-    
-    
-    
-    var offset = 0
-    sync9_trav_space_dag(S, is_anc_B, (node, offset, has_nexts, prev, vid) => {
-        if (is_anc_A(vid)) {
-            
-        } else {
-            
-        }
-        
-        
-        
-    }, true)
-    
-    
-    
-    
-    
-    sync9_trav_space_dag(S, is_new_anc, (node, offset, has_nexts, prev, vid) => {
-        if (Object.keys(node.deleted_by).some(x => is_anc(x))) return
-        var deleted_by_b = Object.keys(node.deleted_by).some(x => is_new_anc(x))
-        
-        node.offset_a = offset_a
-        node.offset_b = offset_b
-        if (set_us.length > 0) {
-            set_us.forEach(n => n.real_next = node)
-            set_us = []
-        }
-        
-        if (is_anc(vid))
-            offset_a += node.elems.length
-        if (!deleted_by_b)
-            offset_b += node.elems.length
-        if (node.next)
-            set_us.push(node)
-    }, true, node => {
-        set_us.push(node)
+    var versions_array = []
+    var seen = {}
+    while (Object.keys(versions).length > 0) {
+        Object.entries(versions).forEach(x => {
+            if (Object.keys(x[1].parents).every(x => !versions[x] || seen[x])) {
+                seen[x[0]] = true
+                delete versions[x[0]]
+                versions_array.push(x[1])
+            }
+        })
+    }
+    return versions_array
+}
+
+
+function sync9_trim(x, is_anc) {
+    sync9_space_dag_trim(sync9_space_dag_get(x.val.S, 0).S, is_anc)
+    Object.keys(x.T).forEach(x => {
+        if (!is_anc(x)) delete x.T[x]
     })
-
-
-
-
-
-
-
-    
-    
+    var leaves = {}
+    Object.keys(x.T).forEach(x => leaves[x] = true)
+    Object.values(x.T).forEach(x => {
+        Object.keys(x).forEach(x => delete leaves[x])
+    })
+    x.leaves = leaves
 }
 
-
-function sync9_trim() {
-    throw 'not implemented : work here'
-}
-
-function sync9_space_dag_trim() {
-    throw 'not implemented : work here'
+function sync9_space_dag_trim(S, is_anc) {
+    function helper(node, vid) {
+        node.nexts = node.nexts.filter(x => is_anc(x.vid))
+        Object.keys(node.deleted_by).forEach(x => {
+            if (!is_anc(x)) {
+                delete node.deleted_by[x]
+            }
+        })
+        for (var next of node.nexts)
+            helper(next, next.vid)
+        if (node.next) helper(node.next, vid)
+    }
+    helper(S, S.vid)    
 }
 
 
