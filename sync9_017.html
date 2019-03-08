@@ -29,7 +29,7 @@ var server = sync9_create_server({
         clients[uid].incoming.push(() => {
             debug_output.push('client welcome ' + uid + ' ' + acks + ' ' + versions + ' TEST')
             
-            c.state = 'connected'
+            clients[uid].state = 'connected'
             clients[uid].welcome(acks, versions)
         })
     },
@@ -86,7 +86,7 @@ for (var i = 0; i < n_clients; i++) {
     })()
 }
     
-for (var t = 0; t < 50; t++) {
+for (var t = 0; t < 0; t++) {
     debug_output.push('t = ' + t)
     
     var i = Math.floor(Math.random() * n_clients)
@@ -252,13 +252,15 @@ function sync9_create_client(s_funcs) {
         
         var changes = sync9_gen_diff(c.s9, x => c.server_leaves[x], () => true)
         sync9_trim(c.s9, x => c.server_leaves[x])
-        var x = {
-            vid : sync9_guid(),
-            parents : Object.assign({}, c.s9.leaves),
-            changes : changes
+        if (changes.length > 0) {
+            var x = {
+                vid : sync9_guid(),
+                parents : Object.assign({}, c.s9.leaves),
+                changes : changes
+            }
+            sync9_add_version(c.s9, x.vid, c.s9.leaves, x.changes)
+            s_funcs.add_version(c.uid, x.vid, x.parents, x.changes)
         }
-        sync9_add_version(c.s9, x.vid, c.s9.leaves, x.changes)
-        s_funcs.add_version(c.uid, x.vid, x.parents, x.changes)
     }
     
     c.add_version = (vid, parents, changes) => {
