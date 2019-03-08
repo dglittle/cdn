@@ -23,11 +23,11 @@ var debug_output = []
 // }
 
 var server = sync9_create_server({
-    welcome : (uid, updates) => {
+    welcome : (uid, versions) => {
         clients[uid].incoming.push(() => {
-            debug_output.push('client welcome ' + uid + ' ' + updates)
+            debug_output.push('client welcome ' + uid + ' ' + versions)
             
-            clients[uid].welcome(updates)
+            clients[uid].welcome(versions)
         })
     },
     add_version : (uid, vid, parents, changes) => {
@@ -66,13 +66,6 @@ for (var i = 0; i < n_clients; i++) {
                         server.add_version(uid, vid, parents, changes)
                     })
                 }
-            },
-            ack : (uid, vid) => {
-                c.outgoing.push(() => {
-                    debug_output.push('server ack: ' + vid + ' from ' + uid)
-
-                    server.ack(uid, vid)
-                })
             }
         })
         c.state = 'disconnected'
@@ -237,22 +230,39 @@ function sync9_create_client(s_funcs) {
         s_funcs.join(c.uid, c.server_leaves)
     }
     
-    c.welcome = (sv, cv, changes) => {
-        if (sv > c.sv) {
-            var parents = {[c.sv] : true}
-            if (cv < c.acked_c) {
-                c.acked_c = cv
-                parents[cv] = true
-            }
-            sync9_add_version(c.s9, sv, parents, changes)
-            prune(sv, cv)
-            s_funcs.ack(c.uid, sv)
-        }
-        
+    c.welcome = (versions, acks) => {
         c.unacked.forEach(x => {
-            s_funcs.add_version(c.uid, x.cv, x.sv, x.changes)
+            if (acks[x.vid]) {
+                Object.keys(x.parents).forEach(k => {
+                    if (c.server_leaves[k]) delete c.server_leaves[k]
+                })
+                c.server_leaves[x.vid] = true
+            }
         })
         
+        versions.forEach(x => {
+            Object.keys(x.parents).forEach(k => {
+                if (c.server_leaves[k]) delete c.server_leaves[k]
+            })
+            c.server_leaves[x.vid] = true
+            
+            sync9_add_version(c.s9, x.vid, x.parents, x.changes)
+        })
+        
+        s_funcs.ack(c.uid, c.server_leaves)
+        
+        var changes = sync9_gen_diff(c.s9, x => c.server_leaves[x], () => true)
+        
+        sync9_trim(c.s9, x => c.server_leaves[x])
+        
+        var x = {
+            vid : sync9_guid(),
+            parents : Object.assign({}, c.server_leaves),
+            changes : changes
+        }
+        sync9_add_version(c.s9, x.vid, c.s9.leaves, x.changes)
+        c.unacked = [x]
+        s_funcs.add_version(c.uid, x.vid, x.parents, x.changes)
     }
     
     c.add_version = (vid, parents, changes) => {
@@ -260,35 +270,23 @@ function sync9_create_client(s_funcs) {
             if (c.server_leaves[k]) delete c.server_leaves[k]
         })
         c.server_leaves[vid] = true
-
         
-        
-        sync9_add_version(c.s9, sv, {[c.sv] : true}, changes)
-        prune(sv, 0)
-        s_funcs.ack(c.uid, sv)
+        sync9_add_version(c.s9, vid, parents, changes)
+        s_funcs.ack(c.uid, c.server_leaves)
     }
     
-    c.ack = (sv, cv) => {
-        c.acked_c = cv
-        sync9_add_version(c.s9, sv, {[c.sv] : true, [cv] : true}, [])
-        prune(sv, cv)
-        s_funcs.ack(c.uid, sv)
+    c.ack = (leaves) => {
     }
     
     c.local_add_version = (changes) => {
-        c.cv--
         var x = {
-            cv : c.cv,
-            sv : c.sv,
+            vid : sync9_guid(),
+            parents : Object.assign({}, c.s9.leaves),
             changes : changes
         }
-        var parents = {[x.sv] : true}
-        if (x.cv + 1 < c.acked_c) {
-            parents[x.cv + 1] = true
-        }
-        sync9_add_version(c.s9, x.cv, parents, x.changes)
+        sync9_add_version(c.s9, x.vid, c.s9.leaves, x.changes)
         c.unacked.push(x)
-        s_funcs.add_version(c.uid, x.cv, x.sv, x.changes)
+        s_funcs.add_version(c.uid, x.vid, x.parents, x.changes)
     }
     
     return c
@@ -299,45 +297,30 @@ function sync9_create_server(c_funcs) {
     
     s.s9 = sync9_create()
     
-    sync9_add_version(s.s9, 'v1', {0 : true}, [' = ""'])
+    sync9_add_version(s.s9, 'v1', {root : true}, [' = ""'])
     sync9_prune(s.s9, (a, b) => true)
     delete s.s9.T.v1
-    s.s9.leaves = {0 : true}
+    s.s9.leaves = {root : true}
 
-    s.sv = 0
     s.peers = {}
     
-    function prune(c) {
-        Object.keys(c.unacked).forEach(x => {
-            if (x <= c.acked_s) delete c.unacked[x]
-        })
-        Object.entries(c.c_to_s).forEach(x => {
-            if (x[1] <= c.acked_s) delete c.c_to_s[x[0]]
-        })
-        
-        var saved = {}
-        Object.values(s.peers).forEach(x => {
-            Object.assign(saved, x.unacked)
-            Object.values(x.c_to_s).forEach(x => saved[x] = true)
-            if (x.saved) Object.assign(saved, x.saved)
-        })
-        sync9_prune(s.s9, (a, b) => !saved[a] && !saved[b])
-    }
-    
-    s.join = (uid, sv) => {
+    s.join = (uid, leaves) => {
         var p = s.peers[uid]
         if (!p) {
             s.peers[uid] = p = {
                 unacked : {},
-                seen_c : 0,
-                c_to_s : {},
+                versions : {},
                 saved : null
             }
         }
         p.online = true
-        var known = {}
-        Object.values(p.c_to_s).forEach(x => known[x] = true)
-        var changes = sync9_gen_diff(s.s9, (x) => x <= (sv == 0 ? -1 : sv) || known[x], (x) => true)
+        
+        var is_anc = sync9_get_ancestors(s.s9, leaves)
+        var versions = sync9_extract_versions(s.s9, x => is_anc(x) || p.versions[x], () => true)
+        
+        
+        
+        
         p.unacked[s.sv] = true
         c_funcs.welcome(uid, s.sv, p.seen_c, changes)
         prune(p)
