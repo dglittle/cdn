@@ -187,7 +187,8 @@ if (true || !check_good) {
         console.log(val)
     })
     
-    console.log(debug_output.join('\n'))
+    if (typeof(debug_output) == 'object')
+        console.log(debug_output.join('\n'))
     
     throw 'bad'
 }
