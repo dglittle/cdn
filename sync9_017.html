@@ -18,11 +18,11 @@ console.log('seed ' + seed)
 var n_clients = 2
 var clients = {}
 
-var debug_output = []
-// debug_output = {}
-// debug_output.push = function (x) {
-//     console.log(x)
-// }
+// var debug_output = []
+debug_output = {}
+debug_output.push = function (x) {
+    console.log(x)
+}
 
 var server = sync9_create_server({
     welcome : (uid, acks, versions) => {
