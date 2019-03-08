@@ -131,6 +131,14 @@ for (var t = 0; t < 30; t++) {
             }
         }
     }
+    
+    
+    
+    console.log('here are the T keys for everyone:')
+    console.log(JSON.stringify(Object.keys(server.s9.T)))
+    Object.values(clients).forEach(x => {
+        console.log(JSON.stringify(Object.keys(x.s9.T)))
+    })
 }
 
 Object.values(clients).forEach(x => {
