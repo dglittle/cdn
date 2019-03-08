@@ -401,9 +401,12 @@ function sync9_space_dag_extract_versions(S, is_anc_A, is_anc_B) {
 
 
 function sync9_trim(x, is_anc) {
+    
+    debugger
+    
     sync9_space_dag_trim(sync9_space_dag_get(x.val.S, 0).S, is_anc)
-    Object.keys(x.T).forEach(x => {
-        if (!is_anc(x)) delete x.T[x]
+    Object.keys(x.T).forEach(vid => {
+        if (!is_anc(vid)) delete x.T[vid]
     })
     var leaves = {}
     Object.keys(x.T).forEach(x => leaves[x] = true)
