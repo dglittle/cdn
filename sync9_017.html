@@ -389,7 +389,7 @@ function sync9_space_dag_extract_versions(S, s9, is_anc) {
         var v = {
             vid,
             parents : s9.T[vid],
-            changes : []
+            splices : []
         }
         
         var ancs = sync9_get_ancestors(s9, {[vid]: true})
@@ -397,9 +397,9 @@ function sync9_space_dag_extract_versions(S, s9, is_anc) {
         var offset = 0
         function helper(node, vid) {
             if (vid == v.vid) {
-                v.changes.push([offset, 0, node.elems.slice(0)])
+                v.splices.push([offset, 0, node.elems.slice(0)])
             } else if (node.deleted_by[v.vid]) {
-                v.changes.push([offset, node.elems.length, node.elems.slice(0, 0)])
+                v.splices.push([offset, node.elems.length, node.elems.slice(0, 0)])
             }
             
             if (ancs[vid] && !Object.keys(node.deleted_by).some(x => ancs[x])) {
