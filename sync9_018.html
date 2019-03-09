@@ -107,10 +107,18 @@ for (var t = 0; t < 30; t++) {
             debug_output.push(c.state)
         } else {
             if (c.state == 'disconnected') {
+                
+                debug_output.push('JOIN: ' + c.uid)
+                debug_output.push(sync9_read(c.s9))
+                
                 c.state = 'connecting'
                 c.join()
             } else if (c.state == 'connecting') {
             } else if (c.state == 'connected') {
+                
+                debug_output.push('LEAVE: ' + c.uid)
+                debug_output.push(sync9_read(c.s9))
+                
                 c.state = 'disconnected'
                 c.state_note = 'had been connected'
                 c.incoming = []
@@ -375,6 +383,9 @@ function sync9_create_server(c_funcs) {
             delete s.unacked[vid]
             Object.entries(s.peers).forEach(x => {
                 if (x[1].online) {
+                    
+                    console.log('calling c_funs.ack ' + uid + ' ' + vid)
+                    
                     c_funcs.ack(uid, vid)
                 }
             })
