@@ -259,9 +259,8 @@ function sync9_create_client(s_funcs) {
             sync9_add_version(c.s9, x.vid, x.parents, x.changes)
         })
         
-        var changes = sync9_gen_diff(c.s9, x => c.server_leaves[x], () => true)
-        
         var ancs = sync9_get_ancestors(c.s9, c.server_leaves)
+        var changes = sync9_gen_diff(c.s9, x => ancs[x], () => true)
         sync9_trim(c.s9, x => ancs[x])
         if (changes.length > 0) {
             var x = {
