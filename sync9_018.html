@@ -71,6 +71,15 @@ for (var i = 0; i < n_clients; i++) {
                         server.add_version(uid, vid, parents, changes)
                     })
                 }
+            },
+            ack : (uid, vid) => {
+                if (c.state == 'connected') {
+                    c.outgoing.push(() => {
+                        debug_output.push('server ack from ' + uid + ' for v:' + vid)
+                    
+                        server.ack(uid, vid)
+                    })
+                }
             }
         })
         c.state = 'disconnected'
