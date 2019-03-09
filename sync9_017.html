@@ -392,14 +392,26 @@ function sync9_space_dag_extract_versions(S, s9, is_anc) {
             splices : []
         }
         
+        function add_result(offset, del, ins) {
+            if (v.splices.length > 0) {
+                var prev = v.splices[v.splices.length - 1]
+                if (prev[0] + prev[1] == offset) {
+                    prev[1] += del
+                    prev[2] = prev[2].concat(ins)
+                    return
+                }
+            }
+            v.splices.push([offset, del, ins])
+        }
+        
         var ancs = sync9_get_ancestors(s9, {[vid]: true})
         delete ancs[vid]
         var offset = 0
         function helper(node, vid) {
             if (vid == v.vid) {
-                v.splices.push([offset, 0, node.elems.slice(0)])
+                add_result(offset, 0, node.elems.slice(0))
             } else if (node.deleted_by[v.vid]) {
-                v.splices.push([offset, node.elems.length, node.elems.slice(0, 0)])
+                add_result(offset, node.elems.length, node.elems.slice(0, 0))
             }
             
             if (ancs[vid] && !Object.keys(node.deleted_by).some(x => ancs[x])) {
