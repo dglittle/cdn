@@ -391,7 +391,8 @@ function sync9_space_dag_extract_versions(S, s9, is_anc) {
             parents : s9.T[vid],
             changes : []
         }
-        var ancs = sync9_get_ancestors(s9, vid)
+        
+        var ancs = sync9_get_ancestors(s9, {[vid]: true})
         delete ancs[vid]
         var offset = 0
         function helper(node, vid) {
