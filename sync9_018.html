@@ -290,6 +290,7 @@ function sync9_create_client(s_funcs) {
         c.server_leaves[vid] = true
         
         sync9_add_version(c.s9, vid, parents, changes)
+        s_funcs.ack(c.uid, vid)
     }
     
     c.ack = (vid) => {
