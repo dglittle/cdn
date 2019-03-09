@@ -20,11 +20,11 @@ console.log('seed ' + seed)
 var n_clients = 2
 var clients = {}
 
-// var debug_output = []
-debug_output = {}
-debug_output.push = function (x) {
-    console.log(x)
-}
+var debug_output = []
+// debug_output = {}
+// debug_output.push = function (x) {
+//     console.log(x)
+// }
 
 var server = sync9_create_server({
     welcome : (uid, acks, versions) => {
@@ -293,18 +293,6 @@ function sync9_create_client(s_funcs) {
     }
     
     c.ack = (vid) => {
-        
-        
-        // work here
-        try {
-            Object.keys(c.s9.T[vid]).forEach(k => true)
-        } catch (e) {
-            debugger
-        }
-        
-        
-        
-        
         Object.keys(c.s9.T[vid]).forEach(k => {
             if (c.server_leaves[k]) delete c.server_leaves[k]
         })
@@ -390,11 +378,6 @@ function sync9_create_server(c_funcs) {
     }
     
     s.leave = (uid) => {
-        
-        if (uid == 'bW4j6IbwjpLYwtO') {
-            debugger
-        }
-        
         var p = s.peers[uid]
         p.online = false
         
