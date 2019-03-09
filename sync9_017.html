@@ -417,7 +417,7 @@ function sync9_space_dag_extract_versions(S, s9, is_anc) {
     var seen = {}
     while (versions.length > 0)
         versions = versions.filter(v => {
-            if (Object.keys(v.parents).every(x => is_anc(x) || seen[x]) {
+            if (Object.keys(v.parents).every(x => is_anc(x) || seen[x])) {
                 seen[v.vid] = true
                 sorted.push(v)
                 return false
