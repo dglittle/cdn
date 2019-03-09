@@ -289,6 +289,9 @@ function sync9_create_client(s_funcs) {
             if (c.server_leaves[k]) delete c.server_leaves[k]
         })
         c.server_leaves[vid] = true
+        
+        // var ancs = sync9_get_ancestors(c.s9, c.server_leaves)
+        // sync9_prune(c.s9, (a, b) => ancs[b])
     }
     
     c.local_add_version = (changes) => {
@@ -315,6 +318,7 @@ function sync9_create_server(c_funcs) {
     s.s9.leaves = {root : true}
 
     s.peers = {}
+    s.unacked = {}
     
     s.join = (uid, leaves) => {
         var p = s.peers[uid]
@@ -343,17 +347,37 @@ function sync9_create_server(c_funcs) {
         var p = s.peers[uid]
         sync9_add_version(s.s9, vid, parents, changes)
         p.versions.push(vid)
+        s.unacked[vid] = {[uid] : true}
         Object.entries(s.peers).forEach(x => {
             if (x[0] != uid && x[1].online) {
+                s.unacked[vid][x[0]] = true
                 c_funcs.add_version(x[0], vid, parents, changes)
             }
         })
-        c_funcs.ack(uid, vid)
+        s.ack(uid, vid)
+    }
+    
+    s.ack = (uid, vid) => {
+        delete s.unacked[vid][uid]
+        if (Object.keys(s.unacked[vid]).length == 0) {
+            delete s.unacked[vid]
+            Object.entries(s.peers).forEach(x => {
+                if (x[1].online) {
+                    c_funcs.ack(uid, vid)
+                }
+            })
+        }
     }
     
     s.leave = (uid) => {
         var p = s.peers[uid]
-        if (p) p.online = false
+        p.online = false
+        
+        Object.entries(s.unacked).forEach(x => {
+            if (x[1][uid]) {
+                s.ack(uid, x[0])
+            }
+        })
     }
     
     return s
