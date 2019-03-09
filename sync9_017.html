@@ -9,20 +9,22 @@ var sync9_ROOT = 'root'
 
 console.log('-------------------')
 
-for (var ttt = 0; ttt < 1; ttt++) {
+var ttt_n = 1
+for (var ttt = 0; ttt < ttt_n; ttt++) {
+var last_ttt = (ttt == ttt_n - 1)
 
-var seed = 51937 + ttt
+var seed = 51939 + ttt
 Math.randomSeed(seed)
 console.log('seed ' + seed)
 
 var n_clients = 2
 var clients = {}
 
-// var debug_output = []
-debug_output = {}
-debug_output.push = function (x) {
-    console.log(x)
-}
+var debug_output = []
+// debug_output = {}
+// debug_output.push = function (x) {
+//     console.log(x)
+// }
 
 var server = sync9_create_server({
     welcome : (uid, acks, versions) => {
@@ -132,13 +134,11 @@ for (var t = 0; t < 30; t++) {
         }
     }
     
-    
-    
-    console.log('here are the T keys for everyone:')
-    console.log(JSON.stringify(Object.keys(server.s9.T)))
-    Object.values(clients).forEach(x => {
-        console.log(JSON.stringify(Object.keys(x.s9.T)))
-    })
+    // console.log('here are the T keys for everyone:')
+    // console.log(JSON.stringify(Object.keys(server.s9.T)))
+    // Object.values(clients).forEach(x => {
+    //     console.log(JSON.stringify(Object.keys(x.s9.T)))
+    // })
 }
 
 Object.values(clients).forEach(x => {
@@ -156,40 +156,14 @@ for (var t = 0; t < 10000; t++) {
             
             c.state = 'connected'
             c.join()
-            
-            
-            
-    
-    
-    console.log('here are the T keys for everyone:')
-    console.log(JSON.stringify(Object.keys(server.s9.T)))
-    Object.values(clients).forEach(x => {
-        console.log(JSON.stringify(Object.keys(x.s9.T)))
-    })
-            
         }
         while (c.incoming.length > 0) {
-            
-            if (t == 5 || t == 4) {
-                debugger
-            }
-            
             debug_output.push('tt = ' + t++ + ' ' + c.uid)
             debug_output.push('client: ' + sync9_read(c.s9))
             
             c.incoming.shift()()
             
             debug_output.push('client: ' + sync9_read(c.s9))
-            
-            
-    
-    
-    console.log('here are the T keys for everyone:')
-    console.log(JSON.stringify(Object.keys(server.s9.T)))
-    Object.values(clients).forEach(x => {
-        console.log(JSON.stringify(Object.keys(x.s9.T)))
-    })
-            
         }
         while (c.outgoing.length > 0) {
             debug_output.push('tt = ' + t++)
@@ -198,16 +172,6 @@ for (var t = 0; t < 10000; t++) {
             c.outgoing.shift()()
             
             debug_output.push('server: ' + sync9_read(server.s9))
-            
-            
-    
-    
-    console.log('here are the T keys for everyone:')
-    console.log(JSON.stringify(Object.keys(server.s9.T)))
-    Object.values(clients).forEach(x => {
-        console.log(JSON.stringify(Object.keys(x.s9.T)))
-    })
-            
         }
     })
     
@@ -224,7 +188,7 @@ var check_good = true
         check_good = false
 })
 console.log('check_good: ' + check_good)
-if (!check_good) {
+if (last_ttt || !check_good) {
     ;[server].concat(Object.values(clients)).forEach((x, i) => {
         console.log(x)
         var val = sync9_read(x.s9)
@@ -398,8 +362,8 @@ function sync9_create_server(c_funcs) {
 
 
 
-function sync9_extract_versions(x, is_anc_A, is_anc_B) {
-    var versions = sync9_space_dag_extract_versions(sync9_space_dag_get(x.val.S, 0).S, is_anc_A, is_anc_B)
+function sync9_extract_versions(x, is_anc) {
+    var versions = sync9_space_dag_extract_versions(sync9_space_dag_get(x.val.S, 0).S, x, is_anc)
     versions.forEach(x => {
         x.changes = x.splices.map(x => {
             return `[${x[0]}:${x[0] + x[1]}] = ${JSON.stringify(x[2])}`
@@ -409,43 +373,50 @@ function sync9_extract_versions(x, is_anc_A, is_anc_B) {
     return versions
 }
 
-function sync9_space_dag_extract_versions(S, is_anc_A, is_anc_B) {
+function sync9_space_dag_extract_versions(S, s9, is_anc) {
     var versions = {}
-    var offset = 0
-    function helper(node, parent, vid) {
-        if (parent != null && !is_anc_A(vid) && is_anc_B(vid)) {
-            var v = versions[vid]
-            if (!v) v = versions[vid] = {vid, parents: {}, splices: []}
-            v.parents[parent] = true
+    function helper(node, front) {
+        if (front && !is_anc(node.vid))
+            versions[node.vid] = true
             
-            var elems = []
-            var cursor = node
-            while (cursor) {
-                elems.push(cursor.elems)
-                cursor = cursor.next
-            }
-            v.splices.push([offset, 0, node.elems.concat.apply(node.elems.slice(0, 0), elems)])
-        }
-        
-        Object.keys(node.deleted_by).forEach(x => {
-            if (!is_anc_A(x) && is_anc_B(x)) {
-                var v = versions[x]
-                if (!v) v = versions[x] = {vid: x, parents: {}, splices: []}
-                v.parents[vid] = true
-                
-                v.splices.push([offset, node.elems.length, node.elems.slice(0, 0)])
-            }
-        })
-        
         for (var next of node.nexts)
-            helper(next, vid, next.vid)
-        if (node.next) helper(node.next, null, vid)
+            helper(next, true)
+        if (node.next) helper(node.next)
     }
-    helper(S, null, S.vid)
+    helper(S, true)
     
-    var versions_array = []
+    versions = Object.keys(versions).map(vid => {
+        var v = {
+            vid,
+            parents : s9.T[vid],
+            changes : []
+        }
+        var ancs = sync9_get_ancestors(s9, vid)
+        delete ancs[vid]
+        var offset = 0
+        function helper(node, vid) {
+            if (vid == v.vid) {
+                v.changes.push([offset, 0, node.elems.slice(0)])
+            } else if (node.deleted_by[v.vid]) {
+                v.changes.push([offset, node.elems.length, node.elems.slice(0, 0)])
+            }
+            
+            if (ancs[vid] && !Object.keys(node.deleted_by).some(x => ancs[x])) {
+                offset += node.elems.length
+            }
+                
+            for (var next of node.nexts)
+                helper(next, next.vid)
+            if (node.next) helper(node.next, vid)
+        }
+        helper(S, S.vid)
+        return v
+    })
+    
+    
+    work here
     var seen = {}
-    while (Object.keys(versions).length > 0) {
+    while (versions.length > 0) {
         Object.entries(versions).forEach(x => {
             if (Object.keys(x[1].parents).every(x => !versions[x] || seen[x])) {
                 seen[x[0]] = true
