@@ -308,7 +308,7 @@ function sync9_create_client(s_funcs) {
         })
         c.server_leaves[vid] = true
         
-        var ancs = sync9_get_ancestors(c.s9, c.server_leaves)
+        var ancs = sync9_get_ancestors(c.s9, {[vid]: true})
         sync9_prune(c.s9, (a, b) => (a != 'root') && ancs[b])
     }
     
