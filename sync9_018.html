@@ -331,9 +331,9 @@ function sync9_create_server(c_funcs) {
     s.s9 = sync9_create()
     
     sync9_add_version(s.s9, 'v1', {root : true}, [' = ""'])
-    sync9_prune(s.s9, (a, b) => true)
-    delete s.s9.T.v1
-    s.s9.leaves = {root : true}
+    // sync9_prune(s.s9, (a, b) => true)
+    // delete s.s9.T.v1
+    // s.s9.leaves = {root : true}
 
     s.peers = {}
     s.unacked = {}
