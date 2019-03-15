@@ -109,7 +109,7 @@ for (var t = 0; t < 500; t++) {
             debug_output.push(sync9_read(c.s9))
             
             if (c.letters_i >= c.letters.length) {
-                throw 'bad: ran out of letters'
+                c.letters_i = 0
             }
             
             var edit = create_random_edit(c.s9, c.letters[c.letters_i++])
