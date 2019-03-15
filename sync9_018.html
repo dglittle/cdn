@@ -1151,11 +1151,14 @@ function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b, seen_nodes) {
         while (node.next) node = node.next
         node.next = next
     }
-    function process_node(node, offset, vid) {
+    function process_node(node, offset, vid, prev) {
         var nexts = node.nexts
         var next = node.next
 
         var first_prunable = nexts.findIndex(x => has_everyone_whos_seen_a_seen_b(vid, x.vid))
+        if (first_prunable >= 0 && !prev) {
+            first_prunable = nexts.findIndex((x, i) => (i > first_prunable) && has_everyone_whos_seen_a_seen_b(vid, x.vid))
+        }
         if (first_prunable >= 0) {
             var gamma = next
             if (first_prunable + 1 < nexts.length) {
@@ -1212,7 +1215,7 @@ function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b, seen_nodes) {
     var did_something = false
     sync9_trav_space_dag(S, () => true, (node, offset, has_nexts, prev, vid) => {
         if (!prev) seen_nodes[vid] = true
-        while (process_node(node, offset, vid)) {
+        while (process_node(node, offset, vid, prev)) {
             did_something = true
         }
     }, true)
