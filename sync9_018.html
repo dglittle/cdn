@@ -20,11 +20,11 @@ console.log('seed ' + seed)
 var n_clients = 2
 var clients = {}
 
-var debug_output = []
-// debug_output = {}
-// debug_output.push = function (x) {
-//     console.log(x)
-// }
+// var debug_output = []
+debug_output = {}
+debug_output.push = function (x) {
+    console.log(x)
+}
 
 var server = sync9_create_server({
     welcome : (uid, acks, versions) => {
@@ -99,6 +99,10 @@ for (var i = 0; i < n_clients; i++) {
     
 for (var t = 0; t < 38; t++) {
     debug_output.push('t = ' + t)
+    
+    if (t == 17) {
+        debugger
+    }
     
     var i = Math.floor(Math.random() * n_clients)
     var c = Object.values(clients)[i]
@@ -1156,7 +1160,7 @@ function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b, seen_nodes) {
         var next = node.next
 
         var first_prunable = nexts.findIndex(x => has_everyone_whos_seen_a_seen_b(vid, x.vid))
-        if (first_prunable >= 0 && !prev) {
+        if (first_prunable > 0 && !prev) {
             first_prunable = nexts.findIndex((x, i) => (i > first_prunable) && has_everyone_whos_seen_a_seen_b(vid, x.vid))
         }
         if (first_prunable >= 0) {
