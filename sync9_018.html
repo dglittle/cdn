@@ -9,12 +9,11 @@ var sync9_ROOT = 'root'
 
 console.log('-------------------')
 
-var ttt_n = 10000
+var ttt_n = 1000
 for (var ttt = 0; ttt < ttt_n; ttt++) {
 var last_ttt = (ttt == ttt_n - 1)
 
-// var seed = 84548 + ttt
-var seed = 120000 + ttt
+var seed = 200000 + ttt
 Math.randomSeed(seed)
 console.log('seed ' + seed)
 
@@ -98,7 +97,7 @@ for (var i = 0; i < n_clients; i++) {
     })()
 }
 
-for (var t = 0; t < 200; t++) {
+for (var t = 0; t < 500; t++) {
     debug_output.push('t = ' + t)
     
     var i = Math.floor(Math.random() * n_clients)
@@ -1156,7 +1155,7 @@ function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b, seen_nodes) {
         var next = node.next
 
         var first_prunable = nexts.findIndex(x => has_everyone_whos_seen_a_seen_b(vid, x.vid))
-        if (first_prunable > 0 && !prev) {
+        if (first_prunable > 0 && (node.elems.length > 0 || !prev)) {
             first_prunable = nexts.findIndex((x, i) => (i > first_prunable) && has_everyone_whos_seen_a_seen_b(vid, x.vid))
         }
         if (first_prunable >= 0) {
