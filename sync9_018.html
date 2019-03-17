@@ -38,6 +38,12 @@ var server = sync9_create_server({
     add_version : (uid, vid, parents, changes) => {
         clients[uid].incoming.push(() => {
             debug_output.push('client add version ' + uid)
+
+            // work here
+            if (uid == 'PF4GcDToCuhAT1P' && vid == 'U90Nligy4nnOhpd') {
+                console.log(JSON.stringify(c.s9.val.S.elems[0].S, null, '    '))
+                throw 'bloop'
+            }
             
             clients[uid].add_version(vid, parents, changes)
         })
@@ -187,6 +193,16 @@ for (var t = 0; t < 10000; t++) {
             c.join()
         }
         while (c.incoming.length > 0) {
+            
+            
+            // work here
+            // if (t == 14) {
+            //     console.log(c.uid)
+            //     console.log(JSON.stringify(c.s9.val.S.elems[0].S, null, '    '))
+            //     throw 'bloop'
+            // }
+            
+            
             debug_output.push('tt = ' + t++ + ' ' + c.uid)
             debug_output.push('client: ' + sync9_read(c.s9))
             
