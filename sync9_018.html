@@ -20,11 +20,11 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
     var n_clients = 2
     var clients = {}
     
-    var debug_output = []
-    // debug_output = {}
-    // debug_output.push = function (x) {
-    //     console.log(x)
-    // }
+    // var debug_output = []
+    debug_output = {}
+    debug_output.push = function (x) {
+        console.log(x)
+    }
     
     var server = sync9_create_server({
         welcome : (uid, acks, versions) => {
@@ -263,6 +263,16 @@ function sync9_create_client(s_funcs) {
     sync9_prune(c.s9, (a, b) => true)
     delete c.s9.T.v1
     c.s9.leaves = {root: true}
+
+
+
+    
+    // work here
+    c.s9_pruned = JSON.parse(JSON.stringify(c.s9))
+    c.prune_acks = []
+    
+
+
     
     c.uid = sync9_guid()
     c.server_leaves = {root: true}
@@ -286,14 +296,26 @@ function sync9_create_client(s_funcs) {
             c.server_leaves[x.vid] = true
             
             sync9_add_version(c.s9, x.vid, x.parents, x.changes)
+            
+            // work here
+            sync9_add_version(c.s9_pruned, x.vid, x.parents, x.changes)
         })
         
         var ancs = sync9_get_ancestors(c.s9, c.server_leaves)
         var changes = sync9_gen_diff(c.s9, x => ancs[x], () => true)
         sync9_trim(c.s9, x => ancs[x])
+        
+        // work here
+        var vvvvid = null
+        
         if (changes.length > 0) {
+            
+            // work here
+            vvvvid = sync9_guid()
+            
+            
             var x = {
-                vid : sync9_guid(),
+                vid : vvvvid,
                 parents : Object.assign({}, c.s9.leaves),
                 changes : changes
             }
@@ -301,6 +323,22 @@ function sync9_create_client(s_funcs) {
             sync9_add_version(c.s9, x.vid, c.s9.leaves, x.changes)
             s_funcs.add_version(c.uid, x.vid, x.parents, x.changes)
         }
+        
+        
+        // work here
+        var ancs = sync9_get_ancestors(c.s9_pruned, c.server_leaves)
+        var changes = sync9_gen_diff(c.s9_pruned, x => ancs[x], () => true)
+        sync9_trim(c.s9_pruned, x => ancs[x])
+        if (changes.length > 0) {
+            var x = {
+                vid : vvvvid,
+                parents : Object.assign({}, c.s9_pruned.leaves),
+                changes : changes
+            }
+            
+            sync9_add_version(c.s9_pruned, x.vid, c.s9_pruned.leaves, x.changes)
+        }
+        
     }
     
     c.add_version = (vid, parents, changes) => {
@@ -310,6 +348,10 @@ function sync9_create_client(s_funcs) {
         c.server_leaves[vid] = true
         
         sync9_add_version(c.s9, vid, parents, changes)
+        
+        // work here
+        sync9_add_version(c.s9_pruned, vid, parents, changes)
+        
         s_funcs.ack(c.uid, vid)
     }
     
@@ -319,8 +361,27 @@ function sync9_create_client(s_funcs) {
         })
         c.server_leaves[vid] = true
         
-        var ancs = sync9_get_ancestors(c.s9, {[vid]: true})
-        sync9_prune(c.s9, (a, b) => (a != 'root') && ancs[b], c.server_leaves)
+        // work here
+        c.prune_acks.push(vid)
+        
+        var ancs = sync9_get_ancestors(c.s9_pruned, {[vid]: true})
+        sync9_prune(c.s9_pruned, (a, b) => (a != 'root') && ancs[b], c.server_leaves)
+        
+        
+        var s9_temp = JSON.parse(JSON.stringify(c.s9))
+        c.prune_acks.forEach(prune_vid => {
+            var ancs = sync9_get_ancestors(s9_temp, {[prune_vid]: true})
+            sync9_prune(s9_temp, (a, b) => (a != 'root') && ancs[b], c.server_leaves)
+            
+        })
+        
+        if (JSON.stringify(s9_temp) != JSON.stringify(c.s9_pruned)) {
+            
+            console.log(JSON.stringify(c.s9_pruned, null, '    '))
+            console.log(JSON.stringify(s9_temp, null, '    '))
+            
+            throw 'found it!'
+        }
     }
     
     c.local_add_version = (changes) => {
@@ -330,6 +391,11 @@ function sync9_create_client(s_funcs) {
             changes : changes
         }
         sync9_add_version(c.s9, x.vid, c.s9.leaves, x.changes)
+        
+        // work here
+        sync9_add_version(c.s9_pruned, x.vid, c.s9_pruned.leaves, x.changes)
+        
+        
         s_funcs.add_version(c.uid, x.vid, x.parents, x.changes)
     }
     
@@ -913,7 +979,7 @@ function sync9_space_dag_add_version(S, vid, splices, is_anc, vid_override) {
             if (d == 0 && !node.end_cap) {
                 add_to_nexts(node.nexts, new_node)
             } else {
-                break_node(node, s[0] - offset, false, new_node)
+                break_node(node, s[0] - offset, undefined, new_node)
             }
             si++
             return
@@ -1091,26 +1157,30 @@ function sync9_create_proxy(x, cb, path) {
 
 function sync9_prune(x, has_everyone_whos_seen_a_seen_b, save_us) {
     var seen_nodes = {}
+    var did_something = true
     function rec(x) {
         if (x && typeof(x) == 'object') {
             if (!x.t && x.val) {
                 rec(x.val)
             } else if (x.t == 'val') {
-                sync9_space_dag_prune(x.S, has_everyone_whos_seen_a_seen_b, seen_nodes)
+                if (sync9_space_dag_prune(x.S, has_everyone_whos_seen_a_seen_b, seen_nodes)) did_something = true
                 rec(sync9_space_dag_get(x.S, 0))
             } else if (x.t == 'obj') {
                 Object.values(x.S).forEach(v => rec(v))
             } else if (x.t == 'arr') {
-                sync9_space_dag_prune(x.S, has_everyone_whos_seen_a_seen_b, seen_nodes)
+                if (sync9_space_dag_prune(x.S, has_everyone_whos_seen_a_seen_b, seen_nodes)) did_something = true
                 sync9_trav_space_dag(x.S, () => true, node => {
                     node.elems.forEach(e => rec(e))
                 })
             } else if (x.t == 'str') {
-                sync9_space_dag_prune(x.S, has_everyone_whos_seen_a_seen_b, seen_nodes)
+                if (sync9_space_dag_prune(x.S, has_everyone_whos_seen_a_seen_b, seen_nodes)) did_something = true
             }
         }
     }
-    rec(x)
+    while (did_something) {
+        did_something = false
+        rec(x)
+    }
 
     var visited = {}    
     var delete_us = {}
