@@ -11,243 +11,225 @@ console.log('-------------------')
 
 var ttt_n = 1
 for (var ttt = 0; ttt < ttt_n; ttt++) {
-var last_ttt = (ttt == ttt_n - 1)
-
-var seed = 203448 + ttt
-Math.randomSeed(seed)
-console.log('seed ' + seed)
-
-var n_clients = 2
-var clients = {}
-
-var debug_output = []
-// debug_output = {}
-// debug_output.push = function (x) {
-//     console.log(x)
-// }
-
-var server = sync9_create_server({
-    welcome : (uid, acks, versions) => {
-        clients[uid].incoming.push(() => {
-            debug_output.push('client welcome ' + uid + ' ' + JSON.stringify(acks) + ' ' + JSON.stringify(versions) + ' TEST')
-            
-            clients[uid].state = 'connected'
-            clients[uid].welcome(acks, versions)
-        })
-    },
-    add_version : (uid, vid, parents, changes) => {
-        clients[uid].incoming.push(() => {
-            debug_output.push('client add version ' + uid)
-
-            // work here
-            if (uid == 'PF4GcDToCuhAT1P' && vid == 'U90Nligy4nnOhpd') {
-                console.log(JSON.stringify(c.s9.val.S.elems[0].S, null, '    '))
-                throw 'bloop'
-            }
-            
-            clients[uid].add_version(vid, parents, changes)
-        })
-    },
-    ack : (uid, vid) => {
-        clients[uid].incoming.push(() => {
-            debug_output.push('client ack: ' + uid + ' ' + vid)
-            
-            clients[uid].ack(vid)
-        })
-    }
-})
-
-for (var i = 0; i < n_clients; i++) {
-    ;(() => {
-        var c = sync9_create_client({
-            join : (uid, leaves) => {
-                c.outgoing.push(() => {
-                    debug_output.push('server join: ' + uid + ' leaves:' + JSON.stringify(leaves))
-                    
-                    server.join(uid, leaves)
-                })
-            },
-            add_version : (uid, vid, parents, changes) => {
-                if (c.state == 'connected') {
-                    c.outgoing.push(() => {
-                        debug_output.push('server add version from ' + uid)
-                    
-                        debug_output.push(`vid: ${vid}, parents: ${JSON.stringify(parents)}, changes: ${changes}`)
-                    
-                        server.add_version(uid, vid, parents, changes)
-                    })
-                }
-            },
-            ack : (uid, vid) => {
-                if (c.state == 'connected') {
-                    c.outgoing.push(() => {
-                        debug_output.push('server ack from ' + uid + ' for v:' + vid)
-                    
-                        server.ack(uid, vid)
-                    })
-                }
-            }
-        })
-        c.state = 'disconnected'
-        c.incoming = []
-        c.outgoing = []
-        clients[c.uid] = c
-        
-        if (i == 0) {
-            c.letters = 'abcdefghijklmnopqrstuvwxyz'
-            for (var ii = 0; ii < 100; ii++) {
-                c.letters += String.fromCharCode(12032 + ii)
-            }
-            c.letters_i = 0
-        } else {
-            c.letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-            for (var ii = 0; ii < 100; ii++) {
-                c.letters += String.fromCharCode(12032 + 100 + ii)
-            }
-            c.letters_i = 0
-        }
-    })()
-}
-
-for (var t = 0; t < 896; t++) {
-    debug_output.push('t = ' + t)
+    var last_ttt = (ttt == ttt_n - 1)
     
-    var i = Math.floor(Math.random() * n_clients)
-    var c = Object.values(clients)[i]
-
-    if (Math.random() < 0.1) {
-        if (Math.random() < 0.9) {
-            debug_output.push('NEW VERSION: ' + c.uid)
-            debug_output.push(sync9_read(c.s9))
+    var seed = 203448 + ttt
+    Math.randomSeed(seed)
+    console.log('seed ' + seed)
+    
+    var n_clients = 2
+    var clients = {}
+    
+    var debug_output = []
+    // debug_output = {}
+    // debug_output.push = function (x) {
+    //     console.log(x)
+    // }
+    
+    var server = sync9_create_server({
+        welcome : (uid, acks, versions) => {
+            clients[uid].incoming.push(() => {
+                debug_output.push('client welcome ' + uid + ' ' + JSON.stringify(acks) + ' ' + JSON.stringify(versions) + ' TEST')
+                
+                clients[uid].state = 'connected'
+                clients[uid].welcome(acks, versions)
+            })
+        },
+        add_version : (uid, vid, parents, changes) => {
+            clients[uid].incoming.push(() => {
+                debug_output.push('client add version ' + uid)
+                
+                clients[uid].add_version(vid, parents, changes)
+            })
+        },
+        ack : (uid, vid) => {
+            clients[uid].incoming.push(() => {
+                debug_output.push('client ack: ' + uid + ' ' + vid)
+                
+                clients[uid].ack(vid)
+            })
+        }
+    })
+    
+    for (var i = 0; i < n_clients; i++) {
+        ;(() => {
+            var c = sync9_create_client({
+                join : (uid, leaves) => {
+                    c.outgoing.push(() => {
+                        debug_output.push('server join: ' + uid + ' leaves:' + JSON.stringify(leaves))
+                        
+                        server.join(uid, leaves)
+                    })
+                },
+                add_version : (uid, vid, parents, changes) => {
+                    if (c.state == 'connected') {
+                        c.outgoing.push(() => {
+                            debug_output.push('server add version from ' + uid)
+                        
+                            debug_output.push(`vid: ${vid}, parents: ${JSON.stringify(parents)}, changes: ${changes}`)
+                        
+                            server.add_version(uid, vid, parents, changes)
+                        })
+                    }
+                },
+                ack : (uid, vid) => {
+                    if (c.state == 'connected') {
+                        c.outgoing.push(() => {
+                            debug_output.push('server ack from ' + uid + ' for v:' + vid)
+                        
+                            server.ack(uid, vid)
+                        })
+                    }
+                }
+            })
+            c.state = 'disconnected'
+            c.incoming = []
+            c.outgoing = []
+            clients[c.uid] = c
             
-            if (c.letters_i >= c.letters.length) {
+            if (i == 0) {
+                c.letters = 'abcdefghijklmnopqrstuvwxyz'
+                for (var ii = 0; ii < 100; ii++) {
+                    c.letters += String.fromCharCode(12032 + ii)
+                }
                 c.letters_i = 0
-                
-                debugger
+            } else {
+                c.letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+                for (var ii = 0; ii < 100; ii++) {
+                    c.letters += String.fromCharCode(12032 + 100 + ii)
+                }
+                c.letters_i = 0
             }
-            
-            var edit = create_random_edit(c.s9, c.letters[c.letters_i++])
-            
-            c.local_add_version(edit.changes)
-            
-            debug_output.push(sync9_read(c.s9))
-            debug_output.push(c.state)
+        })()
+    }
+    
+    for (var t = 0; t < 896; t++) {
+        debug_output.push('t = ' + t)
+        
+        var i = Math.floor(Math.random() * n_clients)
+        var c = Object.values(clients)[i]
+    
+        if (Math.random() < 0.1) {
+            if (Math.random() < 0.9) {
+                debug_output.push('NEW VERSION: ' + c.uid)
+                debug_output.push(sync9_read(c.s9))
+                
+                if (c.letters_i >= c.letters.length) {
+                    c.letters_i = 0
+                }
+                
+                var edit = create_random_edit(c.s9, c.letters[c.letters_i++])
+                
+                c.local_add_version(edit.changes)
+                
+                debug_output.push(sync9_read(c.s9))
+                debug_output.push(c.state)
+            } else {
+                if (c.state == 'disconnected') {
+                    
+                    debug_output.push('JOIN: ' + c.uid)
+                    debug_output.push(sync9_read(c.s9))
+                    
+                    c.state = 'connecting'
+                    c.join()
+                } else if (c.state == 'connecting') {
+                } else if (c.state == 'connected') {
+                    
+                    debug_output.push('LEAVE: ' + c.uid)
+                    debug_output.push(sync9_read(c.s9))
+                    
+                    c.state = 'disconnected'
+                    c.state_note = 'had been connected'
+                    c.incoming = []
+                    c.outgoing = []
+                    server.leave(c.uid)
+                }
+            }
         } else {
-            if (c.state == 'disconnected') {
-                
-                debug_output.push('JOIN: ' + c.uid)
-                debug_output.push(sync9_read(c.s9))
-                
-                c.state = 'connecting'
-                c.join()
-            } else if (c.state == 'connecting') {
-            } else if (c.state == 'connected') {
-                
-                debug_output.push('LEAVE: ' + c.uid)
-                debug_output.push(sync9_read(c.s9))
-                
-                c.state = 'disconnected'
-                c.state_note = 'had been connected'
-                c.incoming = []
-                c.outgoing = []
-                server.leave(c.uid)
+            if (Math.random() < 0.5) {
+                if (c.incoming.length > 0) {
+                    c.incoming.shift()()
+                    
+                    debug_output.push(c.uid + ' -> ' + sync9_read(c.s9))
+                }
+            } else {
+                if (c.outgoing.length > 0) {
+                    c.outgoing.shift()()
+                    
+                    debug_output.push('server -> ' + sync9_read(server.s9))
+                }
             }
         }
-    } else {
-        if (Math.random() < 0.5) {
-            if (c.incoming.length > 0) {
+        
+        // console.log('here are the T keys for everyone:')
+        // console.log(JSON.stringify(Object.keys(server.s9.T)))
+        // Object.values(clients).forEach(x => {
+        //     console.log(JSON.stringify(Object.keys(x.s9.T)))
+        // })
+    }
+    
+    Object.values(clients).forEach(x => {
+        debug_output.push(x.uid + ' i:' + x.incoming.length + ' o:' + x.outgoing.length)
+    })
+    
+    for (var t = 0; t < 10000; t++) {
+        Object.values(clients).forEach(c => {
+            
+            debug_output.push('PROCESSING: ' + c.uid)
+            
+            if (c.state == 'disconnected') {
+                debug_output.push('tt = ' + t++)
+                debug_output.push('JOIN')
+                
+                c.state = 'connected'
+                c.join()
+            }
+            while (c.incoming.length > 0) {
+                debug_output.push('tt = ' + t++ + ' ' + c.uid)
+                debug_output.push('client: ' + sync9_read(c.s9))
+                
                 c.incoming.shift()()
                 
-                debug_output.push(c.uid + ' -> ' + sync9_read(c.s9))
+                debug_output.push('client: ' + sync9_read(c.s9))
             }
-        } else {
-            if (c.outgoing.length > 0) {
+            while (c.outgoing.length > 0) {
+                debug_output.push('tt = ' + t++)
+                debug_output.push('server: ' + sync9_read(server.s9))
+                
                 c.outgoing.shift()()
                 
-                debug_output.push('server -> ' + sync9_read(server.s9))
+                debug_output.push('server: ' + sync9_read(server.s9))
             }
-        }
+        })
+        
+        if (Object.values(clients).every(x => x.incoming.length == 0 && x.outgoing.length == 0)) break
     }
     
-    // console.log('here are the T keys for everyone:')
-    // console.log(JSON.stringify(Object.keys(server.s9.T)))
-    // Object.values(clients).forEach(x => {
-    //     console.log(JSON.stringify(Object.keys(x.s9.T)))
-    // })
-}
-
-Object.values(clients).forEach(x => {
-    debug_output.push(x.uid + ' i:' + x.incoming.length + ' o:' + x.outgoing.length)
-})
-
-for (var t = 0; t < 10000; t++) {
-    Object.values(clients).forEach(c => {
-        
-        debug_output.push('PROCESSING: ' + c.uid)
-        
-        if (c.state == 'disconnected') {
-            debug_output.push('tt = ' + t++)
-            debug_output.push('JOIN')
-            
-            c.state = 'connected'
-            c.join()
-        }
-        while (c.incoming.length > 0) {
-            
-            
-            // work here
-            // if (t == 14) {
-            //     console.log(c.uid)
-            //     console.log(JSON.stringify(c.s9.val.S.elems[0].S, null, '    '))
-            //     throw 'bloop'
-            // }
-            
-            
-            debug_output.push('tt = ' + t++ + ' ' + c.uid)
-            debug_output.push('client: ' + sync9_read(c.s9))
-            
-            c.incoming.shift()()
-            
-            debug_output.push('client: ' + sync9_read(c.s9))
-        }
-        while (c.outgoing.length > 0) {
-            debug_output.push('tt = ' + t++)
-            debug_output.push('server: ' + sync9_read(server.s9))
-            
-            c.outgoing.shift()()
-            
-            debug_output.push('server: ' + sync9_read(server.s9))
-        }
-    })
-    
-    if (Object.values(clients).every(x => x.incoming.length == 0 && x.outgoing.length == 0)) break
-}
-
-var check_val = null
-var check_good = true
-;[server].concat(Object.values(clients)).forEach((x, i) => {
-    var val = sync9_read(x.s9)
-    if (i == 0)
-        check_val = val
-    else if (val != check_val)
-        check_good = false
-})
-console.log('check_good: ' + check_good)
-if (last_ttt || !check_good) {
+    var check_val = null
+    var check_good = true
     ;[server].concat(Object.values(clients)).forEach((x, i) => {
-        console.log(x)
         var val = sync9_read(x.s9)
-        console.log(val)
+        if (i == 0)
+            check_val = val
+        else if (val != check_val)
+            check_good = false
     })
+    console.log('check_good: ' + check_good)
     
-    if (debug_output instanceof Array)
-        console.log(debug_output.join('\n'))
-    
-    console.log('CHECK GOOD: ' + check_good)
-    
-    throw 'bad'
-}
-
+    if (last_ttt || !check_good) {
+        ;[server].concat(Object.values(clients)).forEach((x, i) => {
+            console.log(x)
+            var val = sync9_read(x.s9)
+            console.log(val)
+        })
+        
+        if (debug_output instanceof Array)
+            console.log(debug_output.join('\n'))
+        
+        console.log('CHECK GOOD: ' + check_good)
+        
+        throw 'bad'
+    }
 }
 
 
@@ -315,6 +297,7 @@ function sync9_create_client(s_funcs) {
                 parents : Object.assign({}, c.s9.leaves),
                 changes : changes
             }
+            
             sync9_add_version(c.s9, x.vid, c.s9.leaves, x.changes)
             s_funcs.add_version(c.uid, x.vid, x.parents, x.changes)
         }
