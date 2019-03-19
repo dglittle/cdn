@@ -251,6 +251,26 @@ function create_random_edit(s, letters) {
     }
 }
 
+// work here
+function get_canonical_copy(x) {
+    if (x && typeof(x) == 'object') {
+        if (x instanceof Array) {
+            var y = []
+            for (var i = 0; i < x.length; i++)
+                y[i] = get_canonical_copy(x[i])
+            return y
+        } else {
+            var y = {}
+            Object.keys(x).sort().forEach(key => {
+                y[key] = get_canonical_copy(x[key])
+            })
+            return y
+        }
+    } else {
+        return x
+    }
+}
+
 
 
 
@@ -375,10 +395,10 @@ function sync9_create_client(s_funcs) {
             
         })
         
-        if (JSON.stringify(s9_temp) != JSON.stringify(c.s9_pruned)) {
+        if (JSON.stringify(get_canonical_copy(s9_temp)) != JSON.stringify(get_canonical_copy(c.s9_pruned))) {
             
-            console.log(JSON.stringify(c.s9_pruned, null, '    '))
-            console.log(JSON.stringify(s9_temp, null, '    '))
+            console.log(JSON.stringify(get_canonical_copy(c.s9_pruned), null, '    '))
+            console.log(JSON.stringify(get_canonical_copy(s9_temp), null, '    '))
             
             throw 'found it!'
         }
