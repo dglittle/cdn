@@ -1275,11 +1275,13 @@ function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b, seen_nodes) {
                     delete node.end_cap
                     node.nexts = []
                     node.next = nexts[0]
+                    node.next.vid = null
                     set_nnnext(node, gamma)
                 }
             } else {
                 node.nexts = nexts.slice(0, first_prunable)
                 node.next = nexts[first_prunable]
+                node.next.vid = null
                 set_nnnext(node, gamma)
             }
             return true
