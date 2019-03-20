@@ -274,6 +274,20 @@ function get_canonical_copy(x) {
 
 
 
+// work here
+function detect_case(s9) {
+    var S = s9.val.S.elems[0].S
+    sync9_trav_space_dag(S, () => true, node => {
+        if (node.deleted_by['VbRMpudvxkUu3Hx'] && node.elems == 'C' && node.next.deleted_by['VbRMpudvxkUu3Hx'] && node.next.elems == 'C') {
+            console.log('FOUND FOUND: VbRMpudvxkUu3Hx')
+        }
+    })
+}
+
+
+
+
+
 function sync9_create_client(s_funcs) {
     var c = {}
     
@@ -359,6 +373,10 @@ function sync9_create_client(s_funcs) {
             sync9_add_version(c.s9_pruned, x.vid, c.s9_pruned.leaves, x.changes)
         }
         
+        
+        
+        // work here
+        detect_case(c.s9)
     }
     
     c.add_version = (vid, parents, changes) => {
@@ -373,6 +391,12 @@ function sync9_create_client(s_funcs) {
         sync9_add_version(c.s9_pruned, vid, parents, changes)
         
         s_funcs.ack(c.uid, vid)
+        
+        
+        
+        // work here
+        detect_case(c.s9)
+        
     }
     
     c.ack = (vid) => {
@@ -380,6 +404,40 @@ function sync9_create_client(s_funcs) {
             if (c.server_leaves[k]) delete c.server_leaves[k]
         })
         c.server_leaves[vid] = true
+        
+        
+        
+        
+        
+        
+        // work here
+        if (c.uid == 'PF4GcDToCuhAT1P' && vid == 'rhdaifWIY6SX0zx') {
+            
+            
+            var s9_temp = JSON.parse(JSON.stringify(c.s9))
+            c.prune_acks.forEach(prune_vid => {
+                
+                
+                console.log('PRUNE: ' + prune_vid)
+                
+                
+                var ancs = sync9_get_ancestors(s9_temp, {[prune_vid]: true})
+                sync9_prune(s9_temp, (a, b) => (a != 'root') && ancs[b], c.server_leaves)
+                
+            })
+            
+            console.log(JSON.stringify(get_canonical_copy(c.s9_pruned), null, '    '))
+            console.log(JSON.stringify(get_canonical_copy(s9_temp), null, '    '))
+        
+            throw 'found it!!'
+            
+            
+        }
+        
+        
+        
+        
+        
         
         // work here
         c.prune_acks.push(vid)
@@ -402,6 +460,14 @@ function sync9_create_client(s_funcs) {
             
             throw 'found it!'
         }
+        
+        
+        
+        
+        
+        // work here
+        detect_case(c.s9)
+        
     }
     
     c.local_add_version = (changes) => {
@@ -417,6 +483,15 @@ function sync9_create_client(s_funcs) {
         
         
         s_funcs.add_version(c.uid, x.vid, x.parents, x.changes)
+        
+        
+        
+        
+        
+        
+        // work here
+        detect_case(c.s9)
+        
     }
     
     return c
