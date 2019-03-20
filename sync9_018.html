@@ -429,29 +429,29 @@ function sync9_create_client(s_funcs) {
         
         
         
-        // work here
-        if (c.uid == 'PF4GcDToCuhAT1P' && vid == 'rhdaifWIY6SX0zx') {
+        // // work here
+        // if (c.uid == 'PF4GcDToCuhAT1P' && vid == 'rhdaifWIY6SX0zx') {
             
             
-            var s9_temp = JSON.parse(JSON.stringify(c.s9))
-            c.prune_acks.forEach(prune_vid => {
+        //     var s9_temp = JSON.parse(JSON.stringify(c.s9))
+        //     c.prune_acks.forEach(prune_vid => {
                 
                 
-                console.log('PRUNE: ' + prune_vid)
+        //         console.log('PRUNE: ' + prune_vid)
                 
                 
-                var ancs = sync9_get_ancestors(s9_temp, {[prune_vid]: true})
-                sync9_prune(s9_temp, (a, b) => (a != 'root') && ancs[b], c.server_leaves)
+        //         var ancs = sync9_get_ancestors(s9_temp, {[prune_vid]: true})
+        //         sync9_prune(s9_temp, (a, b) => (a != 'root') && ancs[b], c.server_leaves)
                 
-            })
+        //     })
             
-            console.log(JSON.stringify(get_canonical_copy(c.s9_pruned), null, '    '))
-            console.log(JSON.stringify(get_canonical_copy(s9_temp), null, '    '))
+        //     console.log(JSON.stringify(get_canonical_copy(c.s9_pruned), null, '    '))
+        //     console.log(JSON.stringify(get_canonical_copy(s9_temp), null, '    '))
         
-            throw 'found it!!'
+        //     throw 'found it!!'
             
             
-        }
+        // }
         
         
         
@@ -478,7 +478,7 @@ function sync9_create_client(s_funcs) {
             console.log(JSON.stringify(get_canonical_copy(c.s9_pruned), null, '    '))
             console.log(JSON.stringify(get_canonical_copy(s9_temp), null, '    '))
             
-            throw 'found it!'
+            throw 'found it!--!'
         }
         
         
