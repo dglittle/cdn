@@ -251,48 +251,6 @@ function create_random_edit(s, letters) {
     }
 }
 
-// work here
-function get_canonical_copy(x) {
-    if (x && typeof(x) == 'object') {
-        if (x instanceof Array) {
-            var y = []
-            for (var i = 0; i < x.length; i++)
-                y[i] = get_canonical_copy(x[i])
-            return y
-        } else {
-            var y = {}
-            Object.keys(x).sort().forEach(key => {
-                y[key] = get_canonical_copy(x[key])
-            })
-            return y
-        }
-    } else {
-        return x
-    }
-}
-
-
-
-
-// work here
-function detect_case(s9) {
-    var S = s9.val.S.elems[0].S
-    sync9_trav_space_dag(S, () => true, node => {
-        
-        // if (node.deleted_by['VbRMpudvxkUu3Hx']) {
-        //     throw 'got here!'
-        // }
-        
-        if (node.deleted_by['VbRMpudvxkUu3Hx'] && node.elems == 'C' && node.next.deleted_by['VbRMpudvxkUu3Hx'] && node.next.elems == 'C') {
-            console.log('FOUND FOUND: VbRMpudvxkUu3Hx')
-        }
-    }, true)
-}
-
-
-
-
-
 function sync9_create_client(s_funcs) {
     var c = {}
     
@@ -302,16 +260,6 @@ function sync9_create_client(s_funcs) {
     sync9_prune(c.s9, (a, b) => true)
     delete c.s9.T.v1
     c.s9.leaves = {root: true}
-
-
-
-    
-    // work here
-    c.s9_pruned = JSON.parse(JSON.stringify(c.s9))
-    c.prune_acks = []
-    
-
-
     
     c.uid = sync9_guid()
     c.server_leaves = {root: true}
@@ -335,26 +283,15 @@ function sync9_create_client(s_funcs) {
             c.server_leaves[x.vid] = true
             
             sync9_add_version(c.s9, x.vid, x.parents, x.changes)
-            
-            // work here
-            sync9_add_version(c.s9_pruned, x.vid, x.parents, x.changes)
         })
         
         var ancs = sync9_get_ancestors(c.s9, c.server_leaves)
         var changes = sync9_gen_diff(c.s9, x => ancs[x], () => true)
         sync9_trim(c.s9, x => ancs[x])
-        
-        // work here
-        var vvvvid = null
-        
+        sync9_prune(c.s9, () => false, c.server_leaves)
         if (changes.length > 0) {
-            
-            // work here
-            vvvvid = sync9_guid()
-            
-            
             var x = {
-                vid : vvvvid,
+                vid : sync9_guid(),
                 parents : Object.assign({}, c.s9.leaves),
                 changes : changes
             }
@@ -362,40 +299,6 @@ function sync9_create_client(s_funcs) {
             sync9_add_version(c.s9, x.vid, c.s9.leaves, x.changes)
             s_funcs.add_version(c.uid, x.vid, x.parents, x.changes)
         }
-        
-        
-        // work here
-        var ancs = sync9_get_ancestors(c.s9_pruned, c.server_leaves)
-        var changes = sync9_gen_diff(c.s9_pruned, x => ancs[x], () => true)
-        sync9_trim(c.s9_pruned, x => ancs[x])
-        if (changes.length > 0) {
-            var x = {
-                vid : vvvvid,
-                parents : Object.assign({}, c.s9_pruned.leaves),
-                changes : changes
-            }
-            
-            sync9_add_version(c.s9_pruned, x.vid, c.s9_pruned.leaves, x.changes)
-            
-            
-            
-            
-            
-            
-        
-        
-            // work here
-            sync9_prune(c.s9_pruned, () => false, c.server_leaves)
-            
-            
-        }
-        
-        
-        
-        
-        
-        // work here
-        detect_case(c.s9)
     }
     
     c.add_version = (vid, parents, changes) => {
@@ -405,17 +308,7 @@ function sync9_create_client(s_funcs) {
         c.server_leaves[vid] = true
         
         sync9_add_version(c.s9, vid, parents, changes)
-        
-        // work here
-        sync9_add_version(c.s9_pruned, vid, parents, changes)
-        
         s_funcs.ack(c.uid, vid)
-        
-        
-        
-        // work here
-        detect_case(c.s9)
-        
     }
     
     c.ack = (vid) => {
@@ -424,70 +317,8 @@ function sync9_create_client(s_funcs) {
         })
         c.server_leaves[vid] = true
         
-        
-        
-        
-        
-        
-        // // work here
-        // if (c.uid == 'PF4GcDToCuhAT1P' && vid == 'rhdaifWIY6SX0zx') {
-            
-            
-        //     var s9_temp = JSON.parse(JSON.stringify(c.s9))
-        //     c.prune_acks.forEach(prune_vid => {
-                
-                
-        //         console.log('PRUNE: ' + prune_vid)
-                
-                
-        //         var ancs = sync9_get_ancestors(s9_temp, {[prune_vid]: true})
-        //         sync9_prune(s9_temp, (a, b) => (a != 'root') && ancs[b], c.server_leaves)
-                
-        //     })
-            
-        //     console.log(JSON.stringify(get_canonical_copy(c.s9_pruned), null, '    '))
-        //     console.log(JSON.stringify(get_canonical_copy(s9_temp), null, '    '))
-        
-        //     throw 'found it!!'
-            
-            
-        // }
-        
-        
-        
-        
-        
-        
-        // work here
-        c.prune_acks.push(vid)
-        
-        var ancs = sync9_get_ancestors(c.s9_pruned, {[vid]: true})
-        sync9_prune(c.s9_pruned, (a, b) => (a != 'root') && ancs[b], c.server_leaves)
-        
-        
-        var s9_temp = JSON.parse(JSON.stringify(c.s9))
-        c.prune_acks.forEach(prune_vid => {
-            var ancs = sync9_get_ancestors(s9_temp, {[prune_vid]: true})
-            sync9_prune(s9_temp, (a, b) => (a != 'root') && ancs[b], c.server_leaves)
-            
-        })
-        sync9_prune(s9_temp, () => false, c.server_leaves)
-        
-        if (JSON.stringify(get_canonical_copy(s9_temp)) != JSON.stringify(get_canonical_copy(c.s9_pruned))) {
-            
-            console.log(JSON.stringify(get_canonical_copy(c.s9_pruned), null, '    '))
-            console.log(JSON.stringify(get_canonical_copy(s9_temp), null, '    '))
-            
-            throw 'found it!--!'
-        }
-        
-        
-        
-        
-        
-        // work here
-        detect_case(c.s9)
-        
+        var ancs = sync9_get_ancestors(c.s9, {[vid]: true})
+        sync9_prune(c.s9, (a, b) => (a != 'root') && ancs[b], c.server_leaves)
     }
     
     c.local_add_version = (changes) => {
@@ -497,21 +328,7 @@ function sync9_create_client(s_funcs) {
             changes : changes
         }
         sync9_add_version(c.s9, x.vid, c.s9.leaves, x.changes)
-        
-        // work here
-        sync9_add_version(c.s9_pruned, x.vid, c.s9_pruned.leaves, x.changes)
-        
-        
         s_funcs.add_version(c.uid, x.vid, x.parents, x.changes)
-        
-        
-        
-        
-        
-        
-        // work here
-        detect_case(c.s9)
-        
     }
     
     return c
