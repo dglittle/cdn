@@ -308,7 +308,16 @@ function sync9_create_client(s_funcs) {
         var ancs = sync9_get_ancestors(c.s9, c.server_leaves)
         var changes = sync9_gen_diff(c.s9, x => ancs[x], () => true)
         sync9_trim(c.s9, x => ancs[x])
+        
+        // work here
+        detect_case(c.s9)
+        
         sync9_prune(c.s9, () => false, c.server_leaves)
+        
+        // work here
+        detect_case(c.s9)
+        
+        
         if (changes.length > 0) {
             var x = {
                 vid : sync9_guid(),
