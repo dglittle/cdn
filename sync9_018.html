@@ -327,6 +327,12 @@ function sync9_create_client(s_funcs) {
             
             console.log(JSON.stringify(clone_s9, null, '    '))
             console.log(JSON.stringify(c.s9, null, '    '))
+            
+            
+            debugger
+            sync9_prune(clone_s9, () => false, c.server_leaves)
+            
+            
             throw 'bloopo'
             
         }
