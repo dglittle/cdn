@@ -385,8 +385,12 @@ function sync9_create_client(s_funcs) {
         
         
             // work here
-            var ancs = sync9_get_ancestors(c.s9_pruned, {[x.vid]: true})
-            sync9_prune(c.s9_pruned, (a, b) => (a != 'root') && ancs[b], c.server_leaves)
+            
+            if (vvvvid == 'VbRMpudvxkUu3Hx') {
+                debugger
+            }
+            
+            sync9_prune(c.s9_pruned, () => false, c.server_leaves)
             
             
         }
@@ -472,6 +476,7 @@ function sync9_create_client(s_funcs) {
             sync9_prune(s9_temp, (a, b) => (a != 'root') && ancs[b], c.server_leaves)
             
         })
+        sync9_prune(s9_temp, () => false, c.server_leaves)
         
         if (JSON.stringify(get_canonical_copy(s9_temp)) != JSON.stringify(get_canonical_copy(c.s9_pruned))) {
             
