@@ -307,6 +307,10 @@ function sync9_create_client(s_funcs) {
         
         var ancs = sync9_get_ancestors(c.s9, c.server_leaves)
         var changes = sync9_gen_diff(c.s9, x => ancs[x], () => true)
+        
+        // work here
+        var clone_s9 = JSON.parse(JSON.stringify(c.s9))
+        
         sync9_trim(c.s9, x => ancs[x])
         
         // work here
@@ -315,7 +319,15 @@ function sync9_create_client(s_funcs) {
         sync9_prune(c.s9, () => false, c.server_leaves)
         
         // work here
-        detect_case(c.s9)
+        try {
+            detect_case(c.s9)
+        } catch (e) {
+            
+            console.log(JSON.stringify(clone_s9, null, '    '))
+            console.log(JSON.stringify(c.s9, null, '    '))
+            throw 'bloopo'
+            
+        }
         
         
         if (changes.length > 0) {
