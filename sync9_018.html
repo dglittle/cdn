@@ -569,11 +569,15 @@ function sync9_trim(x, is_anc) {
 function sync9_space_dag_trim(S, is_anc) {
     function helper(node, vid) {
         node.nexts = node.nexts.filter(x => is_anc(x.vid))
+        var was_deleted = Object.keys(node.deleted_by).length > 0
         Object.keys(node.deleted_by).forEach(x => {
             if (!is_anc(x)) {
                 delete node.deleted_by[x]
             }
         })
+        if (was_deleted && Object.keys(node.deleted_by).length == 0) {
+            delete node.gash
+        }
         for (var next of node.nexts)
             helper(next, next.vid)
         if (node.next) helper(node.next, vid)
