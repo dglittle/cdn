@@ -8,13 +8,16 @@
 
 
 
-work here
-function detect_case() {
-    find case where there is a gash, but the prev has no end_cap
-    
-                        if (s[0] == node.offset_a && node.gash) {
-                        if (!prev.end_cap) throw 'no end_cap?'
-
+// work here
+function detect_case(s9) {
+    var S = s9.val.S.elems[0].S
+    sync9_trav_space_dag(S, () => true, (node, offset, has_nexts, prev, vid) => {
+        if (node.gash) {
+            if (!prev.end_cap) {
+                throw 'found HHHHHHHHJ'
+            }
+        }
+    }, true)
 }
 
 
@@ -316,6 +319,9 @@ function sync9_create_client(s_funcs) {
             sync9_add_version(c.s9, x.vid, c.s9.leaves, x.changes)
             s_funcs.add_version(c.uid, x.vid, x.parents, x.changes)
         }
+        
+        // work here
+        detect_case(c.s9)
     }
     
     c.add_version = (vid, parents, changes) => {
@@ -326,6 +332,9 @@ function sync9_create_client(s_funcs) {
         
         sync9_add_version(c.s9, vid, parents, changes)
         s_funcs.ack(c.uid, vid)
+        
+        // work here
+        detect_case(c.s9)
     }
     
     c.ack = (vid) => {
@@ -336,6 +345,9 @@ function sync9_create_client(s_funcs) {
         
         var ancs = sync9_get_ancestors(c.s9, {[vid]: true})
         sync9_prune(c.s9, (a, b) => (a != 'root') && ancs[b], c.server_leaves)
+        
+        // work here
+        detect_case(c.s9)
     }
     
     c.local_add_version = (changes) => {
@@ -346,6 +358,9 @@ function sync9_create_client(s_funcs) {
         }
         sync9_add_version(c.s9, x.vid, c.s9.leaves, x.changes)
         s_funcs.add_version(c.uid, x.vid, x.parents, x.changes)
+        
+        // work here
+        detect_case(c.s9)
     }
     
     return c
