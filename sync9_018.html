@@ -278,10 +278,15 @@ function get_canonical_copy(x) {
 function detect_case(s9) {
     var S = s9.val.S.elems[0].S
     sync9_trav_space_dag(S, () => true, node => {
+        
+        // if (node.deleted_by['VbRMpudvxkUu3Hx']) {
+        //     throw 'got here!'
+        // }
+        
         if (node.deleted_by['VbRMpudvxkUu3Hx'] && node.elems == 'C' && node.next.deleted_by['VbRMpudvxkUu3Hx'] && node.next.elems == 'C') {
             console.log('FOUND FOUND: VbRMpudvxkUu3Hx')
         }
-    })
+    }, true)
 }
 
 
@@ -371,7 +376,22 @@ function sync9_create_client(s_funcs) {
             }
             
             sync9_add_version(c.s9_pruned, x.vid, c.s9_pruned.leaves, x.changes)
+            
+            
+            
+            
+            
+            
+        
+        
+            // work here
+            var ancs = sync9_get_ancestors(c.s9_pruned, {[x.vid]: true})
+            sync9_prune(c.s9_pruned, (a, b) => (a != 'root') && ancs[b], c.server_leaves)
+            
+            
         }
+        
+        
         
         
         
