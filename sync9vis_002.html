@@ -5,7 +5,23 @@
 <body></body>
 <script>
 
+
+
 console.log('blah!')
+
+var grid = document.createElement('div')
+grid.style.display = 'grid'
+grid.style['grid-template-columns'] = '33% 33% 33%'
+
+for (var i = 0; i < 3; i++) {
+    grid.append(create_client())
+}
+
+function create_client() {
+    var d = document.createElement('div')
+    d.textContent = 'hi!'
+    return d
+}
 
 
 </script>
