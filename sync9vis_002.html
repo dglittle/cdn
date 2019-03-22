@@ -39,14 +39,21 @@ console.log(JSON.stringify(s9, null, '    '))
 
 
 
-document.body.append(sync9_create_braidvis())
+document.body.append(sync9_create_braidvis(s9))
 
 
 
 
-function sync9_create_braidvis() {
+function sync9_create_braidvis(s9) {
     var d = document.createElement('div')
     d.textContent = 'hello world!'
+    
+    var s = []
+    Object.keys(s9.T).forEach(vid => {
+        s.push(vid)
+    })
+    d.textContent += s.join('::')
+    
     return d
 }
 
