@@ -50,7 +50,7 @@ function sync9_create_fancy_dag(s9) {
         versions[x[0]] = {
             vid : x[0],
             to_parents : Object.assign({}, x[1]),
-            text : sync9_read(s9, i => ancs[i])
+            text : sync9_read(s9, i => ancs[i]) || ''
         }
     })
     Object.values(versions).forEach(v => {
