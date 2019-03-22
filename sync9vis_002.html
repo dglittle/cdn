@@ -58,7 +58,7 @@ function sync9_create_fancy_dag(s9) {
             var ancs = sync9_get_ancestors(s9, {[p]: true})
             var diff = v.to_parents[p] = []
             var offset = 0
-            sync9_gen_diff(s9, i => ancs[i], i => ancs[i] || i == x[0]).forEach(change => {
+            sync9_gen_diff(s9, i => ancs[i], i => ancs[i] || i == v.vid).forEach(change => {
                 var par = sync9_parse_change(change)
                 var eq = par.range[0] - offset
                 if (eq > 0) diff.push(eq)
