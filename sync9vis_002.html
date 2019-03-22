@@ -50,9 +50,14 @@ function sync9_create_fancy_dag(s9) {
         versions[x[0]] = {
             vid : x[0],
             to_parents : Object.assign({}, x[1]),
-            text : sync9_read(s9, i => ancs[i]) || ''
+            text : sync9_read(s9, i => ancs[i])
         }
     })
+    
+    // work here
+    delete versions.root
+    versions.v1.to_parents = {}
+    
     Object.values(versions).forEach(v => {
         Object.keys(v.to_parents).forEach(p => {
             var ancs = sync9_get_ancestors(s9, {[p]: true})
@@ -66,7 +71,7 @@ function sync9_create_fancy_dag(s9) {
                     par.val,
                     versions[p].text.slice(par.range[0], par.range[1])
                 ])
-                offset = change.range[1]
+                offset = par.range[1]
             })
             var eq = versions[p].text.length - offset
             if (eq > 0) diff.push(eq)
