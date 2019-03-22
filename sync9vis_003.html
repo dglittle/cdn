@@ -37,7 +37,7 @@ go.onclick = () => {
     while (!did_something) {
         var client_i = Math.floor(Math.random() * 3)
         var c = clients[client_i]
-        if (Math.random() < 0.5) {
+        if (Math.random() < 0.2) {
             var v = create_random_edit(c.s9)
             v.vid = c.uid + c.next_version++
             
