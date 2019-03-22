@@ -41,39 +41,9 @@ sync9_add_version(s9, 'v4', {v2:true, v3: true}, ['[5:6] = ""'])
 // console.log(JSON.stringify(s9, null, '    '))
 // console.log(JSON.stringify(sync9_read(s9), null, '    '))
 
-document.body.append(sync7_create_fancy_dag(s9))
+document.body.append(sync9_create_fancy_dag(s9))
 
-function sync9_create_braidvis(s9) {
-    var d = document.createElement('div')
-    d.textContent = 'hello world!'
-    
-    
-    
-    var versions = {}
-    Object.entries(s9.T).forEach(x => {
-        versions[x[0]] = {
-            parents : x[1]
-        }
-    })
-    
-    
-    
-    console.log(versions)
-    
-    
-    var s = []
-    Object.keys(s9.T).forEach(vid => {
-        s.push(vid)
-    })
-    d.textContent += s.join('::')
-    
-    return d
-}
-
-
-
-
-function sync9_create_fancy_dag(s9, width, height) {
+function sync9_create_fancy_dag(s9) {
     var versions = {}
     Object.entries(s9.T).forEach(x => {
         var ancs = sync9_get_ancestors(s9, {[x]: true})
@@ -102,6 +72,73 @@ function sync9_create_fancy_dag(s9, width, height) {
             if (eq > 0) diff.push(eq)
         })
     })
+    
+    var layers = {}
+    
+    function get_layer(c) {
+        if (c.layer != null) return c.layer
+        var max_layer = 0
+        Object.keys(c.to_parents).forEach(p => {
+            max_layer = Math.max(max_layer, get_layer(versions[p]))
+        })
+        c.layer = max_layer + 1
+        if (!layers[c.layer]) layers[c.layer] = []
+        layers[c.layer].push(c)
+        return c.layer
+    }
+    Object.values(versions).forEach(c => {
+        get_layer(c)
+    })
+    
+    var max_width = 0
+    var simple_max_width = 0
+    var layer_widths = {}
+    Object.entries(layers).forEach(E => {
+        layer_members = E[1]
+        layer_i = E[0]
+        layer_members.sort(function (a, b) {
+            if (a.column != b.column)
+                return a.column - b.column
+            if (a.uid && !b.uid) return -1
+            if (!a.uid && b.uid) return 1
+            return 0
+        })
+        
+        var x = 0
+        var simple_x = 0
+        Object.values(layer_members).forEach(c => {
+            if (x) x += 2.7 * BOX_X
+            c.x = x
+            x += c.text.length * BOX_X
+            
+            c.simple_x = simple_x
+            simple_x += 100
+        })
+        layer_widths[layer_i] = x
+        if (x > max_width) max_width = x
+        if (simple_x > simple_max_width) simple_max_width = simple_x
+    })
+    
+    Object.entries(layers).forEach(E => {
+        layer_members = E[1]
+        layer_i = E[0]
+        var add_amount = (max_width - layer_widths[layer_i]) / 2
+        var simple_add_amount = (simple_max_width - (layer_members.length - 1) * 100) / 2
+        Object.values(layer_members).forEach(c => {
+            c.x += add_amount
+            c.simple_x += simple_add_amount
+        })
+    })
+    
+    var max_height = 0
+    Object.values(versions).forEach(c => {
+        c.y = c.layer * BOX_Y * 3
+        if (c.y + BOX_Y > max_height)
+            max_height = c.y + BOX_Y
+    })
+    
+    var width = max_width + 1
+    var height = max_height + 1
     
     var selected = {}
     
