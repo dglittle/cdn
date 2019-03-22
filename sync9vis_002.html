@@ -82,12 +82,50 @@ function create_char(x, y, text, fill, bold) {
 }
 
 function sync9_create_fancy_dag(s9) {
+    function get_s7_diff(is_anc, is_new_anc) {
+        var text = sync9_read(s9, is_anc)
+        var diff = []
+        var offset = 0
+        sync9_gen_diff(s9, is_anc, is_new_anc).forEach(change => {
+            var par = sync9_parse_change(change)
+            var eq = par.range[0] - offset
+            if (eq > 0) diff.push(eq)
+            diff.push([
+                par.val,
+                text.slice(par.range[0], par.range[1])
+            ])
+            offset = par.range[1]
+        })
+        var eq = text.length - offset
+        if (eq > 0) diff.push(eq)
+        return diff
+    }
+    
     var versions = {}
     Object.entries(s9.T).forEach(x => {
         var ancs = sync9_get_ancestors(s9, {[x[0]]: true})
+        var parent_id = null
+        if (Object.keys(x[1]).length > 1) {
+            var merge_node_id = Object.keys(x[1]).sort().join(':')
+            parent_id = merge_node_id
+            var to_parents = {}
+            Object.keys(x[1]).forEach(p => {
+                to_parents[p] = [4]
+            })
+            versions[merge_node_id] = {
+                vid : merge_node_id,
+                to_parents : to_parents,
+                text : sync9_read(s9, i => i != x[0] && ancs[i])
+            }
+        } else {
+            parent_id = Object.keys(x[1])[0]
+        }
+        to_parents = {}
+        if (parent_id)
+            to_parents[parent_id] = get_s7_diff(i => i != x[0] && ancs[i], i => ancs[i])
         versions[x[0]] = {
             vid : x[0],
-            to_parents : Object.assign({}, x[1]),
+            to_parents : to_parents,
             text : sync9_read(s9, i => ancs[i])
         }
     })
@@ -96,23 +134,14 @@ function sync9_create_fancy_dag(s9) {
     delete versions.root
     versions.v1.to_parents = {}
     
+    
+    i => ancs[i] || i == v.vid
+    
+    
+    
+    
     Object.values(versions).forEach(v => {
         Object.keys(v.to_parents).forEach(p => {
-            var ancs = sync9_get_ancestors(s9, {[p]: true})
-            var diff = v.to_parents[p] = []
-            var offset = 0
-            sync9_gen_diff(s9, i => ancs[i], i => ancs[i] || i == v.vid).forEach(change => {
-                var par = sync9_parse_change(change)
-                var eq = par.range[0] - offset
-                if (eq > 0) diff.push(eq)
-                diff.push([
-                    par.val,
-                    versions[p].text.slice(par.range[0], par.range[1])
-                ])
-                offset = par.range[1]
-            })
-            var eq = versions[p].text.length - offset
-            if (eq > 0) diff.push(eq)
         })
     })
     
