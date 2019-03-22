@@ -227,6 +227,19 @@ function sync9_create_fancy_dag(s9) {
             text : sync9_read(s9, i => ancs[i])
         }
     })
+    if (Object.keys(s9.leaves).length > 1) {
+        var merge_node_id = Object.keys(s9.leaves).sort().join(':')
+        var to_parents = {}
+        Object.keys(s9.leaves).forEach(p => {
+            var p_ancs = sync9_get_ancestors(s9, {[p]: true})
+            to_parents[p] = get_s7_diff(i => p_ancs[i], () => true)
+        })
+        versions[merge_node_id] = {
+            vid : merge_node_id,
+            to_parents : to_parents,
+            text : sync9_read(s9, () => true)
+        }
+    }
     
     var layers = {}
     
