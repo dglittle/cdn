@@ -52,11 +52,6 @@ function create_client() {
     sync9_add_version(s9, 'b1', {v1: true}, ['[0:0] = " world"'])
     sync9_add_version(s9, 'c1', {a1:true, b1: true}, ['[5:6] = ""'])
     
-    var msgs = document.createElement('div')
-    msgs.style.display = 'grid'
-    msgs.style['grid-template-columns'] = 'auto auto'
-    d.append(msgs)
-    
     c.msgs = [{
         action : 'Send:',
         color : 'orange',
@@ -71,18 +66,23 @@ function create_client() {
         d.innerHTML = ''
         d.append(sync9_create_fancy_dag(s9))
         
+        var msgs = document.createElement('div')
+        msgs.style.display = 'grid'
+        msgs.style['grid-template-columns'] = 'auto auto'
+        d.append(msgs)
         c.msgs.forEach(x => {
-        var a = document.createElement('div')
-        a.textContent = x.action
-        a.style.color = x.color
-        a.style.fontFamily = 'monospace'
-        msgs.append(a)
-        
-        var b = document.createElement('div')
-        b.textContent = x.text
-        b.style.color = 'black'
-        b.style.fontFamily = 'monospace'
-        msgs.append(b)
+            var a = document.createElement('div')
+            a.textContent = x.action
+            a.style.color = x.color
+            a.style.fontFamily = 'monospace'
+            msgs.append(a)
+            
+            var b = document.createElement('div')
+            b.textContent = x.text
+            b.style.color = 'black'
+            b.style.fontFamily = 'monospace'
+            msgs.append(b)
+        })
     }
     c.redraw()
     
