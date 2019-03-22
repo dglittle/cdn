@@ -29,91 +29,30 @@ var BACKGROUNDS = {
 
 console.log('blah!')
 
-var go = document.createElement('button')
-go.textContent = 'do something'
-document.body.append(go)
-go.onclick = () => {
-    var client_i = Math.floor(Math.random() * 3)
-    var c = clients[client_i]
-    if (Math.random() < 0.5) {
-        var v = create_random_edit(c.s9)
-        v.vid = c.uid + c.next_version++
-        
-        sync9_add_version(c.s9, v.vid, v.parents, v.changes)
-        
-        c.msgs.push({
-            action: 'Send:',
-            color: 'orange',
-            text: `{set: 'x', patches: ${JSON.stringify(v.changes)}, version: ${JSON.stringify(v.vid)}, parents: ${JSON.stringify(Object.keys(v.parents))}}`
-        })
-        c.redraw()
-    } else {
-    }
-}
-
-
-
 var grid = document.createElement('div')
 grid.style.display = 'grid'
 grid.style['grid-template-columns'] = '33% 33% 33%'
 document.body.append(grid)
 
-var clients = []
 for (var i = 0; i < 3; i++) {
-    clients[i] = create_client(i)
-    grid.append(clients[i].d)
+    grid.append(create_client())
 }
 
-function create_client(i) {
-    var c = {}
-    c.uid = String.fromCharCode('a'.charCodeAt(0) + i)
+function create_client() {
     var d = document.createElement('div')
-    c.d = d
+    
     var s9 = sync9_create()
-    c.s9 = s9
-    c.next_version = 2
     
     sync9_add_version(s9, 'v1', {root: true}, [' = ""'])
     sync9_add_version(s9, 'a1', {v1: true}, ['[0:0] = "hellow"'])
     sync9_add_version(s9, 'b1', {v1: true}, ['[0:0] = " world"'])
     sync9_add_version(s9, 'c1', {a1:true, b1: true}, ['[5:6] = ""'])
     
-    c.msgs = [{
-        action : 'Send:',
-        color : 'orange',
-        text : `{set: 'some-key', patches: ['[1] = "8du"'], version: '33fh', parents: ['223h']}`
-    }, {
-        action : 'Recv:',
-        color : 'lightgreen',
-        text : `{set: 'some-key', patches: ['[1] = "8du"'], version: '33fh', parents: ['223h']}`
-    }]
+    d.append(sync9_create_fancy_dag(s9))
     
-    c.redraw = () => {
-        d.innerHTML = ''
-        d.append(sync9_create_fancy_dag(s9))
-        
-        var msgs = document.createElement('div')
-        msgs.style.display = 'grid'
-        msgs.style['grid-template-columns'] = 'auto auto'
-        d.append(msgs)
-        c.msgs.forEach(x => {
-            var a = document.createElement('div')
-            a.textContent = x.action
-            a.style.color = x.color
-            a.style.fontFamily = 'monospace'
-            msgs.append(a)
-            
-            var b = document.createElement('div')
-            b.textContent = x.text
-            b.style.color = 'black'
-            b.style.fontFamily = 'monospace'
-            msgs.append(b)
-        })
-    }
-    c.redraw()
-    
-    return c
+    return d
 }
+
 
 
 
@@ -503,27 +442,6 @@ function sync9_create_fancy_dag(s9) {
 ////////////////////////////////////////////////////
 ////////////////////////////////////////////////////
 
-function create_random_edit(s, letters) {
-    letters = letters || 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    var str = sync9_read(s)
-    var start = Math.floor(Math.random() * (str.length + 1))
-    var del = Math.floor(Math.random() * Math.random() * (str.length - start + 1))
-    var ins = letters[Math.floor(Math.random() * letters.length)].repeat(Math.floor(Math.random() * 4) + (del == 0 ? 1 : 0))
-    
-    var vid = sync9_guid()
-    var changes = [`[${start}:${start + del}] = ` + JSON.stringify(ins)]
-    
-    return {
-        vid : vid,
-        parents : Object.assign({}, s.leaves),
-        changes : changes
-    }
-}
-
-
-
-
-
 
 function sync9_gen_diff(x, is_anc, is_new_anc) {
     return sync9_space_dag_gen_diff(sync9_space_dag_get(x.val.S, 0).S, is_anc, is_new_anc).map(x => {
@@ -562,9 +480,6 @@ function sync9_space_dag_gen_diff(S, is_anc, is_new_anc) {
     
     return result
 }
-
-
-
 
 
 function sync9_create() {
