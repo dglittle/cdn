@@ -283,7 +283,7 @@ function sync9_create_fancy_dag(s9) {
             var id = x[0]
             var merge_node = Object.keys(c.to_parents).length > 1
             each(c.to_parents, function (d, pid) {
-                svg.append(create_diff_lines(c.x || 0, c.y || 0, s7.versions[pid].x || 0, s7.versions[pid].y || 0, d, merge_node))
+                svg.append(create_diff_lines(c.x || 0, c.y || 0, versions[pid].x || 0, versions[pid].y || 0, d, merge_node))
             })
         })
         
