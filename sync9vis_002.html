@@ -207,12 +207,12 @@ function sync9_create_fancy_dag(s9) {
             g.append(rect)
         }
 
-        g.append(create_line(x, Math.floor(y + BOX_Y) + 0.5, x + BOX_X * text.length, Math.floor(y + BOX_Y) + 0.5, FOREGROUNDS.m, '3'))
+        g.append(create_line(x, Math.floor(y + BOX_Y) + 0.5, x + BOX_X * text.length, Math.floor(y + BOX_Y) + 0.5, 'rgb(255, 128, 78)', '3'))
 
         for (var i = 0; i < text.length; i++) {
             var uid = merge_node ? 'm' : version.uid
-            var foreground = FOREGROUNDS[uid]
-            g.append(create_char(Math.floor(x + i*BOX_X + BOX_X/2), y + BOX_Y*0.75, text[i], specials[i] ? foreground : FOREGROUNDS.m, specials[i] && !merge_node))
+            var foreground = 'rgb(78, 255, 128)'
+            g.append(create_char(Math.floor(x + i*BOX_X + BOX_X/2), y + BOX_Y*0.75, text[i], specials[i] ? 'rgb(78, 78, 128)' : 'rgb(78, 128, 255)', specials[i] && !merge_node))
         }
         return g
     }
