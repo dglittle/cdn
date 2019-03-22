@@ -256,12 +256,12 @@ function sync9_create_fancy_dag(s9) {
             g.append(rect)
         }
 
-        g.append(create_line(x, Math.floor(y + BOX_Y) + 0.5, x + BOX_X * text.length, Math.floor(y + BOX_Y) + 0.5, 'rgb(255, 128, 78)', '3'))
+        g.append(create_line(x, Math.floor(y + BOX_Y) + 0.5, x + BOX_X * text.length, Math.floor(y + BOX_Y) + 0.5, FOREGROUNDS.v, '3'))
 
         for (var i = 0; i < text.length; i++) {
-            var uid = merge_node ? 'm' : version.uid
-            var foreground = 'rgb(78, 255, 128)'
-            g.append(create_char(Math.floor(x + i*BOX_X + BOX_X/2), y + BOX_Y*0.75, text[i], specials[i] ? 'rgb(78, 78, 128)' : 'rgb(78, 128, 255)', specials[i] && !merge_node))
+            var uid = merge_node ? 'v' : version.vid.slice(0, 1)
+            var foreground = FOREGROUNDS[uid]
+            g.append(create_char(Math.floor(x + i*BOX_X + BOX_X/2), y + BOX_Y*0.75, text[i], specials[i] ? foreground : FOREGROUNDS.v, specials[i] && !merge_node))
         }
         return g
     }
@@ -322,14 +322,14 @@ function sync9_create_fancy_dag(s9) {
                 var foreground = null
                 var background = null
                 if (pass == 0 && merge_node && typeof(d) == 'number') {
-                    foreground = 'red'
-                    background = 'blue'
+                    foreground = FOREGROUNDS.v
+                    background = BACKGROUNDS.v
                 } else if (pass == 1 && !merge_node && typeof(d) != 'number') {
-                    foreground = 'orange'
-                    background = 'green'
+                    foreground = BACKGROUNDS[uid]
+                    background = BACKGROUNDS[uid]
                 } else if (pass == 0 && !merge_node && typeof(d) == 'number') {
-                    foreground = 'yellow'
-                    background = 'cyan'
+                    foreground = FOREGROUNDS.v
+                    background = BACKGROUNDS.v
                 }
                 
                 if (foreground) {
@@ -355,8 +355,9 @@ function sync9_create_fancy_dag(s9) {
             var c = x[1]
             var id = x[0]
             var merge_node = Object.keys(c.to_parents).length > 1
+            var uid = merge_node ? 'v' : c.vid.slice(0, 1)
             each(c.to_parents, function (d, pid) {
-                svg.append(create_diff_lines(c.x || 0, c.y || 0, versions[pid].x || 0, versions[pid].y || 0, d, merge_node))
+                svg.append(create_diff_lines(c.x || 0, c.y || 0, versions[pid].x || 0, versions[pid].y || 0, d, merge_node, uid))
             })
         })
         
