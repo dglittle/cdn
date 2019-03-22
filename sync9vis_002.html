@@ -56,10 +56,23 @@ function create_client() {
     msgs.style.display = 'grid'
     msgs.style['grid-template-columns'] = '100 auto'
     
-    [{
+    ;[{
         action : 'Send',
+        color : 'orange',
         text : `{set: 'some-key', patches: ['[1] = "8du"'], version: '33fh', parents: ['223h']}`
-    }].forEach()
+    }].forEach(x => {
+        var a = document.createElement('div')
+        a.textContent = x.action
+        a.style.color = x.color
+        a.style.fontFamily = 'monospace'
+        msgs.append(a)
+        
+        var b = document.createElement('div')
+        b.textContent = x.text
+        b.style.color = 'black'
+        b.style.fontFamily = 'monospace'
+        msg.append(b)
+    })
     
     
     
