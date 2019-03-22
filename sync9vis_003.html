@@ -98,16 +98,7 @@ function create_client(i) {
     c.incoming = []
     
     sync9_add_version(s9, 'v1', {root: true}, [' = ""'])
-    
-    c.msgs = [{
-        action : 'Send:',
-        color : 'orange',
-        text : `{set: 'some-key', patches: ['[1] = "8du"'], version: '33fh', parents: ['223h']}`
-    }, {
-        action : 'Recv:',
-        color : 'lightgreen',
-        text : `{set: 'some-key', patches: ['[1] = "8du"'], version: '33fh', parents: ['223h']}`
-    }]
+    c.msgs = []
     
     c.redraw = () => {
         d.innerHTML = ''
