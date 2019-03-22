@@ -6,6 +6,9 @@
 <script>
 
 var sync9_ROOT = 'root'
+var BOX_X = 15
+var BOX_Y = 22
+var anim_dur = '0.5s'
 
 
 
@@ -32,21 +35,31 @@ var s9 = sync9_create()
 
 sync9_add_version(s9, 'v1', {root: true}, [' = ""'])
 sync9_add_version(s9, 'v2', {v1: true}, ['[0:0] = "hellow"'])
-sync9_add_version(s9, 'v3', {v2: true}, ['[5:6] = " world"'])
+sync9_add_version(s9, 'v3', {v1: true}, ['[0:0] = " world"'])
+sync9_add_version(s9, 'v4', {v2:true, v3: true}, ['[5:6] = ""'])
 
-console.log(JSON.stringify(s9, null, '    '))
+// console.log(JSON.stringify(s9, null, '    '))
+// console.log(JSON.stringify(sync9_read(s9), null, '    '))
 
-
-
-
-document.body.append(sync9_create_braidvis(s9))
-
-
-
+document.body.append(sync7_create_fancy_dag(s9))
 
 function sync9_create_braidvis(s9) {
     var d = document.createElement('div')
     d.textContent = 'hello world!'
+    
+    
+    
+    var versions = {}
+    Object.entries(s9.T).forEach(x => {
+        versions[x[0]] = {
+            parents : x[1]
+        }
+    })
+    
+    
+    
+    console.log(versions)
+    
     
     var s = []
     Object.keys(s9.T).forEach(vid => {
@@ -60,7 +73,38 @@ function sync9_create_braidvis(s9) {
 
 
 
-function sync9_create_braidvis_source(s9) {
+function sync9_create_fancy_dag(s9, width, height) {
+    var versions = {}
+    Object.entries(s9.T).forEach(x => {
+        var ancs = sync9_get_ancestors(s9, {[x]: true})
+        versions[x[0]] = {
+            vid : x[0],
+            to_parents : Object.assign({}, x[1]),
+            text : sync9_read(s9, i => ancs[i])
+        }
+    })
+    Object.values(versions).forEach(v => {
+        Object.keys(v.to_parents).forEach(p => {
+            var ancs = sync9_get_ancestors(s9, {[p]: true})
+            var diff = v.to_parents[p] = []
+            var offset = 0
+            sync9_gen_diff(s9, i => ancs[i], i => ancs[i] || i == x[0]).forEach(change => {
+                var par = sync9_parse_change(change)
+                var eq = par.range[0] - offset
+                if (eq > 0) diff.push(eq)
+                diff.push([
+                    par.val,
+                    versions[p].text.slice(par.range[0], par.range[1])
+                ])
+                offset = change.range[1]
+            })
+            var eq = versions[p].text.length - offset
+            if (eq > 0) diff.push(eq)
+        })
+    })
+    
+    var selected = {}
+    
     var d = document.createElement('div')
     
     var svg_div = document.createElement('div')
@@ -69,7 +113,7 @@ function sync9_create_braidvis_source(s9) {
     
     function calc_specials(id) {
         var specials = {}
-        each(s7.versions[id].to_parents, function (d, p) {
+        each(versions[id].to_parents, function (d, p) {
             var offset = 0
             each(d, function (d) {
                 if (typeof(d) == 'number') {
@@ -163,14 +207,14 @@ function sync9_create_braidvis_source(s9) {
                 var foreground = null
                 var background = null
                 if (pass == 0 && merge_node && typeof(d) == 'number') {
-                    foreground = FOREGROUNDS.m
-                    background = BACKGROUNDS.m
+                    foreground = 'red'
+                    background = 'blue'
                 } else if (pass == 1 && !merge_node && typeof(d) != 'number') {
-                    foreground = FOREGROUNDS[uid]
-                    background = BACKGROUNDS[uid]
+                    foreground = 'orange'
+                    background = 'green'
                 } else if (pass == 0 && !merge_node && typeof(d) == 'number') {
-                    foreground = FOREGROUNDS.m
-                    background = BACKGROUNDS.m
+                    foreground = 'yellow'
+                    background = 'cyan'
                 }
                 
                 if (foreground) {
@@ -189,15 +233,20 @@ function sync9_create_braidvis_source(s9) {
         if (svg) svg.remove()
         svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
         svg_div.append(svg)
-        svg.setAttribute('width', s7.width)
-        svg.setAttribute('height', s7.height)
+        svg.setAttribute('width', width)
+        svg.setAttribute('height', height)
         
-        each(s7.versions, function (c, id) {
+        Object.entries(versions).forEach(x => {
+            var c = x[1]
+            var id = x[0]
             var merge_node = Object.keys(c.to_parents).length > 1
-            var uid = merge_node ? 'm' : c.uid
             each(c.to_parents, function (d, pid) {
-                svg.append(create_diff_lines(c.x || 0, c.y || 0, s7.versions[pid].x || 0, s7.versions[pid].y || 0, d, merge_node, uid))
+                svg.append(create_diff_lines(c.x || 0, c.y || 0, s7.versions[pid].x || 0, s7.versions[pid].y || 0, d, merge_node))
             })
+        })
+        
+        
+        each(versions, function (c, id) {
         })
     
         each(s7.versions, function (c, id) {
@@ -288,6 +337,46 @@ function sync9_create_braidvis_source(s9) {
 ////////////////////////////////////////////////////
 ////////////////////////////////////////////////////
 
+
+function sync9_gen_diff(x, is_anc, is_new_anc) {
+    return sync9_space_dag_gen_diff(sync9_space_dag_get(x.val.S, 0).S, is_anc, is_new_anc).map(x => {
+        return `[${x[0]}:${x[0] + x[1]}] = ${JSON.stringify(x[2])}`
+    })
+}
+
+function sync9_space_dag_gen_diff(S, is_anc, is_new_anc) {
+    var result = []
+    function add_result(offset, del, ins) {
+        if (result.length > 0) {
+            var prev = result[result.length - 1]
+            if (prev[0] + prev[1] == offset) {
+                prev[1] += del
+                prev[2] = prev[2].concat(ins)
+                return
+            }
+        }
+        result.push([offset, del, ins])
+    }
+    
+    var offset_a = 0
+    sync9_trav_space_dag(S, is_new_anc, (node, offset, has_nexts, prev, vid) => {
+        if (Object.keys(node.deleted_by).some(x => is_anc(x))) return
+        var deleted_by_b = Object.keys(node.deleted_by).some(x => is_new_anc(x))
+        
+        if (!is_anc(vid) && !deleted_by_b) {
+            add_result(offset_a, 0, node.elems)
+        } else if (is_anc(vid) && deleted_by_b) {
+            add_result(offset_a, node.elems.length, node.elems.slice(0, 0))
+        }
+        
+        if (is_anc(vid))
+            offset_a += node.elems.length
+    }, true)
+    
+    return result
+}
+
+
 function sync9_create() {
     return {
         T : {[sync9_ROOT] : {} },
@@ -348,29 +437,30 @@ function sync9_add_version(x, vid, parents, changes, is_anc, vid_override) {
     })
 }
 
-function sync9_read(x) {
+function sync9_read(x, is_anc) {
+    if (!is_anc) is_anc = () => true
     if (x && typeof(x) == 'object') {
-        if (!x.t && x.val) return sync9_read(x.val)
-        if (x.t == 'val') return sync9_read(sync9_space_dag_get(x.S, 0))
+        if (!x.t && x.val) return sync9_read(x.val, is_anc)
+        if (x.t == 'val') return sync9_read(sync9_space_dag_get(x.S, 0, is_anc), is_anc)
         if (x.t == 'obj') {
             var o = {}
             Object.entries(x.S).forEach(([k, v]) => {
-                o[k] = sync9_read(v)
+                o[k] = sync9_read(v, is_anc)
             })
             return o
         }
         if (x.t == 'arr') {
             var a = []
-            sync9_trav_space_dag(x.S, () => true, (node) => {
+            sync9_trav_space_dag(x.S, is_anc, (node) => {
                 node.elems.forEach((e) => {
-                    a.push(sync9_read(e))
+                    a.push(sync9_read(e, is_anc))
                 })
             })
             return a
         }
         if (x.t == 'str') {
             var s = []
-            sync9_trav_space_dag(x.S, () => true, (node) => {
+            sync9_trav_space_dag(x.S, is_anc, (node) => {
                 s.push(node.elems)
             })
             return s.join('')
