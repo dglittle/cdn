@@ -25,36 +25,40 @@ var BACKGROUNDS = {
 }
 
 
-// console.log('blah!')
-
-// var grid = document.createElement('div')
-// grid.style.display = 'grid'
-// grid.style['grid-template-columns'] = '33% 33% 33%'
-// document.body.append(grid)
-
-// for (var i = 0; i < 3; i++) {
-//     grid.append(create_client())
-// }
-
-// function create_client() {
-//     var d = document.createElement('div')
-//     d.textContent = 'hi!'
-//     return d
-// }
 
 
+console.log('blah!')
 
-var s9 = sync9_create()
+var grid = document.createElement('div')
+grid.style.display = 'grid'
+grid.style['grid-template-columns'] = '33% 33% 33%'
+document.body.append(grid)
 
-sync9_add_version(s9, 'v1', {root: true}, [' = ""'])
-sync9_add_version(s9, 'a1', {v1: true}, ['[0:0] = "hellow"'])
-sync9_add_version(s9, 'b1', {v1: true}, ['[0:0] = " world"'])
-sync9_add_version(s9, 'c1', {a1:true, b1: true}, ['[5:6] = ""'])
+for (var i = 0; i < 3; i++) {
+    grid.append(create_client())
+}
 
-// console.log(JSON.stringify(s9, null, '    '))
-// console.log(JSON.stringify(sync9_read(s9), null, '    '))
+function create_client() {
+    var d = document.createElement('div')
+    
+    var s9 = sync9_create()
+    
+    sync9_add_version(s9, 'v1', {root: true}, [' = ""'])
+    sync9_add_version(s9, 'a1', {v1: true}, ['[0:0] = "hellow"'])
+    sync9_add_version(s9, 'b1', {v1: true}, ['[0:0] = " world"'])
+    sync9_add_version(s9, 'c1', {a1:true, b1: true}, ['[5:6] = ""'])
+    
+    d.append(sync9_create_fancy_dag(s9))
+    
+    return d
+}
 
-document.body.append(sync9_create_fancy_dag(s9))
+
+
+
+
+
+
 
 function create_line(x1, y1, x2, y2, stroke, dasharray) {
     var line = document.createElementNS('http://www.w3.org/2000/svg', 'line')
