@@ -36,13 +36,16 @@ sync9_add_version(s9, 'v3', {v2: true}, ['[5:6] = " world"'])
 
 console.log(JSON.stringify(s9, null, '    '))
 
+function sync9_create_braidvis() {
+    var d = document.createElement('div')
+    d.textContent = 'hello world'
+    return d
+}
 
 
 
 
-function sync7_create_fancy_dag(s7) {
-    var selected = {}
-    
+function sync9_create_braidvis_source(s9) {
     var d = document.createElement('div')
     
     var svg_div = document.createElement('div')
