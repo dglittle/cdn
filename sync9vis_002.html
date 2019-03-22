@@ -89,6 +89,20 @@ function create_client() {
     return c
 }
 
+document.body.onclick = () => {
+    var client_i = Math.floor(Math.random() * 3)
+    var c = clients[client_i]
+    if (Math.random() < 0.5) {
+        var v = create_random_edit(c.s9)
+        c.msgs.push({
+            action: 'Send:',
+            color: 'orange',
+            text: `{set: 'x', patches: ${JSON.stringify(v.changes)}, version: ${JSON.stringify(v.vid)}, parents: ${JSON.stringify(Object.keys(parents))}}`
+        })
+        c.redraw()
+    } else {
+    }
+}
 
 
 
@@ -478,6 +492,27 @@ function sync9_create_fancy_dag(s9) {
 ////////////////////////////////////////////////////
 ////////////////////////////////////////////////////
 
+function create_random_edit(s, letters) {
+    letters = letters || 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    var str = sync9_read(s)
+    var start = Math.floor(Math.random() * (str.length + 1))
+    var del = Math.floor(Math.random() * Math.random() * (str.length - start + 1))
+    var ins = letters[Math.floor(Math.random() * letters.length)].repeat(Math.floor(Math.random() * 4) + (del == 0 ? 1 : 0))
+    
+    var vid = sync9_guid()
+    var changes = [`[${start}:${start + del}] = ` + JSON.stringify(ins)]
+    
+    return {
+        vid : vid,
+        parents : Object.assign({}, s.leaves),
+        changes : changes
+    }
+}
+
+
+
+
+
 
 function sync9_gen_diff(x, is_anc, is_new_anc) {
     return sync9_space_dag_gen_diff(sync9_space_dag_get(x.val.S, 0).S, is_anc, is_new_anc).map(x => {
@@ -516,6 +551,9 @@ function sync9_space_dag_gen_diff(S, is_anc, is_new_anc) {
     
     return result
 }
+
+
+
 
 
 function sync9_create() {
