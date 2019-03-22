@@ -117,7 +117,8 @@ function sync9_create_fancy_dag(s9) {
             parent_id = merge_node_id
             var to_parents = {}
             Object.keys(x[1]).forEach(p => {
-                to_parents[p] = [4]
+                var p_ancs = sync9_get_ancestors(s9, {[p]: true})
+                to_parents[p] = get_s7_diff(i => p_ancs[i], i => i != x[0] && ancs[i])
             })
             versions[merge_node_id] = {
                 vid : merge_node_id,
