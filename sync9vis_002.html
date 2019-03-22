@@ -245,11 +245,9 @@ function sync9_create_fancy_dag(s9, width, height) {
             })
         })
         
-        
-        each(versions, function (c, id) {
-        })
-    
-        each(s7.versions, function (c, id) {
+        Object.entries(versions).forEach(x => {
+            var c = x[1]
+            var id = x[0]
             var merge_node = Object.keys(c.to_parents).length > 1
             svg.append(create_char_boxes(c.x || 0, c.y || 0, c.text || '', selected[id], calc_specials(id), merge_node, c))
         })
@@ -276,7 +274,9 @@ function sync9_create_fancy_dag(s9, width, height) {
     
     svg_div.onmousemove = function (e) {
         var pos = getRelPos(svg_div, e)
-        each(s7.versions, function (v, id) {
+        Object.entries(versions).forEach(x => {
+            var v = x[1]
+            var id = x[0]
             if (pos.x >= (v.x || 0) && pos.x < (v.x || 0) + (v.text || 'Q!?').length * BOX_X && pos.y >= (v.y || 0) && pos.y < (v.y || 0) + BOX_Y) {
                 var version = s7.versions[id]
                 if (version.merge_info) {
@@ -294,7 +294,9 @@ function sync9_create_fancy_dag(s9, width, height) {
         var pos = getRelPos(svg_div, e)
         
         var grabbed = null
-        each(s7.versions, function (v, id) {
+        Object.entries(versions).forEach(x => {
+            var v = x[1]
+            var id = x[0]
             if (pos.x >= (v.x || 0) && pos.x < (v.x || 0) + (v.text || 'Q!?').length * BOX_X && pos.y >= (v.y || 0) && pos.y < (v.y || 0) + BOX_Y) {
                 grabbed = {
                     id : id,
@@ -309,8 +311,8 @@ function sync9_create_fancy_dag(s9, width, height) {
         document.onmousemove = function (e) {
             var pos = getRelPos(svg_div, e)
             if (grabbed) {
-                s7.versions[grabbed.id].x = pos.x - grabbed.hot_x
-                s7.versions[grabbed.id].y = pos.y - grabbed.hot_y
+                versions[grabbed.id].x = pos.x - grabbed.hot_x
+                versions[grabbed.id].y = pos.y - grabbed.hot_y
                 redraw()
             }
         }
