@@ -52,16 +52,12 @@ function create_client() {
     sync9_add_version(s9, 'b1', {v1: true}, ['[0:0] = " world"'])
     sync9_add_version(s9, 'c1', {a1:true, b1: true}, ['[5:6] = ""'])
     
-    d.append(sync9_create_fancy_dag(s9))
-    
-    
-    
     var msgs = document.createElement('div')
     msgs.style.display = 'grid'
     msgs.style['grid-template-columns'] = 'auto auto'
     d.append(msgs)
     
-    ;[{
+    c.msgs = [{
         action : 'Send:',
         color : 'orange',
         text : `{set: 'some-key', patches: ['[1] = "8du"'], version: '33fh', parents: ['223h']}`
@@ -69,7 +65,13 @@ function create_client() {
         action : 'Recv:',
         color : 'lightgreen',
         text : `{set: 'some-key', patches: ['[1] = "8du"'], version: '33fh', parents: ['223h']}`
-    }].forEach(x => {
+    }]
+    
+    c.redraw = () => {
+        d.innerHTML = ''
+        d.append(sync9_create_fancy_dag(s9))
+        
+        c.msgs.forEach(x => {
         var a = document.createElement('div')
         a.textContent = x.action
         a.style.color = x.color
@@ -81,7 +83,8 @@ function create_client() {
         b.style.color = 'black'
         b.style.fontFamily = 'monospace'
         msgs.append(b)
-    })
+    }
+    c.redraw()
     
     return c
 }
