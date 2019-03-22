@@ -36,6 +36,14 @@ sync9_add_version(s9, 'v3', {v2: true}, ['[5:6] = " world"'])
 
 console.log(JSON.stringify(s9, null, '    '))
 
+
+
+
+document.body.append(sync9_create_braidvis())
+
+
+
+
 function sync9_create_braidvis() {
     var d = document.createElement('div')
     d.textContent = 'hello world'
