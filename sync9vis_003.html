@@ -59,6 +59,17 @@ go.onclick = () => {
             did_something = true
         } else if (c.incoming.length > 0) {
             var v = c.incoming.shift()
+            
+            sync9_add_version(c.s9, v.vid, v.parents, v.changes)
+            
+            c.msgs.push({
+                action: 'Recv:',
+                color: 'lightgreen',
+                text: `{set: 'x', patches: ${JSON.stringify(v.changes)}, version: ${JSON.stringify(v.vid)}, parents: ${JSON.stringify(Object.keys(v.parents))}}`
+            })
+            c.redraw()
+            
+            did_something = true
         }
     }
 }
