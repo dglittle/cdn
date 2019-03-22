@@ -387,24 +387,7 @@ function sync9_create_fancy_dag(s9) {
             y : positionedObject.pageY - pos.y
         }
     }
-    
-    svg_div.onmousemove = function (e) {
-        var pos = getRelPos(svg_div, e)
-        Object.entries(versions).forEach(x => {
-            var v = x[1]
-            var id = x[0]
-            if (pos.x >= (v.x || 0) && pos.x < (v.x || 0) + (v.text || 'Q!?').length * BOX_X && pos.y >= (v.y || 0) && pos.y < (v.y || 0) + BOX_Y) {
-                var version = s7.versions[id]
-                if (version.merge_info) {
-                    selected = {}
-                    selected[id] = true
-                    update_space_dag(version.merge_info)
-                    redraw()
-                    return false
-                }
-            }
-        })
-    }
+
     svg_div.onmousedown = function (e) {
         e.preventDefault()
         var pos = getRelPos(svg_div, e)
