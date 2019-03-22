@@ -47,9 +47,9 @@ var BACKGROUNDS = {
 var s9 = sync9_create()
 
 sync9_add_version(s9, 'v1', {root: true}, [' = ""'])
-sync9_add_version(s9, 'v2', {v1: true}, ['[0:0] = "hellow"'])
-sync9_add_version(s9, 'v3', {v1: true}, ['[0:0] = " world"'])
-sync9_add_version(s9, 'v4', {v2:true, v3: true}, ['[5:6] = ""'])
+sync9_add_version(s9, 'a1', {v1: true}, ['[0:0] = "hellow"'])
+sync9_add_version(s9, 'b1', {v1: true}, ['[0:0] = " world"'])
+sync9_add_version(s9, 'c1', {a1:true, b1: true}, ['[5:6] = ""'])
 
 // console.log(JSON.stringify(s9, null, '    '))
 // console.log(JSON.stringify(sync9_read(s9), null, '    '))
@@ -325,7 +325,7 @@ function sync9_create_fancy_dag(s9) {
                     foreground = FOREGROUNDS.v
                     background = BACKGROUNDS.v
                 } else if (pass == 1 && !merge_node && typeof(d) != 'number') {
-                    foreground = BACKGROUNDS[uid]
+                    foreground = FOREGROUNDS[uid]
                     background = BACKGROUNDS[uid]
                 } else if (pass == 0 && !merge_node && typeof(d) == 'number') {
                     foreground = FOREGROUNDS.v
