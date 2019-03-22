@@ -34,14 +34,18 @@ grid.style.display = 'grid'
 grid.style['grid-template-columns'] = '33% 33% 33%'
 document.body.append(grid)
 
+var clients = []
 for (var i = 0; i < 3; i++) {
-    grid.append(create_client())
+    clients[i] = create_client()
+    grid.append(clients[i].d)
 }
 
 function create_client() {
+    var c = {}
     var d = document.createElement('div')
-    
+    c.d = d
     var s9 = sync9_create()
+    c.s9 = s9
     
     sync9_add_version(s9, 'v1', {root: true}, [' = ""'])
     sync9_add_version(s9, 'a1', {v1: true}, ['[0:0] = "hellow"'])
@@ -54,12 +58,16 @@ function create_client() {
     
     var msgs = document.createElement('div')
     msgs.style.display = 'grid'
-    msgs.style['grid-template-columns'] = '100 auto'
+    msgs.style['grid-template-columns'] = 'auto auto'
     d.append(msgs)
     
     ;[{
-        action : 'Send',
+        action : 'Send:',
         color : 'orange',
+        text : `{set: 'some-key', patches: ['[1] = "8du"'], version: '33fh', parents: ['223h']}`
+    }, {
+        action : 'Recv:',
+        color : 'lightgreen',
         text : `{set: 'some-key', patches: ['[1] = "8du"'], version: '33fh', parents: ['223h']}`
     }].forEach(x => {
         var a = document.createElement('div')
@@ -75,9 +83,7 @@ function create_client() {
         msgs.append(b)
     })
     
-    
-    
-    return d
+    return c
 }
 
 
