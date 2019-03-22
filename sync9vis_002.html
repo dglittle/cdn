@@ -29,6 +29,30 @@ var BACKGROUNDS = {
 
 console.log('blah!')
 
+var go = document.createElement('button')
+go.textContent = 'do something'
+document.body.append(go)
+go.onclick = () => {
+    var client_i = Math.floor(Math.random() * 3)
+    var c = clients[client_i]
+    if (Math.random() < 0.5) {
+        var v = create_random_edit(c.s9)
+        v.vid = c.uid + c.next_version++
+        
+        sync9_add_version(c.s9, v.vid, v.parents, v.changes)
+        
+        c.msgs.push({
+            action: 'Send:',
+            color: 'orange',
+            text: `{set: 'x', patches: ${JSON.stringify(v.changes)}, version: ${JSON.stringify(v.vid)}, parents: ${JSON.stringify(Object.keys(v.parents))}}`
+        })
+        c.redraw()
+    } else {
+    }
+}
+
+
+
 var grid = document.createElement('div')
 grid.style.display = 'grid'
 grid.style['grid-template-columns'] = '33% 33% 33%'
@@ -47,7 +71,7 @@ function create_client(i) {
     c.d = d
     var s9 = sync9_create()
     c.s9 = s9
-    c.next_version = 1
+    c.next_version = 2
     
     sync9_add_version(s9, 'v1', {root: true}, [' = ""'])
     sync9_add_version(s9, 'a1', {v1: true}, ['[0:0] = "hellow"'])
@@ -89,23 +113,6 @@ function create_client(i) {
     c.redraw()
     
     return c
-}
-
-document.body.onclick = () => {
-    var client_i = Math.floor(Math.random() * 3)
-    var c = clients[client_i]
-    if (Math.random() < 0.5) {
-        var v = create_random_edit(c.s9)
-        v.vid = c.uid + c.next_version++
-        
-        c.msgs.push({
-            action: 'Send:',
-            color: 'orange',
-            text: `{set: 'x', patches: ${JSON.stringify(v.changes)}, version: ${JSON.stringify(v.vid)}, parents: ${JSON.stringify(Object.keys(v.parents))}}`
-        })
-        c.redraw()
-    } else {
-    }
 }
 
 
