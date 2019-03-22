@@ -43,6 +43,30 @@ sync9_add_version(s9, 'v4', {v2:true, v3: true}, ['[5:6] = ""'])
 
 document.body.append(sync9_create_fancy_dag(s9))
 
+function create_line(x1, y1, x2, y2, stroke, dasharray) {
+    var line = document.createElementNS('http://www.w3.org/2000/svg', 'line')
+    line.setAttribute('x1', x1)
+    line.setAttribute('y1', y1)
+    line.setAttribute('x2', x2)
+    line.setAttribute('y2', y2)
+    line.style['stroke-width'] = 1
+    line.setAttribute('stroke', stroke)
+    if (dasharray) line.setAttribute('stroke-dasharray', dasharray)
+    return line
+}
+
+function create_rect(x, y, w, h, stroke) {
+    var rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
+    rect.setAttribute('x', x)
+    rect.setAttribute('y', y)
+    rect.setAttribute('width', w)
+    rect.setAttribute('height', h)
+    rect.style['stroke-width'] = 1
+    rect.style.stroke = stroke
+    rect.style.fill = '#FFFFFF80'
+    return rect
+}
+
 function sync9_create_fancy_dag(s9) {
     var versions = {}
     Object.entries(s9.T).forEach(x => {
