@@ -50,6 +50,19 @@ function create_client() {
     
     d.append(sync9_create_fancy_dag(s9))
     
+    
+    
+    var msgs = document.createElement('div')
+    msgs.style.display = 'grid'
+    msgs.style['grid-template-columns'] = '100 auto'
+    
+    [{
+        action : 'Send',
+        text : `{set: 'some-key', patches: ['[1] = "8du"'], version: '33fh', parents: ['223h']}`
+    }].forEach()
+    
+    
+    
     return d
 }
 
