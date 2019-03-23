@@ -116,10 +116,15 @@ function create_client(i) {
         d.innerHTML = ''
         var [fd, width, height] = sync9_create_fancy_dag(s9)
         d.append(fd)
+        c.width = width
         c.height = height
-        
+
+        var max_width = clients.reduce((x, y) => Math.max(x, y.width), 0)
         var max_height = clients.reduce((x, y) => Math.max(x, y.height), 0)
-        clients.forEach(x => x.d.style.height = max_height)
+        clients.forEach(x => {
+            x.d.firstChild.style.height = max_height
+            // work here
+        })
         console.log('max_height: ' + max_height)
         
         var msgs = document.createElement('div')
@@ -326,6 +331,9 @@ function sync9_create_fancy_dag(s9) {
     var width = max_width + 1
     var height = max_height + 1
     
+    var view_width = Math.min(width, window.innerWidth/3)
+    var view_height = height/width*view_width
+    
     var selected = {}
     
     var d = document.createElement('div')
@@ -457,13 +465,11 @@ function sync9_create_fancy_dag(s9) {
         if (svg) svg.remove()
         svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
         svg_div.append(svg)
-        svg.setAttribute('width', width)
-        svg.setAttribute('height', height)
-        
-        svg.style.marginLeft = 'auto'
-        svg.style.marginRight = 'auto'
-        
-        
+        svg.setAttribute('width', view_width)
+        svg.setAttribute('height', view_height)
+        // svg.setAttribute('width', width)
+        // svg.setAttribute('height', height)
+        svg.setAttribute('viewBox', `0, 0, ${width}, ${height}`)
         
         Object.entries(versions).forEach(x => {
             var c = x[1]
@@ -537,7 +543,7 @@ function sync9_create_fancy_dag(s9) {
         }
     }    
 
-    return [d, width, height]
+    return [d, view_width, view_height]
 }
 
 
