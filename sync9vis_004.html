@@ -126,6 +126,27 @@ function create_client(i) {
     
     c.redraw = () => {
         d.innerHTML = ''
+
+        var header = document.createElement('div')
+        header.textContent = 'Client ' + (i + 1) + ' Text:'
+        header.style.color = 'lightgrey'
+        header.style.fontSize = 'small'
+        d.append(header)
+        
+        var ta = document.createElement('textarea')
+        ta.setAttribute('readonly', true)
+        ta.style.width = '100%'
+        ta.style.height = '30px'
+        ta.value = sync9_read(c.s9)
+        d.append(ta)
+
+        var header = document.createElement('div')
+        header.textContent = 'Client ' + (i + 1) + ' Braid:'
+        header.style.marginTop = '10px'
+        header.style.color = 'lightgrey'
+        header.style.fontSize = 'small'
+        d.append(header)
+        
         var [fd, width, height, svg] = sync9_create_fancy_dag(s9)
         c.svg = svg
         d.append(fd)
@@ -139,8 +160,15 @@ function create_client(i) {
         clients.forEach(x => x.svg.setAttribute('width', x.width * scale))
         var max_height = clients.reduce((x, y) => Math.max(x, y.svg.clientHeight), 0)
         clients.forEach(x => {
-            x.d.firstChild.style.height = max_height
+            x.d.children[3].style.height = max_height
         })
+        
+        var header = document.createElement('div')
+        header.textContent = 'Client ' + (i + 1) + ' Network messages:'
+        header.style.marginTop = '10px'
+        header.style.color = 'lightgrey'
+        header.style.fontSize = 'small'
+        d.append(header)
         
         var msgs = document.createElement('div')
         msgs.style.display = 'grid'
@@ -338,7 +366,7 @@ function sync9_create_fancy_dag(s9) {
     
     var max_height = 0
     Object.values(versions).forEach(c => {
-        c.y = c.layer * BOX_Y * 3
+        c.y = (c.layer - 1) * BOX_Y * 3
         if (c.y + BOX_Y > max_height)
             max_height = c.y + BOX_Y
     })
@@ -354,7 +382,6 @@ function sync9_create_fancy_dag(s9) {
     var d = document.createElement('div')
     
     var svg_div = document.createElement('div')
-    svg_div.style.cursor = 'pointer'
     svg_div.style.textAlign = 'center'
     d.append(svg_div)
     
