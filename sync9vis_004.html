@@ -36,7 +36,7 @@ go.style.display = 'none'
 go.onclick = do_something
 var did_count = 0
 function do_something_forever() {
-    if (did_count < 5) {
+    if (did_count < 15) {
         did_count++
         do_something()
         setTimeout(do_something_forever, 1000)
