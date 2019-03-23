@@ -34,11 +34,15 @@ go.textContent = 'do something'
 document.body.append(go)
 go.style.display = 'none'
 go.onclick = do_something
+var did_count = 0
 function do_something_forever() {
-    do_something()
-    setTimeout(do_something_forever, 1000)
+    if (did_count < 5) {
+        did_count++
+        do_something()
+        setTimeout(do_something_forever, 1000)
+    }
 }
-do_something_forever()
+setTimeout(do_something_forever, 0)
 function do_something() {
     var did_something = false
     while (!did_something) {
