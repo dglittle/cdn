@@ -89,7 +89,8 @@ function do_something() {
 
 var grid = document.createElement('div')
 grid.style.display = 'grid'
-grid.style['grid-template-columns'] = 'auto auto auto'
+grid.style.width = '100%'
+grid.style['grid-template-columns'] = '1fr 1fr 1fr'
 document.body.append(grid)
 
 var clients = []
@@ -113,7 +114,13 @@ function create_client(i) {
     
     c.redraw = () => {
         d.innerHTML = ''
-        d.append(sync9_create_fancy_dag(s9))
+        var [fd, width, height] = sync9_create_fancy_dag(s9)
+        d.append(fd)
+        c.height = height
+        
+        var max_height = clients.reduce((x, y) => Math.max(x, y.height), 0)
+        clients.forEach(x => x.d.style.height = max_height)
+        console.log('max_height: ' + max_height)
         
         var msgs = document.createElement('div')
         msgs.style.display = 'grid'
@@ -325,6 +332,7 @@ function sync9_create_fancy_dag(s9) {
     
     var svg_div = document.createElement('div')
     svg_div.style.cursor = 'pointer'
+    svg_div.style.textAlign = 'center'
     d.append(svg_div)
     
     function calc_specials(id) {
@@ -452,6 +460,11 @@ function sync9_create_fancy_dag(s9) {
         svg.setAttribute('width', width)
         svg.setAttribute('height', height)
         
+        svg.style.marginLeft = 'auto'
+        svg.style.marginRight = 'auto'
+        
+        
+        
         Object.entries(versions).forEach(x => {
             var c = x[1]
             var id = x[0]
@@ -524,7 +537,7 @@ function sync9_create_fancy_dag(s9) {
         }
     }    
 
-    return d
+    return [d, width, height]
 }
 
 
