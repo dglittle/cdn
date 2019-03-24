@@ -279,7 +279,7 @@ function create_char(x, y, text, fill, bold) {
     char.setAttribute('x', x)
     char.setAttribute('y', y)
     char.setAttribute('text-anchor', 'middle')
-    char.setAttribute('alignment-baseline', 'baseline')
+    char.setAttribute('alignment-baseline', 'alphabetic')
     char.appendChild(document.createTextNode(text))
     return char
 }
