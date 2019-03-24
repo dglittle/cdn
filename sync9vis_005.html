@@ -113,7 +113,7 @@ function do_something() {
             c.msgs.push({
                 action: 'Send:',
                 color: FOREGROUNDS[v.vid.slice(0, 1)],
-                text: `{set: 'x', patches: ${JSON.stringify(v.changes)}, version: ${JSON.stringify(v.vid)}, parents: ${JSON.stringify(Object.keys(v.parents))}}`
+                text: `{set: 'demo', patches: ${JSON.stringify(v.changes)}, version: ${JSON.stringify(v.vid)}, parents: ${JSON.stringify(Object.keys(v.parents))}}`
             })
             c.redraw()
             
@@ -132,7 +132,7 @@ function do_something() {
             c.msgs.push({
                 action: 'Recv:',
                 color: FOREGROUNDS[v.vid.slice(0, 1)],
-                text: `{set: 'x', patches: ${JSON.stringify(v.changes)}, version: ${JSON.stringify(v.vid)}, parents: ${JSON.stringify(Object.keys(v.parents))}}`
+                text: `{set: 'demo', patches: ${JSON.stringify(v.changes)}, version: ${JSON.stringify(v.vid)}, parents: ${JSON.stringify(Object.keys(v.parents))}}`
             })
             c.redraw()
             
