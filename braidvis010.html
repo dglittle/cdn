@@ -1844,6 +1844,20 @@ function create_side_text_boxes(n, show_example) {
         var t = document.createElement('textarea')
         s7.textarea = t
         grid.append(t)
+        var saved      
+  
+        t.onkeyup = t.onchange = function (e) {
+          if (saved != undefined)
+            if (t.value !== saved) {
+              b.style.backgroundColor = FOREGROUNDS[i]
+              delete b.disabled
+              b.style.cursor = 'pointer'
+            } else {
+              b.style.backgroundColor = '#ccc'
+              //b.disabled = true
+              delete b.style.cursor
+            }
+        }
         
         var nothing = document.createElement('div')
         nothing.style.width = '10px'
@@ -1907,10 +1921,20 @@ function create_side_text_boxes(n, show_example) {
         }
         
         var b = document.createElement('button')
-        b.innerHTML = 'C' + (i + 1)
+        b.innerHTML = 'Set'
         b.style.verticalAlign = 'top'
+        b.style.backgroundColor = '#ccc'
+        b.style.color = 'white'
+        b.style.borderRadius = '5px'
+        b.style.border = 0
+        //b.disabled = true
+
         b.onclick = function () {
+            saved = t.value
             commit()
+            b.style.backgroundColor = '#ccc'
+            //b.disabled = true
+            delete b.style.cursor
         }
         buttons.append(b)
         s7.c_button = b
@@ -1921,9 +1945,9 @@ function create_side_text_boxes(n, show_example) {
             var iiii = iii
             iii++
             
-            var b = document.createElement('button')
-            style_merge_button(b, iiii - 1, 0)
-            b.onclick = function () {
+            var b2 = document.createElement('button')
+            style_merge_button(b2, iiii - 1, 0)
+            b2.onclick = function () {
                 commit()
                 var x = s7.buffers[iiii - 1].shift()
                 if (x) {
@@ -1932,7 +1956,7 @@ function create_side_text_boxes(n, show_example) {
                         if (c.column == null)
                             c.column = i
                     })
-                    t.value = s7.text
+                    t.value = saved = s7.text
                     
                     msg.innerHTML = Object.keys(s7.waiting_versions).length > 0 ? ('pend\'n' + '*'.repeat(Object.keys(s7.waiting_versions).length)) : ''
                 }
@@ -1941,8 +1965,8 @@ function create_side_text_boxes(n, show_example) {
                 right.innerHTML = ''
                 right.append(sync7_create_visualizations(s7s))
             }
-            buttons.append(b)
-            s7.buttons[iiii - 1] = b
+            buttons.append(b2)
+            s7.buttons[iiii - 1] = b2
         })
         
         var msg = document.createElement('span')
