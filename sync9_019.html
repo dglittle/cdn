@@ -9,7 +9,7 @@ var sync9_ROOT = 'root'
 
 console.log('-------------------')
 
-var ttt_n = 2000
+var ttt_n = 1
 for (var ttt = 0; ttt < ttt_n; ttt++) {
     var last_ttt = (ttt == ttt_n - 1)
     
@@ -60,6 +60,13 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
                         debug_output.push('server join: ' + uid + ' leaves:' + JSON.stringify(leaves))
                         
                         server.join(uid, leaves)
+                    })
+                },
+                welcome_ack : (uid) => {
+                    c.outgoing.push(() => {
+                        debug_output.push('server welcome_ack: ' + uid)
+                        
+                        server.welcome_ack(uid)
                     })
                 },
                 add_version : (uid, vid, parents, changes) => {
@@ -264,12 +271,13 @@ function sync9_create_client(s_funcs) {
     
     c.uid = sync9_guid()
     c.server_leaves = {root: true}
+    c.unacked = {}
     
     c.join = () => {
         s_funcs.join(c.uid, c.server_leaves)
     }
     
-    c.welcome = (acks, versions) => {
+    c.welcome = (acks, versions, acks2) => {
         acks.forEach(x => {
             Object.keys(c.s9.T[x]).forEach(k => {
                 if (c.server_leaves[k]) delete c.server_leaves[k]
@@ -286,11 +294,21 @@ function sync9_create_client(s_funcs) {
             sync9_add_version(c.s9, x.vid, x.parents, x.changes)
         })
         
+        acks2.forEach(x => {
+            c.ack(x)
+        })
+        
+        s_funcs.welcome_ack(c.uid)
+        
         var ancs = sync9_get_ancestors(c.s9, c.server_leaves)
+        Object.keys(c.s9.T).forEach(x => {
+            if (!ancs[x]) {
+                delete c.unacked[x]
+            }
+        })
         var changes = sync9_gen_diff(c.s9, x => ancs[x], () => true)
         
         sync9_trim(c.s9, x => ancs[x])
-        //sync9_prune(c.s9, () => false, c.server_leaves)
         
         if (changes.length > 0) {
             var x = {
@@ -315,10 +333,13 @@ function sync9_create_client(s_funcs) {
     }
     
     c.ack = (vid) => {
-        Object.keys(c.s9.T[vid]).forEach(k => {
-            if (c.server_leaves[k]) delete c.server_leaves[k]
-        })
-        c.server_leaves[vid] = true
+        if (c.unacked[vid]) {
+            delete c.unacked[vid]
+            Object.keys(c.s9.T[vid]).forEach(k => {
+                if (c.server_leaves[k]) delete c.server_leaves[k]
+            })
+            c.server_leaves[vid] = true
+        }
         
         var ancs = sync9_get_ancestors(c.s9, {[vid]: true})
         sync9_prune(c.s9, (a, b) => (a != 'root') && ancs[b], c.server_leaves)
@@ -331,6 +352,7 @@ function sync9_create_client(s_funcs) {
             changes : changes
         }
         sync9_add_version(c.s9, x.vid, c.s9.leaves, x.changes)
+        c.unacked[x.vid] = true
         s_funcs.add_version(c.uid, x.vid, x.parents, x.changes)
     }
     
@@ -349,6 +371,11 @@ function sync9_create_server(c_funcs) {
 
     s.peers = {}
     s.unacked = {}
+    s.saved = {}
+    
+    function prune() {
+        sync9_prune(s.s9, (a, b) => (a != 'root') && !s.saved[a] && !s.unacked[a] && !s.saved[b] && !s.unacked[b])
+    }
     
     s.join = (uid, leaves) => {
         var p = s.peers[uid]
@@ -370,7 +397,7 @@ function sync9_create_server(c_funcs) {
         })
         
         var versions = sync9_extract_versions(s.s9, x => ancs[x], () => true)
-        c_funcs.welcome(uid, acks, versions)
+        c_funcs.welcome(uid, acks, versions, Object.keys(s.s9.T).filter(vid => !s.unacked[vid]))
     }
     
     s.add_version = (uid, vid, parents, changes) => {
@@ -388,20 +415,30 @@ function sync9_create_server(c_funcs) {
     }
     
     s.ack = (uid, vid) => {
-        delete s.unacked[vid][uid]
-        if (Object.keys(s.unacked[vid]).length == 0) {
-            delete s.unacked[vid]
+        if (multiset_rm(s.unacked, vid, uid)) {
             Object.entries(s.peers).forEach(x => {
                 if (x[1].online) {
                     c_funcs.ack(x[0], vid)
                 }
             })
+            prune()
         }
+    }
+    
+    s.welcome_ack = (uid) => {
+        Object.keys(s.saved).forEach(x => {
+            multiset_rm(s.saved, x, uid)
+        })
+        prune()
     }
     
     s.leave = (uid) => {
         var p = s.peers[uid]
         p.online = false
+        
+        Object.keys(s.s9.T).forEach(vid => {
+            multiset_add(s.saved, vid, uid)
+        })
         
         Object.entries(s.unacked).forEach(x => {
             if (x[1][uid]) {
@@ -412,6 +449,28 @@ function sync9_create_server(c_funcs) {
     
     return s
 }
+
+
+
+
+function multiset_add(ms, key1, key2) {
+    var s = ms[key1]
+    if (!s) s = ms[key1] = {}
+    if (!s[key2]) return s[key2] = true
+}
+
+function multiset_rm(ms, key1, key2) {
+    var s = ms[key1]
+    if (!s) return true
+    delete s[key2]
+    if (Object.keys(s).length == 0) {
+        delete ms[key1]
+        return true
+    }
+}
+
+
+
 
 
 
