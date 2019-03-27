@@ -9,11 +9,11 @@ var sync9_ROOT = 'root'
 
 console.log('-------------------')
 
-var ttt_n = 1
+var ttt_n = 1000
 for (var ttt = 0; ttt < ttt_n; ttt++) {
     var last_ttt = (ttt == ttt_n - 1)
     
-    var seed = 355058 + ttt
+    var seed = 357000 + ttt
     // var seed = 203448 + ttt
     Math.randomSeed(seed)
     console.log('seed ' + seed)
@@ -22,10 +22,10 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
     var clients = {}
     
     var debug_output = []
-    debug_output = {}
-    debug_output.push = function (x) {
-        console.log(x)
-    }
+    // debug_output = {}
+    // debug_output.push = function (x) {
+    //     console.log(x)
+    // }
     
     var server = sync9_create_server({
         welcome : (uid, acks, versions, leaves, acks2) => {
