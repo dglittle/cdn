@@ -13,7 +13,7 @@ var ttt_n = 1
 for (var ttt = 0; ttt < ttt_n; ttt++) {
     var last_ttt = (ttt == ttt_n - 1)
     
-    var seed = 343000 + ttt
+    var seed = 343019 + ttt
     // var seed = 203448 + ttt
     Math.randomSeed(seed)
     console.log('seed ' + seed)
@@ -22,18 +22,18 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
     var clients = {}
     
     var debug_output = []
-    // debug_output = {}
-    // debug_output.push = function (x) {
-    //     console.log(x)
-    // }
+    debug_output = {}
+    debug_output.push = function (x) {
+        console.log(x)
+    }
     
     var server = sync9_create_server({
-        welcome : (uid, acks, versions, acks2) => {
+        welcome : (uid, acks, versions, leaves, acks2) => {
             clients[uid].incoming.push(() => {
-                debug_output.push('client welcome ' + uid + ' ' + JSON.stringify(acks) + ' ' + JSON.stringify(versions) + ' ' + JSON.stringify(acks2))
+                debug_output.push('client welcome ' + uid + ' ' + JSON.stringify(acks) + ' ' + JSON.stringify(versions) + ' ' + JSON.stringify(leaves) + ' ' + JSON.stringify(acks2))
                 
                 clients[uid].state = 'connected'
-                clients[uid].welcome(acks, versions, acks2)
+                clients[uid].welcome(acks, versions, leaves, acks2)
             })
         },
         add_version : (uid, vid, parents, changes) => {
@@ -111,7 +111,7 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
         })()
     }
     
-    for (var t = 0; t < 1000; t++) {
+    for (var t = 0; t < 20; t++) {
         debug_output.push('t = ' + t)
         
         var i = Math.floor(Math.random() * n_clients)
@@ -277,7 +277,7 @@ function sync9_create_client(s_funcs) {
         s_funcs.join(c.uid, c.server_leaves)
     }
     
-    c.welcome = (acks, versions, acks2) => {
+    c.welcome = (acks, versions, leaves, acks2) => {
         acks.forEach(x => {
             Object.keys(c.s9.T[x]).forEach(k => {
                 if (c.server_leaves[k]) delete c.server_leaves[k]
@@ -292,6 +292,14 @@ function sync9_create_client(s_funcs) {
             c.server_leaves[x.vid] = true
             
             sync9_add_version(c.s9, x.vid, x.parents, x.changes)
+        })
+        
+        Object.entries(leaves).forEach(x => {
+            c.s9.T[x[0]] = x[1]
+            Object.keys(x[1]).forEach(k => {
+                if (c.server_leaves[k]) delete c.server_leaves[k]
+            })
+            c.server_leaves[x[0]] = true
         })
         
         acks2.forEach(x => {
@@ -397,7 +405,9 @@ function sync9_create_server(c_funcs) {
         })
         
         var versions = sync9_extract_versions(s.s9, x => ancs[x], () => true)
-        c_funcs.welcome(uid, acks, versions, Object.keys(s.s9.T).filter(vid => !s.unacked[vid]))
+        var leaves = {}
+        Object.keys(s.s9.leaves).forEach(x => leaves[x] = s.s9.T[x])
+        c_funcs.welcome(uid, acks, versions, leaves, Object.keys(s.s9.T).filter(vid => !s.unacked[vid]))
     }
     
     s.add_version = (uid, vid, parents, changes) => {
