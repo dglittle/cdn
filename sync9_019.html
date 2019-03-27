@@ -28,12 +28,12 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
     // }
     
     var server = sync9_create_server({
-        welcome : (uid, acks, versions) => {
+        welcome : (uid, acks, versions, acks2) => {
             clients[uid].incoming.push(() => {
-                debug_output.push('client welcome ' + uid + ' ' + JSON.stringify(acks) + ' ' + JSON.stringify(versions) + ' TEST')
+                debug_output.push('client welcome ' + uid + ' ' + JSON.stringify(acks) + ' ' + JSON.stringify(versions) + ' ' + JSON.stringify(acks2))
                 
                 clients[uid].state = 'connected'
-                clients[uid].welcome(acks, versions)
+                clients[uid].welcome(acks, versions, acks2)
             })
         },
         add_version : (uid, vid, parents, changes) => {
