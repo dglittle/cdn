@@ -392,6 +392,9 @@ function sync9_create_server(c_funcs) {
     
     function prune() {
         sync9_prune(s.s9, (a, b) => (a != 'root') && !s.saved[a] && !s.unacked[a] && !s.saved[b] && !s.unacked[b])
+        Object.values(s.peers).forEach(p => {
+            p.versions = p.versions.filter(x => s.s9.T[x])
+        })
     }
     
     s.join = (uid, leaves) => {
