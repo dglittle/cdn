@@ -295,7 +295,7 @@ function sync9_create_client(s_funcs) {
         })
         
         Object.entries(leaves).forEach(x => {
-            c.s9.T[x[0]] = x[1]
+            if (!c.s9.T[x[0]]) c.s9.T[x[0]] = x[1]
             Object.keys(x[1]).forEach(k => {
                 if (c.server_leaves[k]) delete c.server_leaves[k]
             })
