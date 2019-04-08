@@ -481,21 +481,267 @@ function sync9_create_server(c_funcs) {
 
 
 
-function multiset_add(ms, key1, key2) {
-    var s = ms[key1]
-    if (!s) s = ms[key1] = {}
-    if (!s[key2]) return s[key2] = true
+
+
+
+
+
+
+function sync9_rebase_fancy(x, vid, changes, is_anc) {
+    return sync9_space_dag_rebase_fancy(sync9_space_dag_get(x.val.S, 0).S, vid, changes.map(x => {
+        var p = sync9_parse_change(x)
+        return [p.range[0], p.range[1] - p.range[0], p.val]
+    }), is_anc).map(x => {
+        return `[${x[0]}:${x[0] + x[1]}] = ${JSON.stringify(x[2])}`
+    })
 }
 
-function multiset_rm(ms, key1, key2) {
-    var s = ms[key1]
-    if (!s) return true
-    delete s[key2]
-    if (Object.keys(s).length == 0) {
-        delete ms[key1]
-        return true
+function sync9_space_dag_rebase_fancy(S, vid, splices, is_anc) {
+    function count_as_and_bs(node, counts) {
+        if (Object.keys(node.deleted_by).some(x => is_anc(x))) return
+        var deleted_by_b = Object.keys(node.deleted_by).length > 0
+        
+        if (is_anc(vid))
+            counts.a += node.elems.length
+        if (!deleted_by_b)
+            counts.b += node.elems.length
+            
+        node.nexts.forEach(x => count_as_and_bs(x, counts))
+        count_as_and_bs(node.next)
     }
+    
+    var offset_a = 0
+    var offset_b = 0
+    
+    var si = 0
+    var s = splices[si++]
+    
+    var results = []
+    function add_result(offset, del, ins) {
+        if (results.length > 0) {
+            var prev = results[results.length - 1]
+            if (prev[0] + prev[1] == offset) {
+                prev[1] += del
+                prev[2] = prev[2].concat(ins)
+                return
+            }
+        }
+        results.push([offset, del, ins])
+    }
+    
+    var new_vid = vid
+    var delete_up_to = 0
+    function helper(node, prev, vid) {
+        if (Object.keys(node.deleted_by).some(x => is_anc(x))) return
+        var deleted_by_b = Object.keys(node.deleted_by).length > 0
+            
+        if (is_anc(vid)) {
+            while (s) {
+                if (s[1] == 0) {
+                    var d = s[0] - (offset_a + node.elems.length)
+                    if (d > 0) break
+                    if (d == 0 && !node.end_cap &&
+                        node.nexts.some(next => is_anc(next.vid))) break
+                    if (d == 0 && !node.end_cap) {
+                        var counts = {a: 0, b: 0}
+                        node.nexts.forEach(x =>
+                            if (x.vid < new_vid)
+                                count_as_and_bs(x, counts))
+                        add_result(offset_b + (deleted_by_b ? 0 : node.elems.length) + counts.b - counts.a, 0, s[2])
+                    } else {
+                        add_result(offset_b + (deleted_by_b ? 0 : (s[0] - offset_a)), 0, s[2])
+                    }
+                    s = splices[si++]
+                } else if (delete_up_to <= offset_a) {
+                    var d = s[0] - (offset_a + node.elems.length)
+                    if (d >= 0) break
+                    delete_up_to = s[0] + s[1]
+                    if (delete_up_to <= offset_a) throw 'how so?'
+                    if (s[0] == offset_a && node.gash) {
+                        if (!prev.end_cap) throw 'no end_cap?'
+                        
+                        
+                        
+                        
+                        
+                        work here
+                        
+                        var nexts = prev.nexts.filter(next => is_new_anc(next.vid))
+                        var i = binarySearch(nexts, function (x) {
+                            if (new_vid < x.vid) return -1
+                            if (new_vid > x.vid) return 1
+                            return 0
+                        })
+                        add_result(nexts[i] ? nexts[i].offset_b : node.offset_b, 0, s[2])
+                        
+                        
+                        
+                        
+                        
+                        
+                    } else {
+                        add_result(node.offset_b + (deleted_by_b ? 0 : (s[0] - node.offset_a)), 0, s[2])
+                    }
+                } else {
+                    var d = delete_up_to - (node.offset_a + node.elems.length)
+                    if (!deleted_by_b) {
+                        var start = node.offset_b + Math.max(0, s[0] - node.offset_a)
+                        var stop = node.offset_b + node.elems.length + Math.min(0, d)
+                        add_result(start, stop - start, '')
+                    }
+                    if (d <= 0) {
+                        s = splices[si++]
+                    } else break
+                }
+            }
+        }            
+            
+        if (is_anc(vid))
+            offset_a += node.elems.length
+        if (!deleted_by_b)
+            offset_b += node.elems.length
+            
+            
+            
+            
+            
+            
+            
+            
+            
+        
+        
+        if (view_deleted ||
+            !Object.keys(node.deleted_by).some(vid => f(vid))) {
+            if (cb(node, offset, has_nexts, prev, vid) == false)
+                throw exit_early
+            offset += node.elems.length
+        }
+        for (var next of node.nexts)
+            if (f(next.vid)) helper(next, null, next.vid)
+        if (node.next) helper(node.next, node, vid)
+        else if (tail_cb) tail_cb(node)
+    }
+    helper(S, null, S.vid)
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    var offset_a = 0
+    var offset_b = 0
+    var set_us = []
+    sync9_trav_space_dag(S, is_new_anc, (node, offset, has_nexts, prev, vid) => {
+        if (Object.keys(node.deleted_by).some(x => is_anc(x))) return
+        var deleted_by_b = Object.keys(node.deleted_by).some(x => is_new_anc(x))
+        
+        node.offset_a = offset_a
+        node.offset_b = offset_b
+        if (set_us.length > 0) {
+            set_us.forEach(n => n.real_next = node)
+            set_us = []
+        }
+        
+        if (is_anc(vid))
+            offset_a += node.elems.length
+        if (!deleted_by_b)
+            offset_b += node.elems.length
+        if (node.next)
+            set_us.push(node)
+    }, true, node => {
+        set_us.push(node)
+    })
+    
+    var si = 0
+    var s = splices[si++]
+    
+    var result = []
+    function add_result(offset, del, ins) {
+        if (result.length > 0) {
+            var prev = result[result.length - 1]
+            if (prev[0] + prev[1] == offset) {
+                prev[1] += del
+                prev[2] = prev[2].concat(ins)
+                return
+            }
+        }
+        result.push([offset, del, ins])
+    }
+    
+    var new_vid = vid
+    var delete_up_to = 0
+    sync9_trav_space_dag(S, is_new_anc, (node, offset, has_nexts, prev, vid) => {
+        if (Object.keys(node.deleted_by).some(x => is_anc(x))) return
+        var deleted_by_b = Object.keys(node.deleted_by).some(x => is_new_anc(x))
+        if (is_anc(vid)) {
+            while (s) {
+                if (s[1] == 0) {
+                    var d = s[0] - (node.offset_a + node.elems.length)
+                    if (d > 0) break
+                    if (d == 0 && !node.end_cap &&
+                        node.nexts.find(next => is_anc(next.vid))) break
+                    if (d == 0 && !node.end_cap) {
+                        var nexts = node.nexts.filter(next => is_new_anc(next.vid))
+                        var i = binarySearch(nexts, function (x) {
+                            if (new_vid < x.vid) return -1
+                            if (new_vid > x.vid) return 1
+                            return 0
+                        })
+                        add_result(nexts[i] ? nexts[i].offset_b :
+                            node.real_next ? node.real_next.offset_b :
+                            node.offset_b + (deleted_by_b ? 0 : (s[0] - node.offset_a)), 0, s[2])
+                    } else {
+                        add_result(node.offset_b + (deleted_by_b ? 0 : (s[0] - node.offset_a)), 0, s[2])
+                    }
+                    s = splices[si++]
+                } else if (delete_up_to <= node.offset_a) {
+                    var d = s[0] - (node.offset_a + node.elems.length)
+                    if (d >= 0) break
+                    delete_up_to = s[0] + s[1]
+                    if (delete_up_to <= node.offset_a) throw 'how so?'
+                    if (s[0] == node.offset_a && node.gash) {
+                        if (!prev.end_cap) throw 'no end_cap?'
+                        var nexts = prev.nexts.filter(next => is_new_anc(next.vid))
+                        var i = binarySearch(nexts, function (x) {
+                            if (new_vid < x.vid) return -1
+                            if (new_vid > x.vid) return 1
+                            return 0
+                        })
+                        add_result(nexts[i] ? nexts[i].offset_b : node.offset_b, 0, s[2])
+                    } else {
+                        add_result(node.offset_b + (deleted_by_b ? 0 : (s[0] - node.offset_a)), 0, s[2])
+                    }
+                } else {
+                    var d = delete_up_to - (node.offset_a + node.elems.length)
+                    if (!deleted_by_b) {
+                        var start = node.offset_b + Math.max(0, s[0] - node.offset_a)
+                        var stop = node.offset_b + node.elems.length + Math.min(0, d)
+                        add_result(start, stop - start, '')
+                    }
+                    if (d <= 0) {
+                        s = splices[si++]
+                    } else break
+                }
+            }
+        }
+    }, true)
+    
+    sync9_trav_space_dag(S, is_new_anc, (node, offset, has_nexts, prev, vid) => {
+        if (Object.keys(node.deleted_by).some(x => is_anc(x))) return
+        delete node.offset_a
+        delete node.offset_b
+        delete node.real_next
+    }, true)
+    
+    return result
 }
+
+
 
 
 
@@ -656,6 +902,7 @@ function sync9_space_dag_gen_diff(S, is_anc, is_new_anc) {
     
     return result
 }
+
 
 
 
@@ -1342,6 +1589,22 @@ function binarySearch(ar, compare_fn) {
         }
     }
     return m;
+}
+
+function multiset_add(ms, key1, key2) {
+    var s = ms[key1]
+    if (!s) s = ms[key1] = {}
+    if (!s[key2]) return s[key2] = true
+}
+
+function multiset_rm(ms, key1, key2) {
+    var s = ms[key1]
+    if (!s) return true
+    delete s[key2]
+    if (Object.keys(s).length == 0) {
+        delete ms[key1]
+        return true
+    }
 }
 
 </script>
