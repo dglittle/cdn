@@ -381,6 +381,7 @@ function sync9_create_server(c_funcs) {
                 c_funcs.add_version(x[0], vid, parents, changes)
             }
         })
+        if (!rebase_it) c_funcs.ack(x[0], vid)
     }
     
     s.leave = (uid) => {
