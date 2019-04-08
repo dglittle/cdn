@@ -6,6 +6,7 @@
 <script>
 
 var sync9_ROOT = 'root'
+var REBASE_SUFFIX = '_R'
 
 console.log('-------------------')
 
@@ -280,90 +281,37 @@ function sync9_create_client(s_funcs) {
     
     c.uid = sync9_guid()
     c.server_leaves = {root: true}
-    c.unacked = {}
+    c.unacked = []
     
     c.join = () => {
         s_funcs.join(c.uid, c.server_leaves)
-    }
-    
-    c.welcome = (acks, pruned1, versions, leaves, acks2) => {
-        acks.forEach(x => {
-            Object.keys(c.s9.T[x]).forEach(k => {
-                if (c.server_leaves[k]) delete c.server_leaves[k]
-            })
-            c.server_leaves[x] = true
-        })
-        
-        pruned1.forEach(x => {
-            c.ack(x)
-        })
-        
-        versions.forEach(x => {
-            Object.keys(x.parents).forEach(k => {
-                if (c.server_leaves[k]) delete c.server_leaves[k]
-            })
-            c.server_leaves[x.vid] = true
-            
-            sync9_add_version(c.s9, x.vid, x.parents, x.changes)
-        })
-        
-        Object.entries(leaves).forEach(x => {
-            if (!c.s9.T[x[0]]) c.s9.T[x[0]] = x[1]
-            Object.keys(x[1]).forEach(k => {
-                if (c.server_leaves[k]) delete c.server_leaves[k]
-            })
-            c.server_leaves[x[0]] = true
-        })
-        
-        acks2.forEach(x => {
-            c.ack(x)
-        })
-        
-        s_funcs.welcome_ack(c.uid)
-        
-        var ancs = sync9_get_ancestors(c.s9, c.server_leaves)
-        Object.keys(c.s9.T).forEach(x => {
-            if (!ancs[x]) {
-                delete c.unacked[x]
-            }
-        })
-        var changes = sync9_gen_diff(c.s9, x => ancs[x], () => true)
-        
-        sync9_trim(c.s9, x => ancs[x])
-        
-        if (changes.length > 0) {
-            var x = {
-                vid : sync9_guid(),
-                parents : Object.assign({}, c.s9.leaves),
-                changes : changes
-            }
-            
-            sync9_add_version(c.s9, x.vid, c.s9.leaves, x.changes)
-            s_funcs.add_version(c.uid, x.vid, x.parents, x.changes)
-        }
+        c.unacked.forEach(x => s_funcs.add_version(c.uid, x.vid, x.parents, x.changes))
     }
     
     c.add_version = (vid, parents, changes) => {
+        var old_vid = vid.endsWith(REBASE_SUFFIX) ? vid.slice(0, -REBASE_SUFFIX.length) : ''
+        if (c.s9.T[old_vid]) {
+            var v = c.unacked.shift()
+            if (v.vid != old_vid) throw 'how?'
+            sync9_rebase_inplace(c.s9, sync9_get_ancestors(c.s9, c.server_leaves))
+        } else {
+            sync9_add_version(c.s9, vid, parents, changes)
+        }
+        
         Object.keys(parents).forEach(k => {
             if (c.server_leaves[k]) delete c.server_leaves[k]
         })
         c.server_leaves[vid] = true
-        
-        sync9_add_version(c.s9, vid, parents, changes)
-        s_funcs.ack(c.uid, vid)
     }
     
     c.ack = (vid) => {
-        if (c.unacked[vid]) {
-            delete c.unacked[vid]
-            Object.keys(c.s9.T[vid]).forEach(k => {
-                if (c.server_leaves[k]) delete c.server_leaves[k]
-            })
-            c.server_leaves[vid] = true
-        }
+        var v = c.unacked.shift()
+        if (v.vid != vid) throw 'how?'
         
-        var ancs = sync9_get_ancestors(c.s9, {[vid]: true})
-        sync9_prune(c.s9, (a, b) => (a != 'root') && ancs[b], c.server_leaves)
+        Object.keys(v.parents).forEach(k => {
+            if (c.server_leaves[k]) delete c.server_leaves[k]
+        })
+        c.server_leaves[vid] = true
     }
     
     c.local_add_version = (changes) => {
@@ -373,8 +321,8 @@ function sync9_create_client(s_funcs) {
             changes : changes
         }
         sync9_add_version(c.s9, x.vid, c.s9.leaves, x.changes)
-        c.unacked[x.vid] = true
         s_funcs.add_version(c.uid, x.vid, x.parents, x.changes)
+        c.unacked.push(x)
     }
     
     return c
@@ -414,7 +362,7 @@ function sync9_create_server(c_funcs) {
                     if (s.s9.T[key])
                         Object.keys(s.s9.T[key]).forEach(k => mark_ancs(k))
                     else if (p.pre_rebase[key]) {
-                        ancs[key + '_R'] = true
+                        ancs[key + REBASE_SUFFIX] = true
                         Object.keys(p.pre_rebase[key]).forEach(k => mark_ancs(k))
                     }
                 }
@@ -422,7 +370,7 @@ function sync9_create_server(c_funcs) {
             Object.keys(parents).forEach(x => mark_ancs(x))
             
             changes = sync9_rebase_fancy(s.s9, vid, changes, x => ancs[x])
-            vid += '_R'
+            vid += REBASE_SUFFIX
             p.pre_rebase[vid] = parents
             parents = s.leaves
         }
