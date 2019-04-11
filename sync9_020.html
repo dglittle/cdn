@@ -399,6 +399,121 @@ function sync9_create_server(c_funcs) {
 
 
 
+function sync9_rebase_inplace(s9, is_anc) {
+    sync9_space_dag_rebase_inplace(sync9_space_dag_get(s9.val.S, 0).S, is_anc)
+}
+
+function sync9_space_dag_rebase_inplace(S, vid, splices, is_anc) {
+    function count_as_and_bs(node, counts) {
+        if (Object.keys(node.deleted_by).some(x => is_anc(x))) return
+        var deleted_by_b = Object.keys(node.deleted_by).length > 0
+        
+        if (is_anc(vid))
+            counts.a += node.elems.length
+        if (!deleted_by_b)
+            counts.b += node.elems.length
+            
+        node.nexts.forEach(x => count_as_and_bs(x, counts))
+        count_as_and_bs(node.next)
+    }
+    
+    var offset_a = 0
+    var offset_b = 0
+    
+    var si = 0
+    var s = splices[si++]
+    
+    var results = []
+    function add_result(offset, del, ins) {
+        if (results.length > 0) {
+            var prev = results[results.length - 1]
+            if (prev[0] + prev[1] == offset) {
+                prev[1] += del
+                prev[2] = prev[2].concat(ins)
+                return
+            }
+        }
+        results.push([offset, del, ins])
+    }
+    
+    var new_vid = vid
+    var delete_up_to = 0
+    function helper(node, prev, vid) {
+        if (Object.keys(node.deleted_by).some(x => is_anc(x))) return
+        var deleted_by_b = Object.keys(node.deleted_by).length > 0
+            
+        if (is_anc(vid)) {
+            while (s) {
+                if (s[1] == 0) {
+                    var d = s[0] - (offset_a + node.elems.length)
+                    if (d > 0) break
+                    if (d == 0 && !node.end_cap &&
+                        node.nexts.some(next => is_anc(next.vid))) break
+                    if (d == 0 && !node.end_cap) {
+                        var counts = {a: 0, b: 0}
+                        node.nexts.forEach(x =>
+                            if (x.vid < new_vid)
+                                count_as_and_bs(x, counts))
+                        add_result(offset_b + (deleted_by_b ? 0 : node.elems.length) + counts.b - counts.a, 0, s[2])
+                    } else {
+                        add_result(offset_b + (deleted_by_b ? 0 : (s[0] - offset_a)), 0, s[2])
+                    }
+                    s = splices[si++]
+                } else if (delete_up_to <= offset_a) {
+                    var d = s[0] - (offset_a + node.elems.length)
+                    if (d >= 0) break
+                    delete_up_to = s[0] + s[1]
+                    if (delete_up_to <= offset_a) throw 'how so?'
+                    if (s[0] == offset_a && node.gash) {
+                        if (!prev.end_cap) throw 'no end_cap?'
+                        var counts = {a: 0, b: 0}
+                        prev.nexts.forEach(x =>
+                            if (x.vid < new_vid)
+                                count_as_and_bs(x, counts))
+                        add_result(offset_b + counts.b - counts.a, 0, s[2])
+                    } else {
+                        add_result(offset_b + (deleted_by_b ? 0 : (s[0] - offset_a)), 0, s[2])
+                    }
+                } else {
+                    var d = delete_up_to - (offset_a + node.elems.length)
+                    if (!deleted_by_b) {
+                        var start = offset_b + Math.max(0, s[0] - offset_a)
+                        var stop = offset_b + node.elems.length + Math.min(0, d)
+                        add_result(start, stop - start, '')
+                    }
+                    if (d <= 0) {
+                        s = splices[si++]
+                    } else break
+                }
+            }
+        }            
+            
+        if (is_anc(vid))
+            offset_a += node.elems.length
+        if (!deleted_by_b)
+            offset_b += node.elems.length
+            
+        for (var next of node.nexts)
+            helper(next, null, next.vid)
+        if (node.next)
+            helper(node.next, node, vid)
+    }
+    helper(S, null, S.vid)
+    
+    return result
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 function sync9_rebase_fancy(x, vid, changes, is_anc) {
