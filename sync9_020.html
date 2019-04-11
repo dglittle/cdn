@@ -403,7 +403,38 @@ function sync9_rebase_inplace(s9, is_anc) {
     sync9_space_dag_rebase_inplace(sync9_space_dag_get(s9.val.S, 0).S, is_anc)
 }
 
-function sync9_space_dag_rebase_inplace(S, vid, splices, is_anc) {
+function sync9_space_dag_rebase_inplace(S, is_anc) {
+    
+    var spring_back_to_here
+    var current_new_node
+    
+    iterate over each node in space dag:
+        if is_anc and elems.length > 0 and nobody deletes it:
+            spring back the current node
+        
+        
+    
+        deal with this node
+        for each nexts
+            if !is_anc
+                current_new_node = this node
+            else
+                recursively process node
+        recursively process next
+                
+                
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     function count_as_and_bs(node, counts) {
         if (Object.keys(node.deleted_by).some(x => is_anc(x))) return
         var deleted_by_b = Object.keys(node.deleted_by).length > 0
