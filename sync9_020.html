@@ -404,25 +404,63 @@ function sync9_rebase_inplace(s9, is_anc) {
 }
 
 function sync9_space_dag_rebase_inplace(S, is_anc) {
+    var spring_back_to_here = S
     
-    var spring_back_to_here
-    var current_new_node
+    var current_new_node = null
+    var current_new_node_parent = null
+    var current_new_node_i = null
     
-    iterate over each node in space dag:
-        if is_anc and elems.length > 0 and nobody deletes it:
-            spring back the current node
+    function spring_back_node(node) {
+        // delete node from where it was
         
-        
+        // put node in new spot
+            // first climb to highest is_anc peek
+            // now, if there is a !is_anc's already here..
+                // if it's older than us, insert us at end
+                // if it's newer than us, insert us in it's place, and put it at our beginning
+                // if it's the same as us, append ourselves to it
+    }
     
-        deal with this node
-        for each nexts
-            if !is_anc
-                current_new_node = this node
-            else
-                recursively process node
-        recursively process next
+    function helper(node, prev, vid) {
+        if (node.elems.length > 0) {
+            var deleted_by = Object.,keys(node.deleted_by)
+            if (deleted_by.length == 0) {
                 
                 
+                
+        //         spring back the current node
+        //         set spring_back_to_here to here
+            } else if (deleted_by.some(x => is_anc(x))) {
+        //         skip
+            } else {
+        //         pull current_new_node to here
+            }
+        }
+        
+        
+        
+        
+        // for each nexts
+        //     if !is_anc
+        //         current_new_node = this node
+        //     else
+        //         recursively process node
+        // recursively process next
+        
+        
+        
+        for (var next of node.nexts)
+            helper(next, null, next.vid)
+        if (node.next)
+            helper(node.next, node, vid)
+    }
+    helper(S, null, S.vid)
+    
+    // spring back the current node
+    
+    
+    
+    
     
     
     
