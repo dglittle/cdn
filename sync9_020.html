@@ -280,38 +280,30 @@ function sync9_create_client(s_funcs) {
     c.s9.leaves = {root: true}
     
     c.uid = sync9_guid()
-    c.server_leaves = {root: true}
+    c.server_leaf = 'root'
     c.unacked = []
     
     c.join = () => {
-        s_funcs.join(c.uid, c.server_leaves)
+        s_funcs.join(c.uid, c.server_leaf)
         c.unacked.forEach(x => s_funcs.add_version(c.uid, x.vid, x.parents, x.changes))
     }
     
     c.add_version = (vid, parents, changes) => {
         var old_vid = vid.endsWith(REBASE_SUFFIX) ? vid.slice(0, -REBASE_SUFFIX.length) : ''
         if (c.s9.T[old_vid]) {
+            var m = {}
+            c.unacked.forEach((x, i) => m[x.vid] = i)
+            sync9_rebase_inplace(c.s9, sync9_get_ancestors(c.s9, {[c.server_leaf]: true}), (a, b) => m[a] - m[b])
+            
             var v = c.unacked.shift()
             if (v.vid != old_vid) throw 'how?'
-            sync9_rebase_inplace(c.s9, sync9_get_ancestors(c.s9, c.server_leaves))
+            
+            sync9_rename(c.s9, v.vid, vid)
         } else {
             sync9_add_version(c.s9, vid, parents, changes)
         }
         
-        Object.keys(parents).forEach(k => {
-            if (c.server_leaves[k]) delete c.server_leaves[k]
-        })
-        c.server_leaves[vid] = true
-    }
-    
-    c.ack = (vid) => {
-        var v = c.unacked.shift()
-        if (v.vid != vid) throw 'how?'
-        
-        Object.keys(v.parents).forEach(k => {
-            if (c.server_leaves[k]) delete c.server_leaves[k]
-        })
-        c.server_leaves[vid] = true
+        c.server_leaf = vid
     }
     
     c.local_add_version = (changes) => {
@@ -391,6 +383,42 @@ function sync9_create_server(c_funcs) {
     
     return s
 }
+
+
+
+
+
+
+
+
+
+function sync9_rename(s9, vid, new_vid) {
+    sync9_space_dag_rename(sync9_space_dag_get(s9.val.S, 0).S, vid, new_vid)
+    
+    Object.entries(s9.T).forEach(x => {
+        Object.keys(x[1]).forEach(y => {
+            if (y == vid) {
+                delete x[1][vid]
+                x[1][new_vid] = true
+            }
+        })
+        if (x[0] == vid) {
+            delete s9.T[vid]
+            s9.T[new_vid] = x[1]
+        }
+    })
+}
+
+function sync9_space_dag_rename(S, vid, new_vid) {
+    function helper(node) {
+        if (node.vid == vid) node.vid = new_vid
+        
+        node.nexts.forEach(x => helper(x))
+        if (node.next) helper(node.next)
+    }
+    helper(S)
+}
+
 
 
 
