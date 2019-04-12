@@ -403,22 +403,47 @@ function sync9_rebase_inplace(s9, is_anc) {
     sync9_space_dag_rebase_inplace(sync9_space_dag_get(s9.val.S, 0).S, is_anc)
 }
 
-function sync9_space_dag_rebase_inplace(S, is_anc) {
+function sync9_space_dag_rebase_inplace(S, is_anc, comp) {
     var spring_back_to_here = S
     
     var current_new_node = null
     var current_new_node_parent = null
     var current_new_node_i = null
     
-    function spring_back_node(node) {
-        // delete node from where it was
+    function spring_back() {
+        var s = spring_back_to_here
+        var c = current_new_node
         
-        // put node in new spot
-            // first climb to highest is_anc peek
+        if (!c) return
+        current_new_node_parent.nexts.splice(current_new_node_i, 1)
+        
+        while (s.nexts[0] && is_anc(s.nexts[0].vid)) s = s.nexts[0]
+        
+        if (s.elems.length > 0 && Object.keys(s.deleted_by).some(x => is_anc(x))) sync9_space_dag_break_node(s, 0)
+        
+        if (!s.nexts[0]) {
+            s.nexts.push(c)
+        } else if (s.nexts[0].vid == c.vid) {
+            s.nexts[0].elems = s.nexts[0].elems.concat(c.elems)
+        } else {
+            var x = comp(c.vid, s.nexts[0].vid)
+            if (x < 0) {
+                work here
+                
+                
+            } else if (x > 0) {
+                
+            } else throw new Error('not implemented')
+        }
+        
+        
             // now, if there is a !is_anc's already here..
                 // if it's older than us, insert us at end
                 // if it's newer than us, insert us in it's place, and put it at our beginning
                 // if it's the same as us, append ourselves to it
+                
+                
+        current_new_node = null
     }
     
     function helper(node, prev, vid) {
@@ -996,7 +1021,7 @@ function sync9_create() {
     }
 }
 
-function sync9_add_version(x, vid, parents, changes, is_anc, vid_override) {
+function sync9_add_version(x, vid, parents, changes, is_anc) {
     if (vid_override == undefined) vid_override = vid
     if (x.T[vid_override]) return
     x.T[vid_override] = Object.assign({}, parents)
@@ -1154,10 +1179,23 @@ function sync9_space_dag_get(S, i, is_anc) {
     })
     return ret
 }
-
-function sync9_space_dag_add_version(S, vid, splices, is_anc, vid_override) {
-    if (vid_override == undefined) vid_override = vid
     
+function sync9_space_dag_break_node(node, x, end_cap, new_next) {
+    var tail = sync9_create_space_dag_node(null, subseq(node.elems, x), node.end_cap)
+    Object.assign(tail.deleted_by, node.deleted_by)
+    tail.nexts = node.nexts
+    tail.next = node.next
+    
+    node.elems = subseq(node.elems, 0, x)
+    node.end_cap = end_cap
+    if (end_cap) tail.gash = true
+    node.nexts = new_next ? [new_next] : []
+    node.next = tail
+    
+    return tail
+}
+
+function sync9_space_dag_add_version(S, vid, splices, is_anc) {
     function subseq(x, start, stop) {
         return (x instanceof Array) ?
             x.slice(start, stop) :
@@ -1170,24 +1208,7 @@ function sync9_space_dag_add_version(S, vid, splices, is_anc, vid_override) {
             if (to.vid > x.vid) return 1
             return 0
         })
-        to.vid = vid_override
         nexts.splice(i, 0, to)
-    }
-    
-    function break_node(node, x, end_cap, new_next) {
-        var tail = sync9_create_space_dag_node(null, subseq(node.elems, x), node.end_cap)
-        Object.assign(tail.deleted_by, node.deleted_by)
-        tail.nexts = node.nexts
-        tail.next = node.next
-        
-        node.elems = subseq(node.elems, 0, x)
-        node.end_cap = end_cap
-        if (end_cap) tail.gash = true
-        if (new_next) new_next.vid = vid_override
-        node.nexts = new_next ? [new_next] : []
-        node.next = tail
-        
-        return tail
     }
     
     var si = 0
@@ -1205,7 +1226,7 @@ function sync9_space_dag_add_version(S, vid, splices, is_anc, vid_override) {
             if (d == 0 && !node.end_cap) {
                 add_to_nexts(node.nexts, new_node)
             } else {
-                break_node(node, s[0] - offset, undefined, new_node)
+                sync9_space_dag_break_node(node, s[0] - offset, undefined, new_node)
             }
             si++
             return
@@ -1220,7 +1241,7 @@ function sync9_space_dag_add_version(S, vid, splices, is_anc, vid_override) {
                 if (!prev.end_cap) throw 'no end_cap?'
                 add_to_nexts(prev.nexts, new_node)
             } else {
-                break_node(node, s[0] - offset, true, new_node)
+                sync9_space_dag_break_node(node, s[0] - offset, true, new_node)
                 return
             }
         }
@@ -1228,11 +1249,11 @@ function sync9_space_dag_add_version(S, vid, splices, is_anc, vid_override) {
         if (delete_up_to > offset) {
             if (delete_up_to <= offset + node.elems.length) {
                 if (delete_up_to < offset + node.elems.length) {
-                    break_node(node, delete_up_to - offset)
+                    sync9_space_dag_break_node(node, delete_up_to - offset)
                 }
                 si++
             }
-            node.deleted_by[vid_override] = true
+            node.deleted_by[vid] = true
             return
         }
     })
