@@ -428,17 +428,13 @@ function sync9_space_dag_rebase_inplace(S, is_anc, comp) {
         } else {
             var x = comp(c.vid, s.nexts[0].vid)
             if (x < 0) {
-                var n = s.nexts[0]
-                s.nexts.splice()
-                
-                
-                // if it's newer than us, insert us in it's place, and put it at our beginning
+                var n = s.nexts.splice(0, 1, c)[0]
+                sync9_space_dag_break_node(c, 0, undefined, n)
+            } else if (x > 0) {
                 
                 
                 work here
                 
-                
-            } else if (x > 0) {
                 
             } else throw new Error('not implemented')
         }
