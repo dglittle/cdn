@@ -428,6 +428,13 @@ function sync9_space_dag_rebase_inplace(S, is_anc, comp) {
         } else {
             var x = comp(c.vid, s.nexts[0].vid)
             if (x < 0) {
+                var n = s.nexts[0]
+                s.nexts.splice()
+                
+                
+                // if it's newer than us, insert us in it's place, and put it at our beginning
+                
+                
                 work here
                 
                 
@@ -439,7 +446,6 @@ function sync9_space_dag_rebase_inplace(S, is_anc, comp) {
         
             // now, if there is a !is_anc's already here..
                 // if it's older than us, insert us at end
-                // if it's newer than us, insert us in it's place, and put it at our beginning
                 // if it's the same as us, append ourselves to it
                 
                 
