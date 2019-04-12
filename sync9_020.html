@@ -399,8 +399,8 @@ function sync9_create_server(c_funcs) {
 
 
 
-function sync9_rebase_inplace(s9, is_anc) {
-    sync9_space_dag_rebase_inplace(sync9_space_dag_get(s9.val.S, 0).S, is_anc)
+function sync9_rebase_inplace(s9, is_anc, comp) {
+    sync9_space_dag_rebase_inplace(sync9_space_dag_get(s9.val.S, 0).S, is_anc, comp)
 }
 
 function sync9_space_dag_rebase_inplace(S, is_anc, comp) {
