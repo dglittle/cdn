@@ -552,9 +552,10 @@ function sync9_space_dag_rebase_fancy(S, vid, splices, is_anc) {
                         node.nexts.some(next => is_anc(next.vid))) break
                     if (d == 0 && !node.end_cap) {
                         var counts = {a: 0, b: 0}
-                        node.nexts.forEach(x =>
+                        node.nexts.forEach(x => {
                             if (x.vid < new_vid)
-                                count_as_and_bs(x, counts))
+                                count_as_and_bs(x, counts)
+                        })
                         add_result(offset_b + (deleted_by_b ? 0 : node.elems.length) + counts.b - counts.a, 0, s[2])
                     } else {
                         add_result(offset_b + (deleted_by_b ? 0 : (s[0] - offset_a)), 0, s[2])
