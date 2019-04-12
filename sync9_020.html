@@ -14,8 +14,7 @@ var ttt_n = 1
 for (var ttt = 0; ttt < ttt_n; ttt++) {
     var last_ttt = (ttt == ttt_n - 1)
     
-    var seed = 357087 + ttt
-    // var seed = 203448 + ttt
+    var seed = 1000 + ttt
     Math.randomSeed(seed)
     console.log('seed ' + seed)
     
@@ -23,23 +22,15 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
     var clients = {}
     
     var debug_output = []
-    debug_output = {}
-    debug_output.push = function (x) {
-        console.log(x)
-    }
+    // debug_output = {}
+    // debug_output.push = function (x) {
+    //     console.log(x)
+    // }
     
     var server = sync9_create_server({
-        welcome : (uid, acks, pruned1, versions, leaves, acks2) => {
-            clients[uid].incoming.push(() => {
-                debug_output.push('client welcome ' + uid + ' ' + JSON.stringify(acks) + ' ' + JSON.stringify(pruned1) + ' ' + JSON.stringify(versions) + ' ' + JSON.stringify(leaves) + ' ' + JSON.stringify(acks2))
-                
-                clients[uid].state = 'connected'
-                clients[uid].welcome(acks, pruned1, versions, leaves, acks2)
-            })
-        },
         add_version : (uid, vid, parents, changes) => {
             clients[uid].incoming.push(() => {
-                debug_output.push('client add version ' + uid)
+                debug_output.push('client add version: ' + uid + ' : ' + JSON.stringify({vid, parents, changes}))
                 
                 clients[uid].add_version(vid, parents, changes)
             })
@@ -56,37 +47,19 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
     for (var i = 0; i < n_clients; i++) {
         ;(() => {
             var c = sync9_create_client({
-                join : (uid, leaves) => {
+                join : (uid, leaf) => {
                     c.outgoing.push(() => {
-                        debug_output.push('server join: ' + uid + ' leaves:' + JSON.stringify(leaves))
+                        debug_output.push('server join: ' + uid + ' leaf:' + leaf)
                         
-                        server.join(uid, leaves)
-                    })
-                },
-                welcome_ack : (uid) => {
-                    c.outgoing.push(() => {
-                        debug_output.push('server welcome_ack: ' + uid)
-                        
-                        server.welcome_ack(uid)
+                        server.join(uid, leaf)
                     })
                 },
                 add_version : (uid, vid, parents, changes) => {
                     if (c.state == 'connected') {
                         c.outgoing.push(() => {
-                            debug_output.push('server add version from ' + uid)
-                        
-                            debug_output.push(`vid: ${vid}, parents: ${JSON.stringify(parents)}, changes: ${changes}`)
+                            debug_output.push('server add version: ' + uid + ' : ' + JSON.stringify({vid, parents, changes}))
                         
                             server.add_version(uid, vid, parents, changes)
-                        })
-                    }
-                },
-                ack : (uid, vid) => {
-                    if (c.state == 'connected') {
-                        c.outgoing.push(() => {
-                            debug_output.push('server ack from ' + uid + ' for v:' + vid)
-                        
-                            server.ack(uid, vid)
                         })
                     }
                 }
@@ -169,12 +142,6 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
                 }
             }
         }
-        
-        // console.log('here are the T keys for everyone:')
-        // console.log(JSON.stringify(Object.keys(server.s9.T)))
-        // Object.values(clients).forEach(x => {
-        //     console.log(JSON.stringify(Object.keys(x.s9.T)))
-        // })
     }
     
     Object.values(clients).forEach(x => {
@@ -202,15 +169,6 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
                 debug_output.push('client: ' + sync9_read(c.s9))
             }
             while (c.outgoing.length > 0) {
-                
-                
-                
-                if (t == 7) {
-                    debugger
-                }
-                
-                
-                
                 debug_output.push('tt = ' + t++)
                 debug_output.push('server: ' + sync9_read(server.s9))
                 
@@ -306,6 +264,13 @@ function sync9_create_client(s_funcs) {
         c.server_leaf = vid
     }
     
+    c.ack = (vid) => {
+        var v = c.unacked.shift()
+        if (v.vid != vid) throw 'how?'
+        
+        c.server_leaf = vid
+    }
+    
     c.local_add_version = (changes) => {
         var x = {
             vid : sync9_guid(),
@@ -332,12 +297,12 @@ function sync9_create_server(c_funcs) {
 
     s.peers = {}
     
-    s.join = (uid, leaves) => {
+    s.join = (uid, leaf) => {
         var p = s.peers[uid]
         if (!p) s.peers[uid] = p = {pre_rebase: {}}
         p.online = true
         
-        var ancs = sync9_get_ancestors(s.s9, leaves)
+        var ancs = sync9_get_ancestors(s.s9, {[leaf]: true})
         sync9_extract_versions(s.s9, x => ancs[x]).forEach(x =>
             c_funcs.add_version(uid, x.vid, x.parents, x.changes))
     }
