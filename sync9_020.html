@@ -329,9 +329,9 @@ function sync9_create_server(c_funcs) {
             changes = sync9_rebase_fancy(s.s9, vid, changes, x => ancs[x])
             vid += REBASE_SUFFIX
             p.pre_rebase[vid] = parents
-            parents = s.leaves
+            parents = s.s9.leaves
         }
-            
+        
         sync9_add_version(s.s9, vid, parents, changes)
         Object.entries(s.peers).forEach(x => {
             if ((x[0] != uid || rebase_it) && x[1].online) {
