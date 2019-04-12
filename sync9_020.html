@@ -1067,6 +1067,12 @@ function sync9_space_dag_get(S, i, is_anc) {
 }
     
 function sync9_space_dag_break_node(node, x, end_cap, new_next) {
+    function subseq(x, start, stop) {
+        return (x instanceof Array) ?
+            x.slice(start, stop) :
+            x.substring(start, stop)
+    }
+    
     var tail = sync9_create_space_dag_node(null, subseq(node.elems, x), node.end_cap)
     Object.assign(tail.deleted_by, node.deleted_by)
     tail.nexts = node.nexts
@@ -1082,11 +1088,6 @@ function sync9_space_dag_break_node(node, x, end_cap, new_next) {
 }
 
 function sync9_space_dag_add_version(S, vid, splices, is_anc) {
-    function subseq(x, start, stop) {
-        return (x instanceof Array) ?
-            x.slice(start, stop) :
-            x.substring(start, stop)
-    }
     
     function add_to_nexts(nexts, to) {
         var i = binarySearch(nexts, function (x) {
