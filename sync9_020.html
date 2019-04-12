@@ -438,6 +438,7 @@ function sync9_space_dag_rebase_inplace(S, is_anc, comp) {
     function spring_back() {
         var s = spring_back_to_here
         var c = current_new_node
+        current_new_node = null
         
         if (!c) return
         current_new_node_parent.nexts.splice(current_new_node_i, 1)
@@ -447,159 +448,45 @@ function sync9_space_dag_rebase_inplace(S, is_anc, comp) {
         if (s.elems.length > 0 && Object.keys(s.deleted_by).some(x => is_anc(x))) sync9_space_dag_break_node(s, 0)
         
         insert_at_end(s, c)
-        
-        current_new_node = null
     }
     
     function helper(node, prev, vid) {
         if (node.elems.length > 0) {
-            var deleted_by = Object.,keys(node.deleted_by)
+            var deleted_by = Object.keys(node.deleted_by)
             if (deleted_by.length == 0) {
-                
-                
-                
-        //         spring back the current node
-        //         set spring_back_to_here to here
+                spring_back()
+                spring_back_to_here = node
             } else if (deleted_by.some(x => is_anc(x))) {
-        //         skip
-            } else {
-        //         pull current_new_node to here
-            }
-        }
-        
-        
-        
-        
-        // for each nexts
-        //     if !is_anc
-        //         current_new_node = this node
-        //     else
-        //         recursively process node
-        // recursively process next
-        
-        
-        
-        for (var next of node.nexts)
-            helper(next, null, next.vid)
-        if (node.next)
-            helper(node.next, node, vid)
-    }
-    helper(S, null, S.vid)
-    
-    // spring back the current node
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    function count_as_and_bs(node, counts) {
-        if (Object.keys(node.deleted_by).some(x => is_anc(x))) return
-        var deleted_by_b = Object.keys(node.deleted_by).length > 0
-        
-        if (is_anc(vid))
-            counts.a += node.elems.length
-        if (!deleted_by_b)
-            counts.b += node.elems.length
-            
-        node.nexts.forEach(x => count_as_and_bs(x, counts))
-        count_as_and_bs(node.next)
-    }
-    
-    var offset_a = 0
-    var offset_b = 0
-    
-    var si = 0
-    var s = splices[si++]
-    
-    var results = []
-    function add_result(offset, del, ins) {
-        if (results.length > 0) {
-            var prev = results[results.length - 1]
-            if (prev[0] + prev[1] == offset) {
-                prev[1] += del
-                prev[2] = prev[2].concat(ins)
-                return
-            }
-        }
-        results.push([offset, del, ins])
-    }
-    
-    var new_vid = vid
-    var delete_up_to = 0
-    function helper(node, prev, vid) {
-        if (Object.keys(node.deleted_by).some(x => is_anc(x))) return
-        var deleted_by_b = Object.keys(node.deleted_by).length > 0
-            
-        if (is_anc(vid)) {
-            while (s) {
-                if (s[1] == 0) {
-                    var d = s[0] - (offset_a + node.elems.length)
-                    if (d > 0) break
-                    if (d == 0 && !node.end_cap &&
-                        node.nexts.some(next => is_anc(next.vid))) break
-                    if (d == 0 && !node.end_cap) {
-                        var counts = {a: 0, b: 0}
-                        node.nexts.forEach(x =>
-                            if (x.vid < new_vid)
-                                count_as_and_bs(x, counts))
-                        add_result(offset_b + (deleted_by_b ? 0 : node.elems.length) + counts.b - counts.a, 0, s[2])
-                    } else {
-                        add_result(offset_b + (deleted_by_b ? 0 : (s[0] - offset_a)), 0, s[2])
-                    }
-                    s = splices[si++]
-                } else if (delete_up_to <= offset_a) {
-                    var d = s[0] - (offset_a + node.elems.length)
-                    if (d >= 0) break
-                    delete_up_to = s[0] + s[1]
-                    if (delete_up_to <= offset_a) throw 'how so?'
-                    if (s[0] == offset_a && node.gash) {
-                        if (!prev.end_cap) throw 'no end_cap?'
-                        var counts = {a: 0, b: 0}
-                        prev.nexts.forEach(x =>
-                            if (x.vid < new_vid)
-                                count_as_and_bs(x, counts))
-                        add_result(offset_b + counts.b - counts.a, 0, s[2])
-                    } else {
-                        add_result(offset_b + (deleted_by_b ? 0 : (s[0] - offset_a)), 0, s[2])
-                    }
+            } else if (current_new_node) {
+                var dest = node
+                if (dest.gash) dest = prev
+                else sync9_space_dag_break_node(dest, 0)
+                
+                if (dest.nexts.length > 1) throw new Error('wtf?')
+                else if (dest.nexts.length == 1) {
+                    if (dest.nexts[0] != current_new_node) throw new Error('wtf?')
                 } else {
-                    var d = delete_up_to - (offset_a + node.elems.length)
-                    if (!deleted_by_b) {
-                        var start = offset_b + Math.max(0, s[0] - offset_a)
-                        var stop = offset_b + node.elems.length + Math.min(0, d)
-                        add_result(start, stop - start, '')
-                    }
-                    if (d <= 0) {
-                        s = splices[si++]
-                    } else break
+                    current_new_node_parent.nexts.splice(current_new_node_i, 1)
+                    dest.nexts.push(current_new_node)
                 }
+                current_new_node = null
             }
-        }            
-            
-        if (is_anc(vid))
-            offset_a += node.elems.length
-        if (!deleted_by_b)
-            offset_b += node.elems.length
-            
-        for (var next of node.nexts)
-            helper(next, null, next.vid)
-        if (node.next)
-            helper(node.next, node, vid)
+        }
+        
+        node.nexts((next, i) => {
+            if (!is_anc(next.vid)) {
+                current_new_node = next
+                current_new_node_parent = node
+                current_new_node_i = i
+            } else {
+                helper(next, null, next.vid)
+            }
+        })
+        if (node.next) helper(node.next, node, vid)
     }
     helper(S, null, S.vid)
     
-    return result
+    spring_back()
 }
 
 
