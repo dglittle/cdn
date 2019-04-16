@@ -22,10 +22,10 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
     var clients = {}
     
     var debug_output = []
-    // debug_output = {}
-    // debug_output.push = function (x) {
-    //     console.log(x)
-    // }
+    debug_output = {}
+    debug_output.push = function (x) {
+        console.log(x)
+    }
     
     var server = sync9_create_server({
         add_version : (uid, vid, parents, changes) => {
@@ -1174,16 +1174,6 @@ function sync9_get_ancestors(x, vids) {
     function mark_ancs(key) {
         if (!ancs[key]) {
             ancs[key] = true
-            
-
-            // work here
-            try {
-                var hi = Object.keys(x.T[key])
-            } catch (e) {
-                debugger
-            }
-            
-            
             Object.keys(x.T[key]).forEach(k => mark_ancs(k))
         }
     }
