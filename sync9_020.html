@@ -1174,6 +1174,16 @@ function sync9_get_ancestors(x, vids) {
     function mark_ancs(key) {
         if (!ancs[key]) {
             ancs[key] = true
+            
+
+            // work here
+            try {
+                var hi = Object.keys(x.T[key])
+            } catch (e) {
+                debugger
+            }
+            
+            
             Object.keys(x.T[key]).forEach(k => mark_ancs(k))
         }
     }
