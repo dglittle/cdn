@@ -329,8 +329,8 @@ function sync9_create_server(c_funcs) {
             Object.keys(parents).forEach(x => mark_ancs(x))
             
             changes = sync9_rebase_fancy(s.s9, vid, changes, x => ancs[x])
-            vid += REBASE_SUFFIX
             p.pre_rebase[vid] = parents
+            vid += REBASE_SUFFIX
             parents = s.s9.leaves
         }
         
