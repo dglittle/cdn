@@ -7,7 +7,7 @@
 
 var sync9_ROOT = 'root'
 var REBASE_SUFFIX = '_R'
-
+N
 console.log('-------------------')
 
 var ttt_n = 1
@@ -102,7 +102,9 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
                 
                 var edit = create_random_edit(c.s9, c.letters[c.letters_i++])
                 
-                c.local_add_version(edit.changes)
+                var x = c.local_add_version(edit.changes)
+                debug_output.push(JSON.stringify(x))
+                
                 
                 debug_output.push(sync9_read(c.s9))
                 debug_output.push(c.state)
@@ -280,6 +282,7 @@ function sync9_create_client(s_funcs) {
         sync9_add_version(c.s9, x.vid, c.s9.leaves, x.changes)
         s_funcs.add_version(c.uid, x.vid, x.parents, x.changes)
         c.unacked.push(x)
+        return x
     }
     
     return c
