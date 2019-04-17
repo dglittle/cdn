@@ -162,6 +162,11 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
                 c.join()
             }
             while (c.incoming.length > 0) {
+                
+                if (t == 10) {
+                    debugger
+                }
+                
                 debug_output.push('tt = ' + t++ + ' ' + c.uid)
                 debug_output.push('client: ' + sync9_read(c.s9))
                 
@@ -252,7 +257,8 @@ function sync9_create_client(s_funcs) {
         if (c.s9.T[old_vid]) {
             var m = {}
             c.unacked.forEach((x, i) => m[x.vid] = i)
-            sync9_rebase_inplace(c.s9, sync9_get_ancestors(c.s9, {[c.server_leaf]: true}), (a, b) => m[a] - m[b])
+            var ancs = sync9_get_ancestors(c.s9, {[c.server_leaf]: true})
+            sync9_rebase_inplace(c.s9, x => ancs[x], (a, b) => m[a] - m[b])
             
             var v = c.unacked.shift()
             if (v.vid != old_vid) throw 'how?'
@@ -468,7 +474,7 @@ function sync9_space_dag_rebase_inplace(S, is_anc, comp) {
             }
         }
         
-        node.nexts((next, i) => {
+        node.nexts.forEach((next, i) => {
             if (!is_anc(next.vid)) {
                 current_new_node = next
                 current_new_node_parent = node
