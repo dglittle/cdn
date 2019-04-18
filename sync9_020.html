@@ -450,6 +450,7 @@ function sync9_space_dag_rebase_inplace(S, is_anc, comp) {
         if (s.nexts[0] && is_anc(s.nexts[0].vid)) {
             s = s.nexts[0]
             while (s.elems.length == 0 && s.nexts[0] && is_anc(s.nexts[0].vid)) s = s.nexts[0]
+            if (s.elems.length > 0) sync9_space_dag_break_node(s, 0)
         }
         
         if (s.elems.length > 0 && Object.keys(s.deleted_by).some(x => is_anc(x))) sync9_space_dag_break_node(s, 0)
