@@ -113,7 +113,7 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
                     debug_output.push('JOIN: ' + c.uid)
                     debug_output.push(sync9_read(c.s9))
                     
-                    c.state = 'connecting'
+                    c.state = 'connected'
                     c.join()
                 } else if (c.state == 'connecting') {
                 } else if (c.state == 'connected') {
