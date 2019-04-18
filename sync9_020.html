@@ -255,13 +255,6 @@ function sync9_create_client(s_funcs) {
     }
     
     c.add_version = (vid, parents, changes) => {
-        
-        
-        
-        work here : we want to change the parents in T to match "parens" if vid is a rebase
-        
-        
-        
         var old_vid = vid.endsWith(REBASE_SUFFIX) ? vid.slice(0, -REBASE_SUFFIX.length) : ''
         if (c.s9.T[old_vid]) {
             var m = {}
@@ -273,6 +266,7 @@ function sync9_create_client(s_funcs) {
             if (v.vid != old_vid) throw 'how?'
             
             sync9_rename(c.s9, v.vid, vid)
+            c.s9.T[vid] = parents
         } else {
             sync9_add_version(c.s9, vid, parents, changes)
         }
