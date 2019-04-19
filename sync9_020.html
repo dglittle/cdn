@@ -439,7 +439,7 @@ function sync9_space_dag_rebase_inplace(S, is_anc, comp) {
             for (var next of node.nexts) helper(next)
             if (node.next) helper(node.next)
         }
-        helper(s)
+        for (var next of s.nexts) helper(next)
         
         while (s.nexts[0] && comp(s.nexts[0].vid, c.vid) < 0) s = s.nexts[0]
         
