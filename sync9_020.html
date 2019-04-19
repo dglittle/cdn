@@ -9,7 +9,7 @@ var sync9_ROOT = 'root'
 var REBASE_SUFFIX = '_R'
 console.log('-------------------')
 
-var ttt_n = 1
+var ttt_n = 2
 for (var ttt = 0; ttt < ttt_n; ttt++) {
     var last_ttt = (ttt == ttt_n - 1)
     
@@ -162,13 +162,6 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
                 c.join()
             }
             while (c.incoming.length > 0) {
-                
-                
-                if (t == 16) {
-                    debugger
-                }
-                
-                
                 debug_output.push('tt = ' + t++ + ' ' + c.uid)
                 debug_output.push('client: ' + sync9_read(c.s9))
                 
