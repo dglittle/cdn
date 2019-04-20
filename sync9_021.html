@@ -247,20 +247,14 @@ function sync9_create_client(s_funcs) {
     }
     
     c.add_version = (vid, parents, changes) => {
+        sync9_add_version(c.s9, vid, parents, changes)
+        
         var old_vid = vid.endsWith(REBASE_SUFFIX) ? vid.slice(0, -REBASE_SUFFIX.length) : ''
         if (c.s9.T[old_vid]) {
-            var m = {}
-            c.unacked.forEach((x, i) => m[x.vid] = i)
-            var ancs = sync9_get_ancestors(c.s9, {[c.server_leaf]: true})
-            sync9_rebase_inplace(c.s9, x => ancs[x], (a, b) => m[a] - m[b])
+            sync9_version_deleted_by(c.s9, old_vid, vid)
             
             var v = c.unacked.shift()
             if (v.vid != old_vid) throw 'how?'
-            
-            sync9_rename(c.s9, v.vid, vid)
-            c.s9.T[vid] = parents
-        } else {
-            sync9_add_version(c.s9, vid, parents, changes)
         }
         
         c.server_leaf = vid
@@ -280,8 +274,8 @@ function sync9_create_client(s_funcs) {
             changes : changes
         }
         sync9_add_version(c.s9, x.vid, c.s9.leaves, x.changes)
-        s_funcs.add_version(c.uid, x.vid, x.parents, x.changes)
         c.unacked.push(x)
+        s_funcs.add_version(c.uid, x.vid, x.parents, x.changes)
         return x
     }
     
@@ -302,10 +296,15 @@ function sync9_create_server(c_funcs) {
     
     s.join = (uid, leaf) => {
         var p = s.peers[uid]
-        if (!p) s.peers[uid] = p = {pre_rebase: {}}
+        if (!p) s.peers[uid] = p = {}
         p.online = true
         
         var ancs = sync9_get_ancestors(s.s9, {[leaf]: true})
+        
+        
+        work here : extract versions needs to take a old and new is_ancs
+        
+        
         sync9_extract_versions(s.s9, x => ancs[x]).forEach(x =>
             c_funcs.add_version(uid, x.vid, x.parents, x.changes))
     }
@@ -360,37 +359,18 @@ function sync9_create_server(c_funcs) {
 
 
 
-function sync9_rename(s9, vid, new_vid) {
-    sync9_space_dag_rename(sync9_space_dag_get(s9.val.S, 0).S, vid, new_vid)
-    
-    Object.entries(s9.T).forEach(x => {
-        Object.keys(x[1]).forEach(y => {
-            if (y == vid) {
-                delete x[1][vid]
-                x[1][new_vid] = true
-            }
-        })
-        if (x[0] == vid) {
-            delete s9.T[vid]
-            s9.T[new_vid] = x[1]
-        }
-    })
+function sync9_version_deleted_by(s9, vid, deleted_by_vid) {
+    sync9_space_dag_version_deleted_by(sync9_space_dag_get(s9.val.S, 0).S, vid, deleted_by_vid)
 }
 
-function sync9_space_dag_rename(S, vid, new_vid) {
-    function helper(node) {
-        if (node.vid == vid) node.vid = new_vid
-        Object.keys(node.deleted_by).forEach(x => {
-            if (x == vid) {
-                delete node.deleted_by[vid]
-                node.deleted_by[new_vid] = true
-            }
-        })
+function sync9_space_dag_version_deleted_by(S, vid, deleted_by_vid) {
+    function helper(node, v) {
+        if (v == vid && node.elems.length > 0) node.deleted_by[deleted_by_vid] = true
         
-        node.nexts.forEach(x => helper(x))
-        if (node.next) helper(node.next)
+        node.nexts.forEach(x => helper(x, x.vid))
+        if (node.next) helper(node.next, v)
     }
-    helper(S)
+    helper(S, S.vid)
 }
 
 
