@@ -84,7 +84,7 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
         })()
     }
     
-    for (var t = 0; t < 60; t++) {
+    for (var t = 0; t < 5; t++) {
         debug_output.push('t = ' + t)
         
         var i = Math.floor(Math.random() * n_clients)
@@ -169,6 +169,13 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
                 debug_output.push('client: ' + sync9_read(c.s9))
             }
             while (c.outgoing.length > 0) {
+                
+                
+                if (t == 4) {
+                    debugger
+                }
+                
+                
                 debug_output.push('tt = ' + t++)
                 debug_output.push('server: ' + sync9_read(server.s9))
                 
@@ -233,9 +240,9 @@ function sync9_create_client(s_funcs) {
     c.s9 = sync9_create()
     
     sync9_add_version(c.s9, 'v1', {root: true}, [' = ""'])
-    sync9_prune(c.s9, (a, b) => true)
-    delete c.s9.T.v1
-    c.s9.leaves = {root: true}
+    // sync9_prune(c.s9, (a, b) => true)
+    // delete c.s9.T.v1
+    // c.s9.leaves = {root: true}
     
     c.uid = sync9_guid()
     c.server_leaf = 'root'
