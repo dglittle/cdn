@@ -321,6 +321,8 @@ function sync9_create_server(c_funcs) {
             var new_changes = sync9_rebase(s.s9, vid, changes, x => ancs[x], x => new_ancs[x])
             
             sync9_add_version(s.s9, vid, parents, changes)
+            sync9_version_deleted_by(s.s9, vid, vid + REBASE_SUFFIX)
+            
             vid += REBASE_SUFFIX
             parents = {[s.leaf]: true}
             changes = new_changes
