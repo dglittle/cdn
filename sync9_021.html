@@ -293,6 +293,7 @@ function sync9_create_server(c_funcs) {
     // s.s9.leaves = {root : true}
 
     s.peers = {}
+    s.leaf = 'v1'
     
     s.join = (uid, leaf) => {
         var p = s.peers[uid]
@@ -300,47 +301,35 @@ function sync9_create_server(c_funcs) {
         p.online = true
         
         var ancs = sync9_get_ancestors(s.s9, {[leaf]: true})
-        
-        
-        work here : extract versions needs to take a old and new is_ancs
-        
-        
-        sync9_extract_versions(s.s9, x => ancs[x]).forEach(x =>
+        var new_ancs = sync9_get_ancestors(s.s9, {[s.leaf]: true})
+        sync9_extract_versions(s.s9, x => ancs[x], x => new_ancs[x]).forEach(x =>
             c_funcs.add_version(uid, x.vid, x.parents, x.changes))
     }
     
     s.add_version = (uid, vid, parents, changes) => {
         var p = s.peers[uid]
         
-        var rebase_it = Object.keys(s.s9.leaves).some(x => !parents[x])
+        var rebase_it = !(Object.keys(parents).length == 1 && parents[s.leaf])
         if (rebase_it) {
-            var ancs = {}
-            function mark_ancs(key) {
-                if (!ancs[key]) {
-                    ancs[key] = true
-                    if (s.s9.T[key])
-                        Object.keys(s.s9.T[key]).forEach(k => mark_ancs(k))
-                    else if (p.pre_rebase[key]) {
-                        ancs[key + REBASE_SUFFIX] = true
-                        Object.keys(p.pre_rebase[key]).forEach(k => mark_ancs(k))
-                    }
-                }
-            }
-            Object.keys(parents).forEach(x => mark_ancs(x))
+            var ancs = sync9_get_ancestors(s.s9, parents)
+            var new_ancs = sync9_get_ancestors(s.s9, {[s.leaf]: true})
+            var new_changes = sync9_rebase(s.s9, vid, changes, x => ancs[x], x => new_ancs[x])
             
-            changes = sync9_rebase_fancy(s.s9, vid, changes, x => ancs[x])
-            p.pre_rebase[vid] = parents
+            sync9_add_version(s.s9, vid, parents, changes)
             vid += REBASE_SUFFIX
-            parents = Object.assign({}, s.s9.leaves)
+            parents = {[s.leaf]: true}
+            changes = new_changes
         }
         
-        sync9_add_version(s.s9, vid, s.s9.leaves, changes)
+        sync9_add_version(s.s9, vid, parents, changes)
         Object.entries(s.peers).forEach(x => {
             if ((x[0] != uid || rebase_it) && x[1].online) {
                 c_funcs.add_version(x[0], vid, parents, changes)
             }
         })
         if (!rebase_it) c_funcs.ack(x[0], vid)
+        
+        s.leaf = vid
     }
     
     s.leave = (uid) => {
@@ -381,96 +370,6 @@ function sync9_space_dag_version_deleted_by(S, vid, deleted_by_vid) {
 
 
 
-function sync9_rebase_inplace(s9, is_anc, comp) {
-    sync9_space_dag_rebase_inplace(sync9_space_dag_get(s9.val.S, 0).S, is_anc, comp)
-}
-
-function sync9_space_dag_rebase_inplace(S, is_anc, comp) {
-    
-    var spring_back_to_here = S
-    
-    var current_new_node = null
-    var current_new_node_parent = null
-    var current_new_node_i = null
-    
-    function spring_back() {
-        var s = spring_back_to_here
-        var c = current_new_node
-        current_new_node = null
-        
-        if (!c) return
-        current_new_node_parent.nexts.splice(current_new_node_i, 1)
-        
-        if (s.nexts[0] && is_anc(s.nexts[0].vid)) {
-            s = s.nexts[0]
-            while (s.elems.length == 0 && s.nexts[0] && is_anc(s.nexts[0].vid)) s = s.nexts[0]
-            if (s.elems.length > 0) sync9_space_dag_break_node(s, 0)
-        }
-        
-        if (s.elems.length > 0 && Object.keys(s.deleted_by).some(x => is_anc(x))) sync9_space_dag_break_node(s, 0)
-        
-
-        
-        function helper(node) {
-            if (node.elems.length > 0 && !Object.keys(node.deleted_by).some(x => comp(x, c.vid) < 0)) s = node
-            
-            for (var next of node.nexts) helper(next)
-            if (node.next) helper(node.next)
-        }
-        for (var next of s.nexts) helper(next)
-        
-        while (s.nexts[0] && comp(s.nexts[0].vid, c.vid) < 0) s = s.nexts[0]
-        
-        if (s.elems.length > 0 && Object.keys(s.deleted_by).some(x => comp(x, c.vid) < 0)) sync9_space_dag_break_node(s, 0)
-        
-        if (!s.nexts[0]) {
-            s.nexts.push(c)
-        } else if (s.nexts[0].vid == c.vid) {
-            s.nexts[0].elems = s.nexts[0].elems.concat(c.elems)
-        } else {
-            var n = s.nexts.splice(0, 1, c)[0]
-            sync9_space_dag_break_node(c, 0, undefined, n)
-        }
-    }
-    
-    function helper(node, prev, vid) {
-        if (node.elems.length > 0) {
-            var deleted_by = Object.keys(node.deleted_by)
-            if (deleted_by.length == 0) {
-                spring_back()
-                spring_back_to_here = node
-            } else if (deleted_by.some(x => is_anc(x))) {
-            } else if (current_new_node) {
-                var dest = node
-                if (dest.gash) dest = prev
-                else sync9_space_dag_break_node(dest, 0)
-                
-                if (dest.nexts.length > 1) throw new Error('wtf?')
-                else if (dest.nexts.length == 1) {
-                    if (dest.nexts[0] != current_new_node) throw new Error('wtf?')
-                } else {
-                    current_new_node_parent.nexts.splice(current_new_node_i, 1)
-                    dest.nexts.push(current_new_node)
-                }
-                current_new_node = null
-            }
-        }
-        
-        node.nexts.forEach((next, i) => {
-            if (!is_anc(next.vid)) {
-                current_new_node = next
-                current_new_node_parent = node
-                current_new_node_i = i
-            } else {
-                helper(next, null, next.vid)
-            }
-        })
-        if (node.next) helper(node.next, node, vid)
-    }
-    helper(S, null, S.vid)
-    
-    spring_back()
-}
 
 
 
@@ -478,135 +377,8 @@ function sync9_space_dag_rebase_inplace(S, is_anc, comp) {
 
 
 
-
-
-
-
-
-
-
-function sync9_rebase_fancy(x, vid, changes, is_anc) {
-    return sync9_space_dag_rebase_fancy(sync9_space_dag_get(x.val.S, 0).S, vid, changes.map(x => {
-        var p = sync9_parse_change(x)
-        return [p.range[0], p.range[1] - p.range[0], p.val]
-    }), is_anc).map(x => {
-        return `[${x[0]}:${x[0] + x[1]}] = ${JSON.stringify(x[2])}`
-    })
-}
-
-function sync9_space_dag_rebase_fancy(S, vid, splices, is_anc) {
-    function count_as_and_bs(node, counts) {
-        if (Object.keys(node.deleted_by).some(x => is_anc(x))) return
-        var deleted_by_b = Object.keys(node.deleted_by).length > 0
-        
-        if (is_anc(vid))
-            counts.a += node.elems.length
-        if (!deleted_by_b)
-            counts.b += node.elems.length
-            
-        node.nexts.forEach(x => count_as_and_bs(x, counts))
-        count_as_and_bs(node.next)
-    }
-    
-    var offset_a = 0
-    var offset_b = 0
-    
-    var si = 0
-    var s = splices[si++]
-    
-    var results = []
-    function add_result(offset, del, ins) {
-        if (results.length > 0) {
-            var prev = results[results.length - 1]
-            if (prev[0] + prev[1] == offset) {
-                prev[1] += del
-                prev[2] = prev[2].concat(ins)
-                return
-            }
-        }
-        results.push([offset, del, ins])
-    }
-    
-    var new_vid = vid
-    var delete_up_to = 0
-    function helper(node, prev, vid) {
-        if (!Object.keys(node.deleted_by).some(x => is_anc(x))) {
-            var deleted_by_b = Object.keys(node.deleted_by).length > 0
-            if (is_anc(vid)) {
-                while (s) {
-                    if (s[1] == 0) {
-                        var d = s[0] - (offset_a + node.elems.length)
-                        if (d > 0) break
-                        if (d == 0 && !node.end_cap &&
-                            node.nexts.some(next => is_anc(next.vid))) break
-                        if (d == 0 && !node.end_cap) {
-                            var counts = {a: 0, b: 0}
-                            node.nexts.forEach(x => {
-                                if (x.vid < new_vid)
-                                    count_as_and_bs(x, counts)
-                            })
-                            add_result(offset_b + (deleted_by_b ? 0 : node.elems.length) + counts.b - counts.a, 0, s[2])
-                        } else {
-                            add_result(offset_b + (deleted_by_b ? 0 : (s[0] - offset_a)), 0, s[2])
-                        }
-                        s = splices[si++]
-                    } else if (delete_up_to <= offset_a) {
-                        var d = s[0] - (offset_a + node.elems.length)
-                        if (d >= 0) break
-                        delete_up_to = s[0] + s[1]
-                        if (delete_up_to <= offset_a) throw 'how so?'
-                        if (s[0] == offset_a && node.gash) {
-                            if (!prev.end_cap) throw 'no end_cap?'
-                            var counts = {a: 0, b: 0}
-                            prev.nexts.forEach(x => {
-                                if (x.vid < new_vid)
-                                    count_as_and_bs(x, counts)
-                            })
-                            add_result(offset_b + counts.b - counts.a, 0, s[2])
-                        } else {
-                            add_result(offset_b + (deleted_by_b ? 0 : (s[0] - offset_a)), 0, s[2])
-                        }
-                    } else {
-                        var d = delete_up_to - (offset_a + node.elems.length)
-                        if (!deleted_by_b) {
-                            var start = offset_b + Math.max(0, s[0] - offset_a)
-                            var stop = offset_b + node.elems.length + Math.min(0, d)
-                            add_result(start, stop - start, '')
-                        }
-                        if (d <= 0) {
-                            s = splices[si++]
-                        } else break
-                    }
-                }
-            }
-            
-            if (is_anc(vid))
-                offset_a += node.elems.length
-            if (!deleted_by_b)
-                offset_b += node.elems.length
-        }
-            
-        for (var next of node.nexts)
-            helper(next, null, next.vid)
-        if (node.next)
-            helper(node.next, node, vid)
-    }
-    helper(S, null, S.vid)
-    
-    return results
-}
-
-
-
-
-
-
-
-
-
-
-function sync9_extract_versions(x, is_anc) {
-    var versions = sync9_space_dag_extract_versions(sync9_space_dag_get(x.val.S, 0).S, x, is_anc)
+function sync9_extract_versions(x, is_anc, is_new_anc) {
+    var versions = sync9_space_dag_extract_versions(sync9_space_dag_get(x.val.S, 0).S, x, is_anc, is_new_anc)
     versions.forEach(x => {
         x.changes = x.splices.map(x => {
             return `[${x[0]}:${x[0] + x[1]}] = ${JSON.stringify(x[2])}`
@@ -616,10 +388,10 @@ function sync9_extract_versions(x, is_anc) {
     return versions
 }
 
-function sync9_space_dag_extract_versions(S, s9, is_anc) {
+function sync9_space_dag_extract_versions(S, s9, is_anc, is_new_anc) {
     var versions = {}
     function helper(node, front) {
-        if (front && !is_anc(node.vid))
+        if (front && !is_anc(node.vid) && is_new_anc(node.vid))
             versions[node.vid] = true
             
         for (var next of node.nexts)
@@ -681,6 +453,13 @@ function sync9_space_dag_extract_versions(S, s9, is_anc) {
         })
     return sorted
 }
+
+
+
+
+
+
+
 
 
 function sync9_trim(x, is_anc) {
