@@ -180,12 +180,20 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
                 
                 
                 if (t == 7) {
+                    
+                console.log('s9: ', JSON.stringify(server.s9, null, '    '))
+                    
                     debugger
                 }
                 
                 
                 debug_output.push('tt = ' + t++)
                 debug_output.push('server: ' + sync9_read(server.s9))
+                
+                
+                
+                
+                
                 
                 c.outgoing.shift()()
                 
