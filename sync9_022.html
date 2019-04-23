@@ -274,7 +274,8 @@ function sync9_create_client(s_funcs) {
     }
     
     c.ack = (vid) => {
-        // work here : we'll prune vid away
+        var deleted = sync9_prune(c.s9, (a, b) => b == vid, c.s9.leaves)
+        if (!deleted[vid]) throw 'wtf?'
     }
     
     c.local_add_version = (changes) => {
@@ -309,13 +310,24 @@ function sync9_create_server(c_funcs) {
     }
     
     function prune() {
-        sync9_prune(s.s9, (a, b) => (a != 'root') && (a != 'v1') && Object.keys(s.prune_info[a].sent).every(x => s.prune_info[b].acked[x]), s.s9.leaves)
+        var deleted = sync9_prune(s.s9, (a, b) => (a != 'root') && (a != 'v1') && Object.keys(s.prune_info[a].sent).every(x => s.prune_info[b].acked[x]), s.s9.leaves)
+        Object.keys(deleted).forEach(deleted => {
+            delete s.prune_info[deleted]
+            Object.entries(s.peers).forEach(x => {
+                if (x[1].online) {
+                    c_funcs.ack(x[0], deleted)
+                    s.peers[x[0]].unacked_prunes[deleted] = true
+                }
+            })
+        })
     }
     
     s.join = (uid, leaves) => {
         var p = s.peers[uid]
-        if (!p) s.peers[uid] = p = {}
+        if (!p) s.peers[uid] = p = {unacked_prunes: {}}
         p.online = true
+        
+        Object.keys(unacked_prunes).forEach(x => c_funcs.ack(uid, x))
         
         var ancs = sync9_get_ancestors(s.s9, leaves)
         
@@ -343,6 +355,11 @@ function sync9_create_server(c_funcs) {
     }
     
     s.ack = (uid, vid) => {
+        var p = s.peers[uid]
+        if (p.unacked_prunes[vid]) {
+            delete p.unacked_prunes[vid]
+            return
+        }
         s.prune_info[vid].acked[uid] = true
         prune()
     }
@@ -1151,6 +1168,7 @@ function sync9_prune(x, has_everyone_whos_seen_a_seen_b, save_us) {
     }
     Object.keys(x.leaves).forEach(g)
     Object.keys(delete_us).forEach(vid => delete x.T[vid])
+    return delete_us
 }
 
 function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b, seen_nodes) {
