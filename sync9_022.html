@@ -309,7 +309,7 @@ function sync9_create_server(c_funcs) {
     }
     
     function prune() {
-        sync9_prune(s.s9, (a, b) => (a != 'root') && (a != 'v1') && Object.keys(s.prune_info[a].sent).every(x => s.prune_info[b].acked[x]), s.s9.leaves)
+        // sync9_prune(s.s9, (a, b) => (a != 'root') && (a != 'v1') && Object.keys(s.prune_info[a].sent).every(x => s.prune_info[b].acked[x]), s.s9.leaves)
     }
     
     s.join = (uid, leaves) => {
