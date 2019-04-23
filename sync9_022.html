@@ -205,6 +205,9 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
             console.log(x)
             var val = sync9_read(x.s9)
             console.log(val)
+            
+            var val = sync9_node_count(x.s9)
+            console.log('node count: ' + val)
         })
         
         if (debug_output instanceof Array)
@@ -348,6 +351,30 @@ function sync9_create_server(c_funcs) {
     
     return s
 }
+
+
+
+
+
+
+
+
+function sync9_node_count(s9) {
+    return sync9_space_dag_node_count(sync9_space_dag_get(s9.val.S, 0).S)
+}
+
+function sync9_space_dag_node_count(S) {
+    var count = 0
+    function helper(node) {
+        count++
+        
+        node.nexts.forEach(x => helper(x))
+        if (node.next) helper(node.next)
+    }
+    helper(S)
+    return count
+}
+
 
 
 
