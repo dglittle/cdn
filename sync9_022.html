@@ -303,7 +303,10 @@ function sync9_create_server(c_funcs) {
     // s.s9.leaves = {root : true}
 
     s.peers = {}
-    s.prune_info = {v1: {sent: {}, acked: {}}}
+    s.prune_info = {
+        root: {sent: {}, acked: {}},
+        v1: {sent: {}, acked: {}}
+    }
     
     function prune() {
         // sync9_prune(s.s9, (a, b) => (a != 'root') && (a != 'v1') && Object.keys(s.prune_info[a].sent).every(x => s.prune_info[b].acked[x]), s.s9.leaves)
@@ -317,7 +320,15 @@ function sync9_create_server(c_funcs) {
         var ancs = sync9_get_ancestors(s.s9, leaves)
         
         Object.keys(ancs).forEach(x => {
+            
+            
+            if (!s.prune_info[x]) {
+                debugger
+            }
+            
             s.prune_info[x].acked[uid] = true
+            
+            
         })
         prune()
         
