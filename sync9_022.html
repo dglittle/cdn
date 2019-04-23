@@ -313,6 +313,10 @@ function sync9_create_server(c_funcs) {
         var f = (a, b) => (a != 'root') && (a != 'v1') && (!s.s9.leaves[b]) && Object.keys(s.prune_info[a].sent).every(x => s.prune_info[b].acked[x])
         var deleted = sync9_prune(s.s9, f, f)
         Object.keys(deleted).forEach(deleted => {
+            
+            // work here
+            debug_output('PRUNE: ' + deleted)
+            
             delete s.prune_info[deleted]
             Object.entries(s.peers).forEach(x => {
                 if (x[1].online) {
