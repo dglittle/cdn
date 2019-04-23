@@ -327,7 +327,7 @@ function sync9_create_server(c_funcs) {
         if (!p) s.peers[uid] = p = {unacked_prunes: {}}
         p.online = true
         
-        Object.keys(unacked_prunes).forEach(x => c_funcs.ack(uid, x))
+        Object.keys(p.unacked_prunes).forEach(x => c_funcs.ack(uid, x))
         
         var ancs = sync9_get_ancestors(s.s9, leaves)
         
