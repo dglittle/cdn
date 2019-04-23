@@ -177,23 +177,8 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
                 debug_output.push('client: ' + sync9_read(c.s9))
             }
             while (c.outgoing.length > 0) {
-                
-                
-                if (t == 7) {
-                    
-                console.log('s9: ', JSON.stringify(server.s9, null, '    '))
-                    
-                    debugger
-                }
-                
-                
                 debug_output.push('tt = ' + t++)
                 debug_output.push('server: ' + sync9_read(server.s9))
-                
-                
-                
-                
-                
                 
                 c.outgoing.shift()()
                 
@@ -451,18 +436,7 @@ function sync9_extract_versions(x, is_anc, is_new_anc) {
 }
 
 function sync9_space_dag_extract_versions(S, s9, is_anc, is_new_anc) {
-    var versions = {}
-    function helper(node, front) {
-        if (front && !is_anc(node.vid) && is_new_anc(node.vid))
-            versions[node.vid] = true
-            
-        for (var next of node.nexts)
-            helper(next, true)
-        if (node.next) helper(node.next)
-    }
-    helper(S, true)
-    
-    versions = Object.keys(versions).map(vid => {
+    var versions = Object.keys(s9.T).filter(x => !is_anc(x) && is_new_anc(x)).map(vid => {
         var v = {
             vid,
             parents : s9.T[vid],
