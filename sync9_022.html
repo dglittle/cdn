@@ -274,6 +274,13 @@ function sync9_create_client(s_funcs) {
     }
     
     c.ack = (vid) => {
+        
+        
+        if (vid == 'aXpuweXQTWCImXr') {
+            debugger
+        }
+        
+        
         var deleted = sync9_prune(c.s9, (a, b) => b == vid, c.s9.leaves)
         if (!deleted[vid]) {
             debugger
