@@ -177,14 +177,6 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
                 debug_output.push('client: ' + sync9_read(c.s9))
             }
             while (c.outgoing.length > 0) {
-                
-                
-                if (t == 1) {
-                    debugger
-                }
-                
-                
-                
                 debug_output.push('tt = ' + t++)
                 debug_output.push('server: ' + sync9_read(server.s9))
                 
@@ -318,7 +310,7 @@ function sync9_create_server(c_funcs) {
     }
     
     function prune() {
-        var f = (a, b) => (a != 'root') && (a != 'v1') && Object.keys(s.prune_info[a].sent).every(x => s.prune_info[b].acked[x])
+        var f = (a, b) => (a != 'root') && (a != 'v1') && (!s.s9.leaves[b]) && Object.keys(s.prune_info[a].sent).every(x => s.prune_info[b].acked[x])
         var deleted = sync9_prune(s.s9, f, f)
         Object.keys(deleted).forEach(deleted => {
             delete s.prune_info[deleted]
