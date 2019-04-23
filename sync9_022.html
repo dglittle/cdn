@@ -315,7 +315,7 @@ function sync9_create_server(c_funcs) {
         Object.keys(deleted).forEach(deleted => {
             
             // work here
-            debug_output('PRUNE: ' + deleted)
+            debug_output.push('PRUNE: ' + deleted)
             
             delete s.prune_info[deleted]
             Object.entries(s.peers).forEach(x => {
