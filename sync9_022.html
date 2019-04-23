@@ -274,7 +274,7 @@ function sync9_create_client(s_funcs) {
     }
     
     c.ack = (vid) => {
-        sync9_prune(c.s9, (a, b) => b == vid, (a, b) => a == vid)
+        var deleted = sync9_prune(c.s9, (a, b) => b == vid, (a, b) => a == vid)
         if (!deleted[vid]) throw 'wtf?'
     }
     
