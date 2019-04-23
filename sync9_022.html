@@ -92,7 +92,7 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
         })()
     }
     
-    for (var t = 0; t < 300; t++) {
+    for (var t = 0; t < 500; t++) {
         debug_output.push('t = ' + t)
         
         var i = Math.floor(Math.random() * n_clients)
@@ -320,15 +320,7 @@ function sync9_create_server(c_funcs) {
         var ancs = sync9_get_ancestors(s.s9, leaves)
         
         Object.keys(ancs).forEach(x => {
-            
-            
-            if (!s.prune_info[x]) {
-                debugger
-            }
-            
             s.prune_info[x].acked[uid] = true
-            
-            
         })
         prune()
         
