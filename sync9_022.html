@@ -439,7 +439,7 @@ function sync9_space_dag_extract_versions(S, s9, is_anc, is_new_anc) {
     var versions = Object.keys(s9.T).filter(x => !is_anc(x) && is_new_anc(x)).map(vid => {
         var v = {
             vid,
-            parents : s9.T[vid],
+            parents : Object.assign({}, s9.T[vid]),
             splices : []
         }
         
