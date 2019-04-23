@@ -274,7 +274,7 @@ function sync9_create_client(s_funcs) {
     }
     
     c.ack = (vid) => {
-        var deleted = sync9_prune(c.s9, (a, b) => b == vid, c.s9.leaves)
+        sync9_prune(c.s9, (a, b) => b == vid, (a, b) => a == vid)
         if (!deleted[vid]) throw 'wtf?'
     }
     
@@ -310,7 +310,8 @@ function sync9_create_server(c_funcs) {
     }
     
     function prune() {
-        var deleted = sync9_prune(s.s9, (a, b) => (a != 'root') && (a != 'v1') && Object.keys(s.prune_info[a].sent).every(x => s.prune_info[b].acked[x]), s.s9.leaves)
+        var f = (a, b) => (a != 'root') && (a != 'v1') && Object.keys(s.prune_info[a].sent).every(x => s.prune_info[b].acked[x])
+        var deleted = sync9_prune(s.s9, f, f)
         Object.keys(deleted).forEach(deleted => {
             delete s.prune_info[deleted]
             Object.entries(s.peers).forEach(x => {
@@ -1103,7 +1104,7 @@ function sync9_create_proxy(x, cb, path) {
     })
 }
 
-function sync9_prune(x, has_everyone_whos_seen_a_seen_b, save_us) {
+function sync9_prune(x, has_everyone_whos_seen_a_seen_b, has_everyone_whos_seen_a_seen_b_2) {
     var seen_nodes = {}
     var did_something = true
     function rec(x) {
@@ -1136,15 +1137,13 @@ function sync9_prune(x, has_everyone_whos_seen_a_seen_b, save_us) {
         if (visited[vid]) return
         visited[vid] = true
         Object.keys(x.T[vid]).forEach(pid => {
-            if (has_everyone_whos_seen_a_seen_b(pid, vid) && !seen_nodes[pid]) {
+            if (has_everyone_whos_seen_a_seen_b_2(pid, vid) && !seen_nodes[pid]) {
                 delete_us[pid] = true
             }
             f(pid)
         })
     }
     Object.keys(x.leaves).forEach(f)
-    
-    if (save_us) Object.keys(save_us).forEach(x => delete delete_us[x])
 
     var visited = {}
     var forwards = {}
