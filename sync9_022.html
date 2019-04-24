@@ -344,15 +344,6 @@ function sync9_create_server(c_funcs) {
         var backup_T = Object.assign({}, s.s9.T)
         var deleted = sync9_prune(s.s9, (a, b) => q(a, b) && deletables[b], q)
         Object.keys(deleted).forEach(deleted => {
-            
-            
-            
-            if (deleted == 'HcqqJNhFi8rR7gS') {
-                debugger
-            }
-            
-            
-            
             Object.entries(s.peers).forEach(x => {
                 if (s.prune_info[deleted].sent[x[0]]) {
                     s.peers[x[0]].unacked_prunes[deleted] = backup_T[deleted]
@@ -376,19 +367,6 @@ function sync9_create_server(c_funcs) {
         function mark_ancs(key) {
             if (!ancs[key]) {
                 ancs[key] = true
-                
-                
-                
-                
-                // work here
-                if (!(s.s9.T[key] || p.unacked_prunes[key])) {
-                    debugger
-                }
-                
-                
-                
-                
-                
                 Object.keys(s.s9.T[key] || p.unacked_prunes[key]).forEach(k => mark_ancs(k))
             }
         }
