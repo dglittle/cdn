@@ -276,6 +276,7 @@ function sync9_create_client(s_funcs) {
     c.ack = (vid) => {
         var deleted = sync9_prune(c.s9, (a, b) => b == vid, (a, b) => a == vid)
         if (!deleted[vid]) throw 'wtf?'
+        s_funcs.ack(c.uid, vid)
     }
     
     c.local_add_version = (changes) => {
@@ -328,10 +329,6 @@ function sync9_create_server(c_funcs) {
         
         var deleted = sync9_prune(s.s9, (a, b) => q(a, b) && deletables[b], q)
         Object.keys(deleted).forEach(deleted => {
-            
-            // work here
-            console.log('PRUNE887: ' + deleted)
-            
             delete s.prune_info[deleted]
             Object.entries(s.peers).forEach(x => {
                 if (x[1].online) {
