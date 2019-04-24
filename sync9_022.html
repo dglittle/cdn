@@ -275,7 +275,17 @@ function sync9_create_client(s_funcs) {
     
     c.ack = (vid) => {
         var deleted = sync9_prune(c.s9, (a, b) => b == vid, (a, b) => a == vid)
-        if (!deleted[vid]) throw 'wtf?'
+        if (!deleted[vid]) {
+            
+            
+            // work here
+            console.log('vid: ' + vid)
+            console.log(JSON.stringify(c.s9, null, '    '))
+            
+            
+            
+            throw 'wtf?'
+        }
         s_funcs.ack(c.uid, vid)
     }
     
