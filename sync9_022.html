@@ -391,12 +391,6 @@ function sync9_create_server(c_funcs) {
         }
         Object.keys(leaves).forEach(k => mark_ancs(k))
         
-        Object.keys(ancs).forEach(x => {
-            var pi = s.prune_info[x]
-            if (pi) pi.acked[uid] = true
-        })
-        prune()
-        
         sync9_extract_versions(s.s9, x => ancs[x], x => true).forEach(x => {
             c_funcs.add_version(uid, x.vid, x.parents, x.changes)
             s.prune_info[x.vid].sent[uid] = true
@@ -423,13 +417,19 @@ function sync9_create_server(c_funcs) {
                 helper(x)
             }
         })
-        
+         
         sync9_add_version(s.s9, vid, parents, changes)
         Object.entries(s.peers).forEach(x => {
             if (x[1].online) {
                 c_funcs.add_version(x[0], vid, parents, changes)
                 s.prune_info[vid].sent[x[0]] = true
             }
+        })
+        
+        var ancs = sync9_get_ancestors(s.s9, parents)
+        Object.keys(ancs).forEach(x => {
+            var pi = s.prune_info[x]
+            if (pi) pi.acked[uid] = true
         })
         
         prune()
