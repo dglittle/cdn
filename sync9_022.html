@@ -372,8 +372,10 @@ function sync9_create_server(c_funcs) {
         })
         prune()
         
-        sync9_extract_versions(s.s9, x => ancs[x], x => true).forEach(x =>
-            c_funcs.add_version(uid, x.vid, x.parents, x.changes))
+        sync9_extract_versions(s.s9, x => ancs[x], x => true).forEach(x => {
+            c_funcs.add_version(uid, x.vid, x.parents, x.changes)
+            s.prune_info[x.vid].sent[uid] = true
+        })
     }
     
     s.add_version = (uid, vid, parents, changes) => {
