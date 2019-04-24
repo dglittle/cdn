@@ -34,8 +34,10 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
             })
         },
         ack : (uid, vid) => {
+                debug_output.push('SENT client ack: ' + uid + ' v: ' + vid)
+            
             clients[uid].incoming.push(() => {
-                debug_output.push('client ack: ' + uid + ' v: ' + vid)
+                debug_output.push('RECV client ack: ' + uid + ' v: ' + vid)
                 
                 clients[uid].ack(vid)
             })
