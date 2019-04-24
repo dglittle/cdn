@@ -289,6 +289,8 @@ function sync9_create_client(s_funcs) {
         if (!c.s9.T[vid]) return
         var deleted = sync9_prune(c.s9, (a, b) => b == vid, (a, b) => a == vid)
         if (!deleted[vid]) throw 'wtf?'
+        
+        c.unacked = c.unacked.filter(x => x.vid != vid)
     }
     
     c.local_add_version = (changes) => {
