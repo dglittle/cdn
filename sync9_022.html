@@ -302,7 +302,8 @@ function sync9_create_client(s_funcs) {
             console.log(JSON.stringify(before, null, '    '))
             console.log(JSON.stringify(c.s9, null, '    '))
             
-            
+            debugger
+            var deleted = sync9_prune(c.s9, (a, b) => b == vid, (a, b) => a == vid)
             
             throw 'wtf?'
         }
