@@ -20,10 +20,10 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
     var clients = {}
     
     var debug_output = []
-    debug_output = {}
-    debug_output.push = function (x) {
-        console.log(x)
-    }
+    // debug_output = {}
+    // debug_output.push = function (x) {
+    //     console.log(x)
+    // }
     
     var server = sync9_create_server({
         add_version : (uid, vid, parents, changes) => {
@@ -386,6 +386,20 @@ function sync9_create_server(c_funcs) {
         function mark_ancs(key) {
             if (!ancs[key]) {
                 ancs[key] = true
+                
+                
+                // work here
+                if (!(s.s9.T[key] || p.unacked_prunes[key])) {
+                    
+                    
+                    if (debug_output instanceof Array)
+                        console.log(debug_output.join('\n'))
+                    
+                    throw 'stop'
+                }
+                
+                
+                
                 Object.keys(s.s9.T[key] || p.unacked_prunes[key]).forEach(k => mark_ancs(k))
             }
         }
