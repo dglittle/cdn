@@ -392,6 +392,19 @@ function sync9_create_server(c_funcs) {
         
         s.prune_info[vid] = {sent: {}, acked: {[uid]: true}}
         
+        Object.keys(parents).forEach(x => {
+            if (p.unacked_prunes[x]) {
+                delete parents[x]
+                function helper(x) {
+                    Object.keys(p.unacked_prunes[x]).forEach(x => {
+                        if (p.unacked_prunes[x]) helper(x)
+                        else parents[x] = true
+                    })
+                }
+                helper(x)
+            }
+        })
+        
         sync9_add_version(s.s9, vid, parents, changes)
         Object.entries(s.peers).forEach(x => {
             if (x[1].online) {
