@@ -331,7 +331,6 @@ function sync9_create_server(c_funcs) {
             
             // work here
             console.log('PRUNE: ' + deleted)
-            throw 'got here!!'
             
             delete s.prune_info[deleted]
             Object.entries(s.peers).forEach(x => {
