@@ -317,8 +317,23 @@ function sync9_create_server(c_funcs) {
     }
     
     function prune() {
-        var f = (a, b) => (a != 'root') && (a != 'v1') && (!s.s9.leaves[b]) && Object.keys(s.prune_info[a].sent).every(x => s.prune_info[b].acked[x])
-        var deleted = sync9_prune(s.s9, f, f)
+        var q = (a, b) => (a != 'root') && (a != 'v1') && (!s.s9.leaves[b]) && Object.keys(s.prune_info[a].sent).every(x => s.prune_info[b].acked[x])
+        
+        var visited = {}    
+        var deletables = {}
+        function f(vid) {
+            if (visited[vid]) return
+            visited[vid] = true
+            Object.keys(s.s9.T[vid]).forEach(pid => {
+                if (q(pid, vid)) {
+                    deletables[pid] = true
+                }
+                f(pid)
+            })
+        }
+        Object.keys(s.s9.leaves).forEach(f)        
+        
+        var deleted = sync9_prune(s.s9, (a, b) => q(a, b) && deletables[b], q)
         Object.keys(deleted).forEach(deleted => {
             
             // work here
