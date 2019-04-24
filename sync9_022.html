@@ -330,13 +330,14 @@ function sync9_create_server(c_funcs) {
         }
         Object.keys(s.s9.leaves).forEach(f)        
         
+        var backup_T = Object.assign({}, s.s9.T)
         var deleted = sync9_prune(s.s9, (a, b) => q(a, b) && deletables[b], q)
         Object.keys(deleted).forEach(deleted => {
             delete s.prune_info[deleted]
             Object.entries(s.peers).forEach(x => {
                 if (x[1].online) {
                     c_funcs.ack(x[0], deleted)
-                    s.peers[x[0]].unacked_prunes[deleted] = true
+                    s.peers[x[0]].unacked_prunes[deleted] = backup_T[deleted]
                 }
             })
         })
@@ -349,10 +350,18 @@ function sync9_create_server(c_funcs) {
         
         Object.keys(p.unacked_prunes).forEach(x => c_funcs.ack(uid, x))
         
-        var ancs = sync9_get_ancestors(s.s9, leaves)
+        var ancs = {}
+        function mark_ancs(key) {
+            if (!ancs[key]) {
+                ancs[key] = true
+                Object.keys(s.s9.T[key] || p.unacked_prunes[key]).forEach(k => mark_ancs(k))
+            }
+        }
+        Object.keys(leaves).forEach(k => mark_ancs(k))
         
         Object.keys(ancs).forEach(x => {
-            s.prune_info[x].acked[uid] = true
+            var pi = s.prune_info[x]
+            if (pi) pi.acked[uid] = true
         })
         prune()
         
