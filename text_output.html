@@ -1,0 +1,355 @@
+<pre>
+
+t = 0
+t = 1
+t = 2
+t = 3
+t = 4
+t = 5
+t = 6
+t = 7
+t = 8
+t = 9
+NEW VERSION: FOr3RxLy4wX333v
+
+{"vid":"E8U04KuNucUCE86","parents":{"v1":true},"changes":["[0:0] = \"a\""]}
+a
+disconnected
+t = 10
+t = 11
+t = 12
+t = 13
+t = 14
+t = 15
+t = 16
+NEW VERSION: FOr3RxLy4wX333v
+a
+{"vid":"jxUwF6uUkyCZhDB","parents":{"E8U04KuNucUCE86":true},"changes":["[0:0] = \"b\""]}
+ba
+disconnected
+t = 17
+t = 18
+JOIN: FOr3RxLy4wX333v
+ba
+t = 19
+t = 20
+server join: FOr3RxLy4wX333v leaves:{"v1":true}
+server -> 
+t = 21
+t = 22
+NEW VERSION: mIF4c7Prl09PfaF
+
+{"vid":"VT39gj2MikZLy2Z","parents":{"v1":true},"changes":["[0:0] = \"A\""]}
+A
+disconnected
+t = 23
+server add version: FOr3RxLy4wX333v : {"vid":"E8U04KuNucUCE86","parents":{"v1":true},"changes":["[0:0] = \"a\""]}
+server -> a
+t = 24
+JOIN: mIF4c7Prl09PfaF
+A
+t = 25
+NEW VERSION: mIF4c7Prl09PfaF
+A
+{"vid":"9InluaYrWKf1qfv","parents":{"VT39gj2MikZLy2Z":true},"changes":["[1:1] = \"BB\""]}
+ABB
+connected
+t = 26
+client add version: FOr3RxLy4wX333v : {"vid":"E8U04KuNucUCE86","parents":{"v1":true},"changes":["[0:0] = \"a\""]}
+FOr3RxLy4wX333v -> ba
+unacked: jxUwF6uUkyCZhDB
+t = 27
+server add version: FOr3RxLy4wX333v : {"vid":"jxUwF6uUkyCZhDB","parents":{"E8U04KuNucUCE86":true},"changes":["[0:0] = \"b\""]}
+server -> ba
+t = 28
+t = 29
+server join: mIF4c7Prl09PfaF leaves:{"v1":true}
+server -> ba
+t = 30
+client add version: FOr3RxLy4wX333v : {"vid":"jxUwF6uUkyCZhDB","parents":{"E8U04KuNucUCE86":true},"changes":["[0:0] = \"b\""]}
+FOr3RxLy4wX333v -> ba
+unacked: 
+t = 31
+t = 32
+server add version: mIF4c7Prl09PfaF : {"vid":"VT39gj2MikZLy2Z","parents":{"v1":true},"changes":["[0:0] = \"A\""]}
+server -> baA
+t = 33
+NEW VERSION: mIF4c7Prl09PfaF
+ABB
+{"vid":"WJyThgZiYtel0jJ","parents":{"9InluaYrWKf1qfv":true},"changes":["[2:2] = \"CC\""]}
+ABCCB
+connected
+t = 34
+NEW VERSION: FOr3RxLy4wX333v
+ba
+{"vid":"Ussltkcm0pmgQZl","parents":{"jxUwF6uUkyCZhDB":true},"changes":["[1:2] = \"\""]}
+b
+connected
+t = 35
+server add version: FOr3RxLy4wX333v : {"vid":"Ussltkcm0pmgQZl","parents":{"jxUwF6uUkyCZhDB":true},"changes":["[1:2] = \"\""]}
+server -> bA
+t = 36
+t = 37
+server add version: mIF4c7Prl09PfaF : {"vid":"9InluaYrWKf1qfv","parents":{"VT39gj2MikZLy2Z":true},"changes":["[1:1] = \"BB\""]}
+server -> bABB
+t = 38
+server add version: mIF4c7Prl09PfaF : {"vid":"WJyThgZiYtel0jJ","parents":{"9InluaYrWKf1qfv":true},"changes":["[2:2] = \"CC\""]}
+server -> bABCCB
+t = 39
+client add version: mIF4c7Prl09PfaF : {"vid":"E8U04KuNucUCE86","parents":{"v1":true},"changes":["[0:0] = \"a\""]}
+mIF4c7Prl09PfaF -> aABCCB
+unacked: VT39gj2MikZLy2Z, 9InluaYrWKf1qfv, WJyThgZiYtel0jJ
+t = 40
+t = 41
+client add version: mIF4c7Prl09PfaF : {"vid":"jxUwF6uUkyCZhDB","parents":{"E8U04KuNucUCE86":true},"changes":["[0:0] = \"b\""]}
+mIF4c7Prl09PfaF -> baABCCB
+unacked: VT39gj2MikZLy2Z, 9InluaYrWKf1qfv, WJyThgZiYtel0jJ
+t = 42
+client add version: mIF4c7Prl09PfaF : {"vid":"VT39gj2MikZLy2Z","parents":{"v1":true},"changes":["[0:0] = \"A\""]}
+mIF4c7Prl09PfaF -> baABCCB
+unacked: 9InluaYrWKf1qfv, WJyThgZiYtel0jJ
+t = 43
+server ack: mIF4c7Prl09PfaF v: E8U04KuNucUCE86
+server -> bABCCB
+t = 44
+LEAVE: FOr3RxLy4wX333v
+b
+t = 45
+t = 46
+server ack: mIF4c7Prl09PfaF v: jxUwF6uUkyCZhDB
+server -> bABCCB
+t = 47
+t = 48
+client add version: mIF4c7Prl09PfaF : {"vid":"Ussltkcm0pmgQZl","parents":{"jxUwF6uUkyCZhDB":true},"changes":["[1:2] = \"\""]}
+mIF4c7Prl09PfaF -> bABCCB
+unacked: 9InluaYrWKf1qfv, WJyThgZiYtel0jJ
+t = 49
+NEW VERSION: mIF4c7Prl09PfaF
+bABCCB
+{"vid":"gEVZ4Vd3nyQvmJo","parents":{"WJyThgZiYtel0jJ":true,"Ussltkcm0pmgQZl":true},"changes":["[5:5] = \"DDDD\""]}
+bABCCDDDDB
+connected
+t = 50
+t = 51
+t = 52
+client add version: mIF4c7Prl09PfaF : {"vid":"9InluaYrWKf1qfv","parents":{"VT39gj2MikZLy2Z":true},"changes":["[1:1] = \"BB\""]}
+mIF4c7Prl09PfaF -> bABCCDDDDB
+unacked: WJyThgZiYtel0jJ, gEVZ4Vd3nyQvmJo
+t = 53
+t = 54
+NEW VERSION: mIF4c7Prl09PfaF
+bABCCDDDDB
+{"vid":"zXHjh66ySrd5OAo","parents":{"gEVZ4Vd3nyQvmJo":true},"changes":["[5:5] = \"EE\""]}
+bABCCEEDDDDB
+connected
+t = 55
+t = 56
+t = 57
+server ack: mIF4c7Prl09PfaF v: Ussltkcm0pmgQZl
+server -> bABCCB
+t = 58
+t = 59
+server add version: mIF4c7Prl09PfaF : {"vid":"gEVZ4Vd3nyQvmJo","parents":{"WJyThgZiYtel0jJ":true,"Ussltkcm0pmgQZl":true},"changes":["[5:5] = \"DDDD\""]}
+SENT client ack: mIF4c7Prl09PfaF v: jxUwF6uUkyCZhDB
+server -> bABCCDDDDB
+t = 60
+server add version: mIF4c7Prl09PfaF : {"vid":"zXHjh66ySrd5OAo","parents":{"gEVZ4Vd3nyQvmJo":true},"changes":["[5:5] = \"EE\""]}
+server -> bABCCEEDDDDB
+t = 61
+t = 62
+client add version: mIF4c7Prl09PfaF : {"vid":"WJyThgZiYtel0jJ","parents":{"9InluaYrWKf1qfv":true},"changes":["[2:2] = \"CC\""]}
+mIF4c7Prl09PfaF -> bABCCEEDDDDB
+unacked: gEVZ4Vd3nyQvmJo, zXHjh66ySrd5OAo
+t = 63
+t = 64
+client add version: mIF4c7Prl09PfaF : {"vid":"gEVZ4Vd3nyQvmJo","parents":{"WJyThgZiYtel0jJ":true,"Ussltkcm0pmgQZl":true},"changes":["[5:5] = \"DDDD\""]}
+mIF4c7Prl09PfaF -> bABCCEEDDDDB
+unacked: zXHjh66ySrd5OAo
+t = 65
+JOIN: FOr3RxLy4wX333v
+b
+t = 66
+t = 67
+RECV client ack: mIF4c7Prl09PfaF v: jxUwF6uUkyCZhDB
+mIF4c7Prl09PfaF -> bABCCEEDDDDB
+unacked: zXHjh66ySrd5OAo
+t = 68
+t = 69
+server join: FOr3RxLy4wX333v leaves:{"jxUwF6uUkyCZhDB":true}
+SENT client ack: FOr3RxLy4wX333v v: jxUwF6uUkyCZhDB
+server -> bABCCEEDDDDB
+t = 70
+RECV client ack: FOr3RxLy4wX333v v: jxUwF6uUkyCZhDB
+FOr3RxLy4wX333v -> b
+unacked: Ussltkcm0pmgQZl
+t = 71
+client add version: FOr3RxLy4wX333v : {"vid":"VT39gj2MikZLy2Z","parents":{"v1":true},"changes":["[0:0] = \"A\""]}
+FOr3RxLy4wX333v -> bA
+unacked: Ussltkcm0pmgQZl
+t = 72
+client add version: mIF4c7Prl09PfaF : {"vid":"zXHjh66ySrd5OAo","parents":{"gEVZ4Vd3nyQvmJo":true},"changes":["[5:5] = \"EE\""]}
+mIF4c7Prl09PfaF -> bABCCEEDDDDB
+unacked: 
+t = 73
+t = 74
+server ack: mIF4c7Prl09PfaF v: jxUwF6uUkyCZhDB
+server -> bABCCEEDDDDB
+t = 75
+client add version: FOr3RxLy4wX333v : {"vid":"Ussltkcm0pmgQZl","parents":{"E8U04KuNucUCE86":true},"changes":["[1:2] = \"\""]}
+FOr3RxLy4wX333v -> bA
+unacked: 
+t = 76
+client add version: FOr3RxLy4wX333v : {"vid":"9InluaYrWKf1qfv","parents":{"VT39gj2MikZLy2Z":true},"changes":["[1:1] = \"BB\""]}
+FOr3RxLy4wX333v -> bABB
+unacked: 
+t = 77
+t = 78
+server add version: FOr3RxLy4wX333v : {"vid":"Ussltkcm0pmgQZl","parents":{"jxUwF6uUkyCZhDB":true},"changes":["[1:2] = \"\""]}
+server -> bABCCEEDDDDB
+t = 79
+t = 80
+server ack: FOr3RxLy4wX333v v: jxUwF6uUkyCZhDB
+server -> bABCCEEDDDDB
+t = 81
+t = 82
+server ack: FOr3RxLy4wX333v v: VT39gj2MikZLy2Z
+server -> bABCCEEDDDDB
+t = 83
+server ack: FOr3RxLy4wX333v v: 9InluaYrWKf1qfv
+server -> bABCCEEDDDDB
+t = 84
+t = 85
+t = 86
+client add version: FOr3RxLy4wX333v : {"vid":"WJyThgZiYtel0jJ","parents":{"9InluaYrWKf1qfv":true},"changes":["[2:2] = \"CC\""]}
+FOr3RxLy4wX333v -> bABCCB
+unacked: 
+t = 87
+NEW VERSION: FOr3RxLy4wX333v
+bABCCB
+{"vid":"BhqkUyuASevDziP","parents":{"Ussltkcm0pmgQZl":true,"WJyThgZiYtel0jJ":true},"changes":["[0:0] = \"dddd\""]}
+ddddbABCCB
+connected
+t = 88
+server ack: FOr3RxLy4wX333v v: WJyThgZiYtel0jJ
+SENT client ack: FOr3RxLy4wX333v v: 9InluaYrWKf1qfv
+SENT client ack: mIF4c7Prl09PfaF v: 9InluaYrWKf1qfv
+server -> bABCCEEDDDDB
+t = 89
+server add version: FOr3RxLy4wX333v : {"vid":"BhqkUyuASevDziP","parents":{"Ussltkcm0pmgQZl":true,"WJyThgZiYtel0jJ":true},"changes":["[0:0] = \"dddd\""]}
+server -> ddddbABCCEEDDDDB
+t = 90
+t = 91
+t = 92
+RECV client ack: mIF4c7Prl09PfaF v: 9InluaYrWKf1qfv
+mIF4c7Prl09PfaF -> bABCCEEDDDDB
+unacked: 
+t = 93
+NEW VERSION: FOr3RxLy4wX333v
+ddddbABCCB
+{"vid":"9h6jy9xZoVef7eL","parents":{"BhqkUyuASevDziP":true},"changes":["[5:5] = \"eee\""]}
+ddddbeeeABCCB
+connected
+t = 94
+client add version: FOr3RxLy4wX333v : {"vid":"gEVZ4Vd3nyQvmJo","parents":{"WJyThgZiYtel0jJ":true,"Ussltkcm0pmgQZl":true},"changes":["[5:5] = \"DDDD\""]}
+FOr3RxLy4wX333v -> ddddbeeeABCCDDDDB
+unacked: BhqkUyuASevDziP, 9h6jy9xZoVef7eL
+t = 95
+NEW VERSION: FOr3RxLy4wX333v
+ddddbeeeABCCDDDDB
+{"vid":"bXknZib871eJDi0","parents":{"9h6jy9xZoVef7eL":true,"gEVZ4Vd3nyQvmJo":true},"changes":["[16:16] = \"ffff\""]}
+ddddbeeeABCCDDDDffffB
+connected
+t = 96
+client add version: FOr3RxLy4wX333v : {"vid":"zXHjh66ySrd5OAo","parents":{"gEVZ4Vd3nyQvmJo":true},"changes":["[5:5] = \"EE\""]}
+FOr3RxLy4wX333v -> ddddbeeeABCCEEDDDDffffB
+unacked: BhqkUyuASevDziP, 9h6jy9xZoVef7eL, bXknZib871eJDi0
+t = 97
+RECV client ack: FOr3RxLy4wX333v v: 9InluaYrWKf1qfv
+FOr3RxLy4wX333v -> ddddbeeeABCCEEDDDDffffB
+unacked: BhqkUyuASevDziP, 9h6jy9xZoVef7eL, bXknZib871eJDi0
+t = 98
+client add version: mIF4c7Prl09PfaF : {"vid":"BhqkUyuASevDziP","parents":{"Ussltkcm0pmgQZl":true,"WJyThgZiYtel0jJ":true},"changes":["[0:0] = \"dddd\""]}
+mIF4c7Prl09PfaF -> ddddbABCCEEDDDDB
+unacked: 
+t = 99
+t = 100
+t = 101
+client add version: FOr3RxLy4wX333v : {"vid":"BhqkUyuASevDziP","parents":{"Ussltkcm0pmgQZl":true,"WJyThgZiYtel0jJ":true},"changes":["[0:0] = \"dddd\""]}
+FOr3RxLy4wX333v -> ddddbeeeABCCEEDDDDffffB
+unacked: 9h6jy9xZoVef7eL, bXknZib871eJDi0
+t = 102
+server add version: FOr3RxLy4wX333v : {"vid":"9h6jy9xZoVef7eL","parents":{"BhqkUyuASevDziP":true},"changes":["[5:5] = \"eee\""]}
+server -> ddddbeeeABCCEEDDDDB
+t = 103
+server ack: FOr3RxLy4wX333v v: gEVZ4Vd3nyQvmJo
+SENT client ack: FOr3RxLy4wX333v v: WJyThgZiYtel0jJ
+SENT client ack: mIF4c7Prl09PfaF v: WJyThgZiYtel0jJ
+SENT client ack: FOr3RxLy4wX333v v: Ussltkcm0pmgQZl
+SENT client ack: mIF4c7Prl09PfaF v: Ussltkcm0pmgQZl
+server -> ddddbeeeABCCEEDDDDB
+t = 104
+server ack: mIF4c7Prl09PfaF v: 9InluaYrWKf1qfv
+server -> ddddbeeeABCCEEDDDDB
+t = 105
+client add version: mIF4c7Prl09PfaF : {"vid":"9h6jy9xZoVef7eL","parents":{"BhqkUyuASevDziP":true},"changes":["[5:5] = \"eee\""]}
+mIF4c7Prl09PfaF -> ddddbeeeABCCEEDDDDB
+unacked: 
+t = 106
+server add version: FOr3RxLy4wX333v : {"vid":"bXknZib871eJDi0","parents":{"9h6jy9xZoVef7eL":true,"gEVZ4Vd3nyQvmJo":true},"changes":["[16:16] = \"ffff\""]}
+server -> ddddbeeeABCCEEDDDDffffB
+t = 107
+LEAVE: FOr3RxLy4wX333v
+ddddbeeeABCCEEDDDDffffB
+t = 108
+RECV client ack: mIF4c7Prl09PfaF v: WJyThgZiYtel0jJ
+mIF4c7Prl09PfaF -> ddddbeeeABCCEEDDDDB
+unacked: 
+t = 109
+t = 110
+RECV client ack: mIF4c7Prl09PfaF v: Ussltkcm0pmgQZl
+mIF4c7Prl09PfaF -> ddddbeeeABCCEEDDDDB
+unacked: 
+t = 111
+t = 112
+t = 113
+server ack: mIF4c7Prl09PfaF v: BhqkUyuASevDziP
+server -> ddddbeeeABCCEEDDDDffffB
+t = 114
+server ack: mIF4c7Prl09PfaF v: 9h6jy9xZoVef7eL
+SENT client ack: mIF4c7Prl09PfaF v: BhqkUyuASevDziP
+server -> ddddbeeeABCCEEDDDDffffB
+t = 115
+client add version: mIF4c7Prl09PfaF : {"vid":"bXknZib871eJDi0","parents":{"9h6jy9xZoVef7eL":true,"gEVZ4Vd3nyQvmJo":true},"changes":["[16:16] = \"ffff\""]}
+mIF4c7Prl09PfaF -> ddddbeeeABCCEEDDDDffffB
+unacked: 
+t = 116
+NEW VERSION: FOr3RxLy4wX333v
+ddddbeeeABCCEEDDDDffffB
+{"vid":"ofjSoFMJIacksRt","parents":{"bXknZib871eJDi0":true,"zXHjh66ySrd5OAo":true},"changes":["[0:12] = \"g\""]}
+gEEDDDDffffB
+disconnected
+t = 117
+t = 118
+RECV client ack: mIF4c7Prl09PfaF v: BhqkUyuASevDziP
+mIF4c7Prl09PfaF -> ddddbeeeABCCEEDDDDffffB
+unacked: 
+t = 119
+NEW VERSION: mIF4c7Prl09PfaF
+ddddbeeeABCCEEDDDDffffB
+{"vid":"LDCkVCrQiQZw88M","parents":{"zXHjh66ySrd5OAo":true,"bXknZib871eJDi0":true},"changes":["[5:16] = \"FF\""]}
+ddddbFFDDffffB
+connected
+FOr3RxLy4wX333v i:0 o:0
+mIF4c7Prl09PfaF i:0 o:5
+PROCESSING: FOr3RxLy4wX333v
+tt = 0
+JOIN
+tt = 1
+server: ddddbeeeABCCEEDDDDffffB
+server join: FOr3RxLy4wX333v leaves:{"jxUwF6uUkyCZhDB":true,"zXHjh66ySrd5OAo":true,"BhqkUyuASevDziP":true}
+SENT client ack: FOr3RxLy4wX333v v: 9InluaYrWKf1qfv
+SENT client ack: FOr3RxLy4wX333v v: WJyThgZiYtel0jJ
+SENT client ack: FOr3RxLy4wX333v v: Ussltkcm0pmgQZl
+SENT client ack: FOr3RxLy4wX333v v: BhqkUyuASevDziP
+
+</pre>
