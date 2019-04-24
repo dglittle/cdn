@@ -374,6 +374,9 @@ function sync9_create_server(c_funcs) {
     s.add_version = (uid, vid, parents, changes) => {
         if (s.s9.T[vid]) return
         
+        var p = s.peers[uid]
+        if (p.unacked_prunes[vid]) return
+        
         s.prune_info[vid] = {sent: {}, acked: {[uid]: true}}
         
         sync9_add_version(s.s9, vid, parents, changes)
