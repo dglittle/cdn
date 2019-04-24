@@ -333,7 +333,7 @@ function sync9_create_server(c_funcs) {
         }
         Object.keys(s.s9.leaves).forEach(f)        
         
-        // var deleted = sync9_prune(s.s9, (a, b) => q(a, b) && deletables[b], q)
+        var deleted = sync9_prune(s.s9, (a, b) => q(a, b) && deletables[b], q)
         var deleted = sync9_prune(s.s9, q, q)
         Object.keys(deleted).forEach(deleted => {
             
