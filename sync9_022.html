@@ -1295,9 +1295,16 @@ function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b, seen_nodes) {
         var next = node.next
 
         var first_prunable = nexts.findIndex(x => has_everyone_whos_seen_a_seen_b(vid, x.vid))
-        if (first_prunable > 0 && (node.elems.length > 0 || !prev)) {
-            first_prunable = nexts.findIndex((x, i) => (i > first_prunable) && has_everyone_whos_seen_a_seen_b(vid, x.vid))
-        }
+        
+        
+        // work here
+        
+        // if (first_prunable > 0 && (node.elems.length > 0 || !prev)) {
+        //     first_prunable = nexts.findIndex((x, i) => (i > first_prunable) && has_everyone_whos_seen_a_seen_b(vid, x.vid))
+        // }
+        
+        
+        
         if (first_prunable >= 0) {
             var gamma = next
             if (first_prunable + 1 < nexts.length) {
