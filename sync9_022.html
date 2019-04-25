@@ -176,6 +176,13 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
                 c.join()
             }
             while (c.incoming.length > 0) {
+                
+                
+                if (t == 2) {
+                    debugger
+                }
+                
+                
                 debug_output.push('tt = ' + t++ + ' ' + c.uid)
                 debug_output.push('client: ' + sync9_read(c.s9))
                 
