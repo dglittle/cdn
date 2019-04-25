@@ -375,7 +375,7 @@ function sync9_create_server(c_funcs) {
         }
         
         var clone = JSON.parse(JSON.stringify(s.s9))
-        var deleted = sync9_prune(clone, q, q)
+        var deleted = sync9_prune(clone, q1, q2)
         
         var backup_T = {}
         Object.keys(deleted).forEach(x => backup_T[x] = s.s9.T[x])
