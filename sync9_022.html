@@ -97,13 +97,6 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
     }
     
     for (var t = 0; t < 160; t++) {
-        
-        
-        if (t == 112 || t == 102) {
-            debugger
-        }
-        
-        
         debug_output.push('t = ' + t)
         
         var i = Math.floor(Math.random() * n_clients)
@@ -183,13 +176,6 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
                 c.join()
             }
             while (c.incoming.length > 0) {
-                
-                
-                if (t == 2) {
-                    debugger
-                }
-                
-                
                 debug_output.push('tt = ' + t++ + ' ' + c.uid)
                 debug_output.push('client: ' + sync9_read(c.s9))
                 
@@ -355,6 +341,7 @@ function sync9_create_server(c_funcs) {
 
 
 
+        // work here
         var q = (a, b) => {
             
             try {
@@ -365,27 +352,16 @@ function sync9_create_server(c_funcs) {
             
             return (a != 'root') && (a != 'v1') && (!s.s9.leaves[b]) && Object.keys(s.prune_info[a].sent).every(x => s.prune_info[b].acked[x])
         }
-
-
-
-
         
-        var visited = {}    
-        var deletables = {}
-        function f(vid) {
-            if (visited[vid]) return
-            visited[vid] = true
-            Object.keys(s.s9.T[vid]).forEach(pid => {
-                if (q(pid, vid)) {
-                    deletables[pid] = true
-                }
-                f(pid)
-            })
-        }
-        Object.keys(s.s9.leaves).forEach(f)        
         
-        var backup_T = Object.assign({}, s.s9.T)
-        var deleted = sync9_prune(s.s9, (a, b) => q(a, b) && deletables[b], q)
+        
+        var clone = JSON.parse(JSON.stringify(s.s9))
+        var deleted = sync9_prune(clone, q, q)
+        
+        var backup_T = {}
+        Object.keys(deleted).forEach(x => backup_T[x] = s.s9.T[x])
+        
+        sync9_prune(s.s9, (a, b) => deleted[b], (a, b) => deleted[a])
         Object.keys(deleted).forEach(deleted => {
             Object.entries(s.peers).forEach(x => {
                 if (s.prune_info[deleted].sent[x[0]]) {
