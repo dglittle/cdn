@@ -14,7 +14,9 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
     
     var seed = 1450000 + ttt
     Math.randomSeed(seed)
-    //console.log('seed ' + seed)
+    
+    if (seed % 100 == 0)
+        console.log('seed ' + seed)
     
     var n_clients = 2
     var clients = {}
