@@ -20,10 +20,10 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
     var clients = {}
     
     var debug_output = []
-    // debug_output = {}
-    // debug_output.push = function (x) {
-    //     console.log(x)
-    // }
+    debug_output = {}
+    debug_output.push = function (x) {
+        console.log(x)
+    }
     
     var server = sync9_create_server({
         add_version : (uid, vid, parents, changes) => {
@@ -287,6 +287,14 @@ function sync9_create_client(s_funcs) {
     c.ack = (vid) => {
         s_funcs.ack(c.uid, vid)
         if (!c.s9.T[vid]) return
+        
+        if (c.server_leaves[vid]) {
+            delete c.server_leaves[vid]
+            var ancs = sync9_get_ancestors(c.s9, c.server_leaves)
+            Object.keys(c.s9.T[vid]).forEach(x => {
+                if (!ancs[x]) c.server_leaves[x] = true
+            })
+        }
         
         var deleted = sync9_prune(c.s9, (a, b) => b == vid, (a, b) => a == vid)
         if (!deleted[vid]) throw 'wtf?'
