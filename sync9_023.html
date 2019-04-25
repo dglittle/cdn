@@ -348,6 +348,7 @@ function sync9_create_server(c_funcs) {
                 Object.entries(s.peers).forEach(x => {
                     if (s.prune_info[deleted].sent[x[0]]) {
                         s.peers[x[0]].unacked_prunes[deleted] = backup_parents
+                        s.peers[x[0]].unacked_prunes_in_order.push(deleted)
                     }
                     if (x[1].online) {
                         c_funcs.ack(x[0], deleted)
@@ -360,10 +361,10 @@ function sync9_create_server(c_funcs) {
     
     s.join = (uid, leaves) => {
         var p = s.peers[uid]
-        if (!p) s.peers[uid] = p = {unacked_prunes: {}}
+        if (!p) s.peers[uid] = p = {unacked_prunes: {}, unacked_prunes_in_order: []}
         p.online = true
         
-        Object.keys(p.unacked_prunes).forEach(x => c_funcs.ack(uid, x))
+        p.unacked_prunes_in_order.forEach(x => c_funcs.ack(uid, x))
         
         var ancs = {}
         function mark_ancs(key) {
@@ -422,6 +423,7 @@ function sync9_create_server(c_funcs) {
         var p = s.peers[uid]
         if (p.unacked_prunes[vid]) {
             delete p.unacked_prunes[vid]
+            p.unacked_prunes_in_order.splice(p.unacked_prunes_in_order.findIndex(x => x == vid), 1)
             return
         }
         s.prune_info[vid].acked[uid] = true
