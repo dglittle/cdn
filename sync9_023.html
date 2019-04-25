@@ -344,7 +344,22 @@ function sync9_create_server(c_funcs) {
     }
     
     function prune() {
-        var q = (a, b) => {
+        // work here
+        var q1 = (a, b) => {
+            
+            
+            
+            try {
+                var bool = (a != 'root') && (a != 'v1') && (!s.s9.leaves[b]) && Object.keys(s.prune_info[a].sent).every(x => s.prune_info[b].acked[x])
+            } catch (e) {
+                debugger
+            }
+            
+            
+            
+            return (a != 'root') && (a != 'v1') && (!s.s9.leaves[b]) && Object.keys(s.prune_info[a].sent).every(x => s.prune_info[b].acked[x])
+        }
+        var q2 = (a, b) => {
             
             
             
