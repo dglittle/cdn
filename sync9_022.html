@@ -337,23 +337,6 @@ function sync9_create_server(c_funcs) {
     
     function prune() {
         var q = (a, b) => (a != 'root') && (a != 'v1') && (!s.s9.leaves[b]) && Object.keys(s.prune_info[a].sent).every(x => s.prune_info[b].acked[x])
-
-
-
-
-        // work here
-        var q = (a, b) => {
-            
-            try {
-                Object.keys(s.prune_info[a].sent).every(x => s.prune_info[b].acked[x])
-            } catch (e) {
-                debugger
-            }
-            
-            return (a != 'root') && (a != 'v1') && (!s.s9.leaves[b]) && Object.keys(s.prune_info[a].sent).every(x => s.prune_info[b].acked[x])
-        }
-        
-        
         
         var clone = JSON.parse(JSON.stringify(s.s9))
         var deleted = sync9_prune(clone, q, q)
