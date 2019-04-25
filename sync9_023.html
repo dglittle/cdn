@@ -176,20 +176,6 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
                 c.join()
             }
             while (c.incoming.length > 0) {
-                
-                
-                
-                if (t == 26) {
-                    
-                    
-                    console.log(JSON.stringify(c.s9, null, '    '))
-                    
-                    
-                    debugger
-                }
-                
-                
-                
                 debug_output.push('tt = ' + t++ + ' ' + c.uid)
                 debug_output.push('client: ' + sync9_read(c.s9))
                 
@@ -204,24 +190,6 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
                 
             }
             while (c.outgoing.length > 0) {
-                
-                
-                
-                
-                
-                if (t == 13) {
-                    
-                    
-                    console.log(JSON.stringify(server.s9, null, '    '))
-                    
-                    
-                    debugger
-                }
-                
-                
-                
-                
-                
                 debug_output.push('tt = ' + t++)
                 debug_output.push('server: ' + sync9_read(server.s9))
                 
