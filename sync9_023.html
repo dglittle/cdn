@@ -176,22 +176,6 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
                 c.join()
             }
             while (c.incoming.length > 0) {
-                
-                
-                
-                
-                if (t == 34) {
-                    
-                    
-                    console.log(JSON.stringify(c.s9, null, '    '))
-                    
-                    
-                    debugger
-                }
-                
-                
-                
-                
                 debug_output.push('tt = ' + t++ + ' ' + c.uid)
                 debug_output.push('client: ' + sync9_read(c.s9))
                 
@@ -206,23 +190,6 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
                 
             }
             while (c.outgoing.length > 0) {
-                
-                
-                
-                if (t == 22) {
-                    
-                    
-                    console.log(JSON.stringify(server.s9, null, '    '))
-                    
-                    
-                    debugger
-                }
-                
-                
-                
-                
-                
-                
                 debug_output.push('tt = ' + t++)
                 debug_output.push('server: ' + sync9_read(server.s9))
                 
@@ -374,20 +341,20 @@ function sync9_create_server(c_funcs) {
         var clone = JSON.parse(JSON.stringify(s.s9))
         var deleted = sync9_prune(clone, q, q)
         
-        var backup_T = {}
-        Object.keys(deleted).forEach(x => backup_T[x] = s.s9.T[x])
-        
-        deleted = sync9_prune(s.s9, (a, b) => deleted[b], (a, b) => deleted[a])
-        Object.keys(deleted).sort().forEach(deleted => {
-            Object.entries(s.peers).forEach(x => {
-                if (s.prune_info[deleted].sent[x[0]]) {
-                    s.peers[x[0]].unacked_prunes[deleted] = backup_T[deleted]
-                }
-                if (x[1].online) {
-                    c_funcs.ack(x[0], deleted)
-                }
-            })
-            delete s.prune_info[deleted]
+        deleted.sort().forEach(deleted => {
+            var backup_parents = s.s9.T[deleted]
+            var dels = sync9_prune(s.s9, (a, b) => b == deleted, (a, b) => a == deleted)
+            if (dels[deleted]) {
+                Object.entries(s.peers).forEach(x => {
+                    if (s.prune_info[deleted].sent[x[0]]) {
+                        s.peers[x[0]].unacked_prunes[deleted] = backup_parents
+                    }
+                    if (x[1].online) {
+                        c_funcs.ack(x[0], deleted)
+                    }
+                })
+                delete s.prune_info[deleted]
+            }
         })
     }
     
