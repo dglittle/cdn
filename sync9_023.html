@@ -336,38 +336,10 @@ function sync9_create_server(c_funcs) {
     }
     
     function prune() {
-        // work here
-        var q1 = (a, b) => {
-            
-            
-            
-            try {
-                var bool = (a != 'root') && (a != 'v1') && (!s.s9.leaves[b]) && Object.keys(s.prune_info[a].sent).every(x => s.prune_info[b].acked[x])
-            } catch (e) {
-                debugger
-            }
-            
-            
-            
-            return (a != 'root') && (a != 'v1') && (!s.s9.leaves[b]) && Object.keys(s.prune_info[a].sent).every(x => s.prune_info[b].acked[x])
-        }
-        var q2 = (a, b) => {
-            
-            
-            
-            try {
-                var bool = (a != 'root') && (a != 'v1') && (!s.s9.leaves[b]) && Object.keys(s.prune_info[a].sent).every(x => s.prune_info[b].acked[x])
-            } catch (e) {
-                debugger
-            }
-            
-            
-            
-            return (a != 'root') && (a != 'v1') && (!s.s9.leaves[b]) && Object.keys(s.prune_info[a].sent).every(x => s.prune_info[b].acked[x])
-        }
+        var q = (a, b) => (a != 'root') && (a != 'v1') && (!s.s9.leaves[b]) && Object.keys(s.prune_info[a].sent).every(x => s.prune_info[b].acked[x])
         
         var clone = JSON.parse(JSON.stringify(s.s9))
-        var deleted = sync9_prune(clone, q1, q2)
+        var deleted = sync9_prune(clone, q, q)
         
         var backup_T = {}
         Object.keys(deleted).forEach(x => backup_T[x] = s.s9.T[x])
