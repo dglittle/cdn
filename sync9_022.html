@@ -8,11 +8,13 @@
 var sync9_ROOT = 'root'
 console.log('-------------------')
 
-var ttt_n = 1000
+// seed 1552693 at 180 iteration..
+
+var ttt_n = 5000
 for (var ttt = 0; ttt < ttt_n; ttt++) {
     var last_ttt = (ttt == ttt_n - 1)
     
-    var seed = 1552608 + ttt
+    var seed = 1652608 + ttt
     Math.randomSeed(seed)
     
     // if (seed % 100 == 0)
@@ -96,7 +98,7 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
         })()
     }
     
-    for (var t = 0; t < 180; t++) {
+    for (var t = 0; t < 160; t++) {
         debug_output.push('t = ' + t)
         
         var i = Math.floor(Math.random() * n_clients)
