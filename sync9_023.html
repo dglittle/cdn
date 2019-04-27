@@ -264,6 +264,7 @@ function sync9_create_client(s_funcs) {
     c.uid = sync9_guid()
     c.server_leaves = {v1: true}
     c.unacked = []
+    c.delete_us = {}
     
     c.join = () => {
         s_funcs.join(c.uid, c.server_leaves)
@@ -271,6 +272,12 @@ function sync9_create_client(s_funcs) {
     }
     
     c.add_version = (vid, parents, changes) => {
+        if (Object.keys(c.delete_us).length > 0) {
+            var deleted = sync9_prune2(c.s9, (a, b) => delete_us[b], (a, b) => delete_us[a])
+            if (!Object.keys(delete_us).every(x => deleted[x])) throw 'wtf?'
+            if (!Object.keys(deleted).every(x => delete_us[x])) throw 'wtf?'
+        }
+        
         Object.keys(parents).forEach(p => {
             delete c.server_leaves[p]
         })
@@ -298,10 +305,9 @@ function sync9_create_client(s_funcs) {
             })
         }
         
-        var deleted = sync9_prune(c.s9, (a, b) => b == vid, (a, b) => a == vid)
-        if (!deleted[vid]) throw 'wtf?'
-        
         c.unacked = c.unacked.filter(x => x.vid != vid)
+        
+        c.delete_us[vid] = true
     }
     
     c.local_add_version = (changes) => {
@@ -339,32 +345,32 @@ function sync9_create_server(c_funcs) {
         var q = (a, b) => (a != 'root') && (a != 'v1') && (!s.s9.leaves[b]) && Object.keys(s.prune_info[a].sent).every(x => s.prune_info[b].acked[x])
         
         var clone = JSON.parse(JSON.stringify(s.s9))
-        var deleted = sync9_prune(clone, q, q)
+        var deleted = sync9_prune2(clone, q, q)
+
+        var backup_parents = {}
+        Object.keys(deleted).forEach(x => backup_parents[x] = s.s9.T[x])
+
+        var deleted = sync9_prune2(s.s9, (a, b) => deleted[b], (a, b) => deleted[a])
         
-        Object.keys(deleted).sort().forEach(deleted => {
-            var backup_parents = s.s9.T[deleted]
-            var dels = sync9_prune(s.s9, (a, b) => b == deleted, (a, b) => a == deleted)
-            if (dels[deleted]) {
-                Object.entries(s.peers).forEach(x => {
-                    if (s.prune_info[deleted].sent[x[0]]) {
-                        s.peers[x[0]].unacked_prunes[deleted] = backup_parents
-                        s.peers[x[0]].unacked_prunes_in_order.push(deleted)
-                    }
-                    if (x[1].online) {
-                        c_funcs.ack(x[0], deleted)
-                    }
-                })
-                delete s.prune_info[deleted]
-            }
+        Object.keys(deleted).forEach(deleted => {
+            Object.entries(s.peers).forEach(x => {
+                if (s.prune_info[deleted].sent[x[0]]) {
+                    s.peers[x[0]].unacked_prunes[deleted] = backup_parents[deleted]
+                }
+                if (x[1].online) {
+                    c_funcs.ack(x[0], deleted)
+                }
+            })
+            delete s.prune_info[deleted]
         })
     }
     
     s.join = (uid, leaves) => {
         var p = s.peers[uid]
-        if (!p) s.peers[uid] = p = {unacked_prunes: {}, unacked_prunes_in_order: []}
+        if (!p) s.peers[uid] = p = {unacked_prunes: {}}
         p.online = true
         
-        p.unacked_prunes_in_order.forEach(x => c_funcs.ack(uid, x))
+        Object.keys(p.unacked_prunes).forEach(x => c_funcs.ack(uid, x))
         
         var ancs = {}
         function mark_ancs(key) {
@@ -437,6 +443,163 @@ function sync9_create_server(c_funcs) {
     
     return s
 }
+
+
+
+
+
+
+
+
+
+
+function sync9_prune2(x, has_everyone_whos_seen_a_seen_b, has_everyone_whos_seen_a_seen_b_2) {
+    var seen_nodes = {}
+    var did_something = true
+    function rec(x) {
+        if (x && typeof(x) == 'object') {
+            if (!x.t && x.val) {
+                rec(x.val)
+            } else if (x.t == 'val') {
+                if (sync9_space_dag_prune2(x.S, has_everyone_whos_seen_a_seen_b, seen_nodes)) did_something = true
+                rec(sync9_space_dag_get(x.S, 0))
+            } else if (x.t == 'obj') {
+                Object.values(x.S).forEach(v => rec(v))
+            } else if (x.t == 'arr') {
+                if (sync9_space_dag_prune2(x.S, has_everyone_whos_seen_a_seen_b, seen_nodes)) did_something = true
+                sync9_trav_space_dag(x.S, () => true, node => {
+                    node.elems.forEach(e => rec(e))
+                })
+            } else if (x.t == 'str') {
+                if (sync9_space_dag_prune2(x.S, has_everyone_whos_seen_a_seen_b, seen_nodes)) did_something = true
+            }
+        }
+    }
+    while (did_something) {
+        did_something = false
+        rec(x)
+    }
+
+    var visited = {}    
+    var delete_us = {}
+    function f(vid) {
+        if (visited[vid]) return
+        visited[vid] = true
+        Object.keys(x.T[vid]).forEach(pid => {
+            if (has_everyone_whos_seen_a_seen_b_2(pid, vid) && !seen_nodes[pid]) {
+                delete_us[pid] = true
+            }
+            f(pid)
+        })
+    }
+    Object.keys(x.leaves).forEach(f)
+
+    var visited = {}
+    var forwards = {}
+    function g(vid) {
+        if (visited[vid]) return
+        visited[vid] = true
+        if (delete_us[vid])
+            forwards[vid] = {}
+        Object.keys(x.T[vid]).forEach(pid => {
+            g(pid)
+            if (delete_us[vid]) {
+                if (delete_us[pid])
+                    Object.assign(forwards[vid], forwards[pid])
+                else
+                    forwards[vid][pid] = true
+            } else if (delete_us[pid]) {
+                delete x.T[vid][pid]
+                Object.assign(x.T[vid], forwards[pid])
+            }
+        })
+    }
+    Object.keys(x.leaves).forEach(g)
+    Object.keys(delete_us).forEach(vid => delete x.T[vid])
+    return delete_us
+}
+
+function sync9_space_dag_prune2(S, has_everyone_whos_seen_a_seen_b, seen_nodes) {
+    function set_nnnext(node, next) {
+        while (node.next) node = node.next
+        node.next = next
+    }
+    function process_node(node, offset, vid, prev) {
+        var nexts = node.nexts
+        var next = node.next
+        
+        if (nexts.length > 0 && nexts.every(x => has_everyone_whos_seen_a_seen_b(vid, x.vid))) {
+            var first_prunable = 0
+            var gamma = next
+            if (first_prunable + 1 < nexts.length) {
+                gamma = sync9_create_space_dag_node(null, typeof(node.elems) == 'string' ? '' : [])
+                gamma.nexts = nexts.slice(first_prunable + 1)
+                gamma.next = next
+            }
+            if (first_prunable == 0) {
+                if (nexts[0].elems.length == 0 && !nexts[0].end_cap && nexts[0].nexts.length > 0) {
+                    var beta = gamma
+                    if (nexts[0].next) {
+                        beta = nexts[0].next
+                        set_nnnext(beta, gamma)
+                    }
+                    node.nexts = nexts[0].nexts
+                    node.next = beta
+                } else {
+                    delete node.end_cap
+                    node.nexts = []
+                    node.next = nexts[0]
+                    node.next.vid = null
+                    set_nnnext(node, gamma)
+                }
+            } else {
+                node.nexts = nexts.slice(0, first_prunable)
+                node.next = nexts[first_prunable]
+                node.next.vid = null
+                set_nnnext(node, gamma)
+            }
+            return true
+        }
+        
+        if (Object.keys(node.deleted_by).some(k => has_everyone_whos_seen_a_seen_b(vid, k))) {
+            node.deleted_by = {}
+            node.elems = typeof(node.elems) == 'string' ? '' : []
+            delete node.gash
+            return true
+        } else {
+            Object.assign(seen_nodes, node.deleted_by)
+        }
+        
+        if (next && !next.nexts[0] && (Object.keys(next.deleted_by).some(k => has_everyone_whos_seen_a_seen_b(vid, k)) || next.elems.length == 0)) {
+            node.next = next.next
+            return true
+        }
+        
+        if (nexts.length == 0 && next &&
+            !(next.elems.length == 0 && !next.end_cap && next.nexts.length > 0) &&
+            Object.keys(node.deleted_by).every(x => next.deleted_by[x]) &&
+            Object.keys(next.deleted_by).every(x => node.deleted_by[x])) {
+            node.elems = node.elems.concat(next.elems)
+            node.end_cap = next.end_cap
+            node.nexts = next.nexts
+            node.next = next.next
+            return true
+        }
+    }
+    var did_something = false
+    sync9_trav_space_dag(S, () => true, (node, offset, has_nexts, prev, vid) => {
+        if (!prev) seen_nodes[vid] = true
+        while (process_node(node, offset, vid, prev)) {
+            did_something = true
+        }
+    }, true)
+    return did_something
+}
+
+
+
+
+
 
 
 
