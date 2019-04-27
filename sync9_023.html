@@ -429,7 +429,6 @@ function sync9_create_server(c_funcs) {
         var p = s.peers[uid]
         if (p.unacked_prunes[vid]) {
             delete p.unacked_prunes[vid]
-            p.unacked_prunes_in_order.splice(p.unacked_prunes_in_order.findIndex(x => x == vid), 1)
             return
         }
         s.prune_info[vid].acked[uid] = true
