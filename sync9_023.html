@@ -276,6 +276,7 @@ function sync9_create_client(s_funcs) {
             var deleted = sync9_prune2(c.s9, (a, b) => c.delete_us[b], (a, b) => c.delete_us[a])
             if (!Object.keys(c.delete_us).every(x => deleted[x])) throw 'wtf?'
             if (!Object.keys(deleted).every(x => c.delete_us[x])) throw 'wtf?'
+            c.delete_us = {}
         }
         
         Object.keys(parents).forEach(p => {
