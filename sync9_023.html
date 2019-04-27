@@ -273,9 +273,9 @@ function sync9_create_client(s_funcs) {
     
     c.add_version = (vid, parents, changes) => {
         if (Object.keys(c.delete_us).length > 0) {
-            var deleted = sync9_prune2(c.s9, (a, b) => delete_us[b], (a, b) => delete_us[a])
-            if (!Object.keys(delete_us).every(x => deleted[x])) throw 'wtf?'
-            if (!Object.keys(deleted).every(x => delete_us[x])) throw 'wtf?'
+            var deleted = sync9_prune2(c.s9, (a, b) => c.delete_us[b], (a, b) => c.delete_us[a])
+            if (!Object.keys(c.delete_us).every(x => deleted[x])) throw 'wtf?'
+            if (!Object.keys(deleted).every(x => c.delete_us[x])) throw 'wtf?'
         }
         
         Object.keys(parents).forEach(p => {
