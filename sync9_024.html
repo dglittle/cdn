@@ -35,7 +35,7 @@ function draw_space_dag(S) {
             begin_x = x
             g.moveTo(x, y - 20)
             g.bezierCurveTo(x + 10, y - 10, x + 10, y + 10, x, y + 20)
-            x += 18
+            x += 12
         } else {
             begin_x = x + 10
             g.moveTo(x + 10, y - 20)
@@ -46,7 +46,11 @@ function draw_space_dag(S) {
         g.strokeStyle = 'blue'
         g.stroke()
         
-        g.fillStyle = 'red'
+        if (Object.keys(node.deleted_by).length > 0) {
+            g.fillStyle = 'red'
+        } else {
+            g.fillStyle = 'black'
+        }
         g.textBaseline = 'middle'
         g.font = '20px Arial'
         g.fillText(node.elems, x, y)
@@ -59,7 +63,7 @@ function draw_space_dag(S) {
             end_x = x
             g.moveTo(x, y - 20)
             g.bezierCurveTo(x + 10, y - 10, x + 10, y + 10, x, y + 20)
-            x += 18
+            x += 10
         } else {
             end_x = x + 10
             g.moveTo(x + 10, y - 20)
@@ -101,6 +105,7 @@ function draw_space_dag(S) {
 var s9 = sync9_create()
 sync9_add_version(s9, 'v1', {root: true}, [' = "ab"'])
 sync9_add_version(s9, 'v2', {v1: true}, ['[2:2] = "cc"'])
+sync9_add_version(s9, 'v3', {v2: true}, ['[1:3] = "FF"'])
 
 
 // console.log(JSON.stringify(s9, null, '    '))
