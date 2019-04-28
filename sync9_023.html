@@ -214,6 +214,18 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
                 
             }
             while (c.outgoing.length > 0) {
+                
+                
+                
+                if (t == 16) {
+                    
+                    console.log(JSON.stringify(server.s9, null, '    '))
+                    
+                    throw 'stopy'
+                }
+                
+                
+                
                 debug_output.push('tt = ' + t++)
                 debug_output.push('server: ' + sync9_read(server.s9))
                 
