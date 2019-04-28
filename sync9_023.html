@@ -360,7 +360,7 @@ function sync9_create_client(s_funcs) {
     
     c.local_add_version = (changes) => {
         var x = {
-            vid : sync9_guid() + '_' + c.letters[0] + next_v_i++,
+            vid : sync9_guid() + '_' + c.letters[0] + c.next_v_i++,
             parents : Object.assign({}, c.s9.leaves),
             changes : changes
         }
