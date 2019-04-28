@@ -154,6 +154,18 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
                     c.outgoing.shift()()
                     
                     debug_output.push('server -> ' + sync9_read(server.s9))
+                    
+                    
+                    
+                    
+                    if (t == 105) {
+                        console.log(JSON.stringify(server.s9, null, '    '))
+                        throw 'stopyy'
+                    }
+                    
+                    
+                    
+                    
                 }
             }
         }
