@@ -420,7 +420,7 @@ function sync9_create_server(c_funcs) {
             var clone = JSON.parse(JSON.stringify(s.s9))
             var deleted2 = sync9_prune2(clone, (a, b) => deleted[b], (a, b) => deleted[a])
             
-            if (Object.keys(deleted).some(x => !deleted2[x]) {
+            if (Object.keys(deleted).some(x => !deleted2[x])) {
                 deleted = deleted2
             } else {
                 break
