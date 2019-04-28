@@ -16,18 +16,32 @@ function draw_space_dag(S) {
     c.height = 400
     c.style.width = (c.width / devicePixelRatio) + 'px'
     c.style.height = (c.height / devicePixelRatio) + 'px'
-    
     var g = c.getContext('2d')
     
-    g.fillStyle = 'red'
-    g.textBaseline = 'middle'
-    g.fillText('hoho!', 100, 100)
+    function helper(node) {
+        g.fillStyle = 'red'
+        g.textBaseline = 'middle'
+        g.font = '20px Arial'
+        g.fillText(node.elems, 100, 100)
+        
+        for (var n in node.nexts) helper(n)
+        if (node.next) helper(node.next)
+    }
+    helper(S)
+    
+    
+    
+    
+    // g.fillStyle = 'red'
+    // g.textBaseline = 'middle'
+    // g.font = '20px Arial'
+    // g.fillText('hoho!', 100, 100)
     
     
     
     g.beginPath()
-    g.moveTo(100, 100 - 10)
-    g.bezierCurveTo(90, 100 - 5, 90, 100 + 5, 100, 100 + 10)
+    g.moveTo(100, 100 - 20)
+    g.bezierCurveTo(90, 100 - 5, 90, 100 + 5, 100, 100 + 20)
     g.lineWidth = 1
     g.stroke()
     
