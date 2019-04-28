@@ -351,17 +351,26 @@ function sync9_create_client(s_funcs) {
         s_funcs.ack(c.uid, vid)
         if (!c.s9.T[vid]) return
         
+        c.delete_us[vid] = true
+        
         if (c.server_leaves[vid]) {
-            delete c.server_leaves[vid]
             var ancs = sync9_get_ancestors(c.s9, c.server_leaves)
-            Object.keys(c.s9.T[vid]).forEach(x => {
-                if (!ancs[x]) c.server_leaves[x] = true
+            Object.keys(c.delete_us).forEach(x => {
+                delete ancs[x]
+            })
+            var not_leaves = {}
+            Object.keys(ancs).forEach(x => {
+                Object.assign(not_leaves, c.s9.T[x])
+            })
+            c.server_leaves = {}
+            Object.keys(ancs).forEach(x => {
+                if (!not_leaves[x])
+                    c.server_leaves[x] = true
             })
         }
         
         c.unacked = c.unacked.filter(x => x.vid != vid)
         
-        c.delete_us[vid] = true
     }
 
     // work here
