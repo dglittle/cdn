@@ -74,7 +74,7 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
                         })
                     }
                 }
-            })
+            }, '__' + i)
             c.state = 'disconnected'
             c.incoming = []
             c.outgoing = []
@@ -275,7 +275,7 @@ function create_random_edit(s, letters) {
     }
 }
 
-function sync9_create_client(s_funcs) {
+function sync9_create_client(s_funcs, id_suffix) {
     var c = {}
     
     c.s9 = sync9_create()
@@ -285,7 +285,7 @@ function sync9_create_client(s_funcs) {
     // delete c.s9.T.v1
     // c.s9.leaves = {root: true}
     
-    c.uid = sync9_guid()
+    c.uid = sync9_guid() + id_suffix
     c.server_leaves = {v1: true}
     c.unacked = []
     c.delete_us = {}
