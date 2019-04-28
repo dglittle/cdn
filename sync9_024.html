@@ -28,7 +28,6 @@ sync9_add_version(s9, 'v1', {root: true}, [' = "ab"'])
 
 document.body.append(draw_space_dag(s9.val.S.elems[0].S))
 
-throw 'stop'
 
 
 
@@ -36,7 +35,7 @@ throw 'stop'
 var sync9_ROOT = 'root'
 console.log('-------------------')
 
-var ttt_n = 100000
+var ttt_n = 0
 for (var ttt = 0; ttt < ttt_n; ttt++) {
     var last_ttt = (ttt == ttt_n - 1)
     
