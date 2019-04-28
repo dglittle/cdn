@@ -20,22 +20,26 @@ function draw_space_dag(S) {
     
     var x = 100
     function helper(node, y, px, py) {
-        // g.beginPath()
-        // g.moveTo(x, y - 20)
-        // if (node.gash)
-        //     g.bezierCurveTo(x + 10, y - 5, x + 10, y + 5, x, y + 20)
-        // else
-        //     g.bezierCurveTo(x - 10, y - 5, x - 10, y + 5, x, y + 20)
-        // g.lineWidth = 1
-        // g.strokeStyle = 'blue'
-        // g.stroke()
-        
-        // g.beginPath()
-        // g.moveTo(x - 10, y)
-        // g.lineTo(px, py)
-        // g.lineWidth = 1
-        // g.strokeStyle = 'green'
-        // g.stroke()
+        g.beginPath()
+        g.moveTo(x, y)
+        g.lineTo(px, py)
+        g.lineWidth = 1
+        g.strokeStyle = 'green'
+        g.stroke()
+
+        g.beginPath()
+        if (node.gash) {
+            g.moveTo(x, y - 20)
+            g.bezierCurveTo(x + 10, y - 10, x + 10, y + 10, x, y + 20)
+            x += 15
+        } else {
+            g.moveTo(x + 10, y - 20)
+            g.bezierCurveTo(x, y - 10, x, y + 10, x + 10, y + 20)
+            x += 5
+        }
+        g.lineWidth = 1
+        g.strokeStyle = 'blue'
+        g.stroke()
         
         g.fillStyle = 'red'
         g.textBaseline = 'middle'
