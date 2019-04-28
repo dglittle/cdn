@@ -419,7 +419,11 @@ function sync9_create_server(c_funcs) {
         var backup_parents = {}
         Object.keys(deleted).forEach(x => backup_parents[x] = s.s9.T[x])
 
-        var deleted = sync9_prune2(s.s9, (a, b) => deleted[b], (a, b) => deleted[a])
+        var deleted2 = sync9_prune2(s.s9, (a, b) => deleted[b], (a, b) => deleted[a])
+        
+        if (Object.keys(deleted).some(x => !deleted2[x]) || Object.keys(deleted2).some(x => !deleted[x])) {
+            throw 'wtf?'
+        }
         
         Object.keys(deleted).forEach(deleted => {
             Object.entries(s.peers).forEach(x => {
