@@ -153,18 +153,14 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
                 if (c.outgoing.length > 0) {
                     
                     
-                    if (t == 72) {
-                        console.log(JSON.stringify(server.s9, null, '    '))
-                        throw 'stopyy'
-                    }
                     
                     
                     
                     
-                    if (t == 105) {
-                        console.log(JSON.stringify(server.s9, null, '    '))
-                        throw 'stopyy'
-                    }
+                    // if (t == 105) {
+                    //     console.log(JSON.stringify(server.s9, null, '    '))
+                    //     throw 'stopyy'
+                    // }
                     
                     
                     c.outgoing.shift()()
@@ -174,10 +170,10 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
                     
                     
                     
-                    if (t == 105) {
-                        console.log(JSON.stringify(server.s9, null, '    '))
-                        throw 'stopyy'
-                    }
+                    // if (t == 72) {
+                    //     console.log(JSON.stringify(server.s9, null, '    '))
+                    //     throw 'stopyy'
+                    // }
                     
                     
                     
@@ -316,7 +312,7 @@ function sync9_create_client(s_funcs) {
             
             
             
-            var deleted = sync9_prune2(c.s9, (a, b) => c.delete_us[b], (a, b) => c.delete_us[a])
+            var deleted = sync9_prune(c.s9, (a, b) => c.delete_us[b], (a, b) => c.delete_us[a])
             
             
             // work here
