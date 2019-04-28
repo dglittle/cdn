@@ -24,6 +24,8 @@ function draw_space_dag(S) {
         g.font = '20px Arial'
         g.fillText(node.elems, 100, 100)
         
+        console.log('node: ', node)
+        
         for (var n in node.nexts) helper(n)
         if (node.next) helper(node.next)
     }
