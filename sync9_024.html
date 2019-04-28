@@ -28,7 +28,7 @@ var s9 = sync9_create()
 sync9_add_version(s9, 'v1', {root: true}, [' = "ab"'])
 
 
-console.log(JSON.stringify(s9, null, '    '))
+// console.log(JSON.stringify(s9, null, '    '))
 
 document.body.append(draw_space_dag(sync9_space_dag_get(s9.val.S, 0)))
 
