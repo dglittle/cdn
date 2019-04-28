@@ -26,7 +26,7 @@ function draw_space_dag(S) {
         
         console.log('node: ', node)
         
-        for (var n in node.nexts) helper(n)
+        for (var n of node.nexts) helper(n)
         if (node.next) helper(node.next)
     }
     helper(S)
