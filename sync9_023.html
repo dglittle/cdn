@@ -528,7 +528,8 @@ function sync9_space_dag_prune2(S, has_everyone_whos_seen_a_seen_b, seen_nodes) 
         var nexts = node.nexts
         var next = node.next
         
-        if (nexts.length > 0 && nexts.every(x => has_everyone_whos_seen_a_seen_b(vid, x.vid))) {
+        var all_nexts_prunable = nexts.every(x => has_everyone_whos_seen_a_seen_b(vid, x.vid))
+        if (nexts.length > 0 && all_nexts_prunable) {
             var first_prunable = 0
             var gamma = next
             if (first_prunable + 1 < nexts.length) {
@@ -561,7 +562,7 @@ function sync9_space_dag_prune2(S, has_everyone_whos_seen_a_seen_b, seen_nodes) 
             return true
         }
         
-        if (Object.keys(node.deleted_by).some(k => has_everyone_whos_seen_a_seen_b(vid, k))) {
+        if (Object.keys(node.deleted_by).some(k => has_everyone_whos_seen_a_seen_b(vid, k)) && all_nexts_prunable) {
             node.deleted_by = {}
             node.elems = typeof(node.elems) == 'string' ? '' : []
             delete node.gash
