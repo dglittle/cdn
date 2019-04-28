@@ -12,8 +12,10 @@ console.log('-------------------')
 
 function draw_space_dag(S) {
     var c = document.createElement('canvas')
-    c.width = 500
-    c.height = 200
+    c.width = 1000
+    c.height = 400
+    c.style.width = c.width / c.devicePixelRatio
+    c.style.height = c.height / c.devicePixelRatio
     
     var g = c.getContext('2d')
     
