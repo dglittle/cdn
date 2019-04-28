@@ -18,7 +18,17 @@ function draw_space_dag(S) {
     var g = c.getContext('2d')
     
     g.fillStyle = 'red'
+    g.textBaseline = 'middle'
     g.fillText('hoho!', 100, 100)
+    
+    
+    
+    g.beginPath()
+    g.moveTo(100, 100 - 10)
+    g.bezierCurveTo(90, 100 - 5, 90, 100 + 5, 100, 100 + 10)
+    g.stroke()
+    
+    
     
     return c
 }
