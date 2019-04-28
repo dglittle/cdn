@@ -30,6 +30,10 @@ function draw_space_dag(S) {
         g.beginPath()
         if (node.gash) {
             g.moveTo(x, y - 20)
+            g.lineTo(x + 10, y - 20)
+            g.moveTo(x, y + 20)
+            g.lineTo(x + 10, y + 20)
+            g.moveTo(x, y - 20)
             g.bezierCurveTo(x + 10, y - 10, x + 10, y + 10, x, y + 20)
             x += 18
         } else {
@@ -47,10 +51,34 @@ function draw_space_dag(S) {
         g.fillText(node.elems, x, y)
         
         var width = g.measureText(node.elems).width
-        x += width + 10
         
-        for (var n of node.nexts) helper(n, y - 40, x + width, y)
-        if (node.next) helper(node.next, y, x + width, y)
+        g.beginPath()
+        g.moveTo(x + 10, y - 20)
+        g.lineTo(x + width, y - 20)
+        g.moveTo(x + 10, y + 20)
+        g.lineTo(x + width, y + 20)
+        x += width
+        if (node.end_cap) {
+            g.moveTo(x, y - 20)
+            g.bezierCurveTo(x + 10, y - 10, x + 10, y + 10, x, y + 20)
+            x += 18
+        } else {
+            g.moveTo(x, y - 20)
+            g.lineTo(x + 10, y - 20)
+            g.moveTo(x, y + 20)
+            g.lineTo(x + 10, y + 20)
+            g.moveTo(x + 10, y - 20)
+            g.bezierCurveTo(x, y - 10, x, y + 10, x + 10, y + 20)
+            x += 8
+        }
+        g.lineWidth = 1
+        g.strokeStyle = 'blue'
+        g.stroke()
+
+        var px = x
+        x += 10
+        for (var n of node.nexts) helper(n, y - 40, px, y)
+        if (node.next) helper(node.next, y, px, y)
     }
     helper(S, 200, 50, 200)
     
@@ -73,6 +101,7 @@ function draw_space_dag(S) {
 
 var s9 = sync9_create()
 sync9_add_version(s9, 'v1', {root: true}, [' = "ab"'])
+sync9_add_version(s9, 'v2', {v1: true}, ['[2:2] = "cc"'])
 
 
 // console.log(JSON.stringify(s9, null, '    '))
