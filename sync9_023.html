@@ -281,7 +281,27 @@ function sync9_create_client(s_funcs) {
     
     c.add_version = (vid, parents, changes) => {
         if (Object.keys(c.delete_us).length > 0) {
+            
+            
+            // work here
+            var old_s9 = JSON.parse(JSON.stringify(c.s9))
+            
+            
+            
             var deleted = sync9_prune2(c.s9, (a, b) => c.delete_us[b], (a, b) => c.delete_us[a])
+            
+            
+            // work here
+            if (!Object.keys(c.delete_us).every(x => deleted[x]) || !Object.keys(deleted).every(x => c.delete_us[x])) {
+                
+                
+                console.log(JSON.stringify(old_s9, null, '    '))
+                console.log(JSON.stringify(c.s9, null, '    '))
+                throw 'stopy'
+            }
+            
+            
+            
             if (!Object.keys(c.delete_us).every(x => deleted[x])) throw 'wtf?'
             if (!Object.keys(deleted).every(x => c.delete_us[x])) throw 'wtf?'
             c.delete_us = {}
