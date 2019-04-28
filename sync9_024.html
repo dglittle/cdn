@@ -18,31 +18,37 @@ function draw_space_dag(S) {
     c.style.height = (c.height / devicePixelRatio) + 'px'
     var g = c.getContext('2d')
     
-    function helper(node, x, y, px, py) {
-        g.beginPath()
-        g.moveTo(x, y - 20)
-        g.bezierCurveTo(x - 10, y - 5, x - 10, y + 5, x, y + 20)
-        g.lineWidth = 1
-        g.strokeStyle = 'blue'
-        g.stroke()
+    var x = 100
+    function helper(node, y, px, py) {
+        // g.beginPath()
+        // g.moveTo(x, y - 20)
+        // if (node.gash)
+        //     g.bezierCurveTo(x + 10, y - 5, x + 10, y + 5, x, y + 20)
+        // else
+        //     g.bezierCurveTo(x - 10, y - 5, x - 10, y + 5, x, y + 20)
+        // g.lineWidth = 1
+        // g.strokeStyle = 'blue'
+        // g.stroke()
         
-        g.beginPath()
-        g.moveTo(x - 10, y)
-        g.lineTo(px, py)
-        g.lineWidth = 1
-        g.strokeStyle = 'green'
-        g.stroke()
+        // g.beginPath()
+        // g.moveTo(x - 10, y)
+        // g.lineTo(px, py)
+        // g.lineWidth = 1
+        // g.strokeStyle = 'green'
+        // g.stroke()
         
         g.fillStyle = 'red'
         g.textBaseline = 'middle'
         g.font = '20px Arial'
         g.fillText(node.elems, x, y)
         
+        var width = g.measureText(node.elems).width
+        x += width + 10
         
-        for (var n of node.nexts) helper(n)
-        if (node.next) helper(node.next)
+        for (var n of node.nexts) helper(n, y - 40, x + width, y)
+        if (node.next) helper(node.next, y, x + width, y)
     }
-    helper(S, 100, 200, 50, 200)
+    helper(S, 200, 50, 200)
     
     
     
