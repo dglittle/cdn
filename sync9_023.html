@@ -15,7 +15,7 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
     var seed = 8000000 + ttt
     Math.randomSeed(seed)
     
-    if (seed % 100 == 0)
+    // if (seed % 100 == 0)
         console.log('seed ' + seed)
     
     var n_clients = 2
@@ -96,7 +96,7 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
         })()
     }
     
-    for (var t = 0; t < 170; t++) {
+    for (var t = 0; t < 500; t++) {
         debug_output.push('t = ' + t)
         
         var i = Math.floor(Math.random() * n_clients)
