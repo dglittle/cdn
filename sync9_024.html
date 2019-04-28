@@ -27,16 +27,17 @@ function draw_space_dag(S) {
         g.strokeStyle = 'green'
         g.stroke()
 
+        var begin_x
+        var end_x
+
         g.beginPath()
         if (node.gash) {
-            g.moveTo(x, y - 20)
-            g.lineTo(x + 10, y - 20)
-            g.moveTo(x, y + 20)
-            g.lineTo(x + 10, y + 20)
+            begin_x = x
             g.moveTo(x, y - 20)
             g.bezierCurveTo(x + 10, y - 10, x + 10, y + 10, x, y + 20)
             x += 18
         } else {
+            begin_x = x + 10
             g.moveTo(x + 10, y - 20)
             g.bezierCurveTo(x, y - 10, x, y + 10, x + 10, y + 20)
             x += 8
@@ -51,26 +52,24 @@ function draw_space_dag(S) {
         g.fillText(node.elems, x, y)
         
         var width = g.measureText(node.elems).width
+        x += width
         
         g.beginPath()
-        g.moveTo(x + 10, y - 20)
-        g.lineTo(x + width, y - 20)
-        g.moveTo(x + 10, y + 20)
-        g.lineTo(x + width, y + 20)
-        x += width
         if (node.end_cap) {
+            end_x = x
             g.moveTo(x, y - 20)
             g.bezierCurveTo(x + 10, y - 10, x + 10, y + 10, x, y + 20)
             x += 18
         } else {
-            g.moveTo(x, y - 20)
-            g.lineTo(x + 10, y - 20)
-            g.moveTo(x, y + 20)
-            g.lineTo(x + 10, y + 20)
+            end_x = x + 10
             g.moveTo(x + 10, y - 20)
             g.bezierCurveTo(x, y - 10, x, y + 10, x + 10, y + 20)
             x += 8
         }
+        g.moveTo(begin_x, y - 20)
+        g.lineTo(end_x, y - 20)
+        g.moveTo(begin_x, y + 20)
+        g.lineTo(end_x, y + 20)
         g.lineWidth = 1
         g.strokeStyle = 'blue'
         g.stroke()
