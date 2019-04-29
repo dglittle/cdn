@@ -337,12 +337,14 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
         c.style.width = (c.width / devicePixelRatio) + 'px'
         c.style.height = (c.height / devicePixelRatio) + 'px'
         var g = c.getContext('2d')
+        document.body.append(c)
         
         var slider = document.createElement('input')
         slider.setAttribute('type', 'range')
         slider.setAttribute('min', '0')
         slider.setAttribute('max', debug_frames.length - 1)
         slider.setAttribute('value', debug_frames.length - 1)
+        document.body.append(slider)
         
         draw_space_dag(c, g, sync9_space_dag_get(server.s9.val.S, 0).S, 100, 300)
         
