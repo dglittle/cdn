@@ -548,6 +548,10 @@ function sync9_create_server(c_funcs) {
     }
     
     function prune() {
+        
+        // work here
+        var cloney = JSON.parse(JSON.stringify(s.s9))
+        
         var q = (a, b) => (a != 'root') && (a != 'v1') && (!s.s9.leaves[b]) && Object.keys(s.prune_info[a].sent).every(x => s.prune_info[b].acked[x])
         
         var clone = JSON.parse(JSON.stringify(s.s9))
@@ -584,6 +588,15 @@ function sync9_create_server(c_funcs) {
             })
             delete s.prune_info[deleted]
         })
+        
+        // work here
+        if (Object.keys(deleted).length > 0) {
+            debug_frames.push({
+                t: 'before pruning..',
+                server_s9: JSON.parse(JSON.stringify(cloney)),
+                client_s9s: clients_array.map(x => JSON.parse(JSON.stringify(x.s9)))
+            })
+        }
     }
     
     s.join = (uid, leaves) => {
