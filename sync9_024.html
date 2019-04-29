@@ -89,7 +89,7 @@ var ttt_n = 1
 for (var ttt = 0; ttt < ttt_n; ttt++) {
     var last_ttt = (ttt == ttt_n - 1)
     
-    var seed = 8000160 + ttt
+    var seed = 8000450 + ttt
     Math.randomSeed(seed)
     
     // if (seed % 100 == 0)
@@ -102,10 +102,10 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
     debug_frames = []
     
     var debug_output = []
-    // debug_output = {}
-    // debug_output.push = function (x) {
-    //     console.log(x)
-    // }
+    debug_output = {}
+    debug_output.push = function (x) {
+        console.log(x)
+    }
     
     server = sync9_create_server({
         add_version : (uid, vid, parents, changes) => {
@@ -448,6 +448,46 @@ function sync9_create_client(s_funcs, id_suffix) {
             // work here
             if (!Object.keys(c.delete_us).every(x => deleted[x]) || !Object.keys(deleted).every(x => c.delete_us[x])) {
                 
+                
+                if (debug_frames) {
+                    var c = document.createElement('canvas')
+                    c.width = 3000
+                    c.height = 1200
+                    c.style.width = (c.width / devicePixelRatio) + 'px'
+                    c.style.height = (c.height / devicePixelRatio) + 'px'
+                    var g = c.getContext('2d')
+                    document.body.append(c)
+                    
+                    var slider = document.createElement('input')
+                    slider.style.width = '500px'
+                    slider.setAttribute('type', 'range')
+                    slider.setAttribute('min', '0')
+                    slider.setAttribute('max', debug_frames.length - 1)
+                    slider.setAttribute('value', debug_frames.length - 1)
+                    slider.oninput = () => {
+                        var d = debug_frames[1*slider.value]
+                        
+                        g.clearRect(0, 0, c.width, c.height)
+                        
+                        g.font = '20px Ariel'
+                        g.fillStyle = 'black'
+                        g.textBaseline = 'top'
+                        if (d.tt) g.fillText('v3 tt: ' + d.tt, 0, 0)
+                        else g.fillText('v3 t: ' + d.t, 0, 0)
+            
+                        draw_space_dag(c, g, sync9_space_dag_get(d.client_s9s[0].val.S, 0).S, 100, 300)
+                        
+                        draw_space_dag(c, g, sync9_space_dag_get(d.server_s9.val.S, 0).S, 100, 600)
+                        
+                        draw_space_dag(c, g, sync9_space_dag_get(d.client_s9s[1].val.S, 0).S, 100, 900)
+                        
+                        // clients_array.forEach((c, i) => {
+                        //     draw_space_dag(c, g, sync9_space_dag_get(d.client_s9s[i].val.S, 0).S, 100, 300 + 300*(i + 1))
+                        // })
+                    }
+                    document.body.append(slider)
+                    slider.oninput()
+                }                
                 
                 console.log(JSON.stringify(old_s9, null, '    '))
                 console.log(JSON.stringify(c.s9, null, '    '))
