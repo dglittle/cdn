@@ -1435,79 +1435,59 @@ function sync9_space_dag_add_version(S, vid, splices, is_anc) {
     var si = 0
     var delete_up_to = 0
     
-    var f = is_anc
-    var exit_early = {}
-    var offset = 0
-    function helper(node, prev, vid) {
-        var has_nexts = node.nexts.find(next => f(next.vid))
-        if (!Object.keys(node.deleted_by).some(vid => f(vid))) {
+    var cb = (node, offset, has_nexts, prev) => {
+        var s = splices[si]
+        if (!s) return false
+        
+        if (s[1] == 0) {
+            var d = s[0] - (offset + node.elems.length)
+            if (d > 0) return
+            if (d == 0 && !node.end_cap && has_nexts) return
+            var new_node = sync9_create_space_dag_node(vid, s[2])
+            if (d == 0 && !node.end_cap) {
+                add_to_nexts(node.nexts, new_node)
+            } else {
+                sync9_space_dag_break_node(node, s[0] - offset, undefined, new_node)
+            }
+            si++
+            return
+        }
+        
+        if (delete_up_to <= offset) {
+            var d = s[0] - (offset + node.elems.length)
+            if (d >= 0) return
+            delete_up_to = s[0] + s[1]
             
-            function cb(node, offset, has_nexts, prev, vid) {
-                var s = splices[si]
-                if (!s) return false
-                
-                if (s[1] == 0) {
-                    var d = s[0] - (offset + node.elems.length)
-                    if (d > 0) return
-                    if (d == 0 && !node.end_cap && has_nexts) return
-                    var new_node = sync9_create_space_dag_node(vid, s[2])
-                    if (d == 0 && !node.end_cap) {
-                        add_to_nexts(node.nexts, new_node)
-                    } else {
-                        sync9_space_dag_break_node(node, s[0] - offset, undefined, new_node)
-                    }
-                    si++
+            if (s[2]) {
+                var new_node = sync9_create_space_dag_node(vid, s[2])
+                if (s[0] == offset && node.gash) {
+                    if (!prev.end_cap) throw 'no end_cap?'
+                    add_to_nexts(prev.nexts, new_node)
+                } else {
+                    sync9_space_dag_break_node(node, s[0] - offset, true, new_node)
                     return
                 }
-                
-                if (delete_up_to <= offset) {
-                    var d = s[0] - (offset + node.elems.length)
-                    if (d >= 0) return
-                    delete_up_to = s[0] + s[1]
-                    
-                    if (s[2]) {
-                        var new_node = sync9_create_space_dag_node(vid, s[2])
-                        if (s[0] == offset && node.gash) {
-                            if (!prev.end_cap) throw 'no end_cap?'
-                            add_to_nexts(prev.nexts, new_node)
-                        } else {
-                            sync9_space_dag_break_node(node, s[0] - offset, true, new_node)
-                            return
-                        }
-                    } else {
-                        if (s[0] == offset) {
-                        } else {
-                            sync9_space_dag_break_node(node, s[0] - offset)
-                            return
-                        }
-                    }
-                }
-                
-                if (delete_up_to > offset) {
-                    if (delete_up_to <= offset + node.elems.length) {
-                        if (delete_up_to < offset + node.elems.length) {
-                            sync9_space_dag_break_node(node, delete_up_to - offset)
-                        }
-                        si++
-                    }
-                    node.deleted_by[vid] = true
+            } else {
+                if (s[0] == offset) {
+                } else {
+                    sync9_space_dag_break_node(node, s[0] - offset)
                     return
                 }
             }
-            
-            if (cb(node, offset, has_nexts, prev, vid) == false)
-                throw exit_early
-            offset += node.elems.length
         }
-        for (var next of node.nexts)
-            if (f(next.vid)) helper(next, null, next.vid)
-        if (node.next) helper(node.next, node, vid)
+        
+        if (delete_up_to > offset) {
+            if (delete_up_to <= offset + node.elems.length) {
+                if (delete_up_to < offset + node.elems.length) {
+                    sync9_space_dag_break_node(node, delete_up_to - offset)
+                }
+                si++
+            }
+            node.deleted_by[vid] = true
+            return
+        }
     }
-    try {
-        helper(S, null, S.vid)
-    } catch (e) {
-        if (e != exit_early) throw e
-    }
+    sync9_trav_space_dag(S, is_anc, cb)
 }
 
 function sync9_trav_space_dag(S, f, cb, view_deleted, tail_cb) {
