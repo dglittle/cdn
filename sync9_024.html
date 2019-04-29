@@ -449,6 +449,7 @@ function sync9_create_client(s_funcs, id_suffix) {
             if (!Object.keys(c.delete_us).every(x => deleted[x]) || !Object.keys(deleted).every(x => c.delete_us[x])) {
                 
                 
+                
                 if (debug_frames) {
                     var c = document.createElement('canvas')
                     c.width = 3000
@@ -491,6 +492,8 @@ function sync9_create_client(s_funcs, id_suffix) {
                 
                 console.log(JSON.stringify(old_s9, null, '    '))
                 console.log(JSON.stringify(c.s9, null, '    '))
+                
+                console.log('got here!?')
                 throw 'stopy'
             }
             
