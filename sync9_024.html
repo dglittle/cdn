@@ -309,7 +309,7 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
                 debug_output.push('server: ' + sync9_read(server.s9))
                 
                 debug_frames.push({
-                    t: t - 1,
+                    tt: t - 1,
                     server_s9: JSON.parse(JSON.stringify(server.s9)),
                     client_s9s: clients_array.map(x => JSON.parse(JSON.stringify(x.s9)))
                 })
@@ -348,9 +348,16 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
         slider.setAttribute('max', debug_frames.length - 1)
         slider.setAttribute('value', debug_frames.length - 1)
         slider.oninput = () => {
+            var d = debug_frames[1*slider.value]
+            
             g.clearRect(0, 0, c.width, c.height)
             
-            var d = debug_frames[1*slider.value]
+            g.font = '20px Ariel'
+            g.fillStyle = 'black'
+            g.textBaseline = 'top'
+            if (d.tt) g.fillText(d.tt, 0, 0)
+            else g.fillText(d.t, 0, 0)
+            
             draw_space_dag(c, g, sync9_space_dag_get(d.server_s9.val.S, 0).S, 100, 300)
             clients_array.forEach((c, i) => {
                 draw_space_dag(c, g, sync9_space_dag_get(d.client_s9s[i].val.S, 0).S, 100, 300 + 300*(i + 1))
