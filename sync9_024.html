@@ -1502,7 +1502,6 @@ function sync9_space_dag_add_version(S, vid, splices, is_anc) {
         for (var next of node.nexts)
             if (f(next.vid)) helper(next, null, next.vid)
         if (node.next) helper(node.next, node, vid)
-        else if (tail_cb) tail_cb(node)
     }
     try {
         helper(S, null, S.vid)
