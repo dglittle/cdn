@@ -264,7 +264,7 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
         debug_frames.push({
             t: t,
             server_s9: JSON.parse(JSON.stringify(server.s9)),
-            client_s9s: clients.map(x => JSON.parse(JSON.stringify(x.s9)))
+            client_s9s: Object.values(clients).map(x => JSON.parse(JSON.stringify(x.s9)))
         })
     }
     
@@ -295,7 +295,7 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
                 debug_frames.push({
                     t: t - 1,
                     server_s9: JSON.parse(JSON.stringify(server.s9)),
-                    client_s9s: clients.map(x => JSON.parse(JSON.stringify(x.s9)))
+                    client_s9s: Object.values(clients).map(x => JSON.parse(JSON.stringify(x.s9)))
                 })
             }
             while (c.outgoing.length > 0) {
@@ -309,7 +309,7 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
                 debug_frames.push({
                     t: t - 1,
                     server_s9: JSON.parse(JSON.stringify(server.s9)),
-                    client_s9s: clients.map(x => JSON.parse(JSON.stringify(x.s9)))
+                    client_s9s: Object.values(clients).map(x => JSON.parse(JSON.stringify(x.s9)))
                 })
             }
         })
