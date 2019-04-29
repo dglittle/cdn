@@ -355,8 +355,8 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
             g.font = '20px Ariel'
             g.fillStyle = 'black'
             g.textBaseline = 'top'
-            if (d.tt) g.fillText(d.tt, 0, 0)
-            else g.fillText(d.t, 0, 0)
+            if (d.tt) g.fillText('tt: ' + d.tt, 0, 0)
+            else g.fillText('t: ' + d.t, 0, 0)
             
             draw_space_dag(c, g, sync9_space_dag_get(d.server_s9.val.S, 0).S, 100, 300)
             clients_array.forEach((c, i) => {
