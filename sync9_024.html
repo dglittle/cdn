@@ -1435,7 +1435,9 @@ function sync9_space_dag_add_version(S, vid, splices, is_anc) {
     var si = 0
     var delete_up_to = 0
     
-    var cb = (node, offset, has_nexts, prev) => {
+    var cb = (node, offset, has_nexts, prev, deleted) => {
+        if (deleted) return
+        
         var s = splices[si]
         if (!s) return false
         
@@ -1495,12 +1497,11 @@ function sync9_space_dag_add_version(S, vid, splices, is_anc) {
     var offset = 0
     function helper(node, prev, vid) {
         var has_nexts = node.nexts.find(next => f(next.vid))
-        if (view_deleted ||
-            !Object.keys(node.deleted_by).some(vid => f(vid))) {
-            if (cb(node, offset, has_nexts, prev, vid) == false)
-                throw exit_early
-            offset += node.elems.length
-        }
+        var deleted = Object.keys(node.deleted_by).some(vid => f(vid))
+        if (cb(node, offset, has_nexts, prev, vid, deleted) == false)
+            throw exit_early
+        if (!deleted) offset += node.elems.length
+        
         for (var next of node.nexts)
             if (f(next.vid)) helper(next, null, next.vid)
         if (node.next) helper(node.next, node, vid)
