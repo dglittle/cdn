@@ -1450,7 +1450,7 @@ function sync9_space_dag_add_version(S, vid, splices, is_anc) {
             if (s[1] == 0 && s[0] == offset) {
                 if (node.elems.length == 0 && !node.end_cap && has_nexts) return
                 var new_node = sync9_create_space_dag_node(vid, s[2])
-                if (node.elems.length == 0)
+                if (node.elems.length == 0 && !node.end_cap)
                     add_to_nexts(node.nexts, new_node)
                 else
                     sync9_space_dag_break_node(node, 0, undefined, new_node)
