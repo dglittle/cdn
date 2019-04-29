@@ -97,6 +97,7 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
     
     var n_clients = 2
     var clients = {}
+    var clients_array = []
     
     var debug_frames = []
     
@@ -158,6 +159,7 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
             c.incoming = []
             c.outgoing = []
             clients[c.uid] = c
+            clients_array.push(c)
             
             if (i == 0) {
                 c.letters = 'abcdefghijklmnopqrstuvwxyz'
@@ -347,6 +349,9 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
         document.body.append(slider)
         
         draw_space_dag(c, g, sync9_space_dag_get(server.s9.val.S, 0).S, 100, 300)
+        clients_array.forEach((c, i) => {
+            draw_space_dag(c, g, sync9_space_dag_get(c.s9.val.S, 0).S, 100, 300 + 300*i)
+        })
         
         throw 'stop'
     }
