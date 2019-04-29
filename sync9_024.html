@@ -1446,6 +1446,7 @@ function sync9_space_dag_add_version(S, vid, splices, is_anc) {
     
     var exit_early = {}
     var offset = 0
+    var f = is_anc
     function helper(node, prev, vid) {
         var has_nexts = node.nexts.find(next => f(next.vid))
         var deleted = Object.keys(node.deleted_by).some(vid => f(vid))
