@@ -457,6 +457,13 @@ function sync9_create_client(s_funcs, id_suffix) {
             if (!Object.keys(c.delete_us).every(x => deleted[x]) || !Object.keys(deleted).every(x => c.delete_us[x])) {
                 
                 
+                debug_frames.push({
+                    tt: 'pruned.. but wrong..',
+                    server_s9: JSON.parse(JSON.stringify(server.s9)),
+                    client_s9s: clients_array.map(x => JSON.parse(JSON.stringify(x.s9)))
+                })
+                
+                
                 function do_it() {
                     var c = document.createElement('canvas')
                     c.width = 3000
