@@ -334,7 +334,7 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
     
     if (debug_frames) {
         var c = document.createElement('canvas')
-        c.width = 1000
+        c.width = 1500
         c.height = 1200
         c.style.width = (c.width / devicePixelRatio) + 'px'
         c.style.height = (c.height / devicePixelRatio) + 'px'
@@ -350,7 +350,7 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
         
         draw_space_dag(c, g, sync9_space_dag_get(server.s9.val.S, 0).S, 100, 300)
         clients_array.forEach((c, i) => {
-            draw_space_dag(c, g, sync9_space_dag_get(c.s9.val.S, 0).S, 100, 300 + 300*i)
+            draw_space_dag(c, g, sync9_space_dag_get(c.s9.val.S, 0).S, 100, 300 + 300*(i + 1))
         })
         
         throw 'stop'
