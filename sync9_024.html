@@ -434,6 +434,14 @@ function sync9_create_client(s_funcs, id_suffix) {
     }
     
     c.add_version = (vid, parents, changes) => {
+        
+
+        // work here
+        if (!c) {
+            debugger
+        }
+        
+        
         if (Object.keys(c.delete_us).length > 0) {
             
             
@@ -449,8 +457,7 @@ function sync9_create_client(s_funcs, id_suffix) {
             if (!Object.keys(c.delete_us).every(x => deleted[x]) || !Object.keys(deleted).every(x => c.delete_us[x])) {
                 
                 
-                
-                if (debug_frames) {
+                function do_it() {
                     var c = document.createElement('canvas')
                     c.width = 3000
                     c.height = 1200
@@ -488,7 +495,8 @@ function sync9_create_client(s_funcs, id_suffix) {
                     }
                     document.body.append(slider)
                     slider.oninput()
-                }                
+                }
+                do_it()
                 
                 console.log(JSON.stringify(old_s9, null, '    '))
                 console.log(JSON.stringify(c.s9, null, '    '))
