@@ -1435,7 +1435,7 @@ function sync9_space_dag_add_version(S, vid, splices, is_anc) {
     var si = 0
     var delete_up_to = 0
     
-    var cb = (node, offset, has_nexts, prev, deleted) => {
+    var cb = (node, offset, has_nexts, prev, vid, deleted) => {
         if (deleted) return
         
         var s = splices[si]
