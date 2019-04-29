@@ -1487,7 +1487,31 @@ function sync9_space_dag_add_version(S, vid, splices, is_anc) {
             return
         }
     }
-    sync9_trav_space_dag(S, is_anc, cb)
+    
+    var f = is_anc
+    var view_deleted = false
+    var tail_cb = null
+    var exit_early = {}
+    var offset = 0
+    function helper(node, prev, vid) {
+        var has_nexts = node.nexts.find(next => f(next.vid))
+        if (view_deleted ||
+            !Object.keys(node.deleted_by).some(vid => f(vid))) {
+            if (cb(node, offset, has_nexts, prev, vid) == false)
+                throw exit_early
+            offset += node.elems.length
+        }
+        for (var next of node.nexts)
+            if (f(next.vid)) helper(next, null, next.vid)
+        if (node.next) helper(node.next, node, vid)
+        else if (tail_cb) tail_cb(node)
+    }
+    try {
+        helper(S, null, S.vid)
+    } catch (e) {
+        if (e != exit_early) throw e
+    }
+    
 }
 
 function sync9_trav_space_dag(S, f, cb, view_deleted, tail_cb) {
