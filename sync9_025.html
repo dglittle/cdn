@@ -513,7 +513,7 @@ function sync9_create_server(c_funcs) {
         // work here
         var cloney = JSON.parse(JSON.stringify(s.s9))
         
-        var q = (a, b) => (a != 'root') && (!s.s9.leaves[b]) && Object.keys(s.prune_info[a].sent).every(x => s.prune_info[b].acked[x])
+        var q = (a, b) => (a != 'root') && !s.s9.leaves[b] && Object.keys(s.prune_info[a].sent).every(x => s.prune_info[b].acked[x])
         
         var clone = JSON.parse(JSON.stringify(s.s9))
         var deleted = sync9_prune2(clone, q, q)
