@@ -400,6 +400,7 @@ function sync9_create_client(s_funcs, id_suffix) {
         delete c.s9.T.v1
         c.s9.leaves = {root: true}
     }
+    init()
     
     c.uid = sync9_guid() + id_suffix
     c.server_leaves = {root: true}
