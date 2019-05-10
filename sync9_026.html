@@ -5,399 +5,7 @@
 <body></body>
 <script>
 
-var sync9_ROOT = 'root'
-console.log('-------------------')
-
-function draw_space_dag(c, g, S, x, y) {
-    function helper(node, y, px, py) {
-        g.beginPath()
-        g.moveTo(x, y)
-        g.lineTo(px, py)
-        g.lineWidth = 1
-        g.strokeStyle = 'lightblue'
-        g.stroke()
-
-        var begin_x
-        var end_x
-
-        g.beginPath()
-        if (node.gash) {
-            begin_x = x
-            g.moveTo(x, y - 20)
-            g.bezierCurveTo(x + 10, y - 10, x + 10, y + 10, x, y + 20)
-            x += 12
-        } else {
-            begin_x = x + 10
-            g.moveTo(x + 10, y - 20)
-            g.bezierCurveTo(x, y - 10, x, y + 10, x + 10, y + 20)
-            x += 8
-        }
-        g.lineWidth = 1
-        g.strokeStyle = 'lightblue'
-        g.stroke()
-        
-        if (Object.keys(node.deleted_by).length > 0) {
-            g.fillStyle = 'red'
-        } else {
-            g.fillStyle = 'blue'
-        }
-        g.textBaseline = 'middle'
-        g.font = '20px Arial'
-        g.fillText(node.elems, x, y)
-        
-        // g.font = '20px Arial'
-        // g.fillStyle = 'grey'
-        // g.fillText(node.vid || 'null', x, y + Math.random()*100)
-        
-        var width = g.measureText(node.elems).width
-        x += width
-        
-        g.beginPath()
-        if (node.end_cap) {
-            end_x = x
-            g.moveTo(x, y - 20)
-            g.bezierCurveTo(x + 10, y - 10, x + 10, y + 10, x, y + 20)
-            x += 10
-        } else {
-            end_x = x + 10
-            g.moveTo(x + 10, y - 20)
-            g.bezierCurveTo(x, y - 10, x, y + 10, x + 10, y + 20)
-            x += 8
-        }
-        g.moveTo(begin_x, y - 20)
-        g.lineTo(end_x, y - 20)
-        g.moveTo(begin_x, y + 20)
-        g.lineTo(end_x, y + 20)
-        g.lineWidth = 1
-        g.strokeStyle = 'lightblue'
-        g.stroke()
-
-        var px = x
-        x += 10
-        for (var n of node.nexts) helper(n, y - 40, px, y)
-        if (node.next) helper(node.next, y, px, y)
-    }
-    helper(S, y, x, y)
-}
-
-// console.log(JSON.stringify(s9, null, '    '))
-// draw_space_dag(c, g, S, x, y)
-// document.body.append(draw_space_dag(sync9_space_dag_get(s9.val.S, 0).S))
-
-
-
-
-var debug_frames, clients_array, server
-
-var ttt_n = 1
-for (var ttt = 0; ttt < ttt_n; ttt++) {
-    var last_ttt = (ttt == ttt_n - 1)
-    
-    var seed = 8700003 + ttt
-    Math.randomSeed(seed)
-    
-    // if (seed % 100 == 0)
-        console.log('seed ' + seed)
-    
-    var n_clients = 2
-    var clients = {}
-    clients_array = []
-    
-    debug_frames = []
-    
-    var debug_output = []
-    // debug_output = {}
-    // debug_output.push = function (x) {
-    //     console.log(x)
-    // }
-    
-    server = sync9_create_server({
-        add_version : (uid, vid, parents, changes) => {
-            clients[uid].incoming.push(() => {
-                debug_output.push('client add version: ' + uid + ' : ' + JSON.stringify({vid, parents, changes}))
-                
-                clients[uid].add_version(vid, parents, changes)
-            })
-        },
-        ack : (uid, vid) => {
-                debug_output.push('SENT client ack: ' + uid + ' v: ' + vid)
-            
-            clients[uid].incoming.push(() => {
-                debug_output.push('RECV client ack: ' + uid + ' v: ' + vid)
-                
-                clients[uid].ack(vid)
-            })
-        }
-    })
-    
-    for (var i = 0; i < n_clients; i++) {
-        ;(() => {
-            var c = sync9_create_client({
-                join : (uid, leaves) => {
-                    c.outgoing.push(() => {
-                        debug_output.push('server join: ' + uid + ' leaves:' + JSON.stringify(leaves))
-                        
-                        server.join(uid, leaves)
-                    })
-                },
-                add_version : (uid, vid, parents, changes) => {
-                    if (c.state == 'connected') {
-                        c.outgoing.push(() => {
-                            debug_output.push('server add version: ' + uid + ' : ' + JSON.stringify({vid, parents, changes}))
-                        
-                            server.add_version(uid, vid, parents, changes)
-                        })
-                    }
-                },
-                ack : (uid, vid) => {
-                    if (c.state == 'connected') {
-                        c.outgoing.push(() => {
-                            debug_output.push('server ack: ' + uid + ' v: ' + vid)
-                        
-                            server.ack(uid, vid)
-                        })
-                    }
-                }
-            }, '__' + i)
-            c.state = 'disconnected'
-            c.incoming = []
-            c.outgoing = []
-            clients[c.uid] = c
-            clients_array.push(c)
-            
-            if (i == 0) {
-                c.letters = 'abcdefghijklmnopqrstuvwxyz'
-                for (var ii = 0; ii < 100; ii++) {
-                    c.letters += String.fromCharCode(12032 + ii)
-                }
-                c.letters_i = 0
-            } else {
-                c.letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-                for (var ii = 0; ii < 100; ii++) {
-                    c.letters += String.fromCharCode(12032 + 100 + ii)
-                }
-                c.letters_i = 0
-            }
-        })()
-    }
-    
-    for (var t = 0; t < 500; t++) {
-        debug_output.push('t = ' + t)
-        
-        var i = Math.floor(Math.random() * n_clients)
-        var c = Object.values(clients)[i]
-    
-        if (Math.random() < 0.1) {
-            if (Math.random() < 0.9) {
-                debug_output.push('NEW VERSION: ' + c.uid)
-                debug_output.push(sync9_read(c.s9))
-                
-                if (c.letters_i >= c.letters.length) {
-                    c.letters_i = 0
-                }
-                
-                var edit = create_random_edit(c.s9, c.letters[c.letters_i++])
-                
-                var x = c.local_add_version(edit.changes)
-                debug_output.push(JSON.stringify(x))
-                
-                
-                debug_output.push(sync9_read(c.s9))
-                debug_output.push(c.state)
-            } else {
-                if (c.state == 'disconnected') {
-                    
-                    debug_output.push('JOIN: ' + c.uid)
-                    debug_output.push(sync9_read(c.s9))
-                    
-                    c.state = 'connected'
-                    c.join()
-                } else if (c.state == 'connected') {
-                    
-                    debug_output.push('LEAVE: ' + c.uid)
-                    debug_output.push(sync9_read(c.s9))
-                    
-                    c.state = 'disconnected'
-                    c.state_note = 'had been connected'
-                    c.incoming = []
-                    c.outgoing = []
-                    server.leave(c.uid)
-                }
-            }
-        } else {
-            if (Math.random() < 0.5) {
-                if (c.incoming.length > 0) {
-                    c.incoming.shift()()
-                    
-                    debug_output.push(c.uid + ' -> ' + sync9_read(c.s9))
-                    
-                    debug_output.push('unacked: ' + c.unacked.map(x => x.vid).join(', '))
-                    
-                }
-            } else {
-                if (c.outgoing.length > 0) {
-                    c.outgoing.shift()()
-                    
-                    debug_output.push('server -> ' + sync9_read(server.s9))
-                }
-            }
-        }
-        
-        if (debug_frames) debug_frames.push({
-            t: t,
-            server_s9: JSON.parse(JSON.stringify(server.s9)),
-            client_s9s: clients_array.map(x => JSON.parse(JSON.stringify(x.s9)))
-        })
-    }
-    
-    Object.values(clients).forEach(x => {
-        debug_output.push(x.uid + ' i:' + x.incoming.length + ' o:' + x.outgoing.length)
-    })
-    
-    for (var t = 0; t < 10000; t++) {
-        Object.values(clients).forEach(c => {
-            
-            debug_output.push('PROCESSING: ' + c.uid)
-            
-            if (c.state == 'disconnected') {
-                debug_output.push('tt = ' + t++)
-                debug_output.push('JOIN')
-                
-                c.state = 'connected'
-                c.join()
-            }
-            while (c.incoming.length > 0) {
-                debug_output.push('tt = ' + t++ + ' ' + c.uid)
-                debug_output.push('client: ' + sync9_read(c.s9))
-                
-                c.incoming.shift()()
-                
-                debug_output.push('client: ' + sync9_read(c.s9))
-                
-                if (debug_frames) debug_frames.push({
-                    tt: t - 1,
-                    server_s9: JSON.parse(JSON.stringify(server.s9)),
-                    client_s9s: clients_array.map(x => JSON.parse(JSON.stringify(x.s9)))
-                })
-            }
-            while (c.outgoing.length > 0) {
-                debug_output.push('tt = ' + t++)
-                debug_output.push('server: ' + sync9_read(server.s9))
-                
-                c.outgoing.shift()()
-                
-                debug_output.push('server: ' + sync9_read(server.s9))
-                
-                if (debug_frames) debug_frames.push({
-                    tt: t - 1,
-                    server_s9: JSON.parse(JSON.stringify(server.s9)),
-                    client_s9s: clients_array.map(x => JSON.parse(JSON.stringify(x.s9)))
-                })
-            }
-        })
-        
-        if (Object.values(clients).every(x => x.incoming.length == 0 && x.outgoing.length == 0)) break
-    }
-    
-    Object.values(clients).forEach(c => {
-        c.add_version(sync9_guid(), c.s9.leaves, [])
-    })
-    
-    var check_val = null
-    var check_good = true
-    ;[server].concat(Object.values(clients)).forEach((x, i) => {
-        var val = sync9_read(x.s9)
-        if (i == 0)
-            check_val = val
-        else if (val != check_val)
-            check_good = false
-    })
-    //console.log('check_good: ' + check_good)
-    
-    
-    
-    if (debug_frames) {
-        var c = document.createElement('canvas')
-        c.width = 3000
-        c.height = 1200
-        c.style.width = (c.width / devicePixelRatio) + 'px'
-        c.style.height = (c.height / devicePixelRatio) + 'px'
-        var g = c.getContext('2d')
-        document.body.append(c)
-        
-        var slider = document.createElement('input')
-        slider.style.width = '500px'
-        slider.setAttribute('type', 'range')
-        slider.setAttribute('min', '0')
-        slider.setAttribute('max', debug_frames.length - 1)
-        slider.setAttribute('value', debug_frames.length - 1)
-        slider.oninput = () => {
-            var d = debug_frames[1*slider.value]
-            
-            g.clearRect(0, 0, c.width, c.height)
-            
-            g.font = '20px Ariel'
-            g.fillStyle = 'black'
-            g.textBaseline = 'top'
-            if (d.tt) g.fillText('v3 tt: ' + d.tt, 0, 0)
-            else g.fillText('v3 t: ' + d.t, 0, 0)
-
-            draw_space_dag(c, g, sync9_space_dag_get(d.client_s9s[0].val.S, 0).S, 100, 300)
-            
-            draw_space_dag(c, g, sync9_space_dag_get(d.server_s9.val.S, 0).S, 100, 600)
-            
-            draw_space_dag(c, g, sync9_space_dag_get(d.client_s9s[1].val.S, 0).S, 100, 900)
-            
-            // clients_array.forEach((c, i) => {
-            //     draw_space_dag(c, g, sync9_space_dag_get(d.client_s9s[i].val.S, 0).S, 100, 300 + 300*(i + 1))
-            // })
-        }
-        document.body.append(slider)
-        slider.oninput()
-    }
-    
-    
-    
-    
-    if (last_ttt || !check_good) {
-        ;[server].concat(Object.values(clients)).forEach((x, i) => {
-            console.log(x)
-            var val = sync9_read(x.s9)
-            console.log(val)
-            
-            var val = sync9_node_count(x.s9)
-            console.log('node count: ' + val)
-        })
-        
-        if (debug_output instanceof Array)
-            console.log(debug_output.join('\n'))
-        
-        console.log('CHECK GOOD: ' + check_good)
-        
-        throw 'stop'
-    }
-}
-
-
-
-function create_random_edit(s, letters) {
-    letters = letters || 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    var str = sync9_read(s)
-    var start = Math.floor(Math.random() * (str.length + 1))
-    var del = Math.floor(Math.random() * Math.random() * (str.length - start + 1))
-    var ins = letters[Math.floor(Math.random() * letters.length)].repeat(Math.floor(Math.random() * 4) + (del == 0 ? 1 : 0))
-    
-    var vid = sync9_guid()
-    var changes = [`[${start}:${start + del}] = ` + JSON.stringify(ins)]
-    
-    return {
-        vid : vid,
-        parents : Object.assign({}, s.leaves),
-        changes : changes
-    }
-}
-
-function sync9_create_client(s_funcs, id_suffix) {
+function sync9_create_client(s_funcs) {
     var c = {}
     
     function init() {
@@ -410,7 +18,7 @@ function sync9_create_client(s_funcs, id_suffix) {
     }
     init()
     
-    c.uid = sync9_guid() + id_suffix
+    c.uid = sync9_guid()
     c.server_leaves = {root: true}
     c.unacked = []
     c.delete_us = {}
@@ -427,12 +35,6 @@ function sync9_create_client(s_funcs, id_suffix) {
             if (!Object.keys(c.delete_us).every(x => deleted[x])) throw 'wtf?'
             if (!Object.keys(deleted).every(x => c.delete_us[x])) throw 'wtf?'
             c.delete_us = {}
-            
-            if (debug_frames) debug_frames.push({
-                t: 'prune results..',
-                server_s9: JSON.parse(JSON.stringify(server.s9)),
-                client_s9s: clients_array.map(x => JSON.parse(JSON.stringify(x.s9)))
-            })
         }
         
         Object.keys(parents).forEach(p => {
@@ -447,10 +49,10 @@ function sync9_create_client(s_funcs, id_suffix) {
         }
         
         if (!c.got_first_version) {
+            c.got_first_version = true
             var save = sync9_read(c.s9)
             init()
             sync9_add_version(c.s9, vid, parents, changes)
-            c.got_first_version = true
             c.local_add_version(['[0:0]=' + JSON.stringify(save)])
         } else {
             sync9_add_version(c.s9, vid, parents, changes)
@@ -481,7 +83,6 @@ function sync9_create_client(s_funcs, id_suffix) {
         }
         
         c.unacked = c.unacked.filter(x => x.vid != vid)
-        
     }
     
     c.local_add_version = (changes) => {
@@ -505,11 +106,7 @@ function sync9_create_server(c_funcs) {
     var s = {}
     
     s.s9 = sync9_create()
-    
     sync9_add_version(s.s9, 'v1', {root : true}, [' = ""'])
-    // sync9_prune(s.s9, (a, b) => true)
-    // delete s.s9.T.v1
-    // s.s9.leaves = {root : true}
 
     s.peers = {}
     s.prune_info = {
@@ -518,10 +115,6 @@ function sync9_create_server(c_funcs) {
     }
     
     function prune() {
-        
-        // work here
-        var cloney = JSON.parse(JSON.stringify(s.s9))
-        
         var q = (a, b) => (a != 'root') && !s.s9.leaves[b] && Object.keys(s.prune_info[a].sent).every(x => s.prune_info[b].acked[x])
         
         var clone = JSON.parse(JSON.stringify(s.s9))
@@ -558,15 +151,6 @@ function sync9_create_server(c_funcs) {
             })
             delete s.prune_info[deleted]
         })
-        
-        // work here
-        if (debug_frames && Object.keys(deleted).length > 0) {
-            debug_frames.push({
-                t: 'before pruning..',
-                server_s9: JSON.parse(JSON.stringify(cloney)),
-                client_s9s: clients_array.map(x => JSON.parse(JSON.stringify(x.s9)))
-            })
-        }
     }
     
     s.join = (uid, leaves) => {
@@ -646,15 +230,6 @@ function sync9_create_server(c_funcs) {
     
     return s
 }
-
-
-
-
-
-
-
-
-
 
 function sync9_prune2(x, has_everyone_whos_seen_a_seen_b, has_everyone_whos_seen_a_seen_b_2) {
     var seen_nodes = {}
@@ -800,72 +375,6 @@ function sync9_space_dag_prune2(S, has_everyone_whos_seen_a_seen_b, seen_nodes) 
     return did_something
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-function sync9_node_count(s9) {
-    return sync9_space_dag_node_count(sync9_space_dag_get(s9.val.S, 0).S)
-}
-
-function sync9_space_dag_node_count(S) {
-    var count = 0
-    function helper(node) {
-        count++
-        
-        node.nexts.forEach(x => helper(x))
-        if (node.next) helper(node.next)
-    }
-    helper(S)
-    return count
-}
-
-
-
-
-
-
-
-
-
-
-function sync9_version_deleted_by(s9, vid, deleted_by_vid) {
-    sync9_space_dag_version_deleted_by(sync9_space_dag_get(s9.val.S, 0).S, vid, deleted_by_vid)
-}
-
-function sync9_space_dag_version_deleted_by(S, vid, deleted_by_vid) {
-    function helper(node, v) {
-        if (v == vid && node.elems.length > 0) node.deleted_by[deleted_by_vid] = true
-        
-        node.nexts.forEach(x => helper(x, x.vid))
-        if (node.next) helper(node.next, v)
-    }
-    helper(S, S.vid)
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 function sync9_extract_versions(x, is_anc, is_new_anc) {
     var versions = sync9_space_dag_extract_versions(sync9_space_dag_get(x.val.S, 0).S, x, is_anc, is_new_anc)
     versions.forEach(x => {
@@ -932,226 +441,11 @@ function sync9_space_dag_extract_versions(S, s9, is_anc, is_new_anc) {
     return sorted
 }
 
-
-
-
-
-
-
-
-
-function sync9_trim(x, is_anc) {
-    sync9_space_dag_trim(sync9_space_dag_get(x.val.S, 0).S, is_anc)
-    Object.keys(x.T).forEach(vid => {
-        if (!is_anc(vid)) delete x.T[vid]
-    })
-    var leaves = {}
-    Object.keys(x.T).forEach(x => leaves[x] = true)
-    Object.values(x.T).forEach(x => {
-        Object.keys(x).forEach(x => delete leaves[x])
-    })
-    x.leaves = leaves
-}
-
-function sync9_space_dag_trim(S, is_anc) {
-    function helper(node, vid) {
-        node.nexts = node.nexts.filter(x => is_anc(x.vid))
-        var was_deleted = Object.keys(node.deleted_by).length > 0
-        Object.keys(node.deleted_by).forEach(x => {
-            if (!is_anc(x)) {
-                delete node.deleted_by[x]
-            }
-        })
-        if (was_deleted && Object.keys(node.deleted_by).length == 0) {
-            delete node.gash
-        }
-        for (var next of node.nexts)
-            helper(next, next.vid)
-        if (node.next) helper(node.next, vid)
-    }
-    helper(S, S.vid)    
-}
-
-
-
-
-
-
-function sync9_gen_diff(x, is_anc, is_new_anc) {
-    return sync9_space_dag_gen_diff(sync9_space_dag_get(x.val.S, 0).S, is_anc, is_new_anc).map(x => {
-        return `[${x[0]}:${x[0] + x[1]}] = ${JSON.stringify(x[2])}`
-    })
-}
-
-function sync9_space_dag_gen_diff(S, is_anc, is_new_anc) {
-    var result = []
-    function add_result(offset, del, ins) {
-        if (result.length > 0) {
-            var prev = result[result.length - 1]
-            if (prev[0] + prev[1] == offset) {
-                prev[1] += del
-                prev[2] = prev[2].concat(ins)
-                return
-            }
-        }
-        result.push([offset, del, ins])
-    }
-    
-    var offset_a = 0
-    sync9_trav_space_dag(S, is_new_anc, (node, offset, has_nexts, prev, vid) => {
-        if (Object.keys(node.deleted_by).some(x => is_anc(x))) return
-        var deleted_by_b = Object.keys(node.deleted_by).some(x => is_new_anc(x))
-        
-        if (!is_anc(vid) && !deleted_by_b) {
-            add_result(offset_a, 0, node.elems)
-        } else if (is_anc(vid) && deleted_by_b) {
-            add_result(offset_a, node.elems.length, node.elems.slice(0, 0))
-        }
-        
-        if (is_anc(vid))
-            offset_a += node.elems.length
-    }, true)
-    
-    return result
-}
-
-
-
-
-
-
-
-
-function sync9_rebase(x, vid, changes, is_anc, is_new_anc) {
-    return sync9_space_dag_rebase(sync9_space_dag_get(x.val.S, 0).S, vid, changes.map(x => {
-        var p = sync9_parse_change(x)
-        return [p.range[0], p.range[1] - p.range[0], p.val]
-    }), is_anc, is_new_anc).map(x => {
-        return `[${x[0]}:${x[0] + x[1]}] = ${JSON.stringify(x[2])}`
-    })
-}
-
-function sync9_space_dag_rebase(S, vid, splices, is_anc, is_new_anc) {
-    var offset_a = 0
-    var offset_b = 0
-    var set_us = []
-    sync9_trav_space_dag(S, is_new_anc, (node, offset, has_nexts, prev, vid) => {
-        if (Object.keys(node.deleted_by).some(x => is_anc(x))) return
-        var deleted_by_b = Object.keys(node.deleted_by).some(x => is_new_anc(x))
-        
-        node.offset_a = offset_a
-        node.offset_b = offset_b
-        if (set_us.length > 0) {
-            set_us.forEach(n => n.real_next = node)
-            set_us = []
-        }
-        
-        if (is_anc(vid))
-            offset_a += node.elems.length
-        if (!deleted_by_b)
-            offset_b += node.elems.length
-        if (node.next)
-            set_us.push(node)
-    }, true, node => {
-        set_us.push(node)
-    })
-    
-    var si = 0
-    var s = splices[si++]
-    
-    var result = []
-    function add_result(offset, del, ins) {
-        if (result.length > 0) {
-            var prev = result[result.length - 1]
-            if (prev[0] + prev[1] == offset) {
-                prev[1] += del
-                prev[2] = prev[2].concat(ins)
-                return
-            }
-        }
-        result.push([offset, del, ins])
-    }
-    
-    var new_vid = vid
-    var delete_up_to = 0
-    sync9_trav_space_dag(S, is_new_anc, (node, offset, has_nexts, prev, vid) => {
-        if (Object.keys(node.deleted_by).some(x => is_anc(x))) return
-        var deleted_by_b = Object.keys(node.deleted_by).some(x => is_new_anc(x))
-        if (is_anc(vid)) {
-            while (s) {
-                if (s[1] == 0) {
-                    var d = s[0] - (node.offset_a + node.elems.length)
-                    if (d > 0) break
-                    if (d == 0 && !node.end_cap &&
-                        node.nexts.find(next => is_anc(next.vid))) break
-                    if (d == 0 && !node.end_cap) {
-                        var nexts = node.nexts.filter(next => is_new_anc(next.vid))
-                        var i = binarySearch(nexts, function (x) {
-                            if (new_vid < x.vid) return -1
-                            if (new_vid > x.vid) return 1
-                            return 0
-                        })
-                        add_result(nexts[i] ? nexts[i].offset_b :
-                            node.real_next ? node.real_next.offset_b :
-                            node.offset_b + (deleted_by_b ? 0 : (s[0] - node.offset_a)), 0, s[2])
-                    } else {
-                        add_result(node.offset_b + (deleted_by_b ? 0 : (s[0] - node.offset_a)), 0, s[2])
-                    }
-                    s = splices[si++]
-                } else if (delete_up_to <= node.offset_a) {
-                    var d = s[0] - (node.offset_a + node.elems.length)
-                    if (d >= 0) break
-                    delete_up_to = s[0] + s[1]
-                    if (delete_up_to <= node.offset_a) throw 'how so?'
-                    if (s[0] == node.offset_a && node.gash) {
-                        if (!prev.end_cap) throw 'no end_cap?'
-                        var nexts = prev.nexts.filter(next => is_new_anc(next.vid))
-                        var i = binarySearch(nexts, function (x) {
-                            if (new_vid < x.vid) return -1
-                            if (new_vid > x.vid) return 1
-                            return 0
-                        })
-                        add_result(nexts[i] ? nexts[i].offset_b : node.offset_b, 0, s[2])
-                    } else {
-                        add_result(node.offset_b + (deleted_by_b ? 0 : (s[0] - node.offset_a)), 0, s[2])
-                    }
-                } else {
-                    var d = delete_up_to - (node.offset_a + node.elems.length)
-                    if (!deleted_by_b) {
-                        var start = node.offset_b + Math.max(0, s[0] - node.offset_a)
-                        var stop = node.offset_b + node.elems.length + Math.min(0, d)
-                        add_result(start, stop - start, '')
-                    }
-                    if (d <= 0) {
-                        s = splices[si++]
-                    } else break
-                }
-            }
-        }
-    }, true)
-    
-    sync9_trav_space_dag(S, is_new_anc, (node, offset, has_nexts, prev, vid) => {
-        if (Object.keys(node.deleted_by).some(x => is_anc(x))) return
-        delete node.offset_a
-        delete node.offset_b
-        delete node.real_next
-    }, true)
-    
-    return result
-}
-
-
-
-
-
-
-
-
 function sync9_create() {
     return {
-        T : {[sync9_ROOT] : {} },
-        leaves : {[sync9_ROOT] : true },
-        val : sync9_create_val()
+        T: {root : {}},
+        leaves: {root: true},
+        val: sync9_create_val()
     }
 }
 
@@ -1264,7 +558,7 @@ function sync9_wrap(x, vid) {
 function sync9_create_val() {
     return {
         t : 'val',
-        S : sync9_create_space_dag_node(sync9_ROOT, [])
+        S : sync9_create_space_dag_node('root', [])
     }
 }
 
@@ -1278,14 +572,14 @@ function sync9_create_obj() {
 function sync9_create_arr() {
     return {
         t : 'arr',
-        S : sync9_create_space_dag_node(sync9_ROOT, [])
+        S : sync9_create_space_dag_node('root', [])
     }
 }
 
 function sync9_create_str() {
     return {
         t : 'str',
-        S : sync9_create_space_dag_node(sync9_ROOT, '')
+        S : sync9_create_space_dag_node('root', '')
     }
 }
 
@@ -1743,22 +1037,6 @@ function binarySearch(ar, compare_fn) {
         }
     }
     return m;
-}
-
-function multiset_add(ms, key1, key2) {
-    var s = ms[key1]
-    if (!s) s = ms[key1] = {}
-    if (!s[key2]) return s[key2] = true
-}
-
-function multiset_rm(ms, key1, key2) {
-    var s = ms[key1]
-    if (!s) return true
-    delete s[key2]
-    if (Object.keys(s).length == 0) {
-        delete ms[key1]
-        return true
-    }
 }
 
 </script>
