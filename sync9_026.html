@@ -228,12 +228,6 @@ function run_trial_diffsync(seed, N) {
     }
     
     for (var t = 0; t < N; t++) {
-        
-        console.log('t = ' + t)
-        if (t == 96) {
-            debugger
-        }
-        
         var i = Math.floor(rand() * n_clients)
         var c = Object.values(clients)[i]
         if (rand() < 0.1) {
