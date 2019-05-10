@@ -143,7 +143,7 @@ function run_trial_sync9(seed, N) {
             check_good = false
     })
     
-    if (check_good) {
+    if (!check_good) {
         ;[server].concat(Object.values(clients)).forEach((x, i) => {
             console.log(x)
             var val = sync9_read(x.s9)
