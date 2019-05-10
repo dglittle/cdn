@@ -392,12 +392,14 @@ function create_random_edit(s, letters) {
 function sync9_create_client(s_funcs, id_suffix) {
     var c = {}
     
-    c.s9 = sync9_create()
-    
-    sync9_add_version(c.s9, 'v1', {root: true}, [' = ""'])
-    sync9_prune(c.s9, (a, b) => true, (a, b) => true)
-    delete c.s9.T.v1
-    c.s9.leaves = {root: true}
+    function init() {
+        c.s9 = sync9_create()
+        
+        sync9_add_version(c.s9, 'v1', {root: true}, [' = ""'])
+        sync9_prune(c.s9, (a, b) => true, (a, b) => true)
+        delete c.s9.T.v1
+        c.s9.leaves = {root: true}
+    }
     
     c.uid = sync9_guid() + id_suffix
     c.server_leaves = {root: true}
@@ -436,18 +438,14 @@ function sync9_create_client(s_funcs, id_suffix) {
         }
         
         if (!c.got_first_version) {
-            debugger
-            var diff = sync9_gen_diff(c.s9, x => x == 'root', x => true)
-            throw 'stopy'
-            
-            // function sync9_gen_diff(x, is_anc, is_new_anc) {
-            
-            // c.got_first_version = true
-            
-            // work here
+            var save = sync9_read(c.s9)
+            init()
+            sync9_add_version(c.s9, vid, parents, changes)
+            c.got_first_version = true
+            c.local_add_version(['[0:0]=' + JSON.stringify(save)])
+        } else {
+            sync9_add_version(c.s9, vid, parents, changes)
         }
-        
-        sync9_add_version(c.s9, vid, parents, changes)
         s_funcs.ack(c.uid, vid)
     }
     
@@ -484,8 +482,10 @@ function sync9_create_client(s_funcs, id_suffix) {
             changes : changes
         }
         sync9_add_version(c.s9, x.vid, c.s9.leaves, x.changes)
-        c.unacked.push(x)
-        s_funcs.add_version(c.uid, x.vid, x.parents, x.changes)
+        if (c.got_first_version) {
+            c.unacked.push(x)
+            s_funcs.add_version(c.uid, x.vid, x.parents, x.changes)
+        }
         return x
     }
     
