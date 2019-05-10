@@ -86,6 +86,7 @@ function run_trial_sync9(seed, N) {
                     c.letters_i = 0
                 }
                 var edit = create_random_edit(c.s9, c.letters[c.letters_i++])
+                console.log('edit: ', edit)
                 var x = c.local_add_version(edit.changes)
             } else {
                 if (c.state == 'disconnected') {
@@ -143,7 +144,7 @@ function run_trial_sync9(seed, N) {
             check_good = false
     })
     
-    if (check_good) {
+    if (!check_good) {
         ;[server].concat(Object.values(clients)).forEach((x, i) => {
             console.log(x)
             var val = sync9_read(x.s9)
@@ -175,7 +176,7 @@ function run_trial_sync9(seed, N) {
 
 function main() {
     var s = Date.now()
-    run_trial_sync9('hiseed', 500)
+    run_trial_sync9('hiseedd', 500)
     var e = Date.now()
     console.log('time: ' + (e - s)/1000 + 's')
 }
