@@ -235,9 +235,6 @@ function run_trial_diffsync(seed, N) {
                 if (c.letters_i >= c.letters.length) {
                     c.letters_i = 0
                 }
-                
-                debugger
-                
                 c.on_change(create_random_edit(c.minigit.cache, c.letters[c.letters_i++]))
             } else {
                 if (c.state == 'disconnected') {
@@ -304,22 +301,14 @@ function run_trial_diffsync(seed, N) {
 
     function create_random_edit(s, letters) {
         letters = letters || 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-        var str = sync9_read(s)
+        var str = s
         var start = Math.floor(rand() * (str.length + 1))
         var del = Math.floor(rand() * rand() * (str.length - start + 1))
         var ins = letters[Math.floor(rand() * letters.length)].repeat(Math.floor(rand() * 4) + (del == 0 ? 1 : 0))
-        
-        var vid = sync9_guid()
-        var changes = [`[${start}:${start + del}] = ` + JSON.stringify(ins)]
-        
-        return {
-            vid : vid,
-            parents : Object.assign({}, s.leaves),
-            changes : changes
-        }
+        return s.slice(0, start) + ins + s.slice(start + del)
     }
     
-    console.log('done: ' + seed + ' : ' + sync9_read(server.s9))
+    console.log('done: ' + seed + ' : ' + server.channels['hope'].minigit.cache)
 }
 
 
