@@ -45,9 +45,9 @@ function draw_space_dag(c, g, S, x, y) {
         g.font = '20px Arial'
         g.fillText(node.elems, x, y)
         
-        g.font = '20px Arial'
-        g.fillStyle = 'grey'
-        g.fillText(node.vid || 'null', x, y + Math.random()*100)
+        // g.font = '20px Arial'
+        // g.fillStyle = 'grey'
+        // g.fillText(node.vid || 'null', x, y + Math.random()*100)
         
         var width = g.measureText(node.elems).width
         x += width
