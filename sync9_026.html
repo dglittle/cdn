@@ -75,6 +75,8 @@ function run_trial_sync9(seed, N) {
     }
     
     for (var t = 0; t < N; t++) {
+        console.log('t = ' + t)
+        
         var i = Math.floor(rand() * n_clients)
         var c = Object.values(clients)[i]
     
