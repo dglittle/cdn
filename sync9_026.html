@@ -1459,8 +1459,6 @@ diffsync.create_client = function (options, s_funcs) {
         if (o.commits) {
             minigit.merge(o.commits)
 
-            var patch = get_diff_patch(options.get_text(), minigit.cache)
-
             if (o.welcome) {
                 each(extend(o.commits, minigit.get_ancestors(o.commits)), function (_, id) {
                     delete unacknowledged_commits[id]
