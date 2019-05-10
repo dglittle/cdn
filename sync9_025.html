@@ -410,99 +410,17 @@ function sync9_create_client(s_funcs, id_suffix) {
     }
     
     c.add_version = (vid, parents, changes) => {
-        
-
-        // work here
-        if (!c) {
-            debugger
-        }
-        
-        
         if (Object.keys(c.delete_us).length > 0) {
-            
-            
-            // work here
-            var old_s9 = JSON.parse(JSON.stringify(c.s9))
-            
-            
-            
             var deleted = sync9_prune(c.s9, (a, b) => c.delete_us[b], (a, b) => c.delete_us[a])
-            
-            
-            // work here
-            if (!Object.keys(c.delete_us).every(x => deleted[x]) || !Object.keys(deleted).every(x => c.delete_us[x])) {
-                
-                
-                if (debug_frames) debug_frames.push({
-                    tt: 'pruned.. but wrong..',
-                    server_s9: JSON.parse(JSON.stringify(server.s9)),
-                    client_s9s: clients_array.map(x => JSON.parse(JSON.stringify(x.s9)))
-                })
-                
-                
-                function do_it() {
-                    var c = document.createElement('canvas')
-                    c.width = 3000
-                    c.height = 1200
-                    c.style.width = (c.width / devicePixelRatio) + 'px'
-                    c.style.height = (c.height / devicePixelRatio) + 'px'
-                    var g = c.getContext('2d')
-                    document.body.append(c)
-                    
-                    var slider = document.createElement('input')
-                    slider.style.width = '500px'
-                    slider.setAttribute('type', 'range')
-                    slider.setAttribute('min', '0')
-                    slider.setAttribute('max', debug_frames.length - 1)
-                    slider.setAttribute('value', debug_frames.length - 1)
-                    slider.oninput = () => {
-                        var d = debug_frames[1*slider.value]
-                        
-                        g.clearRect(0, 0, c.width, c.height)
-                        
-                        g.font = '20px Ariel'
-                        g.fillStyle = 'black'
-                        g.textBaseline = 'top'
-                        if (d.tt) g.fillText('v3 tt: ' + d.tt, 0, 0)
-                        else g.fillText('v3 t: ' + d.t, 0, 0)
-            
-                        draw_space_dag(c, g, sync9_space_dag_get(d.client_s9s[0].val.S, 0).S, 100, 300)
-                        
-                        draw_space_dag(c, g, sync9_space_dag_get(d.server_s9.val.S, 0).S, 100, 600)
-                        
-                        draw_space_dag(c, g, sync9_space_dag_get(d.client_s9s[1].val.S, 0).S, 100, 900)
-                        
-                        // clients_array.forEach((c, i) => {
-                        //     draw_space_dag(c, g, sync9_space_dag_get(d.client_s9s[i].val.S, 0).S, 100, 300 + 300*(i + 1))
-                        // })
-                    }
-                    document.body.append(slider)
-                    slider.oninput()
-                }
-                if (debug_frames) do_it()
-                
-                console.log(JSON.stringify(old_s9, null, '    '))
-                console.log(JSON.stringify(c.s9, null, '    '))
-                
-                console.log('got here!?')
-                throw 'stopy'
-            }
-            
-            
-            
             if (!Object.keys(c.delete_us).every(x => deleted[x])) throw 'wtf?'
             if (!Object.keys(deleted).every(x => c.delete_us[x])) throw 'wtf?'
             c.delete_us = {}
             
-            
-            
-            // work here
             if (debug_frames) debug_frames.push({
                 t: 'prune results..',
                 server_s9: JSON.parse(JSON.stringify(server.s9)),
                 client_s9s: clients_array.map(x => JSON.parse(JSON.stringify(x.s9)))
             })
-            
         }
         
         Object.keys(parents).forEach(p => {
@@ -545,13 +463,10 @@ function sync9_create_client(s_funcs, id_suffix) {
         c.unacked = c.unacked.filter(x => x.vid != vid)
         
     }
-
-    // work here
-    c.next_v_i = 1
     
     c.local_add_version = (changes) => {
         var x = {
-            vid : sync9_guid() + '_' + c.letters[0] + c.next_v_i++,
+            vid : sync9_guid(),
             parents : Object.assign({}, c.s9.leaves),
             changes : changes
         }
