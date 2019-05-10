@@ -319,7 +319,7 @@ function run_trial_diffsync(seed, N) {
 function main() {
     var s = Date.now()
     run_trial_sync9('hiseeddd', 1000)
-    // run_trial_diffsync('hiseeddd', 5000)
+    run_trial_diffsync('hiseeddd', 1000)
     var e = Date.now()
     console.log('time: ' + (e - s)/1000 + 's')
 }
