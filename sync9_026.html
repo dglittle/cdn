@@ -1430,6 +1430,7 @@ diffsync.create_client = function (options, s_funcs) {
     var minigit = diffsync.create_minigit()
     self.minigit = minigit
     var unacknowledged_commits = {}
+    var sent_unacknowledged_commits = false
 
     function send(o) {
         o.v = diffsync.version
@@ -1440,7 +1441,7 @@ diffsync.create_client = function (options, s_funcs) {
 
     self.join = function () {
         send({ join : true })
-        var sent_unacknowledged_commits = false
+        sent_unacknowledged_commits = false
     }
     
     self.onmessage = function (s) {
@@ -1480,14 +1481,6 @@ diffsync.create_client = function (options, s_funcs) {
         var cs = minigit.commit(new_text)
         if (cs) {
             extend(unacknowledged_commits, cs)
-
-            var patch = null
-            var c = cs[Object.keys(cs)[0]]
-            var parents = Object.keys(c.from_parents)
-            if (parents.length == 1)
-                patch = c.from_parents[parents[0]]
-            else
-                patch = get_diff_patch(old_cache, minigit.cache)
         }
 
         if (!sent_unacknowledged_commits) { return }
