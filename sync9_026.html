@@ -235,6 +235,9 @@ function run_trial_diffsync(seed, N) {
                 if (c.letters_i >= c.letters.length) {
                     c.letters_i = 0
                 }
+                
+                debugger
+                
                 c.on_change(create_random_edit(c.minigit.cache, c.letters[c.letters_i++]))
             } else {
                 if (c.state == 'disconnected') {
