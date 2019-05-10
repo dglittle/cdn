@@ -395,14 +395,15 @@ function sync9_create_client(s_funcs, id_suffix) {
     c.s9 = sync9_create()
     
     sync9_add_version(c.s9, 'v1', {root: true}, [' = ""'])
-    // sync9_prune(c.s9, (a, b) => true)
-    // delete c.s9.T.v1
-    // c.s9.leaves = {root: true}
+    sync9_prune(c.s9, (a, b) => true, (a, b) => true)
+    delete c.s9.T.v1
+    c.s9.leaves = {root: true}
     
     c.uid = sync9_guid() + id_suffix
-    c.server_leaves = {v1: true}
+    c.server_leaves = {root: true}
     c.unacked = []
     c.delete_us = {}
+    c.got_first_version = false
     
     c.join = () => {
         s_funcs.join(c.uid, c.server_leaves)
@@ -432,6 +433,18 @@ function sync9_create_client(s_funcs, id_suffix) {
             var v = c.unacked.shift()
             if (v.vid != vid) throw 'how?'
             return
+        }
+        
+        if (!c.got_first_version) {
+            debugger
+            var diff = sync9_gen_diff(c.s9, x => x == 'root', x => true)
+            throw 'stopy'
+            
+            // function sync9_gen_diff(x, is_anc, is_new_anc) {
+            
+            // c.got_first_version = true
+            
+            // work here
         }
         
         sync9_add_version(c.s9, vid, parents, changes)
