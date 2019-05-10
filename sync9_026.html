@@ -75,13 +75,13 @@ function run_trial_sync9(seed, N) {
     }
     
     for (var t = 0; t < N; t++) {
-        console.log('t = ' + t)
-        
         var i = Math.floor(rand() * n_clients)
         var c = Object.values(clients)[i]
     
         if (rand() < 0.1) {
+            console.log('got here!1')
             if (rand() < 0.9) {
+                console.log('got here!2')
                 if (c.letters_i >= c.letters.length) {
                     c.letters_i = 0
                 }
@@ -101,7 +101,7 @@ function run_trial_sync9(seed, N) {
                 }
             }
         } else {
-            if (Math.random() < 0.5) {
+            if (rand() < 0.5) {
                 if (c.incoming.length > 0) {
                     c.incoming.shift()()
                 }
