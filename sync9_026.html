@@ -11,6 +11,7 @@ function run_trial_sync9(seed, N) {
     var last_seed = seed
     function rand() {
         Math.randomSeed(last_seed)
+        Math.random()
         return last_seed = Math.random()
     }
 
