@@ -1356,7 +1356,7 @@ diffsync.create_client = function (options, s_funcs) {
 
             if (!sent_unacknowledged_commits) { return }
 
-            if (cs) send({msg.commits: cs})
+            if (cs) send({commits: cs})
         }
     }
 
