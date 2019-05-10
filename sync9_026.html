@@ -197,7 +197,7 @@ function run_trial_diffsync(seed, N) {
     
     for (var i = 0; i < n_clients; i++) {
         ;(() => {
-            var c = diffsync.create_client({
+            var c = diffsync.create_client({}, {
                 send: (message) => {
                     if (c.state == 'connected') {
                         c.outgoing.push(() => {
