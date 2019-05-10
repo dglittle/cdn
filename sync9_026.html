@@ -7,9 +7,197 @@
 
 // goal: compare speed with diffsync
 
-function main() {
-    console.log('got here!?')
+function run_trial_sync9(seed, N) {
+    var last_seed = seed
+    function rand() {
+        Math.randomSeed(last_seed)
+        var r = Math.random()
+        last_seed = Math.random()
+        return r
+    }
+
+    var n_clients = 2
+    var clients = {}
+    
+    var server = sync9_create_server({
+        add_version: (uid, vid, parents, changes) => {
+            clients[uid].incoming.push(() => {
+                clients[uid].add_version(vid, parents, changes)
+            })
+        },
+        ack: (uid, vid) => {
+            clients[uid].incoming.push(() => {
+                clients[uid].ack(vid)
+            })
+        }
+    })
+    
+    for (var i = 0; i < n_clients; i++) {
+        ;(() => {
+            var c = sync9_create_client({
+                join : (uid, leaves) => {
+                    c.outgoing.push(() => {
+                        server.join(uid, leaves)
+                    })
+                },
+                add_version : (uid, vid, parents, changes) => {
+                    if (c.state == 'connected') {
+                        c.outgoing.push(() => {
+                            server.add_version(uid, vid, parents, changes)
+                        })
+                    }
+                },
+                ack : (uid, vid) => {
+                    if (c.state == 'connected') {
+                        c.outgoing.push(() => {
+                            server.ack(uid, vid)
+                        })
+                    }
+                }
+            })
+            c.state = 'disconnected'
+            c.incoming = []
+            c.outgoing = []
+            clients[c.uid] = c
+            
+            if (i == 0) {
+                c.letters = 'abcdefghijklmnopqrstuvwxyz'
+                for (var ii = 0; ii < 100; ii++) {
+                    c.letters += String.fromCharCode(12032 + ii)
+                }
+                c.letters_i = 0
+            } else {
+                c.letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+                for (var ii = 0; ii < 100; ii++) {
+                    c.letters += String.fromCharCode(12032 + 100 + ii)
+                }
+                c.letters_i = 0
+            }
+        })()
+    }
+    
+    for (var t = 0; t < N; t++) {
+        var i = Math.floor(rand() * n_clients)
+        var c = Object.values(clients)[i]
+    
+        if (rand() < 0.1) {
+            if (rand() < 0.9) {
+                if (c.letters_i >= c.letters.length) {
+                    c.letters_i = 0
+                }
+                var edit = create_random_edit(c.s9, c.letters[c.letters_i++])
+                var x = c.local_add_version(edit.changes)
+            } else {
+                if (c.state == 'disconnected') {
+                    c.state = 'connected'
+                    c.join()
+                } else if (c.state == 'connected') {
+                    c.state = 'disconnected'
+                    c.state_note = 'had been connected'
+                    c.incoming = []
+                    c.outgoing = []
+                    server.leave(c.uid)
+                }
+            }
+        } else {
+            if (Math.random() < 0.5) {
+                if (c.incoming.length > 0) {
+                    c.incoming.shift()()
+                }
+            } else {
+                if (c.outgoing.length > 0) {
+                    c.outgoing.shift()()
+                }
+            }
+        }
+    }
+    
+    for (var t = 0; t < 10000; t++) {
+        Object.values(clients).forEach(c => {
+            if (c.state == 'disconnected') {
+                c.state = 'connected'
+                c.join()
+            }
+            while (c.incoming.length > 0) {
+                c.incoming.shift()()
+            }
+            while (c.outgoing.length > 0) {
+                c.outgoing.shift()()
+            }
+        })
+        
+        if (Object.values(clients).every(x => x.incoming.length == 0 && x.outgoing.length == 0)) break
+    }
+    
+    Object.values(clients).forEach(c => {
+        c.add_version(sync9_guid(), c.s9.leaves, [])
+    })
+    
+    var check_val = null
+    var check_good = true
+    ;[server].concat(Object.values(clients)).forEach((x, i) => {
+        var val = sync9_read(x.s9)
+        if (i == 0)
+            check_val = val
+        else if (val != check_val)
+            check_good = false
+    })
+    
+    if (check_good) {
+        ;[server].concat(Object.values(clients)).forEach((x, i) => {
+            console.log(x)
+            var val = sync9_read(x.s9)
+            console.log(val)
+        })
+        console.log('CHECK GOOD: ' + check_good)
+        throw 'stop'
+    }
+
+    function create_random_edit(s, letters) {
+        letters = letters || 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        var str = sync9_read(s)
+        var start = Math.floor(rand() * (str.length + 1))
+        var del = Math.floor(rand() * rand() * (str.length - start + 1))
+        var ins = letters[Math.floor(rand() * letters.length)].repeat(Math.floor(rand() * 4) + (del == 0 ? 1 : 0))
+        
+        var vid = sync9_guid()
+        var changes = [`[${start}:${start + del}] = ` + JSON.stringify(ins)]
+        
+        return {
+            vid : vid,
+            parents : Object.assign({}, s.leaves),
+            changes : changes
+        }
+    }
 }
+
+function main() {
+    var s = Date.now()
+    run_trial_sync9('hiseed', 500)
+    var e = Date.now()
+    console.log('time: ' + (e - s)/1000 + 's')
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 function sync9_create_client(s_funcs) {
     var c = {}
@@ -1083,32 +1271,20 @@ diffsync.version = 1039
 diffsync.port = 60607
 
 // var client = diffsync.create_client({
-//     ws_url : 'ws://invisible.college:' + diffsync.port,
 //     channel : 'the_cool_room',
 //     get_text : function () {
 //         return current_text_displayed_to_user
 //     },
-//     get_range : function () {
-//         return [selection_start, selection_end]
-//     },
-//     on_text : function (text, range) {
+//     on_text : function (text) {
 //         current_text_displayed_to_user = text
-//         set_selection(range[0], range[1])
 //     },
-//     on_ranges : function (peer_ranges) {
-//.        for (peer in peer_ranges) {
-//             set_peer_selection(peer_ranges[peer][0], peer_ranges[peer][1])
-//         }
-//     }
 // })
 //
 // client.on_change() <-- call this when the user changes the text or cursor/selection position
 //
-diffsync.create_client = function (options) {
+diffsync.create_client = function (options, s_funcs) {
     var self = {}
     self.on_change = null
-    self.on_window_closing = null
-    self.get_channels = null
 
     var on_channels = null
 
@@ -1116,89 +1292,20 @@ diffsync.create_client = function (options) {
     var minigit = diffsync.create_minigit()
     var unacknowledged_commits = {}
 
-    var prev_range = [-1, -1]
-    var peer_ranges = {}
-
-    window.addEventListener('beforeunload', function () {
-        if (self.on_window_closing) self.on_window_closing()
-    })
-
-    var connected = false
-    function reconnect() {
-        connected = false
-        console.log('connecting...')
-        var ws = new WebSocket(options.ws_url)
-
+    self.join = function () {
         function send(o) {
             o.v = diffsync.version
             o.uid = uid
             o.channel = options.channel
-            try {
-                ws.send(JSON.stringify(o))
-            } catch (e) {}
-        }
-
-        self.on_window_closing = function () {
-            send({ close : true })
-        }
-
-        self.get_channels = function (cb) {
-            on_channels = cb
-            send({ get_channels : true })
+            s_funcs.send(JSON.stringify(o))
         }
     
-        ws.onopen = function () {
-            connected = true
-            send({ join : true })
-            on_pong()
-        }
-    
-        var pong_timer = null
-        function on_pong() {
-            clearTimeout(pong_timer)
-            setTimeout(function () {
-                send({ ping : true })
-                pong_timer = setTimeout(function () {
-                    console.log('no pong came!!')
-                    if (ws) {
-                        ws = null
-                        reconnect()
-                    }
-                }, 4000)
-            }, 3000)
-        }
-
-        ws.onclose = function () {
-            console.log('connection closed...')
-            if (ws) {
-                ws = null
-                reconnect()
-            }
-        }
+        send({ join : true })
 
         var sent_unacknowledged_commits = false
-
-        function adjust_range(range, patch) {
-            return map_array(range, function (x) {
-                each(patch, function (p) {
-                    if (p[0] < x) {
-                        if (p[0] + p[1] <= x) {
-                            x += -p[1] + p[2].length
-                        } else {
-                            x = p[0] + p[2].length
-                        }
-                    } else return false
-                })
-                return x
-            })
-        }
     
-        ws.onmessage = function (event) {
-            if (!ws) { return }
-            var o = JSON.parse(event.data)
-            if (o.pong) { return on_pong() }
-
-            console.log('message: ' + event.data)
+        self.onmessage = function (s) {
+            var o = JSON.parse(s)
 
             if (o.channels) {
                 if (on_channels) on_channels(o.channels)
@@ -1208,12 +1315,7 @@ diffsync.create_client = function (options) {
                 minigit.merge(o.commits)
 
                 var patch = get_diff_patch(options.get_text(), minigit.cache)
-                each(peer_ranges, function (range, peer) {
-                    peer_ranges[peer] = adjust_range(range, patch)
-                })
-
-                prev_range = adjust_range(options.get_range(), patch)
-                options.on_text(minigit.cache, prev_range)
+                options.on_text(minigit.cache)
 
                 if (o.welcome) {
                     each(extend(o.commits, minigit.get_ancestors(o.commits)), function (_, id) {
@@ -1233,15 +1335,6 @@ diffsync.create_client = function (options) {
                     minigit.remove(id)
                 })
             }
-            if (o.range) {
-                peer_ranges[o.uid] = o.range
-            }
-            if (o.close) {
-                delete peer_ranges[o.uid]
-            }
-            if ((o.range || o.close || o.commits) && options.on_ranges) {
-                options.on_ranges(peer_ranges)
-            }
         }
 
         self.on_change = function () {
@@ -1259,53 +1352,19 @@ diffsync.create_client = function (options) {
                     patch = c.from_parents[parents[0]]
                 else
                     patch = get_diff_patch(old_cache, minigit.cache)
-
-                each(peer_ranges, function (range, peer) {
-                    peer_ranges[peer] = adjust_range(range, patch)
-                })
-                if (options.on_ranges) options.on_ranges(peer_ranges)
             }
 
             if (!sent_unacknowledged_commits) { return }
 
-            var range = options.get_range()
-            var range_changed = (range[0] != prev_range[0]) || (range[1] != prev_range[1])
-            prev_range = range
-
-            var msg = {}
-            if (cs) msg.commits = cs
-
-            if (range_changed) msg.range = range
-            if (cs || range_changed) send(msg)
+            if (cs) send({msg.commits: cs})
         }
     }
-    reconnect()
 
     return self
 }
 
 // options is an object like this: {
 //     wss : a websocket server from the 'ws' module,
-//     initial_data : {
-//         'some_channel_name' : {
-//             commits : {
-//                 'asdfasdf' : {
-//                     to_parents : {},
-//                     from_parents : {},
-//                     text : 'hello'
-//                 }
-//             },
-//             members : {
-//                 'lkjlkjlkj' : {
-//                     do_not_delete : {
-//                         'asdfasdf' : true
-//                     }
-//                 },
-//                 last_seen : 1510878755554,
-//                 last_sent : 1510878755554
-//             }
-//         }
-//     },
 //     on_change : function (changes) {
 //         changes contains commits and members that changed,
 //         and looks like: {
@@ -1316,7 +1375,7 @@ diffsync.create_client = function (options) {
 //     }
 // }
 //
-diffsync.create_server = function (options) {
+diffsync.create_server = function (options, c_funcs) {
     var self = {}
     self.channels = {}
 
@@ -1330,51 +1389,25 @@ diffsync.create_server = function (options) {
     function get_channel(name) {
         return self.channels[name] || new_channel(name)
     }
-
-    var users_to_sockets = {}
-
-    if (options.initial_data) {
-        each(options.initial_data, function (data, channel) {
-            var c = get_channel(channel)
-            c.minigit.merge(data.commits)
-            extend(c.members, data.members)
-        })
+    
+    self.online_users = {}
+    
+    self.leave = function (id) {
+        delete self.online_users[id]
     }
 
-    options.wss.on('connection', function connection(ws) {
-        console.log('new connection')
+    self.join = function () {
         var uid = null
         var channel_name = null
 
-        function myClose() {
-            if (!uid) { return }
-            delete users_to_sockets[uid]
-            each(users_to_sockets, function (_ws, _uid) {
-                try {
-                    _ws.send(JSON.stringify({
-                        v : diffsync.version,
-                        uid : uid,
-                        channel : channel_name,
-                        close : true
-                    }))
-                } catch (e) {}
-            })
-        }
-
-        ws.on('close', myClose)
-        ws.on('error', myClose)
-
-        ws.on('message', function (message) {
+        self.onmessage = function (message) {
             var o = JSON.parse(message)
             if (o.v != diffsync.version) { return }
-            if (o.ping) { return try_send(ws, JSON.stringify({ pong : true })) }
-
-            console.log('message: ' + message)
 
             uid = o.uid
             var channel = get_channel(o.channel)
             channel_name = channel.name
-            users_to_sockets[uid] = ws
+            self.online_users[uid] = true
             
             var changes = { channel : channel.name, commits : {}, members : {} }
 
@@ -1382,24 +1415,21 @@ diffsync.create_server = function (options) {
             channel.members[uid].last_seen = Date.now()
             changes.members[uid] = channel.members[uid]
 
-            function try_send(ws, message) {
+            function try_send(uid, message) {
                 try {
-                    ws.send(message)
+                    c_funcs.send(uid, message)
                 } catch (e) {}
             }
             function send_to_all_but_me(message) {
                 each(channel.members, function (_, them) {
                     if (them != uid) {
-                        try_send(users_to_sockets[them], message)
+                        try_send(them, message)
                     }
                 })
             }
 
-            if (o.get_channels) {
-                try_send(ws, JSON.stringify({ channels : Object.keys(self.channels) }))
-            }
             if (o.join) {
-                try_send(ws, JSON.stringify({ commits : channel.minigit.commits, welcome : true }))
+                try_send(uid, JSON.stringify({ commits : channel.minigit.commits, welcome : true }))
             }
             if (o.commits) {
                 var new_commits = {}
@@ -1415,10 +1445,6 @@ diffsync.create_server = function (options) {
                     channel : channel.name,
                     commits : new_commits
                 }
-                if (o.range) {
-                    new_message.uid = o.uid
-                    new_message.range = o.range
-                }
                 new_message = JSON.stringify(new_message)
 
                 leaves = channel.minigit.get_leaves(new_commits)
@@ -1432,12 +1458,10 @@ diffsync.create_server = function (options) {
                             return
                         }
                         extend(m.do_not_delete, leaves)
-                        try_send(users_to_sockets[them], new_message)
+                        try_send(them, new_message)
                     }
                 })
                 if (!o.leaves) o.leaves = channel.minigit.get_leaves(o.commits)
-            } else if (o.range) {
-                send_to_all_but_me(message)
             }
             if (o.leaves) {
                 extend(channel.members[uid].do_not_delete, o.leaves)
@@ -1465,13 +1489,9 @@ diffsync.create_server = function (options) {
                 if (Object.keys(new_message.may_delete).length > 0) {
                     new_message = JSON.stringify(new_message)
                     each(channel.members, function (m, them) {
-                        try_send(users_to_sockets[them], new_message)
+                        try_send(them, new_message)
                     })
                 }
-            }
-            if (o.close) {
-                channel.members[uid].delete_me = true
-                delete channel.members[uid]
             }
 
             if (options.on_change) options.on_change(changes)
