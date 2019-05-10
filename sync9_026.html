@@ -170,6 +170,173 @@ function run_trial_sync9(seed, N) {
     console.log('done: ' + seed + ' : ' + sync9_read(server.s9))
 }
 
+
+
+
+
+
+function run_trial_diffsync(seed, N) {
+    var last_seed = seed
+    function rand() {
+        Math.randomSeed('' + last_seed)
+        return last_seed = Math.random()
+    }
+
+    var n_clients = 2
+    var clients = {}
+    
+    var server = diffsync.create_server({
+        send: (uid, message) => {
+            if (clients[uid].state == 'connected') {
+                clients[uid].incoming.push(() => {
+                    clients[uid].onmessage(message)
+                })
+            }
+        }
+    })
+    
+    for (var i = 0; i < n_clients; i++) {
+        ;(() => {
+            var c = diffsync.create_client({
+                send: (message) => {
+                    if (c.state == 'connected') {
+                        c.outgoing.push(() => {
+                            server.onmessage(message)
+                        })
+                    }
+                }
+            })
+            c.state = 'disconnected'
+            c.incoming = []
+            c.outgoing = []
+            clients[c.uid] = c
+            
+            if (i == 0) {
+                c.letters = 'abcdefghijklmnopqrstuvwxyz'
+                for (var ii = 0; ii < 100; ii++) {
+                    c.letters += String.fromCharCode(12032 + ii)
+                }
+                c.letters_i = 0
+            } else {
+                c.letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+                for (var ii = 0; ii < 100; ii++) {
+                    c.letters += String.fromCharCode(12032 + 100 + ii)
+                }
+                c.letters_i = 0
+            }
+        })()
+    }
+    
+    for (var t = 0; t < N; t++) {
+        var i = Math.floor(rand() * n_clients)
+        var c = Object.values(clients)[i]
+        if (rand() < 0.1) {
+            if (rand() < 0.9) {
+                if (c.letters_i >= c.letters.length) {
+                    c.letters_i = 0
+                }
+                var edit = create_random_edit(c.s9, c.letters[c.letters_i++])
+                
+                
+
+                
+                work here
+                
+                
+                
+                
+                var x = c.local_add_version(edit.changes)
+            } else {
+                if (c.state == 'disconnected') {
+                    c.state = 'connected'
+                    c.join()
+                } else if (c.state == 'connected') {
+                    c.state = 'disconnected'
+                    c.state_note = 'had been connected'
+                    c.incoming = []
+                    c.outgoing = []
+                    server.leave(c.uid)
+                }
+            }
+        } else {
+            if (rand() < 0.5) {
+                if (c.incoming.length > 0) {
+                    c.incoming.shift()()
+                }
+            } else {
+                if (c.outgoing.length > 0) {
+                    c.outgoing.shift()()
+                }
+            }
+        }
+    }
+    
+    for (var t = 0; t < 10000; t++) {
+        Object.values(clients).forEach(c => {
+            if (c.state == 'disconnected') {
+                c.state = 'connected'
+                c.join()
+            }
+            while (c.incoming.length > 0) {
+                c.incoming.shift()()
+            }
+            while (c.outgoing.length > 0) {
+                c.outgoing.shift()()
+            }
+        })
+        
+        if (Object.values(clients).every(x => x.incoming.length == 0 && x.outgoing.length == 0)) break
+    }
+    
+    Object.values(clients).forEach(c => {
+        c.add_version(sync9_guid(), c.s9.leaves, [])
+    })
+    
+    var check_val = null
+    var check_good = true
+    ;[server].concat(Object.values(clients)).forEach((x, i) => {
+        var val = sync9_read(x.s9)
+        if (i == 0)
+            check_val = val
+        else if (val != check_val)
+            check_good = false
+    })
+    
+    if (!check_good) {
+        ;[server].concat(Object.values(clients)).forEach((x, i) => {
+            console.log(x)
+            var val = sync9_read(x.s9)
+            console.log(val)
+        })
+        console.log('CHECK GOOD: ' + check_good)
+        throw 'stop'
+    }
+
+    function create_random_edit(s, letters) {
+        letters = letters || 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        var str = sync9_read(s)
+        var start = Math.floor(rand() * (str.length + 1))
+        var del = Math.floor(rand() * rand() * (str.length - start + 1))
+        var ins = letters[Math.floor(rand() * letters.length)].repeat(Math.floor(rand() * 4) + (del == 0 ? 1 : 0))
+        
+        var vid = sync9_guid()
+        var changes = [`[${start}:${start + del}] = ` + JSON.stringify(ins)]
+        
+        return {
+            vid : vid,
+            parents : Object.assign({}, s.leaves),
+            changes : changes
+        }
+    }
+    
+    console.log('done: ' + seed + ' : ' + sync9_read(server.s9))
+}
+
+
+
+
+
+
 function main() {
     var s = Date.now()
     run_trial_sync9('hiseedd', 500)
@@ -1269,112 +1436,88 @@ var diffsync = (typeof(module) != 'undefined') ? module.exports : {}
 diffsync.version = 1039
 diffsync.port = 60607
 
-// var client = diffsync.create_client({
-//     channel : 'the_cool_room',
-//     get_text : function () {
-//         return current_text_displayed_to_user
-//     },
-//     on_text : function (text) {
-//         current_text_displayed_to_user = text
-//     },
-// })
-//
-// client.on_change() <-- call this when the user changes the text or cursor/selection position
-//
 diffsync.create_client = function (options, s_funcs) {
+    options = options || {}
+    options.channel = options.channel || 'hope'
+    
     var self = {}
     self.on_change = null
 
     var on_channels = null
 
     var uid = guid()
+    self.uid = uid
     var minigit = diffsync.create_minigit()
     var unacknowledged_commits = {}
 
+    function send(o) {
+        o.v = diffsync.version
+        o.uid = uid
+        o.channel = options.channel
+        s_funcs.send(JSON.stringify(o))
+    }
+
     self.join = function () {
-        function send(o) {
-            o.v = diffsync.version
-            o.uid = uid
-            o.channel = options.channel
-            s_funcs.send(JSON.stringify(o))
-        }
-    
         send({ join : true })
-
         var sent_unacknowledged_commits = false
+    }
     
-        self.onmessage = function (s) {
-            var o = JSON.parse(s)
+    self.onmessage = function (s) {
+        var o = JSON.parse(s)
 
-            if (o.channels) {
-                if (on_channels) on_channels(o.channels)
-            }
-            if (o.commits) {
-                self.on_change()
-                minigit.merge(o.commits)
+        if (o.channels) {
+            if (on_channels) on_channels(o.channels)
+        }
+        if (o.commits) {
+            self.on_change()
+            minigit.merge(o.commits)
 
-                var patch = get_diff_patch(options.get_text(), minigit.cache)
-                options.on_text(minigit.cache)
+            var patch = get_diff_patch(options.get_text(), minigit.cache)
 
-                if (o.welcome) {
-                    each(extend(o.commits, minigit.get_ancestors(o.commits)), function (_, id) {
-                        delete unacknowledged_commits[id]
-                    })
-                    if (Object.keys(unacknowledged_commits).length > 0) {
-                        send({ commits : unacknowledged_commits })
-                    }
-                    sent_unacknowledged_commits = true
-                }
-
-                send({ leaves : minigit.leaves })
-            }
-            if (o.may_delete) {
-                each(o.may_delete, function (_, id) {
+            if (o.welcome) {
+                each(extend(o.commits, minigit.get_ancestors(o.commits)), function (_, id) {
                     delete unacknowledged_commits[id]
-                    minigit.remove(id)
                 })
-            }
-        }
-
-        self.on_change = function () {
-            if (!connected) { return }
-
-            var old_cache = minigit.cache
-            var cs = minigit.commit(options.get_text())
-            if (cs) {
-                extend(unacknowledged_commits, cs)
-
-                var patch = null
-                var c = cs[Object.keys(cs)[0]]
-                var parents = Object.keys(c.from_parents)
-                if (parents.length == 1)
-                    patch = c.from_parents[parents[0]]
-                else
-                    patch = get_diff_patch(old_cache, minigit.cache)
+                if (Object.keys(unacknowledged_commits).length > 0) {
+                    send({ commits : unacknowledged_commits })
+                }
+                sent_unacknowledged_commits = true
             }
 
-            if (!sent_unacknowledged_commits) { return }
-
-            if (cs) send({commits: cs})
+            send({ leaves : minigit.leaves })
         }
+        if (o.may_delete) {
+            each(o.may_delete, function (_, id) {
+                delete unacknowledged_commits[id]
+                minigit.remove(id)
+            })
+        }
+    }
+        
+    self.on_change = function (new_text) {
+        var old_cache = minigit.cache
+        var cs = minigit.commit(new_text)
+        if (cs) {
+            extend(unacknowledged_commits, cs)
+
+            var patch = null
+            var c = cs[Object.keys(cs)[0]]
+            var parents = Object.keys(c.from_parents)
+            if (parents.length == 1)
+                patch = c.from_parents[parents[0]]
+            else
+                patch = get_diff_patch(old_cache, minigit.cache)
+        }
+
+        if (!sent_unacknowledged_commits) { return }
+
+        if (cs) send({commits: cs})
     }
 
     return self
 }
 
-// options is an object like this: {
-//     wss : a websocket server from the 'ws' module,
-//     on_change : function (changes) {
-//         changes contains commits and members that changed,
-//         and looks like: {
-//             channel : 'some_channel_name',
-//             commits : {...},
-//             members : {...}
-//         }
-//     }
-// }
-//
-diffsync.create_server = function (options, c_funcs) {
+diffsync.create_server = function (c_funcs) {
     var self = {}
     self.channels = {}
 
@@ -1395,108 +1538,101 @@ diffsync.create_server = function (options, c_funcs) {
         delete self.online_users[id]
     }
 
-    self.join = function () {
-        var uid = null
-        var channel_name = null
+    self.onmessage = function (message) {
+        var o = JSON.parse(message)
+        if (o.v != diffsync.version) { return }
+        
+        var uid = o.uid
+        var channel = get_channel(o.channel)
+        var channel_name = channel.name
+        self.online_users[uid] = true
+        
+        var changes = { channel : channel.name, commits : {}, members : {} }
 
-        self.onmessage = function (message) {
-            var o = JSON.parse(message)
-            if (o.v != diffsync.version) { return }
+        if (!channel.members[uid]) channel.members[uid] = { do_not_delete : {}, last_sent : 0 }
+        channel.members[uid].last_seen = Date.now()
+        changes.members[uid] = channel.members[uid]
 
-            uid = o.uid
-            var channel = get_channel(o.channel)
-            channel_name = channel.name
-            self.online_users[uid] = true
-            
-            var changes = { channel : channel.name, commits : {}, members : {} }
-
-            if (!channel.members[uid]) channel.members[uid] = { do_not_delete : {}, last_sent : 0 }
-            channel.members[uid].last_seen = Date.now()
-            changes.members[uid] = channel.members[uid]
-
-            function try_send(uid, message) {
-                try {
-                    c_funcs.send(uid, message)
-                } catch (e) {}
-            }
-            function send_to_all_but_me(message) {
-                each(channel.members, function (_, them) {
-                    if (them != uid) {
-                        try_send(them, message)
-                    }
-                })
-            }
-
-            if (o.join) {
-                try_send(uid, JSON.stringify({ commits : channel.minigit.commits, welcome : true }))
-            }
-            if (o.commits) {
-                var new_commits = {}
-                each(o.commits, function (c, id) {
-                    if (!channel.minigit.commits[id]) {
-                        new_commits[id] = c
-                        changes.commits[id] = c
-                    }
-                })
-                channel.minigit.merge(new_commits)
-
-                var new_message = {
-                    channel : channel.name,
-                    commits : new_commits
+        function try_send(uid, message) {
+            try {
+                c_funcs.send(uid, message)
+            } catch (e) {}
+        }
+        function send_to_all_but_me(message) {
+            each(channel.members, function (_, them) {
+                if (them != uid) {
+                    try_send(them, message)
                 }
+            })
+        }
+
+        if (o.join) {
+            try_send(uid, JSON.stringify({ commits : channel.minigit.commits, welcome : true }))
+        }
+        if (o.commits) {
+            var new_commits = {}
+            each(o.commits, function (c, id) {
+                if (!channel.minigit.commits[id]) {
+                    new_commits[id] = c
+                    changes.commits[id] = c
+                }
+            })
+            channel.minigit.merge(new_commits)
+
+            var new_message = {
+                channel : channel.name,
+                commits : new_commits
+            }
+            new_message = JSON.stringify(new_message)
+
+            leaves = channel.minigit.get_leaves(new_commits)
+            var now = Date.now()
+            each(channel.members, function (m, them) {
+                if (them != uid) {
+                    if (m.last_seen > m.last_sent) {
+                        m.last_sent = now
+                        changes.members[them] = m
+                    } else if (m.last_sent < now - 3000) {
+                        return
+                    }
+                    extend(m.do_not_delete, leaves)
+                    try_send(them, new_message)
+                }
+            })
+            if (!o.leaves) o.leaves = channel.minigit.get_leaves(o.commits)
+        }
+        if (o.leaves) {
+            extend(channel.members[uid].do_not_delete, o.leaves)
+            each(channel.minigit.get_ancestors(o.leaves), function (_, id) {
+                delete channel.members[uid].do_not_delete[id]
+            })
+
+            var necessary = {}
+            each(channel.members, function (m) {
+                extend(necessary, m.do_not_delete)
+            })
+
+            var affected = channel.minigit.remove_unnecessary(necessary)
+            extend(changes.commits, affected)
+
+            var new_message = {
+                channel : channel.name,
+                may_delete : {}
+            }
+            each(affected, function (c, id) {
+                if (c.delete_me) {
+                    new_message.may_delete[id] = true
+                }
+            })
+            if (Object.keys(new_message.may_delete).length > 0) {
                 new_message = JSON.stringify(new_message)
-
-                leaves = channel.minigit.get_leaves(new_commits)
-                var now = Date.now()
                 each(channel.members, function (m, them) {
-                    if (them != uid) {
-                        if (m.last_seen > m.last_sent) {
-                            m.last_sent = now
-                            changes.members[them] = m
-                        } else if (m.last_sent < now - 3000) {
-                            return
-                        }
-                        extend(m.do_not_delete, leaves)
-                        try_send(them, new_message)
-                    }
+                    try_send(them, new_message)
                 })
-                if (!o.leaves) o.leaves = channel.minigit.get_leaves(o.commits)
             }
-            if (o.leaves) {
-                extend(channel.members[uid].do_not_delete, o.leaves)
-                each(channel.minigit.get_ancestors(o.leaves), function (_, id) {
-                    delete channel.members[uid].do_not_delete[id]
-                })
-
-                var necessary = {}
-                each(channel.members, function (m) {
-                    extend(necessary, m.do_not_delete)
-                })
-
-                var affected = channel.minigit.remove_unnecessary(necessary)
-                extend(changes.commits, affected)
-
-                var new_message = {
-                    channel : channel.name,
-                    may_delete : {}
-                }
-                each(affected, function (c, id) {
-                    if (c.delete_me) {
-                        new_message.may_delete[id] = true
-                    }
-                })
-                if (Object.keys(new_message.may_delete).length > 0) {
-                    new_message = JSON.stringify(new_message)
-                    each(channel.members, function (m, them) {
-                        try_send(them, new_message)
-                    })
-                }
-            }
-
-            if (options.on_change) options.on_change(changes)
         }
     }
-
+    
     return self
 }
 
