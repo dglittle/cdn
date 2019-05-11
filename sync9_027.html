@@ -48,6 +48,8 @@ function run_trial_automerge(seed, N) {
             c.outgoing = []
             clients[c.uid] = c
             
+            c.add_version(s.init_changes)
+            
             if (i == 0) {
                 c.letters = 'abcdefghijklmnopqrstuvwxyz'
                 for (var ii = 0; ii < 100; ii++) {
@@ -71,6 +73,8 @@ function run_trial_automerge(seed, N) {
             c.outgoing.shift()()
         }
     })
+    
+    debugger
         
     for (var t = 0; t < N; t++) {
         var i = Math.floor(rand() * n_clients)
@@ -371,9 +375,6 @@ function automerge_create_client(s_funcs) {
     
     c.uid = sync9_guid()
     c.a = Automerge.init(c.uid)
-    c.a = Automerge.change(c.a, doc => {
-        doc.text = new Automerge.Text()
-    })
     
     c.join = () => {
         s_funcs.join(c.uid)
@@ -394,10 +395,11 @@ function automerge_create_client(s_funcs) {
 function automerge_create_server(c_funcs) {
     var s = {}
     
-    s.a = Automerge.init()
-    s.a = Automerge.change(s.a, doc => {
+    var root = Automerge.init()
+    s.a = Automerge.change(root, doc => {
         doc.text = new Automerge.Text()
     })
+    s.init_changes = Automerge.getChanges(root, s.a)
 
     s.peers = {}
     
