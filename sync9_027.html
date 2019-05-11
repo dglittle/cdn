@@ -82,10 +82,10 @@ function run_trial_automerge(seed, N) {
             c.a = Automerge.change(c.a, doc => {
                 splices.forEach(x => {
                     for (var i = 0; i < x[1]; i++) {
-                        doc.deleteAt(x[0])
+                        doc.text.deleteAt(x[0])
                     }
                     if (x[2]) {
-                        doc.insertAt(x[0], ...x[2])
+                        doc.text.insertAt(x[0], ...x[2])
                     }
                 })
             })
