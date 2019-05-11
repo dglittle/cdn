@@ -103,6 +103,8 @@ function run_trial_automerge(seed, N) {
         }
     }
     
+    debugger
+    
     for (var t = 0; t < 10000; t++) {
         Object.values(clients).forEach(c => {
             if (c.state == 'disconnected') {
@@ -405,11 +407,9 @@ function automerge_create_server(c_funcs) {
     }
     
     s.add_version = (uid, changes) => {
-        var p = s.peers[uid]
-        
         s.a = Automerge.applyChanges(s.a, changes)
         Object.entries(s.peers).forEach(x => {
-            if (x[1].online) {
+            if (x[0] != uid && x[1].online) {
                 c_funcs.add_version(x[0], changes)
             }
         })
