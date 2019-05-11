@@ -155,7 +155,7 @@ function run_trial_sync9(seed, N) {
         var str = sync9_read(s)
         var start = Math.floor(rand() * (str.length + 1))
         var del = Math.floor(rand() * rand() * (str.length - start + 1))
-        var ins = letters[Math.floor(rand() * letters.length)].repeat(Math.floor(rand() * 200) + (del == 0 ? 1 : 0))
+        var ins = letters[Math.floor(rand() * letters.length)].repeat(Math.floor(rand() * 4) + (del == 0 ? 1 : 0))
         
         var vid = sync9_guid()
         var changes = [`[${start}:${start + del}] = ` + JSON.stringify(ins)]
@@ -304,7 +304,7 @@ function run_trial_diffsync(seed, N) {
         var str = s
         var start = Math.floor(rand() * (str.length + 1))
         var del = Math.floor(rand() * rand() * (str.length - start + 1))
-        var ins = letters[Math.floor(rand() * letters.length)].repeat(Math.floor(rand() * 200) + (del == 0 ? 1 : 0))
+        var ins = letters[Math.floor(rand() * letters.length)].repeat(Math.floor(rand() * 4) + (del == 0 ? 1 : 0))
         return s.slice(0, start) + ins + s.slice(start + del)
     }
     
