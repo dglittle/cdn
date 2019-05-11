@@ -67,8 +67,11 @@ function run_trial_automerge(seed, N) {
     Object.values(clients).forEach(c => {
         c.state = 'connected'
         c.join()
+        while (c.outgoing.length > 0) {
+            c.outgoing.shift()()
+        }
     })
-    
+        
     for (var t = 0; t < N; t++) {
         var i = Math.floor(rand() * n_clients)
         var c = Object.values(clients)[i]
@@ -102,8 +105,6 @@ function run_trial_automerge(seed, N) {
             }
         }
     }
-    
-    debugger
     
     for (var t = 0; t < 10000; t++) {
         Object.values(clients).forEach(c => {
