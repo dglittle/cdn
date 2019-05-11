@@ -26,13 +26,149 @@ function run_trial_automerge(seed, N) {
     
     console.log(newDoc.text.join(''))
     
+
+
+    console.log(Automerge.getChanges(newDoc))
     
     
     
     
+    return
     
     
+    var last_seed = seed
+    function rand() {
+        Math.randomSeed('' + last_seed)
+        return last_seed = Math.random()
+    }
+
+    var n_clients = 2
+    var clients = {}
     
+    var server = {a: Automerge.init()}
+    
+    for (var i = 0; i < n_clients; i++) {
+        ;(() => {
+            var c = {a: Automerge.init()}
+            c.state = 'disconnected'
+            c.incoming = []
+            c.outgoing = []
+            clients[c.uid] = c
+            
+            if (i == 0) {
+                c.letters = 'abcdefghijklmnopqrstuvwxyz'
+                for (var ii = 0; ii < 100; ii++) {
+                    c.letters += String.fromCharCode(12032 + ii)
+                }
+                c.letters_i = 0
+            } else {
+                c.letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+                for (var ii = 0; ii < 100; ii++) {
+                    c.letters += String.fromCharCode(12032 + 100 + ii)
+                }
+                c.letters_i = 0
+            }
+        })()
+    }
+    
+    for (var t = 0; t < N; t++) {
+        var i = Math.floor(rand() * n_clients)
+        var c = Object.values(clients)[i]
+        if (rand() < 0.1) {
+            if (rand() < 0.9) {
+                if (c.letters_i >= c.letters.length) {
+                    c.letters_i = 0
+                }
+                
+                var edit = create_random_edit(c.a.text.join(''), c.letters[c.letters_i++])
+                
+                work here
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                var x = c.local_add_version(edit.changes)
+            } else {
+                if (c.state == 'disconnected') {
+                    c.state = 'connected'
+                    c.join()
+                } else if (c.state == 'connected') {
+                    c.state = 'disconnected'
+                    c.state_note = 'had been connected'
+                    c.incoming = []
+                    c.outgoing = []
+                    server.leave(c.uid)
+                }
+            }
+        } else {
+            if (rand() < 0.5) {
+                if (c.incoming.length > 0) {
+                    c.incoming.shift()()
+                }
+            } else {
+                if (c.outgoing.length > 0) {
+                    c.outgoing.shift()()
+                }
+            }
+        }
+    }
+    
+    for (var t = 0; t < 10000; t++) {
+        Object.values(clients).forEach(c => {
+            if (c.state == 'disconnected') {
+                c.state = 'connected'
+                c.join()
+            }
+            while (c.incoming.length > 0) {
+                c.incoming.shift()()
+            }
+            while (c.outgoing.length > 0) {
+                c.outgoing.shift()()
+            }
+        })
+        
+        if (Object.values(clients).every(x => x.incoming.length == 0 && x.outgoing.length == 0)) break
+    }
+    
+    Object.values(clients).forEach(c => {
+        c.add_version(sync9_guid(), c.s9.leaves, [])
+    })
+    
+    var check_val = null
+    var check_good = true
+    ;[server].concat(Object.values(clients)).forEach((x, i) => {
+        var val = sync9_read(x.s9)
+        if (i == 0)
+            check_val = val
+        else if (val != check_val)
+            check_good = false
+    })
+    
+    if (!check_good) {
+        ;[server].concat(Object.values(clients)).forEach((x, i) => {
+            console.log(x)
+            var val = sync9_read(x.s9)
+            console.log(val)
+        })
+        console.log('CHECK GOOD: ' + check_good)
+        throw 'stop'
+    }
+
+    function create_random_edit(s, letters) {
+        letters = letters || 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        var str = s
+        var start = Math.floor(rand() * (str.length + 1))
+        var del = Math.floor(rand() * rand() * (str.length - start + 1))
+        var ins = letters[Math.floor(rand() * letters.length)].repeat(Math.floor(rand() * 200) + (del == 0 ? 1 : 0))
+        return [start, del, ins]
+    }
+    
+    console.log('done: ' + seed + ' : ' + server.a.text.join(''))
 }
 
 
@@ -361,6 +497,243 @@ function main() {
     // var e = Date.now()
     // console.log('time: ' + (e - s)/1000 + 's')
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function automerge_create_client(s_funcs) {
+    var c = {}
+    
+    c.a = Automerge.init()
+    
+    c.uid = sync9_guid()
+    
+    c.join = () => {
+        s_funcs.join(c.uid)
+    }
+    
+    c.add_version = (vid, parents, changes) => {
+        
+        if (Object.keys(c.delete_us).length > 0) {
+            var deleted = sync9_prune(c.s9, (a, b) => c.delete_us[b], (a, b) => c.delete_us[a])
+            if (!Object.keys(c.delete_us).every(x => deleted[x])) throw 'wtf?'
+            if (!Object.keys(deleted).every(x => c.delete_us[x])) throw 'wtf?'
+            c.delete_us = {}
+        }
+        
+        Object.keys(parents).forEach(p => {
+            delete c.server_leaves[p]
+        })
+        c.server_leaves[vid] = true
+        
+        if (c.s9.T[vid]) {
+            var v = c.unacked.shift()
+            if (v.vid != vid) throw 'how?'
+            return
+        }
+        
+        if (!c.got_first_version) {
+            c.got_first_version = true
+            var save = sync9_read(c.s9)
+            init()
+            sync9_add_version(c.s9, vid, parents, changes)
+            c.local_add_version(['[0:0]=' + JSON.stringify(save)])
+        } else {
+            sync9_add_version(c.s9, vid, parents, changes)
+        }
+        s_funcs.ack(c.uid, vid)
+    }
+    
+    c.ack = (vid) => {
+        s_funcs.ack(c.uid, vid)
+        if (!c.s9.T[vid]) return
+        
+        c.delete_us[vid] = true
+        
+        if (c.server_leaves[vid]) {
+            var ancs = sync9_get_ancestors(c.s9, c.server_leaves)
+            Object.keys(c.delete_us).forEach(x => {
+                delete ancs[x]
+            })
+            var not_leaves = {}
+            Object.keys(ancs).forEach(x => {
+                Object.assign(not_leaves, c.s9.T[x])
+            })
+            c.server_leaves = {}
+            Object.keys(ancs).forEach(x => {
+                if (!not_leaves[x])
+                    c.server_leaves[x] = true
+            })
+        }
+        
+        c.unacked = c.unacked.filter(x => x.vid != vid)
+    }
+    
+    c.local_add_version = (changes) => {
+        var x = {
+            vid : sync9_guid(),
+            parents : Object.assign({}, c.s9.leaves),
+            changes : changes
+        }
+        sync9_add_version(c.s9, x.vid, c.s9.leaves, x.changes)
+        if (c.got_first_version) {
+            c.unacked.push(x)
+            s_funcs.add_version(c.uid, x.vid, x.parents, x.changes)
+        }
+        return x
+    }
+    
+    return c
+}
+
+function sync9_create_server(c_funcs) {
+    var s = {}
+    
+    s.s9 = sync9_create()
+    sync9_add_version(s.s9, 'v1', {root : true}, [' = ""'])
+
+    s.peers = {}
+    s.prune_info = {
+        root: {sent: {}, acked: {}},
+        v1: {sent: {}, acked: {}}
+    }
+    
+    function prune() {
+        var q = (a, b) => (a != 'root') && !s.s9.leaves[b] && Object.keys(s.prune_info[a].sent).every(x => s.prune_info[b].acked[x])
+        
+        var clone = JSON.parse(JSON.stringify(s.s9))
+        var deleted = sync9_prune2(clone, q, q)
+        
+        while (Object.keys(deleted).length > 0) {
+            var clone = JSON.parse(JSON.stringify(s.s9))
+            var deleted2 = sync9_prune2(clone, (a, b) => q(a, b) && deleted[b], (a, b) => q(a, b) && deleted[a])
+            
+            if (Object.keys(deleted).some(x => !deleted2[x])) {
+                deleted = deleted2
+            } else {
+                break
+            }
+        }
+
+        var backup_parents = {}
+        Object.keys(deleted).forEach(x => backup_parents[x] = s.s9.T[x])
+
+        var deleted2 = sync9_prune2(s.s9, (a, b) => q(a, b) && deleted[b], (a, b) => q(a, b) && deleted[a])
+        
+        if (Object.keys(deleted).some(x => !deleted2[x]) || Object.keys(deleted2).some(x => !deleted[x])) {
+            throw 'wtf?'
+        }
+        
+        Object.keys(deleted).forEach(deleted => {
+            Object.entries(s.peers).forEach(x => {
+                if (s.prune_info[deleted].sent[x[0]]) {
+                    s.peers[x[0]].unacked_prunes[deleted] = backup_parents[deleted]
+                }
+                if (x[1].online) {
+                    c_funcs.ack(x[0], deleted)
+                }
+            })
+            delete s.prune_info[deleted]
+        })
+    }
+    
+    s.join = (uid, leaves) => {
+        var p = s.peers[uid]
+        if (!p) s.peers[uid] = p = {unacked_prunes: {}}
+        p.online = true
+        
+        Object.keys(p.unacked_prunes).forEach(x => c_funcs.ack(uid, x))
+        
+        var ancs = {}
+        function mark_ancs(key) {
+            if (!ancs[key]) {
+                ancs[key] = true
+                Object.keys(s.s9.T[key] || p.unacked_prunes[key]).forEach(k => mark_ancs(k))
+            }
+        }
+        Object.keys(leaves).forEach(k => mark_ancs(k))
+        
+        sync9_extract_versions(s.s9, x => ancs[x], x => true).forEach(x => {
+            c_funcs.add_version(uid, x.vid, x.parents, x.changes)
+            s.prune_info[x.vid].sent[uid] = true
+        })
+    }
+    
+    s.add_version = (uid, vid, parents, changes) => {
+        if (s.s9.T[vid]) return
+        
+        var p = s.peers[uid]
+        if (p.unacked_prunes[vid]) return
+        
+        s.prune_info[vid] = {sent: {}, acked: {[uid]: true}}
+        
+        Object.keys(parents).forEach(x => {
+            if (p.unacked_prunes[x]) {
+                delete parents[x]
+                function helper(x) {
+                    Object.keys(p.unacked_prunes[x]).forEach(x => {
+                        if (p.unacked_prunes[x]) helper(x)
+                        else parents[x] = true
+                    })
+                }
+                helper(x)
+            }
+        })
+         
+        sync9_add_version(s.s9, vid, parents, changes)
+        Object.entries(s.peers).forEach(x => {
+            if (x[1].online) {
+                c_funcs.add_version(x[0], vid, parents, changes)
+                s.prune_info[vid].sent[x[0]] = true
+            }
+        })
+        
+        var ancs = sync9_get_ancestors(s.s9, parents)
+        Object.keys(ancs).forEach(x => {
+            var pi = s.prune_info[x]
+            if (pi) pi.acked[uid] = true
+        })
+        
+        prune()
+    }
+    
+    s.ack = (uid, vid) => {
+        var p = s.peers[uid]
+        if (p.unacked_prunes[vid]) {
+            delete p.unacked_prunes[vid]
+            return
+        }
+        s.prune_info[vid].acked[uid] = true
+        prune()
+    }
+    
+    s.leave = (uid) => {
+        var p = s.peers[uid]
+        if (p) p.online = false
+    }
+    
+    return s
+}
+
+
 
 
 
