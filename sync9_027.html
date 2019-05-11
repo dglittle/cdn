@@ -48,7 +48,7 @@ function run_trial_automerge(seed, N) {
             c.outgoing = []
             clients[c.uid] = c
             
-            c.add_version(s.init_changes)
+            c.add_version(server.init_changes)
             
             if (i == 0) {
                 c.letters = 'abcdefghijklmnopqrstuvwxyz'
