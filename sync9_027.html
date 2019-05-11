@@ -377,7 +377,7 @@ function automerge_create_client(s_funcs) {
     }
     
     c.add_version = (changes) => {
-        sync9_add_version(c.s9, vid, parents, changes)
+        c.a = Automerge.applyChanges(c.a, changes)
     }
     
     c.local_add_version = (changes) => {
