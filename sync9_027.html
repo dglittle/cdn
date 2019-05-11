@@ -77,20 +77,15 @@ function run_trial_automerge(seed, N) {
                 c.letters_i = 0
             }
             
-            var splices = create_random_edit(c.a.text.join(''), c.letters[c.letters_i++])
+            var splice = create_random_edit(c.a.text.join(''), c.letters[c.letters_i++])
             var oldDoc = c.a
             c.a = Automerge.change(c.a, doc => {
-                splices.forEach(x => {
+                [splice].forEach(x => {
                     for (var i = 0; i < x[1]; i++) {
                         doc.text.deleteAt(x[0])
                     }
                     if (x[2]) {
-                        try {
-                            doc.text.insertAt(x[0], ...x[2])
-                        } catch (e) {
-                            debugger
-                            throw 'stop'
-                        }
+                        doc.text.insertAt(x[0], ...x[2])
                     }
                 })
             })
