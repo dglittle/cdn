@@ -85,7 +85,12 @@ function run_trial_automerge(seed, N) {
                         doc.text.deleteAt(x[0])
                     }
                     if (x[2]) {
-                        doc.text.insertAt(x[0], ...x[2])
+                        try {
+                            doc.text.insertAt(x[0], ...x[2])
+                        } catch (e) {
+                            debugger
+                            throw 'stop'
+                        }
                     }
                 })
             })
