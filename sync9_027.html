@@ -12,6 +12,27 @@
 function run_trial_automerge(seed, N) {
     
     console.log('got seed: ' + seed + ' & ' + N)
+    
+    
+    var x = Automerge.init()
+    
+    newDoc = Automerge.change(x, doc => {
+        doc.text = new Automerge.Text()
+        doc.text.insertAt(0, 'h', 'e', 'l', 'l', 'o')
+        doc.text.deleteAt(0)
+        doc.text.insertAt(0, 'H')
+    })
+    
+    
+    console.log(newDoc.text.join(''))
+    
+    
+    
+    
+    
+    
+    
+    
 }
 
 
