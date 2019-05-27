@@ -640,11 +640,15 @@ function sync7_create_fancy_dag(s7) {
         
         if (Object.keys(selected).length == 0) {
             var leaf = s7.column_leaves[0]
+            var mi = s7.versions[leaf].merge_info
             Object.values(s7.column_leaves).forEach(L => {
                 var ancs = sync7_get_ancestors(s7, L)
-                if (ancs[leaf]) leaf = L
+                var mimi = s7.versions[L].merge_info
+                if (ancs[leaf] || (mimi && !mi)) {
+                    leaf = L
+                    mi = mimi
+                }
             })
-            var mi = s7.versions[leaf].merge_info
             if (mi) update_space_dag(mi)
         }
     }
