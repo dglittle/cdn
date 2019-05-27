@@ -638,13 +638,15 @@ function sync7_create_fancy_dag(s7) {
             svg.append(create_char_boxes(c.x || 0, c.y || 0, c.text || '', selected[id], calc_specials(id), merge_node, c))
         })
         
-        var leaf = s7.column_leaves[0]
-        Object.values(s7.column_leaves).forEach(L => {
-            var ancs = sync7_get_ancestors(s7, L)
-            if (ancs[leaf]) leaf = L
-        })
-        var mi = s7.versions[leaf].merge_info
-        if (mi) update_space_dag(mi)
+        if (Object.keys(selected).length == 0) {
+            var leaf = s7.column_leaves[0]
+            Object.values(s7.column_leaves).forEach(L => {
+                var ancs = sync7_get_ancestors(s7, L)
+                if (ancs[leaf]) leaf = L
+            })
+            var mi = s7.versions[leaf].merge_info
+            if (mi) update_space_dag(mi)
+        }
     }
     redraw()
 
@@ -668,6 +670,7 @@ function sync7_create_fancy_dag(s7) {
     
     svg_div.onmousemove = function (e) {
         var pos = getRelPos(svg_div, e)
+        var did_something = false
         each(s7.versions, function (v, id) {
             if (pos.x >= (v.x || 0) && pos.x < (v.x || 0) + (v.text || 'Q!?').length * BOX_X && pos.y >= (v.y || 0) && pos.y < (v.y || 0) + BOX_Y) {
                 var version = s7.versions[id]
@@ -676,10 +679,15 @@ function sync7_create_fancy_dag(s7) {
                     selected[id] = true
                     update_space_dag(version.merge_info)
                     redraw()
+                    did_something = true
                     return false
                 }
             }
         })
+        if (!did_something) {
+            selected = {}
+            redraw()
+        }
     }
     svg_div.onmousedown = function (e) {
         e.preventDefault()
