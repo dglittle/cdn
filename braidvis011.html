@@ -238,7 +238,7 @@ function update_space_dag(merge_info) {
     svg.setAttribute('width', max_x)
     
     debugger
-    var W = fancy_dag_svg.offsetWidth
+    var W = fancy_dag_svg.my_width
     var w = max_x
     svg.style.marginLeft = (W - w)/2 + 'px'
     svg.style.marginRight = (-w) + 'px'
@@ -623,6 +623,7 @@ function sync7_create_fancy_dag(s7) {
         if (svg) svg.remove()
         svg = fancy_dag_svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
         svg_div.append(svg)
+        svg.my_width = s7.width
         svg.setAttribute('width', s7.width)
         svg.setAttribute('height', s7.height)
         
