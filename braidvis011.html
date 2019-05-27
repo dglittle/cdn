@@ -805,6 +805,9 @@ var sync7 = {}
         var id = guid()
         var to_parents = {}
         s7.versions[s7.leaf].from_kids[id] = to_parents[s7.leaf] = sync7_diff(s, s7.text)
+        
+        console.log('diff: ', to_parents[s7.leaf])
+        
         s7.versions[id] = cs[id] = {
             to_parents : to_parents,
             from_kids : {},
