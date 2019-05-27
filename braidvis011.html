@@ -106,7 +106,7 @@ function update_space_dag(merge_info) {
     
     var size = BOX_Y
 
-    // svg.append(create_line(size + 0.5, size, size + 0.5, size * 2, 'black'))
+    svg.append(create_line(size + 0.5, size, size + 0.5, size * 2, 'black'))
     svg.append(create_line(size, size * 1.5 + 0.5, size * 2, size * 1.5 + 0.5, 'black'))
     
     function draw_char_box(x, y, char, deleted) {
@@ -133,6 +133,7 @@ function update_space_dag(merge_info) {
     var b_text = merge_info.b_text
     var a_regions = merge_info.a_regions
     var b_regions = merge_info.b_regions
+    var max_x = 0
     function draw_t(r, t, deleted, middle) {
         if (middle) {
             var x = Math.max(next_top_x, next_bottom_x)
@@ -155,6 +156,7 @@ function update_space_dag(merge_info) {
             if (t == '') {
                 svg.append(create_line(x, size * 1.5 + 0.5, x + size, size * 1.5 + 0.5, 'black'))
                 svg.append(create_line(x + size + 0.5, size, x + size + 0.5, size * 2, 'black'))
+                max_x = x + size + 0.5
             } else {
                 draw_char_boxes(x + 0.5, size + 0.5, t, deleted)
             }
@@ -232,6 +234,14 @@ function update_space_dag(merge_info) {
         }
     }
     draw_t(null, '', false, true)
+    max_x = Math.ceil(max_x)
+    svg.setAttribute('width', max_x)
+    
+    debugger
+    var W = fancy_dag_svg.offsetWidth
+    var w = max_x
+    svg.style.marginLeft = (W - w)/2 + 'px'
+    svg.style.marginRight = (-w) + 'px'
 }
 
 // work here
@@ -481,6 +491,7 @@ function sync7_create_simple_dag(s7) {
     return d    
 }
 
+var fancy_dag_svg
 function sync7_create_fancy_dag(s7) {
     var selected = {}
     
@@ -610,7 +621,7 @@ function sync7_create_fancy_dag(s7) {
     var svg = null
     function redraw() {
         if (svg) svg.remove()
-        svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+        svg = fancy_dag_svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
         svg_div.append(svg)
         svg.setAttribute('width', s7.width)
         svg.setAttribute('height', s7.height)
