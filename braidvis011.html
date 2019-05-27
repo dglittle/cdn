@@ -525,6 +525,11 @@ function sync7_create_fancy_dag(s7) {
     svg_div.style.cursor = 'pointer'
     d.append(svg_div)
     
+    var header2 = document.createElement('div')
+    header2.style.marginTop = '30px'
+    header2.textContent = 'space DAG'
+    d.append(header2)
+    
     function calc_specials(id) {
         var specials = {}
         each(s7.versions[id].to_parents, function (d, p) {
@@ -679,6 +684,7 @@ function sync7_create_fancy_dag(s7) {
         }
         
         header.style.marginLeft = (s7.width - measure_text(header.textContent))/2 + 'px'
+        header2.style.marginLeft = (s7.width - measure_text(header2.textContent))/2 + 'px'
     }
     redraw()
 
