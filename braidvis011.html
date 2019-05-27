@@ -806,19 +806,26 @@ var sync7 = {}
         var to_parents = {}
         s7.versions[s7.leaf].from_kids[id] = to_parents[s7.leaf] = sync7_diff(s, s7.text)
         
-        console.log('diff: ', to_parents[s7.leaf])
+        var a_regions = []
+        var offset = 0
+        to_parents[s7.leaf].forEach((x, i) => {
+            if (Array.isArray(x)) {
+                a_regions.push([offset, x[0].length, true, i, null, -1])
+                offset += x[0].length
+            } else {
+                a_regions.push([offset, x, true, i, null, -1])
+                offset += x
+            }
+        })
         
         s7.versions[id] = cs[id] = {
             to_parents : to_parents,
             from_kids : {},
             
             merge_info : {
-                a_text : 'hi wo',
+                a_text : s,
                 b_text : '',
-                a_regions : [
-                    [0, 2, true, 0, null, -1],
-                    [2, 3, true, 1, null, -1]
-                ],
+                a_regions : a_regions,
                 b_regions : []
             }
         }
