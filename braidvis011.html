@@ -250,6 +250,10 @@ function sync7_create_simple_dag(s7) {
     
     var d = document.createElement('div')
     
+    var header = document.createElement('div')
+    header.textContent = 'time DAG'
+    d.append(header)
+    
     var svg_div = document.createElement('div')
     svg_div.style.cursor = 'pointer'
     d.append(svg_div)
@@ -432,6 +436,8 @@ function sync7_create_simple_dag(s7) {
                 }
             })
         })
+        
+        header.style.marginLeft = (s7.width - measure_text(header.textContent))/2 + 'px'
     }
     redraw(true)
 
