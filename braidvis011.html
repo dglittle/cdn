@@ -489,6 +489,22 @@ function sync7_create_simple_dag(s7) {
     return d    
 }
 
+function measure_text(s, fontSize) {
+    var d = document.createElement('div')
+    d.style.position = 'absolute'
+    d.style.visibility = 'hidden'
+    d.style.height = 'auto'
+    d.style.width = 'auto'
+    d.style['white-space'] = 'nowrap'
+
+    if (fontSize) d.style.fontSize = fontSize
+    d.innerHTML = s.replace(/ /g, '&nbsp;')
+    document.body.append(d)
+    var x = d.offsetWidth
+    d.remove()
+    return x
+}
+
 var fancy_dag_svg
 function sync7_create_fancy_dag(s7) {
     var selected = {}
@@ -655,6 +671,8 @@ function sync7_create_fancy_dag(s7) {
             })
             if (mi) update_space_dag(mi)
         }
+        
+        header.style.marginLeft = (s7.width - measure_text(header.textContent))/2 + 'px'
     }
     redraw()
 
