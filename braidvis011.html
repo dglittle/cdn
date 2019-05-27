@@ -234,7 +234,7 @@ function update_space_dag(merge_info) {
         }
     }
     draw_t(null, '', false, true)
-    max_x = Math.ceil(max_x)
+    max_x += size
     svg.setAttribute('width', max_x)
     var W = fancy_dag_svg.my_width
     var w = max_x
