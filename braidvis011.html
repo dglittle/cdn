@@ -638,15 +638,14 @@ function sync7_create_fancy_dag(s7) {
             svg.append(create_char_boxes(c.x || 0, c.y || 0, c.text || '', selected[id], calc_specials(id), merge_node, c))
         })
         
+        debugger
         var leaf = s7.column_leaves[0]
-        for (var i = 1; i < s7.column_leaves.length; i++) {
-            var L = s7.column_leaves[i]
+        Object.values(s7.column_leaves).forEach(L => {
             var ancs = sync7_get_ancestors(s7, L)
             if (ancs[leaf]) leaf = L
-        }
-        if (leaf.merge_info) {
-            update_space_dag(leaf.merge_info)
-        }    
+        })
+        var mi = s7.versions[leaf].merge_info
+        if (mi) update_space_dag(mi)
     }
     redraw()
 
