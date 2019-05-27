@@ -92,7 +92,7 @@ function anim(attr, from, to, dur) {
 
 var space_dag_div = null
 function update_space_dag(merge_info) {
-    if (!space_dag_div) {
+    if (!space_dag_div || !braidvis.contains(space_dag_div)) {
         space_dag_div = document.createElement('div')
         space_dag_div.style.marginTop = 30
         braidvis.append(space_dag_div)
