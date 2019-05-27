@@ -495,6 +495,10 @@ function sync7_create_fancy_dag(s7) {
     
     var d = braidvis = document.createElement('div')
     
+    var header = document.createElement('div')
+    header.textContent = 'braid'
+    d.append(header)
+    
     var svg_div = document.createElement('div')
     svg_div.style.cursor = 'pointer'
     d.append(svg_div)
