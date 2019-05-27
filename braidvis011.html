@@ -804,7 +804,17 @@ var sync7 = {}
         var id = guid()
         var to_parents = {}
         s7.versions[s7.leaf].from_kids[id] = to_parents[s7.leaf] = sync7_diff(s, s7.text)
-        s7.versions[id] = cs[id] = { to_parents : to_parents, from_kids : {} }
+        s7.versions[id] = cs[id] = {
+            to_parents : to_parents,
+            from_kids : {},
+            
+            merge_info : {
+                a_text : 'hi wo',
+                b_text : '',
+                a_regions : [[0, 2], [2, 3]],
+                b_regions : []
+            }
+        }
         s7.leaf = id
         s7.real_leaves = [id]
         
