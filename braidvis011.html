@@ -640,7 +640,7 @@ function sync7_create_fancy_dag(s7) {
     }
     redraw()
 
-    update_space_dag(s7.versions[s7.leaf].merge_info)
+    update_space_dag(s7.versions[s7.column_leaves[0]].merge_info)
 
     function getPos(e) {
         var x = 0, y = 0
