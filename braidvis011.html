@@ -672,6 +672,13 @@ function sync7_create_fancy_dag(s7) {
         }
     }
     
+    svg_div.onmouseleave = function (e) {
+        if (Object.keys(selected).length > 0) {
+            selected = {}
+            redraw()
+        }
+    }
+    
     svg_div.onmousemove = function (e) {
         var pos = getRelPos(svg_div, e)
         var did_something = false
@@ -689,8 +696,10 @@ function sync7_create_fancy_dag(s7) {
             }
         })
         if (!did_something) {
-            selected = {}
-            redraw()
+            if (Object.keys(selected).length > 0) {
+                selected = {}
+                redraw()
+            }
         }
     }
     svg_div.onmousedown = function (e) {
