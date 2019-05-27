@@ -493,7 +493,7 @@ var fancy_dag_svg
 function sync7_create_fancy_dag(s7) {
     var selected = {}
     
-    var d = document.createElement('div')
+    var d = braidvis = document.createElement('div')
     
     var svg_div = document.createElement('div')
     svg_div.style.cursor = 'pointer'
@@ -1745,7 +1745,7 @@ function sync7_create_visualization(s7) {
     d.style.display = 'grid'
     d.style['grid-template-columns'] = 'auto auto'
     
-    var B = braidvis = sync7_create_fancy_dag(s7)
+    var B = sync7_create_fancy_dag(s7)
     
     var s72 = { versions : {}, column_leaves : s7.column_leaves }
     each(s7.versions, function (c, id) {
