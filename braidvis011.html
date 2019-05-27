@@ -674,7 +674,7 @@ function sync7_create_fancy_dag(s7) {
     
     svg_div.onmouseleave = function (e) {
         
-        console.log('got here!?')
+        console.log('got here!? : ' + Math.random())
         
         if (Object.keys(selected).length > 0) {
             selected = {}
@@ -683,27 +683,27 @@ function sync7_create_fancy_dag(s7) {
     }
     
     svg_div.onmousemove = function (e) {
-        var pos = getRelPos(svg_div, e)
-        var did_something = false
-        each(s7.versions, function (v, id) {
-            if (pos.x >= (v.x || 0) && pos.x < (v.x || 0) + (v.text || 'Q!?').length * BOX_X && pos.y >= (v.y || 0) && pos.y < (v.y || 0) + BOX_Y) {
-                var version = s7.versions[id]
-                if (version.merge_info) {
-                    selected = {}
-                    selected[id] = true
-                    update_space_dag(version.merge_info)
-                    redraw()
-                    did_something = true
-                    return false
-                }
-            }
-        })
-        if (!did_something) {
-            if (Object.keys(selected).length > 0) {
-                selected = {}
-                redraw()
-            }
-        }
+        // var pos = getRelPos(svg_div, e)
+        // var did_something = false
+        // each(s7.versions, function (v, id) {
+        //     if (pos.x >= (v.x || 0) && pos.x < (v.x || 0) + (v.text || 'Q!?').length * BOX_X && pos.y >= (v.y || 0) && pos.y < (v.y || 0) + BOX_Y) {
+        //         var version = s7.versions[id]
+        //         if (version.merge_info) {
+        //             selected = {}
+        //             selected[id] = true
+        //             update_space_dag(version.merge_info)
+        //             redraw()
+        //             did_something = true
+        //             return false
+        //         }
+        //     }
+        // })
+        // if (!did_something) {
+        //     if (Object.keys(selected).length > 0) {
+        //         selected = {}
+        //         redraw()
+        //     }
+        // }
     }
     svg_div.onmousedown = function (e) {
         e.preventDefault()
