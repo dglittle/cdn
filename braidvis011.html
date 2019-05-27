@@ -673,6 +673,9 @@ function sync7_create_fancy_dag(s7) {
     }
     
     svg_div.onmouseleave = function (e) {
+        
+        console.log('got here!?')
+        
         if (Object.keys(selected).length > 0) {
             selected = {}
             redraw()
