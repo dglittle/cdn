@@ -10,8 +10,10 @@
 // goal: make json work
 function main() {
     var s9 = sync9_create()
-    sync9_add_version(s9, 'hi', {'root': true}, ['= {a:3}'])
+    sync9_add_version(s9, 'hi', {'root': true}, ['= {"a":3}'])
     console.log('hi!', JSON.stringify(s9, null, '    '))
+    console.log('hi!', sync9_read(s9))
+    console.log(sync9_extract_versions(s9, x => x == 'root', () => true))
 }
 
 function sync9_create_client(s_funcs) {
@@ -240,6 +242,89 @@ function sync9_create_server(c_funcs) {
     return s
 }
 
+
+function sync9_extract_versions(x, is_anc, is_new_anc) {
+    var versions = []
+    function rec(x) {
+        if (x && typeof(x) == 'object') {
+            if (!x.t && x.val) {
+                rec(x.val)
+            } else if (x.t == 'val') {
+                versions = versions.concat(sync9_space_dag_extract_versions(x.S, x, is_anc, is_new_anc))
+                rec(sync9_space_dag_get(x.S, 0))
+            } else if (x.t == 'obj') {
+                Object.values(x.S).forEach(v => rec(v))
+            } else if (x.t == 'arr') {
+                versions = versions.concat(sync9_space_dag_extract_versions(x.S, x, is_anc, is_new_anc))
+                sync9_trav_space_dag(x.S, () => true, node => {
+                    node.elems.forEach(e => rec(e))
+                })
+            } else if (x.t == 'str') {
+                versions = versions.concat(sync9_space_dag_extract_versions(x.S, x, is_anc, is_new_anc))
+            }
+        }
+    }
+    rec(x)
+    return versions
+}
+
+function sync9_space_dag_extract_versions(S, s9, is_anc, is_new_anc) {
+    var versions = Object.keys(s9.T).filter(x => !is_anc(x) && is_new_anc(x)).map(vid => {
+        var v = {
+            vid,
+            parents : Object.assign({}, s9.T[vid]),
+            splices : []
+        }
+        
+        function add_result(offset, del, ins) {
+            if (v.splices.length > 0) {
+                var prev = v.splices[v.splices.length - 1]
+                if (prev[0] + prev[1] == offset) {
+                    prev[1] += del
+                    prev[2] = prev[2].concat(ins)
+                    return
+                }
+            }
+            v.splices.push([offset, del, ins])
+        }
+        
+        var ancs = sync9_get_ancestors(s9, {[vid]: true})
+        delete ancs[vid]
+        var offset = 0
+        function helper(node, vid) {
+            if (vid == v.vid) {
+                add_result(offset, 0, node.elems.slice(0))
+            } else if (node.deleted_by[v.vid]) {
+                add_result(offset, node.elems.length, node.elems.slice(0, 0))
+            }
+            
+            if (ancs[vid] && !Object.keys(node.deleted_by).some(x => ancs[x])) {
+                offset += node.elems.length
+            }
+                
+            for (var next of node.nexts)
+                helper(next, next.vid)
+            if (node.next) helper(node.next, vid)
+        }
+        helper(S, S.vid)
+        return v
+    })
+    
+    var sorted = []
+    var seen = {}
+    while (versions.length > 0)
+        versions = versions.filter(v => {
+            if (Object.keys(v.parents).every(x => is_anc(x) || seen[x])) {
+                seen[v.vid] = true
+                sorted.push(v)
+                return false
+            } return true
+        })
+    return sorted
+}
+
+
+
 function sync9_prune2(x, has_everyone_whos_seen_a_seen_b, has_everyone_whos_seen_a_seen_b_2) {
     var seen_nodes = {}
     var did_something = true
@@ -384,71 +469,7 @@ function sync9_space_dag_prune2(S, has_everyone_whos_seen_a_seen_b, seen_nodes) 
     return did_something
 }
 
-function sync9_extract_versions(x, is_anc, is_new_anc) {
-    var versions = sync9_space_dag_extract_versions(sync9_space_dag_get(x.val.S, 0).S, x, is_anc, is_new_anc)
-    versions.forEach(x => {
-        x.changes = x.splices.map(x => {
-            return `[${x[0]}:${x[0] + x[1]}] = ${JSON.stringify(x[2])}`
-        })
-        delete x.splices
-    })
-    return versions
-}
 
-function sync9_space_dag_extract_versions(S, s9, is_anc, is_new_anc) {
-    var versions = Object.keys(s9.T).filter(x => !is_anc(x) && is_new_anc(x)).map(vid => {
-        var v = {
-            vid,
-            parents : Object.assign({}, s9.T[vid]),
-            splices : []
-        }
-        
-        function add_result(offset, del, ins) {
-            if (v.splices.length > 0) {
-                var prev = v.splices[v.splices.length - 1]
-                if (prev[0] + prev[1] == offset) {
-                    prev[1] += del
-                    prev[2] = prev[2].concat(ins)
-                    return
-                }
-            }
-            v.splices.push([offset, del, ins])
-        }
-        
-        var ancs = sync9_get_ancestors(s9, {[vid]: true})
-        delete ancs[vid]
-        var offset = 0
-        function helper(node, vid) {
-            if (vid == v.vid) {
-                add_result(offset, 0, node.elems.slice(0))
-            } else if (node.deleted_by[v.vid]) {
-                add_result(offset, node.elems.length, node.elems.slice(0, 0))
-            }
-            
-            if (ancs[vid] && !Object.keys(node.deleted_by).some(x => ancs[x])) {
-                offset += node.elems.length
-            }
-                
-            for (var next of node.nexts)
-                helper(next, next.vid)
-            if (node.next) helper(node.next, vid)
-        }
-        helper(S, S.vid)
-        return v
-    })
-    
-    var sorted = []
-    var seen = {}
-    while (versions.length > 0)
-        versions = versions.filter(v => {
-            if (Object.keys(v.parents).every(x => is_anc(x) || seen[x])) {
-                seen[v.vid] = true
-                sorted.push(v)
-                return false
-            } return true
-        })
-    return sorted
-}
 
 function sync9_create() {
     return {
