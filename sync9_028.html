@@ -266,6 +266,12 @@ function sync9_extract_versions(s9, is_anc, is_new_anc) {
         }
     }
     rec(s9)
+    versions.forEach(x => {
+        x.changes = x.splices.map(x => {
+            return `[${x[0]}:${x[0] + x[1]}] = ${JSON.stringify(x[2])}`
+        })
+        delete x.splices
+    })
     return versions
 }
 
