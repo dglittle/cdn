@@ -13,6 +13,7 @@ function main() {
     sync9_add_version(s9, 'hi', {'root': true}, ['= {"a":3}'])
     console.log('hi!', JSON.stringify(s9, null, '    '))
     console.log('hi!', sync9_read(s9))
+    debugger
     console.log(sync9_extract_versions(s9, x => x == 'root', () => true))
 }
 
@@ -243,28 +244,28 @@ function sync9_create_server(c_funcs) {
 }
 
 
-function sync9_extract_versions(x, is_anc, is_new_anc) {
+function sync9_extract_versions(s9, is_anc, is_new_anc) {
     var versions = []
     function rec(x) {
         if (x && typeof(x) == 'object') {
             if (!x.t && x.val) {
                 rec(x.val)
             } else if (x.t == 'val') {
-                versions = versions.concat(sync9_space_dag_extract_versions(x.S, x, is_anc, is_new_anc))
+                versions = versions.concat(sync9_space_dag_extract_versions(x.S, s9, is_anc, is_new_anc))
                 rec(sync9_space_dag_get(x.S, 0))
             } else if (x.t == 'obj') {
                 Object.values(x.S).forEach(v => rec(v))
             } else if (x.t == 'arr') {
-                versions = versions.concat(sync9_space_dag_extract_versions(x.S, x, is_anc, is_new_anc))
+                versions = versions.concat(sync9_space_dag_extract_versions(x.S, s9, is_anc, is_new_anc))
                 sync9_trav_space_dag(x.S, () => true, node => {
                     node.elems.forEach(e => rec(e))
                 })
             } else if (x.t == 'str') {
-                versions = versions.concat(sync9_space_dag_extract_versions(x.S, x, is_anc, is_new_anc))
+                versions = versions.concat(sync9_space_dag_extract_versions(x.S, s9, is_anc, is_new_anc))
             }
         }
     }
-    rec(x)
+    rec(s9)
     return versions
 }
 
