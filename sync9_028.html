@@ -10,8 +10,8 @@
 // goal: make json work
 function main() {
     var s9 = sync9_create()
-    sync9_add_version(s9, 'hi', {'root': true}, '= 5')
-    console.log('hi!', JSON.stringify(s9))
+    sync9_add_version(s9, 'hi', {'root': true}, ['= 5'])
+    console.log('hi!', JSON.stringify(s9, null, '    '))
 }
 
 function sync9_create_client(s_funcs) {
