@@ -10,7 +10,7 @@
 // goal: make json work
 function main() {
     var s9 = sync9_create()
-    sync9_add_version(s9, 'hi', {'root': true}, ['= {"a":3, "b":6}'])
+    sync9_add_version(s9, 'hi', {'root': true}, ['= {"a":3, "b":6, "c":["hi!"]}'])
     console.log('hi!', JSON.stringify(s9, null, '    '))
     console.log('hi!', sync9_read(s9))
     console.log(sync9_extract_versions(s9, x => x == 'root', () => true))
