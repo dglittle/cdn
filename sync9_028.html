@@ -502,7 +502,7 @@ function sync9_extract_versions(s9, is_anc, is_new_anc) {
                     x.changes = x.splices.map(x => {
                         var path = prefix + ` = `
                         var y = x[2][0]
-                        if (typeof(y) == 'object') {
+                        if (y && typeof(y) == 'object') {
                             if (y.t == 'arr') {
                                 return path + '[]'
                             } else if (y.t == 'obj') {
