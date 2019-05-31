@@ -210,7 +210,7 @@ function main() {
                     var start = Math.floor(rand() * (x.length + 1))
                     var del = Math.floor(rand() * rand() * (x.length - start + 1))
                     var ins = letters[Math.floor(rand() * letters.length)].repeat(Math.floor(rand() * 4) + (del == 0 ? 1 : 0))
-                    return `[${start}:${start + del}] = ` + JSON.stringify(ins)]
+                    return `[${start}:${start + del}] = ` + JSON.stringify(ins)
                 }
             }
         }
