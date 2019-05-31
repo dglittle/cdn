@@ -85,7 +85,7 @@ function main() {
     for (var t = 0; t < N; t++) {
         var i = Math.floor(rand() * n_clients)
         var c = Object.values(clients)[i]
-        if (rand() < 0.1) {
+        if (rand() < 0.1 && c.got_first_version) {
             // if (rand() < 0.9) {
                 if (c.letters_i >= c.letters.length) {
                     c.letters_i = 0
