@@ -234,6 +234,10 @@ function main() {
     Object.values(clients).forEach(x => {
         console.log('client: ' + JSON.stringify(x))
     })
+    console.log('server: ' + JSON.stringify(sync9_read(server.s9)))
+    Object.values(clients).forEach(x => {
+        console.log('client: ' + JSON.stringify(sync9_read(x.s9)))
+    })
 }
 
 
