@@ -91,9 +91,11 @@ function main() {
                 if (c.letters_i >= c.letters.length) {
                     c.letters_i = 0
                 }
-                var edit = create_random_edit(c.s9, c.letters[c.letters_i++])
-                console.log('edit: ' + JSON.stringify(edit))
-                var x = c.local_add_version(edit.changes)
+                var changes = create_random_edit(c.s9, c.letters[c.letters_i++])
+                console.log('changes: ' + JSON.stringify(changes))
+                console.log('leaves: ' + JSON.stringify(c.s9.leaves))
+                var x = c.local_add_version(changes)
+                console.log('new version: ' + JSON.stringify(c.s9.leaves))
             // } else {
             //     if (c.state == 'disconnected') {
             //         c.state = 'connected'
@@ -229,11 +231,7 @@ function main() {
         var changes = []
         var change = rec(o, '')
         if (change) changes.push(change)
-        return {
-            vid: sync9_guid(),
-            parents: Object.assign({}, s9.leaves),
-            changes: changes
-        }
+        return changes
     }
     
     console.log('done: ' + seed + ' : ' + sync9_read(server.s9))
