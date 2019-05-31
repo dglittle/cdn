@@ -126,8 +126,7 @@ function run_trial(seed, N) {
         // console.log('client: ' + c.uid + ' -> ' + JSON.stringify(sync9_read(c.s9)))
     }
     
-    for (var t = 0; t < 1; t++) {
-    // for (var t = 0; t < 10000; t++) {
+    for (var t = 0; t < 10000; t++) {
         Object.values(clients).forEach(c => {
             if (c.state == 'disconnected') {
                 c.state = 'connected'
