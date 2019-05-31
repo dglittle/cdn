@@ -244,6 +244,7 @@ function sync9_create_server(c_funcs) {
 
 
 function sync9_extract_versions(s9, is_anc, is_new_anc) {
+    debugger
     var versions = []
     function rec(x, prefix) {
         if (x && typeof(x) == 'object') {
@@ -262,7 +263,7 @@ function sync9_extract_versions(s9, is_anc, is_new_anc) {
                         } else if (typeof(y) == 'string') {
                             return path + '""'
                         } else {
-                            return path + JSON.stringify(x[2])
+                            return path + JSON.stringify(y)
                         }
                     })
                     delete x.splices
