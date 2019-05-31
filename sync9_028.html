@@ -10,7 +10,7 @@
 function main() {
     for (var i = 0; i < 100; i++) {
         console.log('TRIAL: ' + i)
-        run_trial('seed:' + i, 300, false)
+        run_trial('seed:' + i, 300, i == 17)
     }
 }
 
