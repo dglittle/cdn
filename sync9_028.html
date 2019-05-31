@@ -245,8 +245,14 @@ function sync9_create_server(c_funcs) {
 
 
 function sync9_extract_versions(s9, is_anc, is_new_anc) {
-    debugger
-    var versions = []
+    var versions = {}
+    function add_versions(vs) {
+        vs.forEach(v => {
+            if (!versions[v.vid]) versions[v.vid] = v
+            else versions[v.vid].changes = versions[v.vid].changes.concat(v.changes)
+        })
+    }
+    
     function rec(x, prefix) {
         if (x && typeof(x) == 'object') {
             if (!x.t && x.val) {
@@ -271,7 +277,7 @@ function sync9_extract_versions(s9, is_anc, is_new_anc) {
                     })
                     delete x.splices
                 })
-                versions = versions.concat(vs)
+                add_versions(vs)
                 rec(sync9_space_dag_get(x.S, 0), prefix)
             } else if (x.t == 'obj') {
                 Object.entries(x.S).forEach(x => {
@@ -297,7 +303,7 @@ function sync9_extract_versions(s9, is_anc, is_new_anc) {
                     })
                     delete x.splices
                 })
-                versions = versions.concat(vs)
+                add_versions(vs)
                 var i = 0
                 sync9_trav_space_dag(x.S, () => true, node => {
                     node.elems.forEach(e => rec(e, prefix + `[${i++}]`))
@@ -310,16 +316,28 @@ function sync9_extract_versions(s9, is_anc, is_new_anc) {
                     })
                     delete x.splices
                 })
-                versions = versions.concat(vs)
+                add_versions(vs)
             }
         }
     }
     rec(s9, '')
-    return versions
+    
+    var sorted = []
+    var seen = {}
+    versions = Object.values(versions)
+    while (versions.length > 0)
+        versions = versions.filter(v => {
+            if (Object.keys(v.parents).every(x => is_anc(x) || seen[x])) {
+                seen[v.vid] = true
+                sorted.push(v)
+                return false
+            } return true
+        })
+    return sorted
 }
 
 function sync9_space_dag_extract_versions(S, s9, is_anc, is_new_anc) {
-    var versions = Object.keys(s9.T).filter(x => !is_anc(x) && is_new_anc(x)).map(vid => {
+    return Object.keys(s9.T).filter(x => !is_anc(x) && is_new_anc(x)).map(vid => {
         var v = {
             vid,
             parents : Object.assign({}, s9.T[vid]),
@@ -359,18 +377,6 @@ function sync9_space_dag_extract_versions(S, s9, is_anc, is_new_anc) {
         helper(S, S.vid)
         return v
     })
-    
-    var sorted = []
-    var seen = {}
-    while (versions.length > 0)
-        versions = versions.filter(v => {
-            if (Object.keys(v.parents).every(x => is_anc(x) || seen[x])) {
-                seen[v.vid] = true
-                sorted.push(v)
-                return false
-            } return true
-        })
-    return sorted
 }
 
 
