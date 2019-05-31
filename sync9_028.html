@@ -9,8 +9,10 @@
 
 function main() {
     for (var i = 0; i < 100; i++) {
+        i = 48
         console.log('TRIAL: ' + i)
         run_trial('seed:' + i, 300, false)
+        throw 'stop'
     }
 }
 
