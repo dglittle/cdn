@@ -9,14 +9,12 @@
 
 function main() {
     for (var i = 0; i < 10; i++) {
-        i = 8
         console.log('TRIAL: ' + i)
-        run_trial('seed:' + i, 300)
-        throw 'stop'
+        run_trial('seed:' + i, 300, false)
     }
 }
 
-function run_trial(seed, N) {
+function run_trial(seed, N, show_debug) {
     var last_seed = seed
     function rand() {
         Math.randomSeed('' + last_seed)
@@ -103,10 +101,13 @@ function run_trial(seed, N) {
                     c.letters_i = 0
                 }
                 var changes = create_random_edit(c.s9, c.letters[c.letters_i++])
-                console.log('changes: ' + JSON.stringify(changes))
-                console.log('leaves: ' + JSON.stringify(c.s9.leaves))
+                if (show_debug) {
+                    console.log('changes: ' + JSON.stringify(changes))
+                    console.log('leaves: ' + JSON.stringify(c.s9.leaves))
+                }
                 var x = c.local_add_version(changes)
-                console.log('new version: ' + JSON.stringify(c.s9.leaves))
+                if (show_debug)
+                    console.log('new version: ' + JSON.stringify(c.s9.leaves))
             // } else {
             //     if (c.state == 'disconnected') {
             //         c.state = 'connected'
@@ -131,7 +132,8 @@ function run_trial(seed, N) {
             }
         }
         
-        console.log('client: ' + c.uid + ' -> ' + JSON.stringify(sync9_read(c.s9)))
+        if (show_debug)
+            console.log('client: ' + c.uid + ' -> ' + JSON.stringify(sync9_read(c.s9)))
     }
     
     for (var t = 0; t < 10000; t++) {
