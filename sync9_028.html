@@ -245,7 +245,7 @@ function sync9_create_server(c_funcs) {
 
 function sync9_extract_versions(s9, is_anc, is_new_anc) {
     var versions = []
-    function rec(x) {
+    function rec(x, prefix) {
         if (x && typeof(x) == 'object') {
             if (!x.t && x.val) {
                 rec(x.val)
@@ -253,7 +253,7 @@ function sync9_extract_versions(s9, is_anc, is_new_anc) {
                 var vs = sync9_space_dag_extract_versions(x.S, s9, is_anc, is_new_anc)
                 vs.forEach(x => {
                     x.changes = x.splices.map(x => {
-                        var path = `[${x[0]}:${x[0] + x[1]}] = `
+                        var path = prefix + ` = `
                         var y = x[2][0]
                         if (Array.isArray(y)) {
                             return path + '[]'
@@ -268,14 +268,16 @@ function sync9_extract_versions(s9, is_anc, is_new_anc) {
                     delete x.splices
                 })
                 versions = versions.concat(vs)
-                rec(sync9_space_dag_get(x.S, 0))
+                rec(sync9_space_dag_get(x.S, 0), prefix)
             } else if (x.t == 'obj') {
-                Object.values(x.S).forEach(v => rec(v))
+                Object.entries(x.S).forEach(x => {
+                    rec(x[1], prefix + `[${JSON.stringify(x[0])}]`)
+                })
             } else if (x.t == 'arr') {
                 var vs = sync9_space_dag_extract_versions(x.S, s9, is_anc, is_new_anc)
                 vs.forEach(x => {
                     x.changes = x.splices.map(x => {
-                        return `[${x[0]}:${x[0] + x[1]}] = ` + JSON.stringify(x[2].map(x => {
+                        return prefix + `[${x[0]}:${x[0] + x[1]}] = ` + JSON.stringify(x[2].map(x => {
                             if (Array.isArray(x)) {
                                 return []
                             } else if (typeof(x) == 'object') {
@@ -290,14 +292,15 @@ function sync9_extract_versions(s9, is_anc, is_new_anc) {
                     delete x.splices
                 })
                 versions = versions.concat(vs)
+                var i = 0
                 sync9_trav_space_dag(x.S, () => true, node => {
-                    node.elems.forEach(e => rec(e))
+                    node.elems.forEach(e => rec(e, prefix + `[${i++}]`))
                 })
             } else if (x.t == 'str') {
                 var vs = sync9_space_dag_extract_versions(x.S, s9, is_anc, is_new_anc)
                 vs.forEach(x => {
                     x.changes = x.splices.map(x => {
-                        return `[${x[0]}:${x[0] + x[1]}] = ${JSON.stringify(x[2])}`
+                        return prefix + `[${x[0]}:${x[0] + x[1]}] = ${JSON.stringify(x[2])}`
                     })
                     delete x.splices
                 })
@@ -305,7 +308,7 @@ function sync9_extract_versions(s9, is_anc, is_new_anc) {
             }
         }
     }
-    rec(s9)
+    rec(s9, '')
     return versions
 }
 
