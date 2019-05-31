@@ -83,6 +83,7 @@ function main() {
     })
     
     for (var t = 0; t < N; t++) {
+        console.log('t = ' + t)
         var i = Math.floor(rand() * n_clients)
         var c = Object.values(clients)[i]
         if (rand() < 0.1 && c.got_first_version) {
@@ -108,19 +109,23 @@ function main() {
         } else {
             if (rand() < 0.5) {
                 if (c.incoming.length > 0) {
+                    console.log('processing incoming..')
                     c.incoming.shift()()
                 }
             } else {
                 if (c.outgoing.length > 0) {
+                    console.log('processing outgoing..')
                     c.outgoing.shift()()
                 }
             }
         }
         
-        console.log('server: ' + JSON.stringify(server))
-        Object.values(clients).forEach(x => {
-            console.log('client: ' + JSON.stringify(x))
-        })
+        console.log('client: ' + JSON.stringify(sync9_read(c.s9)))
+        
+        // console.log('server: ' + JSON.stringify(server))
+        // Object.values(clients).forEach(x => {
+        //     console.log('client: ' + JSON.stringify(x))
+        // })
     }
     
     for (var t = 0; t < 1; t++) {
