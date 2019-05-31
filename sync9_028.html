@@ -844,7 +844,7 @@ function sync9_read(x) {
 }
 
 function sync9_wrap(x, vid) {
-    if (typeof(x) == 'number' || x == null) {
+    if (typeof(x) == 'number' || x == null || typeof(x) == 'boolean') {
         return x
     } else if (typeof(x) == 'string') {
         var s = sync9_create_str()
