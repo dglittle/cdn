@@ -9,7 +9,7 @@
 
 function main() {
     var seed = 'hiya!'
-    var N = 100
+    var N = 300
     
     var last_seed = seed
     function rand() {
@@ -230,10 +230,10 @@ function main() {
     
     console.log('done: ' + seed + ' : ' + JSON.stringify(sync9_read(server.s9)))
     
-    console.log('server: ' + JSON.stringify(server))
-    Object.values(clients).forEach(x => {
-        console.log('client: ' + JSON.stringify(x))
-    })
+    // console.log('server: ' + JSON.stringify(server))
+    // Object.values(clients).forEach(x => {
+    //     console.log('client: ' + JSON.stringify(x))
+    // })
     console.log('server: ' + JSON.stringify(sync9_read(server.s9)))
     Object.values(clients).forEach(x => {
         console.log('client: ' + JSON.stringify(sync9_read(x.s9)))
