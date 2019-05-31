@@ -162,13 +162,13 @@ function main() {
             check_good = false
     })
     
+    console.log('CHECK GOOD: ' + check_good)
     if (!check_good) {
         ;[server].concat(Object.values(clients)).forEach((x, i) => {
             console.log(x)
             var val = sync9_read(x.s9)
             console.log(val)
         })
-        console.log('CHECK GOOD: ' + check_good)
         throw 'stop'
     }
 
