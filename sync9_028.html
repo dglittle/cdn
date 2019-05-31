@@ -8,9 +8,12 @@
 <script>
 
 function main() {
-    var seed = 'hiya!'
-    var N = 300
-    
+    for (var i = 0; i < 10; i++) {
+        run_trial('seed:' + i, 300)
+    }
+}
+
+function run_trial(seed, N) {
     var last_seed = seed
     function rand() {
         Math.randomSeed('' + last_seed)
