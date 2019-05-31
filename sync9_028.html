@@ -109,6 +109,9 @@ function run_trial(seed, N, show_debug) {
                     console.log('changes: ' + JSON.stringify(changes))
                     console.log('leaves: ' + JSON.stringify(c.s9.leaves))
                 }
+                
+                console.log(JSON.stringify(c.s9, null, '    '))
+                
                 var x = c.local_add_version(changes)
                 if (show_debug)
                     console.log('new version: ' + JSON.stringify(c.s9.leaves))
