@@ -22,11 +22,6 @@ function sync9_create_client(s_funcs) {
     
     function init() {
         c.s9 = sync9_create()
-        
-        sync9_add_version(c.s9, 'v1', {root: true}, [' = ""'])
-        sync9_prune(c.s9, (a, b) => true, (a, b) => true)
-        delete c.s9.T.v1
-        c.s9.leaves = {root: true}
     }
     init()
     
@@ -118,7 +113,7 @@ function sync9_create_server(c_funcs) {
     var s = {}
     
     s.s9 = sync9_create()
-    sync9_add_version(s.s9, 'v1', {root : true}, [' = ""'])
+    sync9_add_version(s.s9, 'v1', {root : true}, [])
 
     s.peers = {}
     s.prune_info = {
