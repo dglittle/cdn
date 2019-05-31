@@ -254,11 +254,12 @@ function sync9_extract_versions(s9, is_anc, is_new_anc) {
                 vs.forEach(x => {
                     x.changes = x.splices.map(x => {
                         var path = `[${x[0]}:${x[0] + x[1]}] = `
-                        if (Array.isArray(x[2])) {
+                        var y = x[2][0]
+                        if (Array.isArray(y)) {
                             return path + '[]'
-                        } else if (typeof(x[2]) == 'object') {
+                        } else if (typeof(y) == 'object') {
                             return path + '{}'
-                        } else if (typeof(x[2]) == 'string') {
+                        } else if (typeof(y) == 'string') {
                             return path + '""'
                         } else {
                             return path + JSON.stringify(x[2])
