@@ -13,7 +13,8 @@ function main() {
     sync9_add_version(s9, 'hi', {'root': true}, ['= {"a":3, "b":6, "c":["hi!"]}'])
     console.log('hi!', JSON.stringify(s9, null, '    '))
     console.log('hi!', sync9_read(s9))
-    console.log(sync9_extract_versions(s9, x => x == 'root', () => true))
+    var vs = sync9_extract_versions(s9, x => x == 'root', () => true)
+    console.log(JSON.stringify(vs, null, '    '))
 }
 
 function sync9_create_client(s_funcs) {
@@ -244,6 +245,7 @@ function sync9_create_server(c_funcs) {
 
 
 function sync9_extract_versions(s9, is_anc, is_new_anc) {
+    debugger
     var versions = []
     function rec(x, prefix) {
         if (x && typeof(x) == 'object') {
@@ -255,12 +257,14 @@ function sync9_extract_versions(s9, is_anc, is_new_anc) {
                     x.changes = x.splices.map(x => {
                         var path = prefix + ` = `
                         var y = x[2][0]
-                        if (Array.isArray(y)) {
-                            return path + '[]'
-                        } else if (typeof(y) == 'object') {
-                            return path + '{}'
-                        } else if (typeof(y) == 'string') {
-                            return path + '""'
+                        if (typeof(y) == 'object') {
+                            if (y.t == 'arr') {
+                                return path + '[]'
+                            } else if (y.t == 'obj') {
+                                return path + '{}'
+                            } else if (y.t == 'str') {
+                                return path + '""'
+                            } else throw 'wtf?'
                         } else {
                             return path + JSON.stringify(y)
                         }
@@ -277,15 +281,17 @@ function sync9_extract_versions(s9, is_anc, is_new_anc) {
                 var vs = sync9_space_dag_extract_versions(x.S, s9, is_anc, is_new_anc)
                 vs.forEach(x => {
                     x.changes = x.splices.map(x => {
-                        return prefix + `[${x[0]}:${x[0] + x[1]}] = ` + JSON.stringify(x[2].map(x => {
-                            if (Array.isArray(x)) {
-                                return []
-                            } else if (typeof(x) == 'object') {
-                                return {}
-                            } else if (typeof(x) == 'string') {
-                                return ""
+                        return prefix + `[${x[0]}:${x[0] + x[1]}] = ` + JSON.stringify(x[2].map(y => {
+                            if (typeof(y) == 'object') {
+                                if (y.t == 'arr') {
+                                    return []
+                                } else if (y.t == 'obj') {
+                                    return {}
+                                } else if (y.t == 'str') {
+                                    return ""
+                                } else throw 'wtf?'
                             } else {
-                                return x
+                                return y
                             }
                         }))
                     })
