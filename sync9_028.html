@@ -91,7 +91,7 @@ function main() {
                     c.letters_i = 0
                 }
                 var edit = create_random_edit(c.s9, c.letters[c.letters_i++])
-                console.log('edit: ' + edit)
+                console.log('edit: ' + JSON.stringify(edit))
                 var x = c.local_add_version(edit.changes)
             // } else {
             //     if (c.state == 'disconnected') {
