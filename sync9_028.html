@@ -9,7 +9,7 @@
 
 function main() {
     var seed = 'hiya!'
-    var N = 2
+    var N = 1
     
     var last_seed = seed
     function rand() {
@@ -117,7 +117,8 @@ function main() {
         }
     }
     
-    for (var t = 0; t < 10000; t++) {
+    for (var t = 0; t < 1; t++) {
+    // for (var t = 0; t < 10000; t++) {
         Object.values(clients).forEach(c => {
             if (c.state == 'disconnected') {
                 c.state = 'connected'
@@ -158,20 +159,68 @@ function main() {
         throw 'stop'
     }
 
-    function create_random_edit(s, letters) {
+    function create_random_edit(s9, letters) {
         letters = letters || 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-        var str = sync9_read(s)
-        var start = Math.floor(rand() * (str.length + 1))
-        var del = Math.floor(rand() * rand() * (str.length - start + 1))
-        var ins = letters[Math.floor(rand() * letters.length)].repeat(Math.floor(rand() * 200) + (del == 0 ? 1 : 0))
+        var o = sync9_read(s9)
         
-        var vid = sync9_guid()
-        var changes = [`[${start}:${start + del}] = ` + JSON.stringify(ins)]
+        function create_random_thing_to_insert() {
+            if (Math.random() < 0.3) {
+                return {}
+            } else if (Math.random() < 0.3) {
+                return []
+            } else if (Math.random() < 0.3) {
+                return Math.random() * 100
+            } else if (Math.random() < 0.3) {
+                return letters[Math.floor(rand() * letters.length)].repeat(Math.floor(rand() * 4))
+            } else return null
+        }
         
+        function rec(x, prefix) {
+            if (Math.random() < 0.3) {
+                return prefix + ' = ' + JSON.stringify(create_random_thing_to_insert())
+            } else if (x == null) {
+            } else if (Array.isArray(x)) {
+                if (Math.random() < 0.5) {
+                    var start = Math.floor(rand() * (x.length + 1))
+                    var del = Math.floor(rand() * rand() * (x.length - start + 1))
+                    var ins_len = Math.floor(rand() * 3)
+                    var ins = []
+                    for (var i = 0; i < ins_len; i++) {
+                        ins.push(create_random_thing_to_insert())
+                    }
+                    return `[${start}:${start + del}] = ` + JSON.stringify(ins)
+                } else if (Math.random() < 0.5) {
+                    for (var i = 0; i < x.length; i++) {
+                        var r = rec(x[i], prefix + `[${i}]`)
+                        if (r) return r
+                    }
+                }
+            } else if (typeof(x) == 'object') {
+                if (Math.random() < 0.5) {
+                    var key = letters[Math.floor(rand() * letters.length)].repeat(Math.floor(rand() * 4) + 1)
+                    return `[${JSON.stringify(key)}] = ${JSON.stringify(create_random_thing_to_insert())}`
+                } else if (Math.random() < 0.5) {
+                    Object.entries(x).forEach(y => {
+                        var r = rec(y[1], prefix + `[${JSON.stringify(y[0])}]`)
+                        if (r) return r
+                    })
+                }
+            } else if (typeof(x) == 'string') {
+                if (Math.random() < 0.5) {
+                    var start = Math.floor(rand() * (x.length + 1))
+                    var del = Math.floor(rand() * rand() * (x.length - start + 1))
+                    var ins = letters[Math.floor(rand() * letters.length)].repeat(Math.floor(rand() * 4) + (del == 0 ? 1 : 0))
+                    return `[${start}:${start + del}] = ` + JSON.stringify(ins)]
+                }
+            }
+        }
+        var changes = []
+        var change = rec(o, '')
+        if (change) changes.push(change)
         return {
-            vid : vid,
-            parents : Object.assign({}, s.leaves),
-            changes : changes
+            vid: sync9_guid(),
+            parents: Object.assign({}, s9.leaves),
+            changes: changes
         }
     }
     
