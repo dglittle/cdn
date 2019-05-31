@@ -249,7 +249,7 @@ function sync9_extract_versions(s9, is_anc, is_new_anc) {
     function rec(x, prefix) {
         if (x && typeof(x) == 'object') {
             if (!x.t && x.val) {
-                rec(x.val)
+                rec(x.val, prefix)
             } else if (x.t == 'val') {
                 var vs = sync9_space_dag_extract_versions(x.S, s9, is_anc, is_new_anc)
                 vs.forEach(x => {
