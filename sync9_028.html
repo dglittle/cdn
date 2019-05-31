@@ -219,7 +219,7 @@ function run_trial(seed, N, show_debug) {
                     for (var i = 0; i < ins_len; i++) {
                         ins.push(create_random_thing_to_insert())
                     }
-                    return `[${start}:${start + del}] = ` + JSON.stringify(ins)
+                    return prefix + `[${start}:${start + del}] = ` + JSON.stringify(ins)
                 } else if (Math.random() < 0.5) {
                     for (var i = 0; i < x.length; i++) {
                         var r = rec(x[i], prefix + `[${i}]`)
@@ -229,7 +229,7 @@ function run_trial(seed, N, show_debug) {
             } else if (typeof(x) == 'object') {
                 if (Math.random() < 0.5) {
                     var key = letters[Math.floor(rand() * letters.length)].repeat(Math.floor(rand() * 4) + 1)
-                    return `[${JSON.stringify(key)}] = ${JSON.stringify(create_random_thing_to_insert())}`
+                    return prefix + `[${JSON.stringify(key)}] = ${JSON.stringify(create_random_thing_to_insert())}`
                 } else if (Math.random() < 0.5) {
                     Object.entries(x).forEach(y => {
                         var r = rec(y[1], prefix + `[${JSON.stringify(y[0])}]`)
@@ -241,7 +241,7 @@ function run_trial(seed, N, show_debug) {
                     var start = Math.floor(rand() * (x.length + 1))
                     var del = Math.floor(rand() * rand() * (x.length - start + 1))
                     var ins = letters[Math.floor(rand() * letters.length)].repeat(Math.floor(rand() * 4) + (del == 0 ? 1 : 0))
-                    return `[${start}:${start + del}] = ` + JSON.stringify(ins)
+                    return prefix + `[${start}:${start + del}] = ` + JSON.stringify(ins)
                 }
             }
         }
