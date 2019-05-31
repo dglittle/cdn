@@ -116,6 +116,11 @@ function main() {
                 }
             }
         }
+        
+        console.log('server: ' + JSON.stringify(server))
+        Object.values(clients).forEach(x => {
+            console.log('client: ' + JSON.stringify(x))
+        })
     }
     
     for (var t = 0; t < 1; t++) {
