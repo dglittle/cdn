@@ -123,11 +123,6 @@ function main() {
         }
         
         console.log('client: ' + c.uid + ' -> ' + JSON.stringify(sync9_read(c.s9)))
-        
-        // console.log('server: ' + JSON.stringify(server))
-        // Object.values(clients).forEach(x => {
-        //     console.log('client: ' + JSON.stringify(x))
-        // })
     }
     
     for (var t = 0; t < 1; t++) {
@@ -234,6 +229,11 @@ function main() {
     }
     
     console.log('done: ' + seed + ' : ' + JSON.stringify(sync9_read(server.s9)))
+    
+    console.log('server: ' + JSON.stringify(server))
+    Object.values(clients).forEach(x => {
+        console.log('client: ' + JSON.stringify(x))
+    })
 }
 
 
