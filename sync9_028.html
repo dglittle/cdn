@@ -8,6 +8,7 @@
 <script>
 
 function main() {
+    debugger
     var seed = 'hiya!'
     var N = 1
     
@@ -280,10 +281,10 @@ function sync9_create_client(s_funcs) {
         
         if (!c.got_first_version) {
             c.got_first_version = true
-            var save = sync9_read(c.s9)
+            // var save = sync9_read(c.s9)
             init()
             sync9_add_version(c.s9, vid, parents, changes)
-            c.local_add_version(['[0:0]=' + JSON.stringify(save)])
+            // c.local_add_version(['[0:0]=' + JSON.stringify(save)])
         } else {
             sync9_add_version(c.s9, vid, parents, changes)
         }
