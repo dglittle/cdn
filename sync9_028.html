@@ -9,7 +9,7 @@
 
 function main() {
     var seed = 'hiya!'
-    var N = 1
+    var N = 100
     
     var last_seed = seed
     function rand() {
@@ -91,6 +91,7 @@ function main() {
                     c.letters_i = 0
                 }
                 var edit = create_random_edit(c.s9, c.letters[c.letters_i++])
+                console.log('edit: ' + edit)
                 var x = c.local_add_version(edit.changes)
             // } else {
             //     if (c.state == 'disconnected') {
