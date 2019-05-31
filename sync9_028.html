@@ -104,6 +104,12 @@ function run_trial(seed, N, show_debug) {
                 if (c.letters_i >= c.letters.length) {
                     c.letters_i = 0
                 }
+                
+                
+                console.log(JSON.stringify(c.s9, null, '    '))
+                
+                
+                
                 var changes = create_random_edit(c.s9, c.letters[c.letters_i++])
                 if (show_debug) {
                     console.log('changes: ' + JSON.stringify(changes))
