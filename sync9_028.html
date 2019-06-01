@@ -843,6 +843,9 @@ function sync9_add_version(x, vid, parents, changes, is_anc) {
         })
         if (!parse.range) {
             if (cur.t != 'val') throw 'bad'
+            
+            work here -- delete 1?
+            
             sync9_space_dag_add_version(cur.S, vid, [[0, 0, [sync9_wrap(parse.val, vid)]]], is_anc)
         } else {
             if (cur.t == 'val') cur = sync9_space_dag_get(cur.S, 0, is_anc)
