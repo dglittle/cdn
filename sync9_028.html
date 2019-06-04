@@ -11,12 +11,14 @@ function main() {
     for (var i = 0; i < 100; i++) {
         i = 8
         console.log('TRIAL: ' + i)
-        run_trial('seed:' + i, 300, false)
+        run_trial('seed:' + i, 300, true)
         throw 'blah'
     }
 }
 
 function run_trial(seed, N, show_debug) {
+    // debugger
+    
     var last_seed = seed
     function rand() {
         Math.randomSeed('' + last_seed)
