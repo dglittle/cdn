@@ -649,14 +649,16 @@ function sync9_prune2(x, has_everyone_whos_seen_a_seen_b, has_everyone_whos_seen
                 rec(x.val)
             } else if (x.t == 'val') {
                 if (sync9_space_dag_prune2(x.S, has_everyone_whos_seen_a_seen_b, seen_nodes)) did_something = true
-                rec(sync9_space_dag_get(x.S, 0))
+                sync9_trav_space_dag(x.S, () => true, node => {
+                    node.elems.forEach(rec)
+                }, true)
             } else if (x.t == 'obj') {
                 Object.values(x.S).forEach(v => rec(v))
             } else if (x.t == 'arr') {
                 if (sync9_space_dag_prune2(x.S, has_everyone_whos_seen_a_seen_b, seen_nodes)) did_something = true
                 sync9_trav_space_dag(x.S, () => true, node => {
-                    node.elems.forEach(e => rec(e))
-                })
+                    node.elems.forEach(rec)
+                }, true)
             } else if (x.t == 'str') {
                 if (sync9_space_dag_prune2(x.S, has_everyone_whos_seen_a_seen_b, seen_nodes)) did_something = true
             }
