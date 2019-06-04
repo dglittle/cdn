@@ -182,7 +182,7 @@ function run_trial(seed, N, show_debug) {
         ;[server].concat(Object.values(clients)).forEach((x, i) => {
             console.log(x)
             var val = sync9_read(x.s9)
-            console.log(val)
+            console.log('val: ' + JSON.stringify(val))
         })
         throw 'stop'
     }
