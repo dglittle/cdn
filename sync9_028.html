@@ -173,13 +173,9 @@ function run_trial(seed, N, show_debug) {
     var check_good = true
     ;[server].concat(Object.values(clients)).forEach((x, i) => {
         var val = sync9_read(x.s9)
-        
-        // work here
-        console.log('val at i ' + i + ': ', val)
-        
         if (i == 0)
             check_val = val
-        else if (deep_equals(val, check_val))
+        else if (!deep_equals(val, check_val))
             check_good = false
     })
     
