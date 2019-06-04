@@ -390,47 +390,42 @@ function sync9_create_server(c_funcs) {
     }
     
     function prune() {
+        var q = (a, b) => (a != 'root') && !s.s9.leaves[b] && Object.keys(s.prune_info[a].sent).every(x => s.prune_info[b].acked[x])
         
+        var clone = JSON.parse(JSON.stringify(s.s9))
+        var deleted = sync9_prune2(clone, q, q)
         
-        // work here
-        
-        
-        // var q = (a, b) => (a != 'root') && !s.s9.leaves[b] && Object.keys(s.prune_info[a].sent).every(x => s.prune_info[b].acked[x])
-        
-        // var clone = JSON.parse(JSON.stringify(s.s9))
-        // var deleted = sync9_prune2(clone, q, q)
-        
-        // while (Object.keys(deleted).length > 0) {
-        //     var clone = JSON.parse(JSON.stringify(s.s9))
-        //     var deleted2 = sync9_prune2(clone, (a, b) => q(a, b) && deleted[b], (a, b) => q(a, b) && deleted[a])
+        while (Object.keys(deleted).length > 0) {
+            var clone = JSON.parse(JSON.stringify(s.s9))
+            var deleted2 = sync9_prune2(clone, (a, b) => q(a, b) && deleted[b], (a, b) => q(a, b) && deleted[a])
             
-        //     if (Object.keys(deleted).some(x => !deleted2[x])) {
-        //         deleted = deleted2
-        //     } else {
-        //         break
-        //     }
-        // }
+            if (Object.keys(deleted).some(x => !deleted2[x])) {
+                deleted = deleted2
+            } else {
+                break
+            }
+        }
 
-        // var backup_parents = {}
-        // Object.keys(deleted).forEach(x => backup_parents[x] = s.s9.T[x])
+        var backup_parents = {}
+        Object.keys(deleted).forEach(x => backup_parents[x] = s.s9.T[x])
 
-        // var deleted2 = sync9_prune2(s.s9, (a, b) => q(a, b) && deleted[b], (a, b) => q(a, b) && deleted[a])
+        var deleted2 = sync9_prune2(s.s9, (a, b) => q(a, b) && deleted[b], (a, b) => q(a, b) && deleted[a])
         
-        // if (Object.keys(deleted).some(x => !deleted2[x]) || Object.keys(deleted2).some(x => !deleted[x])) {
-        //     throw 'wtf?'
-        // }
+        if (Object.keys(deleted).some(x => !deleted2[x]) || Object.keys(deleted2).some(x => !deleted[x])) {
+            throw 'wtf?'
+        }
         
-        // Object.keys(deleted).forEach(deleted => {
-        //     Object.entries(s.peers).forEach(x => {
-        //         if (s.prune_info[deleted].sent[x[0]]) {
-        //             s.peers[x[0]].unacked_prunes[deleted] = backup_parents[deleted]
-        //         }
-        //         if (x[1].online) {
-        //             c_funcs.ack(x[0], deleted)
-        //         }
-        //     })
-        //     delete s.prune_info[deleted]
-        // })
+        Object.keys(deleted).forEach(deleted => {
+            Object.entries(s.peers).forEach(x => {
+                if (s.prune_info[deleted].sent[x[0]]) {
+                    s.peers[x[0]].unacked_prunes[deleted] = backup_parents[deleted]
+                }
+                if (x[1].online) {
+                    c_funcs.ack(x[0], deleted)
+                }
+            })
+            delete s.prune_info[deleted]
+        })
     }
     
     s.join = (uid, leaves) => {
@@ -843,10 +838,8 @@ function sync9_add_version(x, vid, parents, changes, is_anc) {
         })
         if (!parse.range) {
             if (cur.t != 'val') throw 'bad'
-            
-            work here -- delete 1?
-            
-            sync9_space_dag_add_version(cur.S, vid, [[0, 0, [sync9_wrap(parse.val, vid)]]], is_anc)
+            var len = sync9_space_dag_length(cur.S, is_anc)
+            sync9_space_dag_add_version(cur.S, vid, [[0, len, [sync9_wrap(parse.val, vid)]]], is_anc)
         } else {
             if (cur.t == 'val') cur = sync9_space_dag_get(cur.S, 0, is_anc)
             if (parse.val instanceof Array && cur.t != 'arr') throw 'bad'
@@ -963,7 +956,15 @@ function sync9_space_dag_get(S, i, is_anc) {
     })
     return ret
 }
-    
+
+function sync9_space_dag_length(S, is_anc) {
+    var count = 0
+    sync9_trav_space_dag(S, is_anc ? is_anc : () => true, node => {
+        count += node.elems.length
+    })
+    return count
+}
+
 function sync9_space_dag_break_node(node, x, end_cap, new_next) {
     function subseq(x, start, stop) {
         return (x instanceof Array) ?
