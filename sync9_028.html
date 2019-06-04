@@ -94,16 +94,6 @@ function run_trial(seed, N, show_debug) {
         var i = Math.floor(rand() * n_clients)
         var c = Object.values(clients)[i]
         
-        
-        
-        if (t == 240) {
-            debugger
-            console.log(JSON.stringify(c.s9, null, '    '))
-            console.log(JSON.stringify(server.s9, null, '    '))
-        }
-        
-        
-        
         if (rand() < 0.1 && c.got_first_version) {
             // if (rand() < 0.9) {
                 if (c.letters_i >= c.letters.length) {
