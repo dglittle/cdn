@@ -167,10 +167,16 @@ function run_trial(seed, N, show_debug) {
         c.add_version(sync9_guid(), c.s9.leaves, [])
     })
     
+    debugger
+    
     var check_val = null
     var check_good = true
     ;[server].concat(Object.values(clients)).forEach((x, i) => {
         var val = sync9_read(x.s9)
+        
+        // work here
+        var x = 2 + '' + (val ? val.bloop : 5)
+        
         if (i == 0)
             check_val = val
         else if (deep_equals(val, check_val))
