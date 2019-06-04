@@ -173,7 +173,7 @@ function run_trial(seed, N, show_debug) {
         var val = sync9_read(x.s9)
         if (i == 0)
             check_val = val
-        else if (JSON.stringify(val) != JSON.stringify(check_val))
+        else if (deep_equals(val, check_val))
             check_good = false
     })
     
@@ -1386,6 +1386,32 @@ function binarySearch(ar, compare_fn) {
     }
     return m;
 }
+
+
+
+
+
+
+function deep_equals(a, b) {
+    if (typeof(a) != 'object' || typeof(b) != 'object') return a == b
+    if (a == null) return b == null
+    if (Array.isArray(a)) {
+        if (!Array.isArray(b)) return false
+        if (a.length != b.length) return false
+        for (var i = 0; i < a.length; i++)
+            if (!deep_equals(a[i], b[i])) return false
+        return true
+    }
+    var ak = Object.keys(a).sort()
+    var bk = Object.keys(b).sort()
+    if (ak.length != bk.length) return false
+    for (var k of ak)
+        if (!deep_equals(a[k], b[k])) return false
+    return true
+}
+
+
+
 
 
 main()
