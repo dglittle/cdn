@@ -175,7 +175,7 @@ function run_trial(seed, N, show_debug) {
         var val = sync9_read(x.s9)
         
         // work here
-        var x = 2 + '' + (val ? val.bloop : 5)
+        console.log('val at i ' + i + ': ', val)
         
         if (i == 0)
             check_val = val
