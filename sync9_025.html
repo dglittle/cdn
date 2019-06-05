@@ -595,7 +595,7 @@ function sync9_create_server(c_funcs) {
         if (s.s9.T[vid]) return
         
         var p = s.peers[uid]
-        if (p.unacked_prunes[vid]) return
+        // if (p.unacked_prunes[vid]) return
         
         s.prune_info[vid] = {sent: {}, acked: {[uid]: true}}
         
