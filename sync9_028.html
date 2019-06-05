@@ -9,9 +9,11 @@
 
 function main() {
     for (var i = 0; i < 1000; i++) {
+        i = 83
         console.log('TRIAL: ' + i)
         // run_trial('seed:' + i, 20, false)
-        run_trial('seed:' + i, 10, false)
+        run_trial('seed:' + i, 10, true)
+        throw 'stop'
     }
 }
 
@@ -130,14 +132,25 @@ function run_trial(seed, N, show_debug) {
             //     }
             // }
         } else {
+            var did_something = false
             if (rand() < 0.5) {
                 if (c.incoming.length > 0) {
+                    if (show_debug)
+                        console.log('process incoming')
+                    did_something = true
                     c.incoming.shift()()
                 }
             } else {
                 if (c.outgoing.length > 0) {
+                    if (show_debug)
+                        console.log('process outgoing')
+                    did_something = true
                     c.outgoing.shift()()
                 }
+            }
+            if (!did_something) {
+                if (show_debug)
+                    console.log('did nothing')
             }
         }
         
