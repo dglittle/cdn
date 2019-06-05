@@ -93,6 +93,12 @@ function run_trial(seed, N, show_debug) {
     for (var t = 0; t < N; t++) {
         if (show_debug) console.log('t == ' + t)
         
+        
+        if (t == 217) {
+            debugger
+        }
+        
+        
         var i = Math.floor(rand() * n_clients)
         var c = Object.values(clients)[i]
         
