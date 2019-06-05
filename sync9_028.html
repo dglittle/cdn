@@ -9,10 +9,8 @@
 
 function main() {
     for (var i = 0; i < 100; i++) {
-        i = 55
         console.log('TRIAL: ' + i)
-        run_trial('seed:' + i, 300, true)
-        throw 'stop'
+        run_trial('seed:' + i, 20, false)
     }
 }
 
@@ -92,12 +90,6 @@ function run_trial(seed, N, show_debug) {
     
     for (var t = 0; t < N; t++) {
         if (show_debug) console.log('t == ' + t)
-        
-        
-        if (t == 217) {
-            debugger
-        }
-        
         
         var i = Math.floor(rand() * n_clients)
         var c = Object.values(clients)[i]
