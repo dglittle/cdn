@@ -9,9 +9,10 @@
 
 function main() {
     for (var i = 0; i < 1000; i++) {
+        i = 906
         console.log('TRIAL: ' + i)
         // run_trial('seed:' + i, 20, false)
-        run_trial('seed:' + i, 5, false)
+        run_trial('seed:' + i, 5, true)
     }
 }
 
@@ -164,6 +165,7 @@ function run_trial(seed, N, show_debug) {
     }
     
     for (var t = 0; t < 10000; t++) {
+        if (show_debug) console.log('t => ' + t)
         Object.values(clients).forEach(c => {
             if (c.state == 'disconnected') {
                 c.state = 'connected'
