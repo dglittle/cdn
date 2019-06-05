@@ -31,12 +31,16 @@ function run_trial(seed, N, show_debug) {
     
     var server = sync9_create_server({
         add_version: (uid, vid, parents, changes) => {
+            if (show_debug) console.log('c add version 1')
             clients[uid].incoming.push(() => {
+                if (show_debug) console.log('c add version 2')
                 clients[uid].add_version(vid, parents, changes)
             })
         },
         ack: (uid, vid) => {
+            if (show_debug) console.log('c ack 1')
             clients[uid].incoming.push(() => {
+                if (show_debug) console.log('c ack 2')
                 clients[uid].ack(vid)
             })
         }
@@ -46,20 +50,26 @@ function run_trial(seed, N, show_debug) {
         ;(() => {
             var c = sync9_create_client({
                 join : (uid, leaves) => {
+                    if (show_debug) console.log('s join 1')
                     c.outgoing.push(() => {
+                        if (show_debug) console.log('s join 2')
                         server.join(uid, leaves)
                     })
                 },
                 add_version : (uid, vid, parents, changes) => {
                     if (c.state == 'connected') {
+                        if (show_debug) console.log('s add_version 1')
                         c.outgoing.push(() => {
+                            if (show_debug) console.log('s add_version 2')
                             server.add_version(uid, vid, parents, changes)
                         })
                     }
                 },
                 ack : (uid, vid) => {
                     if (c.state == 'connected') {
+                        if (show_debug) console.log('s ack 1')
                         c.outgoing.push(() => {
+                            if (show_debug) console.log('s ack 2')
                             server.ack(uid, vid)
                         })
                     }
