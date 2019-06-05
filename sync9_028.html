@@ -19,13 +19,10 @@ function main() {
 
 function run_trial(seed, N, show_debug) {
     // debugger
-    
-    var last_seed = seed
-    function rand() {
-        Math.randomSeed('' + last_seed)
-        return last_seed = Math.random()
-    }
 
+    Math.randomSeed(seed)
+    var rand = () => Math.random()
+    
     var n_clients = 2
     var clients = {}
     
