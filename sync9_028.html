@@ -9,20 +9,17 @@
 
 function main() {
     for (var i = 0; i < 1000; i++) {
-        i = 83
         console.log('TRIAL: ' + i)
         // run_trial('seed:' + i, 20, false)
-        run_trial('seed:' + i, 10, true)
-        throw 'stop'
+        run_trial('seed:' + i, 10, false)
     }
 }
 
 function run_trial(seed, N, show_debug) {
     // debugger
-
-    Math.randomSeed(seed)
-    var rand = () => Math.random()
     
+    Math.randomSeed(seed)
+
     var n_clients = 2
     var clients = {}
     
