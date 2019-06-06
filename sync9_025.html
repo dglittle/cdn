@@ -301,10 +301,6 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
         if (Object.values(clients).every(x => x.incoming.length == 0 && x.outgoing.length == 0)) break
     }
     
-    } catch (e) {
-        console.log('got error: ' + e)
-    }
-    
     Object.values(clients).forEach(c => {
         c.add_version(sync9_guid(), c.s9.leaves, [])
     })
@@ -319,6 +315,10 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
             check_good = false
     })
     //console.log('check_good: ' + check_good)
+    
+    } catch (e) {
+        console.log('got error: ' + e)
+    }
     
     
     
