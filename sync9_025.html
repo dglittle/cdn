@@ -550,7 +550,7 @@ function sync9_create_server(c_funcs) {
         Object.keys(deleted).forEach(deleted => {
             Object.entries(s.peers).forEach(x => {
                 if (s.prune_info[deleted].sent[x[0]]) {
-                    s.peers[x[0]].unacked_prunes[deleted] = true
+                    s.peers[x[0]].unacked_prunes[deleted] = backup_parents[deleted]
                 }
                 if (x[1].online) {
                     c_funcs.ack(x[0], deleted)
