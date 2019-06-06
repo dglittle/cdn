@@ -288,7 +288,7 @@ function run_trial(seed, N, show_debug) {
 //     sync9_add_version(s9, 'hi', {'root': true}, ['= {"a":3, "b":6, "c":["hi!"]}'])
 //     console.log('hi!', JSON.stringify(s9, null, '    '))
 //     console.log('hi!', sync9_read(s9))
-//     var vs = sync9_extract_versions(s9, x => x == 'root', () => true)
+//     var vs = sync9_extract_versions(s9, x => x == 'root')
 //     console.log(JSON.stringify(vs, null, '    '))
 // }
 
@@ -451,7 +451,7 @@ function sync9_create_server(c_funcs) {
         }
         Object.keys(leaves).forEach(k => mark_ancs(k))
         
-        sync9_extract_versions(s.s9, x => ancs[x], x => true).forEach(x => {
+        sync9_extract_versions(s.s9, x => ancs[x]).forEach(x => {
             c_funcs.add_version(uid, x.vid, x.parents, x.changes)
             s.prune_info[x.vid].sent[uid] = true
         })
@@ -514,7 +514,7 @@ function sync9_create_server(c_funcs) {
 }
 
 
-function sync9_extract_versions(s9, is_anc, is_new_anc) {
+function sync9_extract_versions(s9, is_anc) {
     var versions = {}
     function add_versions(vs) {
         vs.forEach(v => {
@@ -523,63 +523,62 @@ function sync9_extract_versions(s9, is_anc, is_new_anc) {
         })
     }
     
-    function rec(x, prefix) {
+    function rec(x, prefix, is_anc) {
         if (x && typeof(x) == 'object') {
             if (!x.t && x.val) {
-                rec(x.val, prefix)
+                rec(x.val, prefix, is_anc)
             } else if (x.t == 'val') {
-                var vs = sync9_space_dag_extract_versions(x.S, s9, is_anc, is_new_anc)
-                vs.forEach(x => {
-                    x.changes = x.splices.map(x => {
-                        var path = prefix + ` = `
-                        var y = x[2][0]
-                        if (y && typeof(y) == 'object') {
-                            if (y.t == 'arr') {
-                                return path + '[]'
-                            } else if (y.t == 'obj') {
-                                return path + '{}'
-                            } else if (y.t == 'str') {
-                                return path + '""'
-                            } else throw 'wtf?'
-                        } else {
-                            return path + JSON.stringify(y)
-                        }
-                    })
+                var vs = sync9_space_dag_extract_versions(x.S, s9, is_anc)
+                var last_v
+                vs.forEach((x, i) => {
+                    if (x.changes.length != 1) throw 'wtf?'
+                    if (i == vs.length - 1) {
+                        last_v = x.vid
+                        x.changes = x.splices.map(x => {
+                            return prefix + ' = ' + JSON.stringify(sync9_read(x[2][0], vid => is_anc(vid) || vid == last_v))
+                        })
+                    } else {
+                        x.changes = x.splices.map(x => {
+                            var path = prefix + ` = `
+                            var y = x[2][0]
+                            if (y && typeof(y) == 'object') {
+                                if (y.t == 'arr') {
+                                    return path + '[]'
+                                } else if (y.t == 'obj') {
+                                    return path + '{}'
+                                } else if (y.t == 'str') {
+                                    return path + '""'
+                                } else throw 'wtf?'
+                            } else {
+                                return path + JSON.stringify(y)
+                            }
+                        })
+                    }
                     delete x.splices
                 })
                 add_versions(vs)
-                rec(sync9_space_dag_get(x.S, 0), prefix)
+                rec(sync9_space_dag_get(x.S, 0), prefix, vid => is_anc(vid) || vid == last_v)
             } else if (x.t == 'obj') {
                 Object.entries(x.S).forEach(x => {
-                    rec(x[1], prefix + `[${JSON.stringify(x[0])}]`)
+                    rec(x[1], prefix + `[${JSON.stringify(x[0])}]`, is_anc)
                 })
             } else if (x.t == 'arr') {
-                var vs = sync9_space_dag_extract_versions(x.S, s9, is_anc, is_new_anc)
-                vs.forEach(x => {
-                    x.changes = x.splices.map(x => {
+                var vs = sync9_space_dag_extract_versions(x.S, s9, is_anc)
+                vs.forEach(z => {
+                    z.changes = z.splices.map(x => {
                         return prefix + `[${x[0]}:${x[0] + x[1]}] = ` + JSON.stringify(x[2].map(y => {
-                            if (typeof(y) == 'object') {
-                                if (y.t == 'arr') {
-                                    return []
-                                } else if (y.t == 'obj') {
-                                    return {}
-                                } else if (y.t == 'str') {
-                                    return ""
-                                } else throw 'wtf?'
-                            } else {
-                                return y
-                            }
+                            return sync9_read(y, vid => is_anc(vid) || vid == z.vid)
                         }))
                     })
-                    delete x.splices
+                    delete z.splices
                 })
                 add_versions(vs)
                 var i = 0
                 sync9_trav_space_dag(x.S, () => true, node => {
-                    node.elems.forEach(e => rec(e, prefix + `[${i++}]`))
+                    node.elems.forEach(e => rec(e, prefix + `[${i++}]`, vid => is_anc(vid) || vid == node.vid))
                 })
             } else if (x.t == 'str') {
-                var vs = sync9_space_dag_extract_versions(x.S, s9, is_anc, is_new_anc)
+                var vs = sync9_space_dag_extract_versions(x.S, s9, is_anc)
                 vs.forEach(x => {
                     x.changes = x.splices.map(x => {
                         return prefix + `[${x[0]}:${x[0] + x[1]}] = ${JSON.stringify(x[2])}`
@@ -587,10 +586,10 @@ function sync9_extract_versions(s9, is_anc, is_new_anc) {
                     delete x.splices
                 })
                 add_versions(vs)
-            }
+            } else throw 'wtf?'
         }
     }
-    rec(s9, '')
+    rec(s9, '', is_anc)
     
     var sorted = []
     var seen = {}
@@ -606,8 +605,8 @@ function sync9_extract_versions(s9, is_anc, is_new_anc) {
     return sorted
 }
 
-function sync9_space_dag_extract_versions(S, s9, is_anc, is_new_anc) {
-    return Object.keys(s9.T).filter(x => !is_anc(x) && is_new_anc(x)).map(vid => {
+function sync9_space_dag_extract_versions(S, s9, is_anc) {
+    return Object.keys(s9.T).filter(x => !is_anc(x)).map(vid => {
         var v = {
             vid,
             parents : Object.assign({}, s9.T[vid]),
@@ -859,29 +858,29 @@ function sync9_add_version(x, vid, parents, changes, is_anc) {
     })
 }
 
-function sync9_read(x) {
+function sync9_read(x, is_anc) {
     if (x && typeof(x) == 'object') {
-        if (!x.t && x.val) return sync9_read(x.val)
-        if (x.t == 'val') return sync9_read(sync9_space_dag_get(x.S, 0))
+        if (!x.t && x.val) return sync9_read(x.val, is_anc)
+        if (x.t == 'val') return sync9_read(sync9_space_dag_get(x.S, 0, is_anc), is_anc)
         if (x.t == 'obj') {
             var o = {}
             Object.entries(x.S).forEach(([k, v]) => {
-                o[k] = sync9_read(v)
+                o[k] = sync9_read(v, is_anc)
             })
             return o
         }
         if (x.t == 'arr') {
             var a = []
-            sync9_trav_space_dag(x.S, () => true, (node) => {
+            sync9_trav_space_dag(x.S, is_anc, (node) => {
                 node.elems.forEach((e) => {
-                    a.push(sync9_read(e))
+                    a.push(sync9_read(e, is_anc))
                 })
             })
             return a
         }
         if (x.t == 'str') {
             var s = []
-            sync9_trav_space_dag(x.S, () => true, (node) => {
+            sync9_trav_space_dag(x.S, is_anc, (node) => {
                 s.push(node.elems)
             })
             return s.join('')
