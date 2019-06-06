@@ -89,7 +89,7 @@ function draw_space_dag(c, g, S, x, y) {
 
 var debug_frames, clients_array, server
 
-var ttt_n = 1000
+var ttt_n = 100
 for (var ttt = 0; ttt < ttt_n; ttt++) {
     var last_ttt = (ttt == ttt_n - 1)
     
@@ -580,7 +580,12 @@ function sync9_create_server(c_funcs) {
         function mark_ancs(key) {
             if (!ancs[key]) {
                 ancs[key] = true
-                Object.keys(s.s9.T[key] || p.unacked_prunes[key]).forEach(k => mark_ancs(k))
+                
+                
+                // work here
+                
+                // Object.keys(s.s9.T[key] || p.unacked_prunes[key]).forEach(k => mark_ancs(k))
+                Object.keys(s.s9.T[key]).forEach(k => mark_ancs(k))
             }
         }
         Object.keys(leaves).forEach(k => mark_ancs(k))
