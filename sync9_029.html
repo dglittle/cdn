@@ -257,6 +257,14 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
     })
     
     for (var t = 0; t < 10000; t++) {
+        
+
+        // work here
+        if (t == 23) {
+            debugger
+        }
+        
+        
         Object.values(clients).forEach(c => {
             
             debug_output.push('PROCESSING: ' + c.uid)
