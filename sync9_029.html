@@ -555,6 +555,11 @@ function sync9_create_server(c_funcs) {
             }
         }
         
+        // work here
+        if (Object.keys(deleted).length > 0) {
+            debugger
+        }
+        
         if (sync9_space_dag_is_incommunicable(sync9_space_dag_get(s.s9.val.S, 0).S)) deleted = {}
 
         var backup_parents = {}
