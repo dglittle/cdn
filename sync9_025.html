@@ -89,7 +89,7 @@ function draw_space_dag(c, g, S, x, y) {
 
 var debug_frames, clients_array, server
 
-var ttt_n = 1
+var ttt_n = 100
 for (var ttt = 0; ttt < ttt_n; ttt++) {
     var last_ttt = (ttt == ttt_n - 1)
     
@@ -103,13 +103,13 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
     var clients = {}
     clients_array = []
     
-    debug_frames = []
+    // debug_frames = []
     
     var debug_output = []
-    debug_output = {}
-    debug_output.push = function (x) {
-        console.log(x)
-    }
+    // debug_output = {}
+    // debug_output.push = function (x) {
+    //     console.log(x)
+    // }
     
     server = sync9_create_server({
         add_version : (uid, vid, parents, changes) => {
@@ -314,7 +314,7 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
         else if (val != check_val)
             check_good = false
     })
-    //console.log('check_good: ' + check_good)
+    // console.log('check_good: ' + check_good)
     
     } catch (e) {
         console.log('got error: ' + e)
@@ -586,11 +586,7 @@ function sync9_create_server(c_funcs) {
         function mark_ancs(key) {
             if (!ancs[key]) {
                 ancs[key] = true
-                
-                
-                // work here
-                
-                // Object.keys(s.s9.T[key] || p.unacked_prunes[key]).forEach(k => mark_ancs(k))
+                Object.keys(s.s9.T[key] || p.unacked_prunes[key]).forEach(k => mark_ancs(k))
                 Object.keys(s.s9.T[key]).forEach(k => mark_ancs(k))
             }
         }
@@ -611,16 +607,16 @@ function sync9_create_server(c_funcs) {
         s.prune_info[vid] = {sent: {}, acked: {[uid]: true}}
         
         Object.keys(parents).forEach(x => {
-            // if (p.unacked_prunes[x]) {
-            //     delete parents[x]
-            //     function helper(x) {
-            //         Object.keys(p.unacked_prunes[x]).forEach(x => {
-            //             if (p.unacked_prunes[x]) helper(x)
-            //             else parents[x] = true
-            //         })
-            //     }
-            //     helper(x)
-            // }
+            if (p.unacked_prunes[x]) {
+                delete parents[x]
+                function helper(x) {
+                    Object.keys(p.unacked_prunes[x]).forEach(x => {
+                        if (p.unacked_prunes[x]) helper(x)
+                        else parents[x] = true
+                    })
+                }
+                helper(x)
+            }
         })
          
         sync9_add_version(s.s9, vid, parents, changes)
