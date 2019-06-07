@@ -201,7 +201,7 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
                 var edit = create_random_edit(c.s9, c.letters[c.letters_i++])
                 
                 var x = c.local_add_version(edit.changes)
-                debug_output.push('NEW VERSION: ' + x.vid)
+                debug_output.push('NEW VERSION: ' + x.vid + ' ' + JSON.stringify(x.parents) + ' ' + JSON.stringify(x.changes))
                 debug_output.push(JSON.stringify(x))
                 
                 
