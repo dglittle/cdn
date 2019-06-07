@@ -554,13 +554,6 @@ function sync9_create_server(c_funcs) {
                 break
             }
         }
-        
-        // work here
-        if (Object.keys(deleted).length > 0) {
-            debugger
-        }
-        
-        if (sync9_space_dag_is_incommunicable(sync9_space_dag_get(clone.val.S, 0).S)) deleted = {}
 
         var backup_parents = {}
         Object.keys(deleted).forEach(x => backup_parents[x] = s.s9.T[x])
@@ -677,19 +670,6 @@ function sync9_create_server(c_funcs) {
 
 
 
-
-function sync9_space_dag_is_incommunicable(S) {
-    var incommunicable = false
-    sync9_trav_space_dag(S, () => true, (node, offset, has_nexts, prev, vid) => {
-        if (prev && node.elems.length == 0 && !node.end_cap && has_nexts) {
-            incommunicable = true
-            return false
-        }
-    }, true)
-    return incommunicable
-}
-
-
 function sync9_prune2(x, has_everyone_whos_seen_a_seen_b, has_everyone_whos_seen_a_seen_b_2) {
     var seen_nodes = {}
     var did_something = true
@@ -764,8 +744,11 @@ function sync9_space_dag_prune2(S, has_everyone_whos_seen_a_seen_b, seen_nodes) 
     function process_node(node, offset, vid, prev) {
         var nexts = node.nexts
         var next = node.next
-        
-        var all_nexts_prunable = nexts.every(x => has_everyone_whos_seen_a_seen_b(vid, x.vid))
+        var all_nexts_prunable = nexts.every(x => {
+            if (!has_everyone_whos_seen_a_seen_b(vid, x.vid)) return false
+            if (x.elems.length == 0 && !x.end_cap && x.nexts.length > 0) return false
+            return true
+        })
         if (nexts.length > 0 && all_nexts_prunable) {
             var first_prunable = 0
             var gamma = next
