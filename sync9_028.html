@@ -534,6 +534,7 @@ function sync9_extract_versions(s9, is_anc) {
                     if (x.splices.length == 0) {
                         x.changes = x.splices
                         delete x.splices
+                        return
                     }
                     if (x.splices.length != 1) throw 'wtf?'
                     if (i == vs.length - 1) {
