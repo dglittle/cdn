@@ -228,8 +228,10 @@ function run_trial(seed, N, show_debug) {
             } else if (Array.isArray(x)) {
                 if (Math.random() < 0.5) {
                     var start = Math.floor(rand() * (x.length + 1))
-                    var del = Math.floor(rand() * rand() * (x.length - start + 1))
                     var ins_len = Math.floor(rand() * 3)
+                    // work here
+                    //var del = Math.floor(rand() * rand() * (x.length - start + 1))
+                    var del = Math.floor(rand() * ins_len)
                     var ins = []
                     for (var i = 0; i < ins_len; i++) {
                         ins.push(create_random_thing_to_insert())
@@ -254,8 +256,10 @@ function run_trial(seed, N, show_debug) {
             } else if (typeof(x) == 'string') {
                 if (Math.random() < 0.5) {
                     var start = Math.floor(rand() * (x.length + 1))
-                    var del = Math.floor(rand() * rand() * (x.length - start + 1))
                     var ins = letters[Math.floor(rand() * letters.length)].repeat(Math.floor(rand() * 4) + (del == 0 ? 1 : 0))
+                    // work here
+                    var del = Math.floor(rand() * ins.length)
+                    // var del = Math.floor(rand() * rand() * (x.length - start + 1))
                     return prefix + `[${start}:${start + del}] = ` + JSON.stringify(ins)
                 }
             }
