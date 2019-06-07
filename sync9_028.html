@@ -531,6 +531,14 @@ function sync9_extract_versions(s9, is_anc) {
                 var vs = sync9_space_dag_extract_versions(x.S, s9, is_anc)
                 var last_v
                 vs.forEach((x, i) => {
+
+
+                    // work here
+                    if (!x.changes) {
+                        debugger
+                    }
+                    
+                    
                     if (x.changes.length != 1) throw 'wtf?'
                     if (i == vs.length - 1) {
                         last_v = x.vid
