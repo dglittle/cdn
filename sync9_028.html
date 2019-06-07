@@ -223,7 +223,7 @@ function run_trial(seed, N, show_debug) {
         
         function rec(x, prefix) {
             if (Math.random() < 0.3) {
-                return prefix + ' = ' + JSON.stringify(create_random_thing_to_insert())
+                if (!x) return prefix + ' = ' + JSON.stringify(create_random_thing_to_insert())
             } else if (x == null) {
             } else if (Array.isArray(x)) {
                 if (Math.random() < 0.5) {
