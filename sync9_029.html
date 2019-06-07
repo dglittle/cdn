@@ -545,7 +545,7 @@ function sync9_create_server(c_funcs) {
         var deleted = sync9_prune2(clone, q, q)
         
         while (Object.keys(deleted).length > 0) {
-            var clone = JSON.parse(JSON.stringify(s.s9))
+            clone = JSON.parse(JSON.stringify(s.s9))
             var deleted2 = sync9_prune2(clone, (a, b) => q(a, b) && deleted[b], (a, b) => q(a, b) && deleted[a])
             
             if (Object.keys(deleted).some(x => !deleted2[x])) {
@@ -560,7 +560,7 @@ function sync9_create_server(c_funcs) {
             debugger
         }
         
-        if (sync9_space_dag_is_incommunicable(sync9_space_dag_get(s.s9.val.S, 0).S)) deleted = {}
+        if (sync9_space_dag_is_incommunicable(sync9_space_dag_get(clone.val.S, 0).S)) deleted = {}
 
         var backup_parents = {}
         Object.keys(deleted).forEach(x => backup_parents[x] = s.s9.T[x])
