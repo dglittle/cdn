@@ -588,7 +588,6 @@ function sync9_create_server(c_funcs) {
             if (!ancs[key]) {
                 ancs[key] = true
                 Object.keys(s.s9.T[key] || p.unacked_prunes[key]).forEach(k => mark_ancs(k))
-                Object.keys(s.s9.T[key]).forEach(k => mark_ancs(k))
             }
         }
         Object.keys(leaves).forEach(k => mark_ancs(k))
