@@ -89,7 +89,7 @@ function draw_space_dag(c, g, S, x, y) {
 
 var debug_frames, clients_array, server
 
-var ttt_n = 1
+var ttt_n = 100
 for (var ttt = 0; ttt < ttt_n; ttt++) {
     var last_ttt = (ttt == ttt_n - 1)
     
@@ -103,13 +103,13 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
     var clients = {}
     clients_array = []
     
-    debug_frames = []
+    // debug_frames = []
     
     var debug_output = []
-    debug_output = {}
-    debug_output.push = function (x) {
-        console.log(x)
-    }
+    // debug_output = {}
+    // debug_output.push = function (x) {
+    //     console.log(x)
+    // }
     
     server = sync9_create_server({
         add_version : (uid, vid, parents, changes) => {
@@ -183,7 +183,7 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
     
     try {
     
-    for (var t = 0; t < 500; t++) {
+    for (var t = 0; t < 50; t++) {
         debug_output.push('t = ' + t)
         
         var i = Math.floor(Math.random() * n_clients)
