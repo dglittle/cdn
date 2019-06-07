@@ -458,7 +458,7 @@ function sync9_create_client(s_funcs, id_suffix) {
             init()
             sync9_add_version(c.s9, vid, parents, changes)
             c.got_first_version = true
-            c.local_add_version(['[0:0]=' + JSON.stringify(save)])
+            if (save) c.local_add_version(['[0:0]=' + JSON.stringify(save)])
         } else {
             sync9_add_version(c.s9, vid, parents, changes)
         }
