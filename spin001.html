@@ -3,86 +3,110 @@
 <script src="https://dglittle.github.io/cdn/utils001.js"></script>
 <script>
 
-var c = document.createElement('canvas')
-c.width = 256
-c.height = 256
-var g = c.getContext('2d')
-
-var xd = 256 / 64
-var yd = 256 / 64
-var xn = c.width / xd
-var yn = c.height / yd
-
-var spins = []
-for (var y = 0; y < yn; y++) {
-    var row = []
-    for (var x = 0; x < xn; x++) {
-        row.push(Math.floor(Math.random() * 2))
-    }
-    spins.push(row)
-}
-
-// spins[10][10] = 0
-//spins[11][10] = -Math.PI+0.001
-// vels[11][10] = 0.1
-// spins[10][11] = Math.PI/2
-// spins[11][11] = Math.PI
-
-var iteration = 0
-function update_it() {
-    var dt = 1
-    function update_pair_vel(x1, y1, x2, y2) {
-        var a = spins[y1][x1]
-        var b = spins[y2][x2]
-        if (Math.random() < 0.3) {
-        } else if (Math.random() < 0.3) {
-            var swap = a
-            a = b
-            b = swap
-        } else if (Math.random() < 0.5) {
-            a = b
-        } else {
-            b = a
-        }
-        spins[y1][x1] = a
-        spins[y2][x2] = b
-    }
+function create_spin_network(a, b) {
+    var c = document.createElement('canvas')
+    c.width = 256
+    c.height = 256
+    var g = c.getContext('2d')
+    
+    var xd = 256 / 64
+    var yd = 256 / 64
+    var xn = c.width / xd
+    var yn = c.height / yd
+    
+    var spins = []
     for (var y = 0; y < yn; y++) {
+        var row = []
         for (var x = 0; x < xn; x++) {
-            update_pair_vel(x, y, (x + 1) % xn, y)
-            update_pair_vel(x, y, x, (y + 1) % yn)
+            row.push(Math.floor(Math.random() * 2))
         }
+        spins.push(row)
     }
-}
-
-function paint_it() {
-    g.fillStyle = 'white'
-    g.fillRect(0, 0, c.width, c.height)
-    // g.beginPath()
-    for (var y = 0; y < yn; y++) {
-        for (var x = 0; x < xn; x++) {
-            var a = spins[y][x]
-            if (a == 0) {
-                g.fillStyle = 'white'
+    
+    // spins[10][10] = 0
+    //spins[11][10] = -Math.PI+0.001
+    // vels[11][10] = 0.1
+    // spins[10][11] = Math.PI/2
+    // spins[11][11] = Math.PI
+    
+    var iteration = 0
+    function update_it() {
+        var dt = 1
+        function update_pair_vel(x1, y1, x2, y2) {
+            var a = spins[y1][x1]
+            var b = spins[y2][x2]
+            if (Math.random() < a) {
+            } else if (Math.random() < b) {
+                var swap = a
+                a = b
+                b = swap
+            } else if (Math.random() < 0.5) {
+                a = b
             } else {
-                g.fillStyle = 'black'
+                b = a
             }
-            g.fillRect(x * xd, y * yd, xd, yd)
-            
+            spins[y1][x1] = a
+            spins[y2][x2] = b
+        }
+        for (var y = 0; y < yn; y++) {
+            for (var x = 0; x < xn; x++) {
+                update_pair_vel(x, y, (x + 1) % xn, y)
+                update_pair_vel(x, y, x, (y + 1) % yn)
+            }
         }
     }
-    // g.fillStyle = 'red'
-    // g.fill()        
+    
+    function paint_it() {
+        g.fillStyle = 'white'
+        g.fillRect(0, 0, c.width, c.height)
+        // g.beginPath()
+        for (var y = 0; y < yn; y++) {
+            for (var x = 0; x < xn; x++) {
+                var a = spins[y][x]
+                if (a == 0) {
+                    g.fillStyle = 'white'
+                } else {
+                    g.fillStyle = 'black'
+                }
+                g.fillRect(x * xd, y * yd, xd, yd)
+                
+            }
+        }
+        // g.fillStyle = 'red'
+        // g.fill()        
+    }
+    c.update_it = update_it
+    c.paint_it = paint_it
+    return c
 }
+
+var networks = []
+
+var n = create_spin_network(0.3, 0.3)
+document.body.append(n)
+networks.push(n)
+
+var n = create_spin_network(0.6, 0.6)
+document.body.append(n)
+networks.push(n)
+
+var n = create_spin_network(0.2, 0.7)
+document.body.append(n)
+networks.push(n)
+
+var n = create_spin_network(0.7, 0.2)
+document.body.append(n)
+networks.push(n)
+
 
 function loop() {
-    update_it()
-    paint_it()
-    setTimeout(loop, 15)
+    networks.forEach(n => {
+        n.update_it()
+        n.paint_it()
+    })
+    setTimeout(loop, 300)
 }
 loop()
-
-document.body.append(c)
 
 function fmod(a, b) {
     var m = a % b
