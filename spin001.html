@@ -3,7 +3,7 @@
 <script src="https://dglittle.github.io/cdn/utils001.js"></script>
 <script>
 
-function create_spin_network(a, b) {
+function create_spin_network(aa, bb) {
     var c = document.createElement('canvas')
     c.width = 256
     c.height = 256
@@ -35,8 +35,8 @@ function create_spin_network(a, b) {
         function update_pair_vel(x1, y1, x2, y2) {
             var a = spins[y1][x1]
             var b = spins[y2][x2]
-            if (Math.random() < a) {
-            } else if (Math.random() < b) {
+            if (Math.random() < aa) {
+            } else if (Math.random() < bb) {
                 var swap = a
                 a = b
                 b = swap
@@ -90,13 +90,13 @@ var n = create_spin_network(0.6, 0.6)
 document.body.append(n)
 networks.push(n)
 
-var n = create_spin_network(0.2, 0.7)
-document.body.append(n)
-networks.push(n)
+// var n = create_spin_network(0.2, 0.7)
+// document.body.append(n)
+// networks.push(n)
 
-var n = create_spin_network(0.7, 0.2)
-document.body.append(n)
-networks.push(n)
+// var n = create_spin_network(0.7, 0.2)
+// document.body.append(n)
+// networks.push(n)
 
 
 function loop() {
