@@ -18,7 +18,7 @@ function create_spin_network(aa, bb) {
     for (var y = 0; y < yn; y++) {
         var row = []
         for (var x = 0; x < xn; x++) {
-            row.push(Math.floor(Math.random() * 2))
+            row.push(Math.random() < 0.5 ? 1 : -1)
         }
         spins.push(row)
     }
@@ -31,29 +31,20 @@ function create_spin_network(aa, bb) {
     
     var iteration = 0
     function update_it() {
-        var dt = 1
-        function update_pair_vel(x1, y1, x2, y2) {
-            var a = spins[y1][x1]
-            var b = spins[y2][x2]
-            if (Math.random() < aa) {
-            } else if (Math.random() < bb) {
-                var swap = a
-                a = b
-                b = swap
-            } else if (Math.random() < 0.5) {
-                a = b
-            } else {
-                b = a
-            }
-            spins[y1][x1] = a
-            spins[y2][x2] = b
-        }
+        var new_spins = []
         for (var y = 0; y < yn; y++) {
+            var row = []
             for (var x = 0; x < xn; x++) {
-                update_pair_vel(x, y, (x + 1) % xn, y)
-                update_pair_vel(x, y, x, (y + 1) % yn)
+                var spin = 0 +
+                    spins[fmod(y - 1, yn)][x] +
+                    spins[fmod(y + 1, yn)][x] +
+                    spins[y][fmod(x - 1, xn)] +
+                    spins[y][fmod(x + 1, xn)]
+                row.push(spin == 0 ? (Math.random() < 0.5 ? 1 : -1) : (spin > 0 : 1 : -1))
             }
+            new_spins.push(row)
         }
+        spins = new_spins
     }
     
     function paint_it() {
