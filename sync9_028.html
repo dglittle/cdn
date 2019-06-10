@@ -245,7 +245,8 @@ function run_trial(seed, N, show_debug) {
                 }
             } else if (typeof(x) == 'object') {
                 if (Math.random() < 0.5) {
-                    var key = letters[Math.floor(rand() * letters.length)].repeat(Math.floor(rand() * 4) + 1)
+                    var i = Math.floor(Math.random() * 3)
+                    var key = 'abc'.slice(i, i + 1)
                     return prefix + `[${JSON.stringify(key)}] = ${JSON.stringify(create_random_thing_to_insert())}`
                 } else if (Math.random() < 0.5) {
                     Object.entries(x).forEach(y => {
