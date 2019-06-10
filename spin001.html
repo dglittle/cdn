@@ -40,7 +40,7 @@ function create_spin_network(aa, bb) {
                     spins[fmod(y + 1, yn)][x] +
                     spins[y][fmod(x - 1, xn)] +
                     spins[y][fmod(x + 1, xn)]
-                row.push(spin == 0 ? (Math.random() < 0.5 ? 1 : -1) : (spin > 0 : 1 : -1))
+                row.push((spin == 0) ? (Math.random() < 0.5 ? 1 : -1) : (spin > 0 : 1 : -1))
             }
             new_spins.push(row)
         }
@@ -77,9 +77,9 @@ var n = create_spin_network(0.3, 0.3)
 document.body.append(n)
 networks.push(n)
 
-var n = create_spin_network(0.6, 0.6)
-document.body.append(n)
-networks.push(n)
+// var n = create_spin_network(0.6, 0.6)
+// document.body.append(n)
+// networks.push(n)
 
 // var n = create_spin_network(0.2, 0.7)
 // document.body.append(n)
