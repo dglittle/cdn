@@ -562,7 +562,7 @@ function sync9_extract_versions(s9, is_anc) {
                     if (z.splices.length > 1) throw 'wtf?'
                     z.changes = z.splices.map(x => {
                         if (x[2].length != 1) throw 'wtf?'
-                        return prefix + ` = ` + sync9_read(x[2][0], vid => is_anc(vid) || vid == z.vid))
+                        return prefix + ` = ` + sync9_read(x[2][0], vid => is_anc(vid) || vid == z.vid)
                     })
                     delete z.splices
                 })
