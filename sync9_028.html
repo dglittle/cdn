@@ -210,15 +210,15 @@ function run_trial(seed, N, show_debug) {
         var o = sync9_read(s9)
         
         function create_random_thing_to_insert() {
-            if (Math.random() < 0.3) {
+            if (Math.random() < 0.25) {
                 return {}
-            } else if (Math.random() < 0.3) {
+            } else if (Math.random() < 0.33) {
                 return []
-            } else if (Math.random() < 0.3) {
+            } else if (Math.random() < 0.5) {
                 return Math.floor(Math.random() * 100)
-            } else if (Math.random() < 0.3) {
+            } else {
                 return letters[Math.floor(rand() * letters.length)].repeat(Math.floor(rand() * 4))
-            } else return null
+            }
         }
         
         var include_vals = (o == null) || (Math.random() < 0.2)
