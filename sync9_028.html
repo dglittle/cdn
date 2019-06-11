@@ -567,8 +567,12 @@ function sync9_extract_versions(s9, is_anc) {
                     delete z.splices
                 })
                 add_versions(vs)
-                var node = sync9_space_dag_get(x.S, 0)
-                rec(node, prefix, vid => is_anc(vid) || vid == node.vid)
+                sync9_trav_space_dag(x.S, () => true, node => {
+                    if (node.elems.length > 0) {
+                        rec(node.elems[0], prefix, vid => is_anc(vid) || vid == node.vid)
+                        return false
+                    }
+                })
             } else if (x.t == 'obj') {
                 Object.entries(x.S).forEach(x => {
                     rec(x[1], prefix + `[${JSON.stringify(x[0])}]`, is_anc)
