@@ -209,11 +209,6 @@ function run_trial(seed, N, show_debug) {
     }
 
     function create_random_edit(s9, letters) {
-        
-        
-        console.log('got here!??')
-        
-        
         letters = letters || 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
         var o = sync9_read(s9)
         
@@ -466,7 +461,26 @@ function sync9_create_server(c_funcs) {
             }
         }
         Object.keys(leaves).forEach(k => mark_ancs(k))
+        
+        
+        
+        if (uid == 'B05uQyVRI6DQ2hp') {
+            console.log(JSON.stringify(s.s9, null, '    '))
+            debugger
+        }
+        
+        
+        
+        
         sync9_extract_versions(s.s9, x => ancs[x]).forEach(x => {
+            
+            
+            if (x.changes.length > 1) {
+                console.log(JSON.stringify(s.s9, null, '    '))
+                debugger
+            }
+
+            
             c_funcs.add_version(uid, x.vid, x.parents, x.changes)
             s.prune_info[x.vid].sent[uid] = true
         })
@@ -543,17 +557,15 @@ function sync9_extract_versions(s9, is_anc) {
             if (!x.t && x.val) {
                 rec(x.val, prefix, is_anc)
             } else if (x.t == 'val') {
-                var vs = sync9_space_dag_extract_versions(x.S, s9, is_anc).filter(z => {
-                    if (z.splices.length == 0) return false
-                    if (z.splices.length > 1) throw 'wtf?'
-                    if (z.splices[0][2].length != 1) throw 'wtf?'
-                    return true
-                })
+                var vs = sync9_space_dag_extract_versions(x.S, s9, is_anc)
                 vs.forEach(z => {
-                    var y = z.splices[0][2][0]
-                    z.changes = [prefix + ' = ' + sync9_read(y, vid => is_anc(vid) || vid == z.vid)]
+                    if (z.splices.length > 1) throw 'wtf?'
+                    z.changes = z.splices.map(x => {
+                        if (x[2].length != 1) throw 'wtf?'
+                        return prefix + ` = ` + sync9_read(x[2][0], vid => is_anc(vid) || vid == z.vid))
+                    })
                     delete z.splices
-                })                
+                })
                 add_versions(vs)
                 var node = sync9_space_dag_get(x.S, 0)
                 rec(node, prefix, vid => is_anc(vid) || vid == node.vid)
