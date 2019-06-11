@@ -462,14 +462,24 @@ function sync9_create_server(c_funcs) {
         }
         Object.keys(leaves).forEach(k => mark_ancs(k))
         
+        
+        
+        if (uid == 'B05uQyVRI6DQ2hp') {
+            console.log(JSON.stringify(s.s9, null, '    '))
+            debugger
+        }
+        
+        
+        
+        
         sync9_extract_versions(s.s9, x => ancs[x]).forEach(x => {
             
+            
             if (x.changes.length > 1) {
-                
                 console.log(JSON.stringify(s.s9, null, '    '))
-                
                 debugger
             }
+
             
             c_funcs.add_version(uid, x.vid, x.parents, x.changes)
             s.prune_info[x.vid].sent[uid] = true
@@ -548,40 +558,17 @@ function sync9_extract_versions(s9, is_anc) {
                 rec(x.val, prefix, is_anc)
             } else if (x.t == 'val') {
                 var vs = sync9_space_dag_extract_versions(x.S, s9, is_anc)
-                var last_v
-                vs.forEach((x, i) => {
-                    if (x.splices.length == 0) {
-                        x.changes = x.splices
-                        delete x.splices
-                        return
-                    }
-                    if (x.splices.length != 1) throw 'wtf?'
-                    if (i == vs.length - 1) {
-                        last_v = x.vid
-                        x.changes = x.splices.map(x => {
-                            return prefix + ' = ' + JSON.stringify(sync9_read(x[2][0], vid => is_anc(vid) || vid == last_v))
-                        })
-                    } else {
-                        x.changes = x.splices.map(x => {
-                            var path = prefix + ` = `
-                            var y = x[2][0]
-                            if (y && typeof(y) == 'object') {
-                                if (y.t == 'arr') {
-                                    return path + '[]'
-                                } else if (y.t == 'obj') {
-                                    return path + '{}'
-                                } else if (y.t == 'str') {
-                                    return path + '""'
-                                } else throw 'wtf?'
-                            } else {
-                                return path + JSON.stringify(y)
-                            }
-                        })
-                    }
-                    delete x.splices
-                })
+                vs.forEach(z => {
+                    z.changes = z.splices.map(x => {
+                        return prefix + ` = ` + JSON.stringify(x[2].map(y => {
+                            return sync9_read(y, vid => is_anc(vid) || vid == z.vid)
+                        }))
+                    })
+                    delete z.splices
+                })                
                 add_versions(vs)
-                rec(sync9_space_dag_get(x.S, 0), prefix, vid => is_anc(vid) || vid == last_v)
+                var node = sync9_space_dag_get(x.S, 0)
+                rec(node, prefix, vid => is_anc(vid) || vid == node.vid)
             } else if (x.t == 'obj') {
                 Object.entries(x.S).forEach(x => {
                     rec(x[1], prefix + `[${JSON.stringify(x[0])}]`, is_anc)
