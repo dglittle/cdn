@@ -9,11 +9,12 @@
 
 function main() {
     for (var i = 0; i < 10000; i++) {
+        i = 5
         console.log('TRIAL: ' + i)
         // run_trial('seed:' + i, 20, false)
         // run_trial('seed:' + i, 500, true)
-        run_trial('seeed:' + i, 20, false)
-        // throw 'stop'
+        run_trial('seeed:' + i, 10, true)
+        throw 'stop'
     }
 }
 
@@ -462,6 +463,14 @@ function sync9_create_server(c_funcs) {
         Object.keys(leaves).forEach(k => mark_ancs(k))
         
         sync9_extract_versions(s.s9, x => ancs[x]).forEach(x => {
+            
+            if (x.changes.length > 1) {
+                
+                console.log(JSON.stringify(s.s9, null, '    '))
+                
+                debugger
+            }
+            
             c_funcs.add_version(uid, x.vid, x.parents, x.changes)
             s.prune_info[x.vid].sent[uid] = true
         })
