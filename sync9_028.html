@@ -557,13 +557,13 @@ function sync9_extract_versions(s9, is_anc) {
             if (!x.t && x.val) {
                 rec(x.val, prefix, is_anc)
             } else if (x.t == 'val') {
-                var vs = sync9_space_dag_extract_versions(x.S, s9, is_anc)
-                vs.filter(z => {
+                var vs = sync9_space_dag_extract_versions(x.S, s9, is_anc).filter(z => {
                     if (z.splices.length == 0) return false
                     if (z.splices.length > 1) throw 'wtf?'
                     if (z.splices[0][2].length != 1) throw 'wtf?'
                     return true
-                }).forEach(z => {
+                })
+                vs.forEach(z => {
                     var y = z.splices[0][2][0]
                     z.changes = [prefix + ' = ' + sync9_read(y, vid => is_anc(vid) || vid == z.vid)]
                     delete z.splices
