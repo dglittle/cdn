@@ -8,13 +8,11 @@
 <script>
 
 function main() {
-    for (var i = 0; i < 10000; i++) {
-        i = 5
+    for (var i = 0; i < 100; i++) {
         console.log('TRIAL: ' + i)
         // run_trial('seed:' + i, 20, false)
         // run_trial('seed:' + i, 500, true)
-        run_trial('seeed:' + i, 10, true)
-        throw 'stop'
+        run_trial('seeed:' + i, 10, false)
     }
 }
 
