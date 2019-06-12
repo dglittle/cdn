@@ -127,6 +127,15 @@ function run_trial(seed, N, show_debug) {
                 
                 var changes = create_random_edit(c.s9, c.letters[c.letters_i++])
                 if (show_debug) {
+                    
+                    
+                    
+                    if (t == 99) {
+                        console.log(JSON.stringify(c.s9, null, '    '))
+                    }
+                    
+                    
+                    
                     console.log('changes: ' + JSON.stringify(changes))
                     console.log('leaves: ' + JSON.stringify(c.s9.leaves))
                 }
