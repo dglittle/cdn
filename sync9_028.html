@@ -9,10 +9,12 @@
 
 function main() {
     for (var i = 0; i < 1000; i++) {
+        i = 207
         console.log('TRIAL: ' + i)
         // run_trial('seed:' + i, 20, false)
         // run_trial('seed:' + i, 500, true)
-        run_trial('seEEEd:' + i, 75, false)
+        run_trial('seEEEEd:' + i, 100, true)
+        throw 'stop'
     }
 }
 
@@ -29,7 +31,7 @@ function run_trial(seed, N, show_debug) {
         add_version: (uid, vid, parents, changes) => {
             if (show_debug) console.log('c add version 1 ' + uid)
             clients[uid].incoming.push(() => {
-                if (show_debug) console.log('c add version 2 ' + uid)
+                if (show_debug) console.log('c add version 2 ' + uid +  ' vid:' + vid)
                 clients[uid].add_version(vid, parents, changes)
             })
         },
