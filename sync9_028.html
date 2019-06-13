@@ -13,7 +13,7 @@ function main() {
         console.log('TRIAL: ' + i)
         // run_trial('seed:' + i, 20, false)
         // run_trial('seed:' + i, 500, true)
-        run_trial('seEEEEEd:' + i, 100, false)
+        run_trial('seEEEEEd:' + i, 100, true)
         throw 'stop!!'
     }
 }
@@ -334,7 +334,18 @@ function sync9_create_client(s_funcs) {
     c.add_version = (vid, parents, changes) => {
         if (Object.keys(c.delete_us).length > 0) {
             var deleted = sync9_prune2(c.s9, (a, b) => c.delete_us[b], (a, b) => c.delete_us[a])
-            if (!Object.keys(c.delete_us).every(x => deleted[x])) throw 'wtf?'
+            if (!Object.keys(c.delete_us).every(x => deleted[x])) {
+                
+                
+                
+                // work here
+                console.log(JSON.stringify(c.s9, null, '    '))
+                debugger
+                
+                
+                
+                throw 'wtf?'
+            }
             if (!Object.keys(deleted).every(x => c.delete_us[x])) throw 'wtf?'
             c.delete_us = {}
         }
