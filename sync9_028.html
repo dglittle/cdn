@@ -811,9 +811,9 @@ function sync9_space_dag_prune2(S, has_everyone_whos_seen_a_seen_b, seen_nodes) 
             return true
         }
         
-        if (Object.keys(node.deleted_by).some(k => has_everyone_whos_seen_a_seen_b(vid, k)) && all_nexts_prunable) {
+        if (Object.keys(node.deleted_by).some(k => has_everyone_whos_seen_a_seen_b(vid, k))) {
             node.deleted_by = {}
-            node.elems = typeof(node.elems) == 'string' ? '' : []
+            node.elems = node.elems.slice(0, 0)
             delete node.gash
             return true
         } else {
