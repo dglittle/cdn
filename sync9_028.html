@@ -34,7 +34,7 @@ function run_trial(seed, N, show_debug) {
                 if (show_debug) console.log('c add version 2 ' + uid +  ' vid:' + vid)
 
                 // work here
-                if (vid == 'uoAwBrBB7MKtlEw') {
+                if (vid == 'uoAwBrBB7MKtlEw' || vid == '3XYoRiMDCE0AMhA') {
                     
                     console.log('blah: ' + JSON.stringify(clients[uid].s9, null, '    '))
                     
@@ -48,6 +48,14 @@ function run_trial(seed, N, show_debug) {
             if (show_debug) console.log('c ack 1 ' + uid + ' -> ' + vid)
             clients[uid].incoming.push(() => {
                 if (show_debug) console.log('c ack 2 ' + uid + ' -> ' + vid)
+
+                
+                // work here
+                if (vid == 'Gf0oYCN8prJZL2N') {
+                    debugger
+                }
+                
+                
                 clients[uid].ack(vid)
             })
         }
@@ -342,7 +350,7 @@ function sync9_create_client(s_funcs) {
     
     c.add_version = (vid, parents, changes) => {
         if (Object.keys(c.delete_us).length > 0) {
-            var deleted = sync9_prune(c.s9, (a, b) => c.delete_us[b], (a, b) => c.delete_us[a])
+            var deleted = sync9_prune2(c.s9, (a, b) => c.delete_us[b], (a, b) => c.delete_us[a])
             if (!Object.keys(c.delete_us).every(x => deleted[x])) throw 'wtf?'
             if (!Object.keys(deleted).every(x => c.delete_us[x])) throw 'wtf?'
             c.delete_us = {}
