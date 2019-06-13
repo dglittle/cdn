@@ -45,9 +45,9 @@ function run_trial(seed, N, show_debug) {
             })
         },
         ack: (uid, vid) => {
-            if (show_debug) console.log('c ack 1 ' + uid)
+            if (show_debug) console.log('c ack 1 ' + uid + ' -> ' + vid)
             clients[uid].incoming.push(() => {
-                if (show_debug) console.log('c ack 2 ' + uid)
+                if (show_debug) console.log('c ack 2 ' + uid + ' -> ' + vid)
                 clients[uid].ack(vid)
             })
         }
