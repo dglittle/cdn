@@ -447,6 +447,15 @@ function sync9_create_server(c_funcs) {
 
         var deleted2 = sync9_prune2(s.s9, (a, b) => q(a, b) && deleted[b], (a, b) => q(a, b) && deleted[a])
         
+        
+        
+        // work here
+        if (deleted2['Gf0oYCN8prJZL2N']) {
+            debugger
+        }
+        
+        
+        
         if (Object.keys(deleted).some(x => !deleted2[x]) || Object.keys(deleted2).some(x => !deleted[x])) {
             throw 'wtf?'
         }
