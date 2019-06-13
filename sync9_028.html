@@ -9,12 +9,10 @@
 
 function main() {
     for (var i = 0; i < 1000; i++) {
-        i = 207
         console.log('TRIAL: ' + i)
         // run_trial('seed:' + i, 20, false)
         // run_trial('seed:' + i, 500, true)
-        run_trial('seEEEEd:' + i, 100, true)
-        throw 'stop'
+        run_trial('seEEEEEd:' + i, 100, true)
     }
 }
 
@@ -32,15 +30,6 @@ function run_trial(seed, N, show_debug) {
             if (show_debug) console.log('c add version 1 ' + uid)
             clients[uid].incoming.push(() => {
                 if (show_debug) console.log('c add version 2 ' + uid +  ' vid:' + vid)
-
-                // work here
-                if (vid == 'uoAwBrBB7MKtlEw' || vid == '3XYoRiMDCE0AMhA') {
-                    
-                    console.log('blah: ' + JSON.stringify(clients[uid].s9, null, '    '))
-                    
-                    debugger
-                }
-                
                 clients[uid].add_version(vid, parents, changes)
             })
         },
@@ -48,14 +37,6 @@ function run_trial(seed, N, show_debug) {
             if (show_debug) console.log('c ack 1 ' + uid + ' -> ' + vid)
             clients[uid].incoming.push(() => {
                 if (show_debug) console.log('c ack 2 ' + uid + ' -> ' + vid)
-
-                
-                // work here
-                if (vid == 'Gf0oYCN8prJZL2N') {
-                    debugger
-                }
-                
-                
                 clients[uid].ack(vid)
             })
         }
@@ -454,18 +435,6 @@ function sync9_create_server(c_funcs) {
         Object.keys(deleted).forEach(x => backup_parents[x] = s.s9.T[x])
 
         var deleted2 = sync9_prune2(s.s9, (a, b) => q(a, b) && deleted[b], (a, b) => q(a, b) && deleted[a])
-        
-        
-        
-        // work here
-        if (deleted2['Gf0oYCN8prJZL2N']) {
-            
-            console.log(JSON.stringify(s.s9, null, '    '))
-            
-            debugger
-        }
-        
-        
         
         if (Object.keys(deleted).some(x => !deleted2[x]) || Object.keys(deleted2).some(x => !deleted[x])) {
             throw 'wtf?'
