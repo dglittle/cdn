@@ -8,72 +8,77 @@
 var sync9_ROOT = 'root'
 console.log('-------------------')
 
-function draw_space_dag(c, g, S, x, y) {
+function draw_space_dag(c, g, S, L, x, y) {
     function helper(node, y, px, py) {
-        g.beginPath()
-        g.moveTo(x, y)
-        g.lineTo(px, py)
-        g.lineWidth = 1
-        g.strokeStyle = 'lightblue'
-        g.stroke()
-
-        var begin_x
-        var end_x
-
-        g.beginPath()
-        if (node.gash) {
-            begin_x = x
-            g.moveTo(x, y - 20)
-            g.bezierCurveTo(x + 10, y - 10, x + 10, y + 10, x, y + 20)
-            x += 12
-        } else {
-            begin_x = x + 10
-            g.moveTo(x + 10, y - 20)
-            g.bezierCurveTo(x, y - 10, x, y + 10, x + 10, y + 20)
-            x += 8
+        var width = Math.max(g.measureText(node.elems).width+1, 3)
+        g.strokeStyle = "steelblue"
+        g.lineWidth = 2;
+        
+        // Where the connecting line comes in
+        var connect_x = x;
+        var text_x = x;
+        
+        if (node.gash) { // Gash means concave beginning
+            connect_x += 8;
+            text_x += 10;
         }
-        g.lineWidth = 1
-        g.strokeStyle = 'lightblue'
+        else 
+            connect_x -= 8;
+            
+        var end_x = text_x + width;
+        if (!node.end_cap) // End cap means concave end
+            end_x += 10;
+        
+        
+        // Draw the connecting line
+        if (node.vid != "root") {
+            // Draw connecting lines behind nodes
+            g.globalCompositeOperation = 'destination-over';
+            g.beginPath()
+            g.moveTo(px, py)
+            g.lineTo(connect_x, y)
+            g.stroke()
+            g.globalCompositeOperation = 'source-over'
+        }
+        
+        g.beginPath()
+        g.moveTo(x, y - 20) // Start at bottom-left corner
+        if (node.gash) // Draw the line to the top-left, either curved concave
+            g.bezierCurveTo(x + 10, y - 10, x + 10, y + 10, x, y + 20)
+        else // Or convec
+            g.bezierCurveTo(x - 10, y - 10, x - 10, y + 10, x, y + 20)
+        
+        g.lineTo(end_x, y + 20) // Go to the top-right
+
+        if (node.end_cap) // Bottom-right
+            g.bezierCurveTo(end_x + 10, y + 10, end_x + 10, y - 10, end_x, y - 20)
+        else
+            g.bezierCurveTo(end_x - 10, y + 10, end_x - 10, y - 10, end_x, y - 20)
+        g.closePath() // Connect back to bottom-left
+        
+        if (L[node.vid])
+            g.fillStyle = 'lightgreen'
+        else
+            g.fillStyle = 'white'
+        g.fill()
         g.stroke()
         
-        if (Object.keys(node.deleted_by).length > 0) {
-            g.fillStyle = 'red'
+        // Draw the text
+        if (Object.keys(node.deleted_by).length) {
+            g.fillStyle = '#d00'
         } else {
-            g.fillStyle = 'blue'
+            g.fillStyle = '#00d'
         }
         g.textBaseline = 'middle'
         g.font = '20px Arial'
-        g.fillText(node.elems, x, y)
+        g.fillText(node.elems, text_x, y)
         
-        // g.font = '20px Arial'
-        // g.fillStyle = 'grey'
-        // g.fillText(node.vid || 'null', x, y + Math.random()*100)
-        
-        var width = g.measureText(node.elems).width
-        x += width
-        
-        g.beginPath()
-        if (node.end_cap) {
-            end_x = x
-            g.moveTo(x, y - 20)
-            g.bezierCurveTo(x + 10, y - 10, x + 10, y + 10, x, y + 20)
-            x += 10
-        } else {
-            end_x = x + 10
-            g.moveTo(x + 10, y - 20)
-            g.bezierCurveTo(x, y - 10, x, y + 10, x + 10, y + 20)
-            x += 8
-        }
-        g.moveTo(begin_x, y - 20)
-        g.lineTo(end_x, y - 20)
-        g.moveTo(begin_x, y + 20)
-        g.lineTo(end_x, y + 20)
-        g.lineWidth = 1
-        g.strokeStyle = 'lightblue'
-        g.stroke()
-
-        var px = x
-        x += 10
+        var px;
+        if (node.end_cap)
+            px = end_x + 8
+        else
+            px = end_x - 7
+        x = end_x + 20
         for (var n of node.nexts) helper(n, y - 40, px, y)
         if (node.next) helper(node.next, y, px, y)
     }
@@ -319,45 +324,66 @@ for (var ttt = 0; ttt < ttt_n; ttt++) {
     if (debug_frames) {
         var c = document.createElement('canvas')
         c.width = 3000
-        c.height = 1200
-        c.style.width = (c.width / devicePixelRatio) + 'px'
-        c.style.height = (c.height / devicePixelRatio) + 'px'
+        c.height = 1000
+        c.style.width = "auto"
+        c.style.height = "calc(100% - 40px)"
         var g = c.getContext('2d')
         document.body.append(c)
         
-        var slider = document.createElement('input')
-        slider.style.width = '500px'
+        
+        var inputs = document.createElement('div');
+        inputs.style = "position: absolute; bottom: 10px; display: flex; width: calc(100% - 20px); padding: 0 5px;"
+        
+        var button = document.createElement('button');
+        button.innerHTML="Save Image"
+        button.onclick = () => {
+            window.open(c.toDataURL('image/png'))
+        }
+        
+        var slider = document.createElement('input');
+        slider.style = "margin: 0 10px; flex-grow: 1;"
         slider.setAttribute('type', 'range')
         slider.setAttribute('min', '0')
         slider.setAttribute('max', debug_frames.length - 1)
         slider.setAttribute('value', debug_frames.length - 1)
+        
+        
         slider.oninput = () => {
             var d = debug_frames[1*slider.value]
             
             g.clearRect(0, 0, c.width, c.height)
             
-            g.font = '20px Ariel'
+            g.font = '20px Arial'
             g.fillStyle = 'black'
-            g.textBaseline = 'top'
-            if (d.tt) g.fillText('v3 tt: ' + d.tt, 0, 0)
-            else g.fillText('v3 t: ' + d.t, 0, 0)
-
-            draw_space_dag(c, g, sync9_space_dag_get(d.client_s9s[0].val.S, 0).S, 100, 300)
+            g.textBaseline = 'top';
+            if (d.tt) g.fillText(`Frame ${1*slider.value} tt: ${d.tt}`, 5, 5);
+            else g.fillText(`Frame ${1*slider.value} t: ${d.t}`, 5, 5);
             
-            draw_space_dag(c, g, sync9_space_dag_get(d.server_s9.val.S, 0).S, 100, 600)
+            g.fillText("Server", 5, 100)
+            draw_space_dag(c, g, sync9_space_dag_get(d.server_s9.val.S, 0).S, d.server_s9.leaves, 50, 250)
             
-            draw_space_dag(c, g, sync9_space_dag_get(d.client_s9s[1].val.S, 0).S, 100, 900)
+            g.font = '25px Arial'
+            g.fillStyle = 'black'
+            g.fillText("Client #1", 5, 400)
+            draw_space_dag(c, g, sync9_space_dag_get(d.client_s9s[0].val.S, 0).S, d.client_s9s[0].leaves, 50, 550)
             
-            // clients_array.forEach((c, i) => {
-            //     draw_space_dag(c, g, sync9_space_dag_get(d.client_s9s[i].val.S, 0).S, 100, 300 + 300*(i + 1))
-            // })
+            g.font = '25px Arial'
+            g.fillStyle = 'black'
+            g.fillText("Client #2", 5, 700)
+            draw_space_dag(c, g, sync9_space_dag_get(d.client_s9s[1].val.S, 0).S, d.client_s9s[1].leaves, 50, 850)
+            
+            // Draw a white background *behind* everything
+            g.globalCompositeOperation = 'destination-over';
+            g.fillStyle = 'white'
+            g.fillRect(0, 0, c.width, c.height)
+            g.globalCompositeOperation = 'source-over'
+           
         }
-        document.body.append(slider)
+        inputs.append(button)
+        inputs.append(slider)
+        document.body.append(inputs)
         slider.oninput()
     }
-    
-    
-    
     
     if (last_ttt || !check_good) {
         ;[server].concat(Object.values(clients)).forEach((x, i) => {
@@ -429,7 +455,7 @@ function sync9_create_client(s_funcs, id_suffix) {
             c.delete_us = {}
             
             if (debug_frames) debug_frames.push({
-                t: 'prune results..',
+                t: 'prune results',
                 server_s9: JSON.parse(JSON.stringify(server.s9)),
                 client_s9s: clients_array.map(x => JSON.parse(JSON.stringify(x.s9)))
             })
@@ -562,7 +588,7 @@ function sync9_create_server(c_funcs) {
         // work here
         if (debug_frames && Object.keys(deleted).length > 0) {
             debug_frames.push({
-                t: 'before pruning..',
+                t: 'before pruning',
                 server_s9: JSON.parse(JSON.stringify(cloney)),
                 client_s9s: clients_array.map(x => JSON.parse(JSON.stringify(x.s9)))
             })
