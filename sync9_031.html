@@ -550,7 +550,8 @@ function sync9_create_server(c_funcs) {
 
 work here
 
-
+function sync9_space_val_extract_versions(S, s9, is_anc) {
+}
 
 
 
@@ -571,7 +572,7 @@ function sync9_extract_versions(s9, is_anc) {
             if (!x.t && x.val) {
                 rec(x.val, prefix, is_anc)
             } else if (x.t == 'val') {
-                var vs = sync9_space_dag_extract_versions(x.S, s9, is_anc)
+                var vs = sync9_space_val_extract_versions(x.S, s9, is_anc)
                 vs.forEach(z => {
                     if (z.splices.length > 1) throw 'wtf?'
                     z.changes = z.splices.map(x => {
@@ -581,6 +582,13 @@ function sync9_extract_versions(s9, is_anc) {
                     delete z.splices
                 })
                 add_versions(vs)
+                
+                
+                
+                work here
+                
+                
+                
                 sync9_trav_space_dag(x.S, () => true, node => {
                     if (node.elems.length > 0) {
                         rec(node.elems[0], prefix, vid => is_anc(vid) || vid == node.vid)
