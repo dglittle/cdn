@@ -2,330 +2,88 @@
 <script src="https://dglittle.github.io/cdn/random001.js"></script>
 <script src="https://dglittle.github.io/cdn/utils004.js"></script>
 <script src="https://invisible-college.github.io/universal-sync/diffsync.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/automerge@0.10.0/dist/automerge.min.js"></script>
 
 <body></body>
 <script>
 
-function main() {
-    for (var i = 0; i < 1000; i++) {
-        console.log('TRIAL: ' + i)
-        // run_trial('seed:' + i, 20, false)
-        // run_trial('seed:' + i, 500, true)
-        run_trial('seEEEEEed:' + i, 100, true)
-        // throw 'stop!!'
-    }
-}
-
-function run_trial(seed, N, show_debug) {
-    // debugger
+function sync9_create_peer() {
+    var self = {}
     
-    Math.randomSeed(seed)
-    var rand = () => Math.random()
-
-    var n_clients = 2
-    var clients = {}
+    self.s9 = sync9_create()
+    self.id = sync9_guid()
     
-    var server = sync9_create_server({
-        add_version: (uid, vid, parents, changes) => {
-            if (show_debug) console.log('c add version 1 ' + uid)
-            clients[uid].incoming.push(() => {
-                if (show_debug) console.log('c add version 2 ' + uid +  ' vid:' + vid)
-                clients[uid].add_version(vid, parents, changes)
-            })
-        },
-        ack: (uid, vid) => {
-            if (show_debug) console.log('c ack 1 ' + uid + ' -> ' + vid)
-            clients[uid].incoming.push(() => {
-                if (show_debug) console.log('c ack 2 ' + uid + ' -> ' + vid)
-                clients[uid].ack(vid)
-            })
-        }
-    })
+    self.peers = {}
+    self.fissures = {}
+    self.full_acks = {}
+    self.phase_one = {}
     
-    for (var i = 0; i < n_clients; i++) {
-        ;(() => {
-            var c = sync9_create_client({
-                join : (uid, leaves) => {
-                    if (show_debug) console.log('s join 1 ' + uid)
-                    c.outgoing.push(() => {
-                        if (show_debug) console.log('s join 2 ' + uid)
-                        server.join(uid, leaves)
-                    })
-                },
-                add_version : (uid, vid, parents, changes) => {
-                    if (c.state == 'connected') {
-                        if (show_debug) console.log('s add_version 1 ' + uid)
-                        c.outgoing.push(() => {
-                            if (show_debug) console.log('s add_version 2 ' + uid)
-                            server.add_version(uid, vid, parents, changes)
-                        })
-                    }
-                },
-                ack : (uid, vid) => {
-                    if (c.state == 'connected') {
-                        if (show_debug) console.log('s ack 1 ' + uid)
-                        c.outgoing.push(() => {
-                            if (show_debug) console.log('s ack 2 ' + uid)
-                            server.ack(uid, vid)
-                        })
-                    }
-                }
-            })
-            c.state = 'disconnected'
-            c.incoming = []
-            c.outgoing = []
-            clients[c.uid] = c
-            
-            if (i == 0) {
-                c.letters = 'abcdefghijklmnopqrstuvwxyz'
-                for (var ii = 0; ii < 100; ii++) {
-                    c.letters += String.fromCharCode(12032 + ii)
-                }
-                c.letters_i = 0
-            } else {
-                c.letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-                for (var ii = 0; ii < 100; ii++) {
-                    c.letters += String.fromCharCode(12032 + 100 + ii)
-                }
-                c.letters_i = 0
-            }
-        })()
+    self.prune = () => {
+        mark all the nodes in T according to fissures and full_acks,
+        so we have regions of full_acks that don't cross any fissures
+            (or contain nodes in any fissures)
+        prune stuff in full_ack regions
     }
     
-    Object.values(clients).forEach(c => {
-        c.state = 'connected'
-        c.join()
-    })
-    
-    for (var t = 0; t < N; t++) {
-        if (show_debug) console.log('t == ' + t)
-        
-        var i = Math.floor(rand() * n_clients)
-        var c = Object.values(clients)[i]
-        
-        if (rand() < 0.1 && c.got_first_version) {
-            // if (rand() < 0.9) {
-                if (c.letters_i >= c.letters.length) {
-                    c.letters_i = 0
-                }
-                
-                
-                // console.log(JSON.stringify(sync9_read(c.s9), null, '    '))
-                
-                
-                
-                var changes = create_random_edit(c.s9, c.letters[c.letters_i++])
-                if (show_debug) {
-                    
-                    
-                    
-                    if (t == 99) {
-                        console.log(JSON.stringify(c.s9, null, '    '))
-                    }
-                    
-                    
-                    
-                    console.log('changes: ' + JSON.stringify(changes))
-                    console.log('leaves: ' + JSON.stringify(c.s9.leaves))
-                }
-                
-                //console.log(JSON.stringify(c.s9, null, '    '))
-                
-                var x = c.local_add_version(changes)
-                if (show_debug)
-                    console.log('new version: ' + JSON.stringify(c.s9.leaves))
-            // } else {
-            //     if (c.state == 'disconnected') {
-            //         c.state = 'connected'
-            //         c.join()
-            //     } else if (c.state == 'connected') {
-            //         c.state = 'disconnected'
-            //         c.state_note = 'had been connected'
-            //         c.incoming = []
-            //         c.outgoing = []
-            //         server.leave(c.uid)
-            //     }
-            // }
-        } else {
-            var did_something = false
-            if (rand() < 0.5) {
-                if (c.incoming.length > 0) {
-                    if (show_debug)
-                        console.log('process incoming')
-                    did_something = true
-                    c.incoming.shift()()
-                }
-            } else {
-                if (c.outgoing.length > 0) {
-                    if (show_debug)
-                        console.log('process outgoing')
-                    did_something = true
-                    c.outgoing.shift()()
-                }
-            }
-            if (!did_something) {
-                if (show_debug)
-                    console.log('did nothing')
-            }
-        }
-        
-        if (show_debug)
-            console.log('client: ' + c.uid + ' -> ' + JSON.stringify(sync9_read(c.s9)))
+    self.connect = peer => {
+        blob = gather all our versions and fissures into a blob
+        peer.init_blob(self.id, blob)
     }
     
-    for (var t = 0; t < 10000; t++) {
-        if (show_debug) console.log('t => ' + t)
-        Object.values(clients).forEach(c => {
-            if (c.state == 'disconnected') {
-                c.state = 'connected'
-                c.join()
-            }
-            while (c.incoming.length > 0) {
-                c.incoming.shift()()
-            }
-            while (c.outgoing.length > 0) {
-                c.outgoing.shift()()
-            }
-        })
-        
-        if (Object.values(clients).every(x => x.incoming.length == 0 && x.outgoing.length == 0)) break
+    self.disconnect = peer => {
+        create fissure
     }
     
-    Object.values(clients).forEach(c => {
-        c.add_version(sync9_guid(), c.s9.leaves, [])
-    })
-    
-    var check_val = null
-    var check_good = true
-    ;[server].concat(Object.values(clients)).forEach((x, i) => {
-        var val = sync9_read(x.s9)
-        if (i == 0)
-            check_val = val
-        else if (!deep_equals(val, check_val))
-            check_good = false
-    })
-    
-    console.log('CHECK GOOD: ' + check_good)
-    if (!check_good) {
-        ;[server].concat(Object.values(clients)).forEach((x, i) => {
-            console.log(x)
-            var val = sync9_read(x.s9)
-            console.log('val: ' + JSON.stringify(val))
-        })
-        throw 'stop'
-    }
-
-    function create_random_edit(s9, letters) {
-        letters = letters || 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-        var o = sync9_read(s9)
-        
-        function create_random_thing_to_insert() {
-            if (Math.random() < 0.25) {
-                return {}
-            } else if (Math.random() < 0.33) {
-                return []
-            } else if (Math.random() < 0.5) {
-                return Math.floor(Math.random() * 100)
-            } else {
-                return letters[Math.floor(rand() * letters.length)].repeat(Math.floor(rand() * 4))
-            }
-        }
-        
-        var include_vals = (o == null) || (Math.random() < 0.2)
-        
-        var paths = {}
-        function get_paths(x, path) {
-            if (include_vals || (x != null && typeof(x) == 'object'))
-                paths[path] = x
-            if (x == null) {
-            } else if (Array.isArray(x)) {
-                for (var i = 0; i < x.length; i++) {
-                    get_paths(x[i], path + `[${i}]`)
-                }
-            } else if (typeof(x) == 'object') {
-                Object.entries(x).forEach(x => {
-                    get_paths(x[1], path + `[${JSON.stringify(x[0])}]`)
-                })
-            }
-        }
-        get_paths(o, '')
-        
-        var changes = []
-        var ents = Object.entries(paths)
-        if (ents.length > 0) {
-            var ent = ents[Math.floor(Math.random() * ents.length)]
-            if (typeof(ent[1]) == 'string') {
-                var x = ent[1]
-                var start = Math.floor(rand() * (x.length + 1))
-                var ins = letters[Math.floor(rand() * letters.length)].repeat(Math.floor(rand() * 4) + (del == 0 ? 1 : 0))
-                // work here
-                var del = Math.floor(rand() * ins.length)
-                // var del = Math.floor(rand() * rand() * (x.length - start + 1))
-                changes.push(ent[0] + `[${start}:${start + del}] = ` + JSON.stringify(ins))
-            } else if (Array.isArray(ent[1])) {
-                var x = ent[1]
-                var start = Math.floor(rand() * (x.length + 1))
-                var ins_len = Math.floor(rand() * 3)
-                // work here
-                //var del = Math.floor(rand() * rand() * (x.length - start + 1))
-                var del = Math.floor(rand() * ins_len)
-                var ins = []
-                for (var i = 0; i < ins_len; i++) {
-                    ins.push(create_random_thing_to_insert())
-                }
-                changes.push(ent[0] + `[${start}:${start + del}] = ` + JSON.stringify(ins))
-            } else if (ent[1] != null && typeof(ent[1]) == 'object') {
-                var i = Math.floor(Math.random() * 3)
-                var key = 'abc'.slice(i, i + 1)
-                changes.push(ent[0] + `[${JSON.stringify(key)}] = ${JSON.stringify(create_random_thing_to_insert())}`)
-            } else {
-                changes.push(ent[0] + ' = ' + JSON.stringify(create_random_thing_to_insert()))
-            }
-        }
-        return changes
+    self.fissure = (peer, fissure) => {
+        add the fissure
+        propogate the fissure if it's new
+        if this actually closes the fissure,
+            maybe prune?
     }
     
-    // console.log('done: ' + seed + ' : ' + JSON.stringify(sync9_read(server.s9)))
-    
-    // console.log('server: ' + JSON.stringify(server))
-    // Object.values(clients).forEach(x => {
-    //     console.log('client: ' + JSON.stringify(x))
-    // })
-    console.log('server: ' + JSON.stringify(sync9_read(server.s9)))
-    Object.values(clients).forEach(x => {
-        console.log('client: ' + JSON.stringify(sync9_read(x.s9)))
-    })
-}
-
-
-
-
-
-// function main() {
-//     var s9 = sync9_create()
-//     sync9_add_version(s9, 'hi', {'root': true}, ['= {"a":3, "b":6, "c":["hi!"]}'])
-//     console.log('hi!', JSON.stringify(s9, null, '    '))
-//     console.log('hi!', sync9_read(s9))
-//     var vs = sync9_extract_versions(s9, x => x == 'root')
-//     console.log(JSON.stringify(vs, null, '    '))
-// }
-
-function sync9_create_client(s_funcs) {
-    var c = {}
-    
-    function init() {
-        c.s9 = sync9_create()
+    self.init_blob = (peer, id, blob) => {
+        peer.id = id
+        self.peers[id] = peer
+        self.blob(peer, blob)
     }
-    init()
     
-    c.uid = sync9_guid()
-    c.server_leaves = {root: true}
-    c.unacked = []
-    c.delete_us = {}
-    c.got_first_version = false
+    self.blob = (peer, blob) => {
+        add all the versions to s9
+        add all the fissures to our fissures
+        maybe prune?
+        send to all our peers the new stuff that was actually added by us
+    }
     
-    c.join = () => {
+    self.local_add_version = (vid, parents, changes) => {
+        add version to s9
+        send to all our peers
+            (note that we're the center in phase_one)
+        if we have no peers, mark as fully acked
+    }
+    
+    self.add_version = (peer, vid, parents, changes) => {
+        if version is new to us:
+            add version to s9
+            send to all our peers except where we got it from
+                (note who we got it from in phase_one)
+            if we have no other peers, send ack back to original sender
+        else:
+            pretend as though we got an ack
+    }
+    
+    self.ack = (peer, vid) => {
+        mark this peer as acked
+        if we have enough acks, send back to original sender (see phase_one)
+            or send full_ack
+    }
+    
+    self.full_ack = (peer, vid) => {
+        mark this vid as fully acked
+        prune?
+    }
+    
+    
+    
+    self.join = () => {
         s_funcs.join(c.uid, c.server_leaves)
         c.unacked.forEach(x => s_funcs.add_version(c.uid, x.vid, x.parents, x.changes))
     }
