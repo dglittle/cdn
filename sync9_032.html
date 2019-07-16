@@ -18,6 +18,78 @@ function sync9_create_peer() {
     self.phase_one = {}
     
     self.prune = () => {
+        var fissure_map = {}
+        Object.keys(self.s9.T).forEach(vid => {
+            fissure_map[vid] = {tops: {}, bottoms: {}}
+        })
+        Object.entries(self.fissures).forEach(x => {
+            Object.keys(x[1].top).forEach(v => {
+                fissure_map[v].tops[x[0]] = true
+            })
+            Object.keys(x[1].bottom).forEach(v => {
+                fissure_map[v].bottoms[x[0]] = true
+            })
+        })
+        Object.keys(self.full_ack_leaves).forEach(v => {
+            fissure_map[v].tops['_full_ack'] = true
+        })
+        
+        var tags = {}
+        function process_node(vid, bottoms, tops, tag) {
+            if (tags[vid]) return
+            var bottoms_cloned = false
+            var tops_cloned = false
+            function ensure_bottoms_is_cloned() {
+                if (!bottoms_cloned) {
+                    bottoms_cloned = true
+                    bottoms = Object.assign({}, bottoms)
+                }
+            }
+            function ensure_tops_is_cloned() {
+                if (!tops_cloned) {
+                    tops_cloned = true
+                    tops = Object.assign({}, tops)
+                }
+            }
+            Object.keys(fissure_map[vid].bottoms).forEach(f => {
+                ensure_bottoms_is_cloned()
+                bottoms[f] = true
+            })
+            Object.keys(fissure_map[vid].tops).forEach(f => {
+                ensure_bottoms_is_cloned()
+                ensure_tops_is_cloned()
+                delete bottoms[f]
+                tops[f] = true
+            })
+            if (bottoms_cloned || tops_cloned) {
+                if (Object.keys(bottoms).length == 0) {
+                    tag = Object.keys(tops).sort().join(',')
+                } else {
+                    tag = '_frozen'
+                }
+            }
+            tags[vid] = tag
+            Object.keys(self.s9.T[vid]).forEach(p => {
+                process_node(p, bottoms, tops, tag)
+            })
+        }
+        Object.keys(self.full_ack_leaves).forEach(leaf => {
+            process_node(leaf, {}, {}, null)
+        })
+        
+        sync9_prune2()
+        
+        
+        
+        
+        
+        function mark_ancs(leaves, so_far) {
+            
+        }
+        mark_ancs(self.s9.leaves, {})
+        
+        
+        
         
         work here : this code isn't quite right
         
