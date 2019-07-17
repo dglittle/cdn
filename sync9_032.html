@@ -96,10 +96,8 @@ function run_trial(seed, N, show_debug) {
                 if (p.letters_i >= p.letters.length) {
                     p.letters_i = 0
                 }
-                var vid = sync9_guid()
-                var parents = Object.assign({}, p.s9.leaves)
-                var changes = create_random_edit(p.s9, p.letters[p.letters_i++])
-                p.local_set(vid, parents, changes)
+                var e = create_random_edit(p.s9, p.letters[p.letters_i++])
+                p.local_set(e.vid, e.parents, e.changes)
             } else {
                 var other_p = p
                 while (other_p == p) {
