@@ -399,14 +399,15 @@ function sync9_create_peer(p_funcs) {
     }
     
     self.set_multi = (pid, vs, fs) => {
-        var new_vs = []
+        var new_vs = null
         vs.forEach(v => {
             if (!self.s9.T[v.vid]) {
+                if (!new_vs) new_vs = []
                 new_vs.push(v)
                 sync9_add_version(self.s9, v.vid, v.parents, v.changes)
             }
         })
-        var new_fs = {}
+        var new_fs = null
         var return_fs = null
         Object.entries(fs).forEach(x => {
             on_fissure(x[1], () => {
@@ -418,13 +419,18 @@ function sync9_create_peer(p_funcs) {
                     top: x[1].top,
                     bottom: x[1].bottom
                 }
-            }, () => new_fs[x[0]] = x[1])
+            }, () => {
+                if (!new_fs) new_fs = {}
+                new_fs[x[0]] = x[1]
+            })
         })
-        Object.keys(self.peers).forEach(p => {
-            if (p != pid)
-                p_funcs.set_multi(p, new_vs, new_fs)
-        })
-        if (return_fs) p_funcs.set_multi(pid, {}, return_fs)
+        if (new_vs || new_fs) {
+            Object.keys(self.peers).forEach(p => {
+                if (p != pid)
+                    p_funcs.set_multi(p, new_vs || [], new_fs || {})
+            })
+        }
+        if (return_fs) p_funcs.set_multi(pid, [], return_fs)
         
         self.prune()
     }
