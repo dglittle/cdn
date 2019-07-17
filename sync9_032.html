@@ -157,9 +157,16 @@ function run_trial(seed, N, show_debug) {
                     throw 'wtf?'
                 }
                 
-                
+                try {
                 
                 p.incoming.shift()()
+                
+                } catch (e) {
+                    
+                    console.log(p.incoming.length)
+                    throw 'wtf?'
+                    
+                }
                 
                 if (debug_frames) debug_frames.push({
                     tt: t - 1,
