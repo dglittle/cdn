@@ -210,8 +210,8 @@ function sync9_create_peer(p_funcs) {
     if (true) {
         sync9_add_version(self.s9, 'v1', {root: true}, [' = ""'])
         sync9_prune(self.s9, (a, b) => true, (a, b) => true)
-        delete c.s9.T.v1
-        c.s9.leaves = {root: true}
+        delete self.s9.T.v1
+        self.s9.leaves = {root: true}
     }
     
     self.peers = {}
