@@ -526,7 +526,7 @@ function sync9_create_peer(p_funcs) {
             if (keys.length == 0) {
                 frozen[x[0]] = true
             } else if (!frozen[x[0]]) {
-                x.tag = Object.keys(x.tags).sort().join(',')
+                x[1].tag = keys.sort().join(',')
             }
         })
         var q = (a, b) => !frozen[a] && !frozen[b] && (tags[a].tag == tags[b].tag)
