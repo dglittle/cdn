@@ -39,7 +39,6 @@ function run_trial(seed, N, show_debug) {
                     }])
                 },
                 set_multi: (pid, vs, fs) => {
-                    vs = Object.assign({}, vs)
                     fs = Object.assign({}, fs)
                     if (show_debug) console.log('SEND: ' + pid + ' set_multi')
                     peers[pid].incoming.push([p.uid, () => {
