@@ -88,6 +88,17 @@ function run_trial(seed, N, show_debug) {
     }
     var peers_array = Object.values(peers)
     
+
+    for (var p1 = 0; p1 < n_peers; p1++) {
+        for (var p2 = p1 + 1; p2 < n_peers; p2++) {
+            if (!peers_array[p1].peers[peers_array[p2].uid]) {
+                peers_array[p1].connect(peers_array[p2].uid)
+                peers_array[p2].connect(peers_array[p1].uid)
+            }
+        }
+    }
+    
+    
     for (var t = 0; t < N; t++) {
         if (show_debug) console.log('t == ' + t)
         
