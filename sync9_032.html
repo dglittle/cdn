@@ -44,7 +44,7 @@ function run_trial(seed, N, show_debug) {
                     if (show_debug) console.log('SEND: ' + pid + ' set_multi')
                     peers[pid].incoming.push([p.uid, () => {
                         if (show_debug) console.log('RECV: ' + pid + ' set_multi')
-                        peers[pid].set(p.uid, vs, fs)
+                        peers[pid].set_multi(p.uid, vs, fs)
                     }])
                 },
                 ack: (pid, vid) => {
