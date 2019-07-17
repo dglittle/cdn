@@ -462,14 +462,14 @@ function sync9_create_peer(p_funcs) {
         if (!self.s9.T[vid]) {
             
             // work here
-            var old_s9 = JSON.parse(JSON.stringify(self.s9))
-            try {
+            // var old_s9 = JSON.parse(JSON.stringify(self.s9))
+            // try {
                 sync9_add_version(self.s9, vid, parents, changes)
             
-            } catch (e){
-                debugger
-                sync9_add_version(old_s9, vid, parents, changes)
-            }
+            // } catch (e){
+            //     debugger
+            //     sync9_add_version(old_s9, vid, parents, changes)
+            // }
             
             
             var ps = Object.keys(self.peers)
