@@ -16,6 +16,8 @@ function main() {
 function run_trial(seed, N, show_debug) {
     Math.randomSeed(seed)
     var rand = () => Math.random()
+    
+    var debug_frames = []
 
     var n_peers = 3
     var peers = {}
@@ -127,6 +129,11 @@ function run_trial(seed, N, show_debug) {
         
         if (show_debug)
             console.log('peer: ' + p.uid + ' -> ' + JSON.stringify(sync9_read(p.s9)))
+            
+        if (debug_frames) debug_frames.push({
+            t: t,
+            peer_s9s: peers_array.map(x => JSON.parse(JSON.stringify(x.s9)))
+        })
     }
 
     for (var p1 = 0; p1 < n_peers; p1++) {
@@ -143,6 +150,11 @@ function run_trial(seed, N, show_debug) {
         Object.values(peers).forEach(p => {
             while (p.incoming.length > 0) {
                 p.incoming.shift()()
+                
+                if (debug_frames) debug_frames.push({
+                    tt: t - 1,
+                    peer_s9s: peers_array.map(x => JSON.parse(JSON.stringify(x.s9)))
+                })
             }
         })
         
@@ -190,6 +202,112 @@ function run_trial(seed, N, show_debug) {
     Object.values(peers).forEach(x => {
         console.log('peer: ' + JSON.stringify(sync9_read(x.s9)))
     })
+    
+    if (debug_frames) {
+        var c = document.createElement('canvas')
+        c.width = 3000
+        c.height = 1200
+        c.style.width = (c.width / devicePixelRatio) + 'px'
+        c.style.height = (c.height / devicePixelRatio) + 'px'
+        var g = c.getContext('2d')
+        document.body.append(c)
+        
+        var slider = document.createElement('input')
+        slider.style.width = '500px'
+        slider.setAttribute('type', 'range')
+        slider.setAttribute('min', '0')
+        slider.setAttribute('max', debug_frames.length - 1)
+        slider.setAttribute('value', debug_frames.length - 1)
+        slider.oninput = () => {
+            var d = debug_frames[1*slider.value]
+            
+            g.clearRect(0, 0, c.width, c.height)
+            
+            g.font = '20px Ariel'
+            g.fillStyle = 'black'
+            g.textBaseline = 'top'
+            if (d.tt) g.fillText('v3 tt: ' + d.tt, 0, 0)
+            else g.fillText('v3 t: ' + d.t, 0, 0)
+
+            peers_array.forEach((p, i) => {
+                draw_space_dag(p, g, sync9_space_dag_get(d.peer_s9s[i].val.S, 0).S, 100, 300 + 300*i)
+            })
+        }
+        document.body.append(slider)
+        slider.oninput()
+    }    
+}
+
+function draw_space_dag(c, g, S, x, y) {
+    function helper(node, y, px, py) {
+        g.beginPath()
+        g.moveTo(x, y)
+        g.lineTo(px, py)
+        g.lineWidth = 1
+        g.strokeStyle = 'lightblue'
+        g.stroke()
+
+        var begin_x
+        var end_x
+
+        g.beginPath()
+        if (node.gash) {
+            begin_x = x
+            g.moveTo(x, y - 20)
+            g.bezierCurveTo(x + 10, y - 10, x + 10, y + 10, x, y + 20)
+            x += 12
+        } else {
+            begin_x = x + 10
+            g.moveTo(x + 10, y - 20)
+            g.bezierCurveTo(x, y - 10, x, y + 10, x + 10, y + 20)
+            x += 8
+        }
+        g.lineWidth = 1
+        g.strokeStyle = 'lightblue'
+        g.stroke()
+        
+        if (Object.keys(node.deleted_by).length > 0) {
+            g.fillStyle = 'red'
+        } else {
+            g.fillStyle = 'blue'
+        }
+        g.textBaseline = 'middle'
+        g.font = '20px Arial'
+        g.fillText(node.elems, x, y)
+        
+        // g.font = '20px Arial'
+        // g.fillStyle = 'grey'
+        // g.fillText(node.vid || 'null', x, y + Math.random()*100)
+        
+        var width = g.measureText(node.elems).width
+        x += width
+        
+        g.beginPath()
+        if (node.end_cap) {
+            end_x = x
+            g.moveTo(x, y - 20)
+            g.bezierCurveTo(x + 10, y - 10, x + 10, y + 10, x, y + 20)
+            x += 10
+        } else {
+            end_x = x + 10
+            g.moveTo(x + 10, y - 20)
+            g.bezierCurveTo(x, y - 10, x, y + 10, x + 10, y + 20)
+            x += 8
+        }
+        g.moveTo(begin_x, y - 20)
+        g.lineTo(end_x, y - 20)
+        g.moveTo(begin_x, y + 20)
+        g.lineTo(end_x, y + 20)
+        g.lineWidth = 1
+        g.strokeStyle = 'lightblue'
+        g.stroke()
+
+        var px = x
+        x += 10
+        for (var n of node.nexts) helper(n, y - 40, px, y)
+        if (node.next) helper(node.next, y, px, y)
+    }
+    helper(S, y, x, y)
 }
 
 
