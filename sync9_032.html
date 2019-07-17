@@ -118,9 +118,9 @@ function run_trial(seed, N, show_debug) {
         } else {
             if (show_debug) console.log('process incoming')
             var did_something = false
-            if (c.incoming.length > 0) {
+            if (p.incoming.length > 0) {
                 did_something = true
-                c.incoming.shift()()
+                p.incoming.shift()()
             }
             if (!did_something) {
                 if (show_debug) console.log('did nothing')
