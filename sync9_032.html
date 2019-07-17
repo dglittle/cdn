@@ -6,10 +6,205 @@
 <body></body>
 <script>
 
-function sync9_create_peer() {
+function main() {
+    for (var i = 0; i < 1000; i++) {
+        console.log('TRIAL: ' + i)
+        run_trial('seEEEEEed:' + i, 100, true)
+    }
+}
+
+function run_trial(seed, N, show_debug) {
+    Math.randomSeed(seed)
+    var rand = () => Math.random()
+
+    var n_peers = 3
+    var peers = {}
+    for (var i = 0; i < n_peers; i++) {
+        ;(() => {
+            var p = sync9_create_peer({
+                get: (pid, id) => {
+                    if (show_debug) console.log('SEND: ' + pid + ' get ' + id)
+                    peers[pid].incoming.push([p.uid, () => {
+                        if (show_debug) console.log('RECV: ' + pid + ' get ' + id)
+                        peers[pid].get(p.uid, id)
+                    }])
+                },
+                set: (pid, vid, parents, changes) => {
+                    if (show_debug) console.log('SEND: ' + pid + ' set')
+                    peers[pid].incoming.push([p.uid, () => {
+                        if (show_debug) console.log('RECV: ' + pid + ' set')
+                        peers[pid].set(p.uid, vid, parents, changes)
+                    }])
+                },
+                set_multi: (pid, vs, fs) => {
+                    if (show_debug) console.log('SEND: ' + pid + ' set_multi')
+                    peers[pid].incoming.push([p.uid, () => {
+                        if (show_debug) console.log('RECV: ' + pid + ' set_multi')
+                        peers[pid].set(p.uid, vid, parents, changes)
+                    }])
+                },
+                ack: (pid, vid) => {
+                    if (show_debug) console.log('SEND: ' + pid + ' ack ' + vid)
+                    peers[pid].incoming.push([p.uid, () => {
+                        if (show_debug) console.log('RECV: ' + pid + ' ack ' + vid)
+                        peers[pid].ack(p.uid, vid)
+                    }])
+                },
+                full_ack: (pid, vid) => {
+                    if (show_debug) console.log('SEND: ' + pid + ' full_ack ' + vid)
+                    peers[pid].incoming.push([p.uid, () => {
+                        if (show_debug) console.log('RECV: ' + pid + ' full_ack ' + vid)
+                        peers[pid].full_ack(p.uid, vid)
+                    }])
+                },
+                fissure: (pid, fissure) => {
+                    if (show_debug) console.log('SEND: ' + pid + ' fissure')
+                    peers[pid].incoming.push([p.uid, () => {
+                        if (show_debug) console.log('RECV: ' + pid + ' fissure')
+                        peers[pid].fissure(p.uid, fissure)
+                    }])
+                }
+            })
+            p.incoming = []
+            peers[p.uid] = p
+            
+            if (i == 0) {
+                p.letters = 'abcdefghijklmnopqrstuvwxyz'
+                for (var ii = 0; ii < 100; ii++) {
+                    p.letters += String.fromCharCode(12032 + ii)
+                }
+                p.letters_i = 0
+            } else {
+                p.letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+                for (var ii = 0; ii < 100; ii++) {
+                    p.letters += String.fromCharCode(12032 + 100 + ii)
+                }
+                p.letters_i = 0
+            }
+        })()
+    }
+    var peers_array = Object.values(peers)
+    
+    for (var t = 0; t < N; t++) {
+        if (show_debug) console.log('t == ' + t)
+        
+        var i = Math.floor(rand() * n_peers)
+        var p = peers_array[i]
+        
+        if (rand() < 0.1) {
+            if (rand() < 0.9) {
+                if (p.letters_i >= p.letters.length) {
+                    p.letters_i = 0
+                }
+                var vid = sync9_guid()
+                var parents = Object.assign({}, p.s9.leaves)
+                var changes = create_random_edit(p.s9, p.letters[p.letters_i++])
+                p.local_set(vid, parents, changes)
+            } else {
+                var other_p = p
+                while (other_p == p) {
+                    other_p = peers_array[Math.floor(rand() * n_peers)]
+                }
+                if (p.peers[other_p.uid]) {
+                    p.disconnect(other_p.uid)
+                    p.incoming = p.incoming.filter(x => x[0] != other_p.uid)
+                    other_p.disconnect(p.uid)
+                    other_p.incoming = other_p.incoming.filter(x => x[0] != p.uid)
+                } else {
+                    p.connect(other_p.uid)
+                    other_p.connect(p.uid)
+                }
+            }
+        } else {
+            if (show_debug) console.log('process incoming')
+            var did_something = false
+            if (c.incoming.length > 0) {
+                did_something = true
+                c.incoming.shift()()
+            }
+            if (!did_something) {
+                if (show_debug) console.log('did nothing')
+            }
+        }
+        
+        if (show_debug)
+            console.log('peer: ' + p.uid + ' -> ' + JSON.stringify(sync9_read(p.s9)))
+    }
+
+    for (var p1 = 0; p1 < n_peers; p1++) {
+        for (var p2 = p1 + 1; p2 < n_peers; p2++) {
+            if (!peers_array[p1].peers[peers_array[p2].uid]) {
+                peers_array[p1].connect(peers_array[p2].uid)
+                peers_array[p2].connect(peers_array[p1].uid)
+            }
+        }
+    }
+    
+    for (var t = 0; t < 10000; t++) {
+        if (show_debug) console.log('t => ' + t)
+        Object.values(peers).forEach(p => {
+            while (p.incoming.length > 0) {
+                p.incoming.shift()()
+            }
+        })
+        
+        if (Object.values(peers).every(x => x.incoming.length == 0) break
+    }
+    
+    var check_val = null
+    var check_good = true
+    Object.values(peers).forEach((x, i) => {
+        var val = sync9_read(x.s9)
+        if (i == 0)
+            check_val = val
+        else if (!deep_equals(val, check_val))
+            check_good = false
+    })
+    
+    console.log('CHECK GOOD: ' + check_good)
+    if (!check_good) {
+        Object.values(peers).forEach((x, i) => {
+            console.log(x)
+            var val = sync9_read(x.s9)
+            console.log('val: ' + JSON.stringify(val))
+        })
+        throw 'stop'
+    }
+
+
+    function create_random_edit(s, letters) {
+        letters = letters || 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        var str = sync9_read(s)
+        var start = Math.floor(Math.random() * (str.length + 1))
+        var del = Math.floor(Math.random() * Math.random() * (str.length - start + 1))
+        var ins = letters[Math.floor(Math.random() * letters.length)].repeat(Math.floor(Math.random() * 4) + (del == 0 ? 1 : 0))
+        
+        var vid = sync9_guid()
+        var changes = [`[${start}:${start + del}] = ` + JSON.stringify(ins)]
+        
+        return {
+            vid : vid,
+            parents : Object.assign({}, s.leaves),
+            changes : changes
+        }
+    }
+
+    Object.values(peers).forEach(x => {
+        console.log('peer: ' + JSON.stringify(sync9_read(x.s9)))
+    })
+}
+
+
+
+
+
+
+
+function sync9_create_peer(p_funcs) {
     var self = {}
     
     self.s9 = sync9_create()
+    self.uid = sync9_guid()
     
     // work here : creating single string within json
     if (true) {
@@ -19,12 +214,171 @@ function sync9_create_peer() {
         c.s9.leaves = {root: true}
     }
     
-    self.id = sync9_guid()
-    
     self.peers = {}
     self.fissures = {}
+    self.old_fissures = {}
     self.full_ack_leaves = {}
     self.phase_one = {}
+    
+    self.connect = pid => {
+        self.peers[pid] = {a: sync9_guid()}
+        p_funcs.get(pid, self.peers[pid].a)
+    }
+    
+    self.disconnect = pid => {
+        if (!self.peers[pid]) return
+        if (self.peers[pid].b) {
+            self.fissure(pid, {
+                a: self.peers[pid].a,
+                b: self.peers[pid].b,
+                top: Object.assign({}, self.full_ack_leaves),
+                bottom: Object.assign({}, self.s9.leaves)
+            })
+        }
+        delete self.peers[pid]
+    }
+    
+    function on_fissure(fissure, on_old, on_new, on_delete) {
+        if (self.old_fissures[fissure.a + ':' + fissure.b]) {
+            if (on_old) on_old()
+            return
+        }
+        if (!self.fissures[fissure.a + ':' + fissure.b]) {
+            self.fissures[fissure.a + ':' + fissure.b] = fissure
+            if (on_new) on_new()
+        }
+        if (self.fissures[fissure.b + ':' + fissure.a]) {
+            delete self.fissures[fissure.b + ':' + fissure.a]
+            delete self.fissures[fissure.a + ':' + fissure.b]
+            self.old_fissures[fissure.b + ':' + fissure.a] = true
+            self.old_fissures[fissure.a + ':' + fissure.b] = true
+            if (on_delete) on_delete()
+        }
+    }
+    
+    self.fissure = (pid, fissure) => {
+        on_fissure(fissure, () => {
+            p_funcs.fissure(pid, {
+                a: fissure.b,
+                b: fissure.a,
+                top: {},
+                bottom: {}
+            })
+        }, () => {
+            Object.entries(self.peers).forEach(x => {
+                if (x[0] != pid)
+                    p_funcs.fissure(x[0], fissure)
+            })
+        }, () => {
+            self.prune()
+        })
+    }
+    
+    self.get = (pid, id) => {
+        self.peers[pid].b = id
+        var vs = sync9_extract_versions(self.s9, x => x == 'root')
+        var fs = self.fissures
+        p_funcs.set_multi(pid, vs, fs)
+    }
+    
+    self.set_multi = (pid, vs, fs) => {
+        var new_vs = []
+        vs.forEach(v => {
+            if (!self.s9.T[v.vid]) {
+                new_vs.push(v)
+                sync9_add_version(self.s9, v.vid, v.parents, v.changes)
+            }
+        })
+        var new_fs = {}
+        var return_fs = null
+        Object.entries(fs).forEach(x => {
+            on_fissure(x[1], () => {
+                if (!return_fs) return_fs = {}
+                var key = x[1].b + ':' + x[1].a
+                return_fs[key] = {
+                    a: x[1].b,
+                    b: x[1].a,
+                    top: x[1].top,
+                    bottom: x[1].bottom
+                }
+            }, () => new_fs[x[0]] = x[1])
+        })
+        Object.keys(self.peers).forEach(p => {
+            if (p != pid)
+                p_funcs.set_multi(p, new_vs, new_fs)
+        })
+        if (return_fs) p_funcs.set_multi(pid, {}, return_fs)
+        
+        self.prune()
+    }
+    
+    function add_full_ack_leaf(vid) {
+        var marks = {}
+        function f(v) {
+            if (!marks[v]) {
+                marks[v] = true
+                delete self.full_ack_leaves[v]
+                Object.keys(self.s9.T[v]).forEach(f)
+            }
+        }
+        f(vid)
+        self.full_ack_leaves[vid] = true
+    }
+    
+    self.local_set = (vid, parents, changes) => {
+        sync9_add_version(self.s9, vid, parents, changes)
+        var ps = Object.keys(self.peers)
+        self.phase_one[vid] = {origin: null, count: ps.length}
+        ps.forEach(p => {
+            p_funcs.set(p, vid, parents, changes)
+        })
+        check_ack_count(vid)
+    }
+    
+    self.set = (pid, vid, parents, changes) => {
+        if (!self.s9.T[vid]) {
+            sync9_add_version(self.s9, vid, parents, changes)
+            var ps = Object.keys(self.peers)
+            self.phase_one[vid] = {origin: pid, count: ps.length - 1}
+            ps.forEach(p => {
+                if (p != pid)
+                    p_funcs.set(p, vid, parents, changes)
+            })
+        } else {
+            self.phase_one[vid].count--
+        }
+        check_ack_count(vid)
+    }
+    
+    self.ack = (pid, vid) => {
+        self.phase_one[vid].count--
+        check_ack_count(vid)
+    }
+    
+    function check_ack_count(vid) {
+        if (self.phase_one[vid].count == 0) {
+            if (self.phase_one[vid].origin)
+                p_funcs.ack(self.phase_one[vid].origin, vid)
+            else {
+                add_full_ack_leaf(vid)
+                Object.keys(self.peers).forEach(p => {
+                    p_funcs.full_ack(p, vid)
+                })
+            }
+        }
+    }
+    
+    self.full_ack = (pid, vid) => {
+        var ancs = sync9_get_ancestors(self.s9, self.full_ack_leaves)
+        if (!ancs[vid]) {
+            add_full_ack_leaf(vid)
+            Object.keys(self.peers).forEach(p => {
+                if (p != pid)
+                    p_funcs.full_ack(p, vid)
+            })
+            self.prune()
+        }
+    }
     
     self.prune = () => {
         var tags = {}
@@ -60,141 +414,7 @@ function sync9_create_peer() {
         })
         var q = (a, b) => !frozen[a] && !frozen[b] && (tags[a].tag == tags[b].tag)
         sync9_prune2(self.s9, q, q)
-    }
-    
-    self.connect = peer => {
-        peer.get(self.id)
-    }
-    
-    self.disconnect = peer => {
-        if (!peer.id) return
-        delete self.peers[peer.id]
-        self.fissure(peer, {
-            a: self.id,
-            b: peer.id,
-            top: Object.assign({}, self.full_ack_leaves),
-            bottom: Object.assign({}, self.s9.leaves)
-        })
-    }
-    
-    self.fissure = (peer, fissure) => {
-        if (!self.fissures[fissure.a + ':' + fissure.b]) {
-            self.fissures[fissure.a + ':' + fissure.b] = fissure
-            Object.values(self.peers).forEach(p => {
-                if (p.id != peer.id)
-                    p.fissure(fissure)
-            })
-        }
-        if (self.fissures[fissure.b + ':' + fissure.a]) {
-            delete self.fissures[fissure.b + ':' + fissure.a]
-            delete self.fissures[fissure.a + ':' + fissure.b]
-            self.prune()
-        }
-    }
-    
-    self.get = (peer, id) => {
-        peer.id = id
-        self.peers[id] = peer
-        var vs = sync9_extract_versions(self.s9, x => x == 'root')
-        var fs = self.fissures
-        peer.set_multi(vs, fs)
-    }
-    
-    self.set_multi = (peer, vs, fs) => {
-        var new_vs = []
-        vs.forEach(v => {
-            if (!self.s9.T[v.vid]) {
-                new_vs.push(v)
-                sync9_add_version(self.s9, v.vid, v.parents, v.changes)
-            }
-        })
-        var new_fs = {}
-        Object.entries(fs).forEach(x => {
-            if (!self.fissures[x[0]]) {
-                new_fs[x[0]] = self.fissures[x[0]] = x[1]
-            }
-            if (self.fissures[x[1].b + ':' + x[1].a]) {
-                delete self.fissures[x[1].b + ':' + x[1].a]
-                delete self.fissures[x[1].a + ':' + x[1].b]
-            }
-        })
-        
-        self.prune()
-        
-        Object.values(self.peers).forEach(p => {
-            if (p.id != peer.id) {
-                p.set_multi(new_vs, new_fs)
-            }
-        })
-    }
-    
-    function add_full_ack_leaf(vid) {
-        var marks = {}
-        function f(v) {
-            if (!marks[v]) {
-                marks[v] = true
-                delete self.full_ack_leaves[v]
-                Object.keys(self.s9.T[v]).forEach(f)
-            }
-        }
-        f(vid)
-        self.full_ack_leaves[vid] = true
-    }
-    
-    self.local_set = (vid, parents, changes) => {
-        sync9_add_version(self.s9, vid, parents, changes)
-        var ps = Object.values(self.peers)
-        self.phase_one[vid] = {origin: null, count: ps.length}
-        ps.forEach(p => {
-            p.set(vid, parents, changes)
-        })
-        check_ack_count(vid)
-    }
-    
-    self.set = (peer, vid, parents, changes) => {
-        if (!self.s9.T[vid]) {
-            sync9_add_version(self.s9, vid, parents, changes)
-            var ps = Object.values(self.peers)
-            self.phase_one[vid] = {origin: peer.id, count: ps.length - 1}
-            ps.forEach(p => {
-                if (p.id != peer.id)
-                    p.set(vid, parents, changes)
-            })
-        } else {
-            self.phase_one[vid].count--
-        }
-        check_ack_count(vid)
-    }
-    
-    self.ack = (peer, vid) => {
-        self.phase_one[vid].count--
-        check_ack_count(vid)
-    }
-    
-    function check_ack_count(vid) {
-        if (self.phase_one[vid].count == 0) {
-            if (self.phase_one[vid].origin)
-                self.peers[self.phase_one[vid].origin].ack(vid)
-            else {
-                add_full_ack_leaf(vid)
-                Object.values(self.peers).forEach(p => {
-                    p.full_ack(vid)
-                })
-            }
-        }
-    }
-    
-    self.full_ack = (peer, vid) => {
-        var ancs = sync9_get_ancestors(self.s9, self.full_ack_leaves)
-        if (!ancs[vid]) {
-            add_full_ack_leaf(vid)
-            self.prune()
-            Object.values(self.peers).forEach(p => {
-                if (p.id != peer.id)
-                    p.full_ack(vid)
-            })
-        }
-    }
+    }    
     
     return self
 }
