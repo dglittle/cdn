@@ -120,7 +120,7 @@ function run_trial(seed, N, show_debug) {
             var did_something = false
             if (p.incoming.length > 0) {
                 did_something = true
-                p.incoming.shift()()
+                p.incoming.shift()[1]()
             }
             if (!did_something) {
                 if (show_debug) console.log('did nothing')
@@ -149,25 +149,7 @@ function run_trial(seed, N, show_debug) {
         if (show_debug) console.log('t => ' + t)
         Object.values(peers).forEach(p => {
             while (p.incoming.length > 0) {
-                
-                
-                // work here
-                if (!p.incoming.shift) {
-                    console.log(p.incoming.length)
-                    throw 'wtf?'
-                }
-                
-                try {
-                
-                p.incoming.shift()()
-                
-                } catch (e) {
-                    
-                    console.log(p.incoming.length)
-                    console.log("p:", p.incoming)
-                    throw 'wtf?'
-                    
-                }
+                p.incoming.shift()[1]()
                 
                 if (debug_frames) debug_frames.push({
                     tt: t - 1,
