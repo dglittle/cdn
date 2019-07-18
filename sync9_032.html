@@ -9,9 +9,9 @@
 function main() {
     for (var i = 0; i < 1000; i++) {
         console.log('TRIAL: ' + i)
-        // i = 723
-        run_trial('seEEEEEeeeeeEd:' + i, 3, false)
-        // break
+        i = 4
+        run_trial('seEEEEEeeeeeEd:' + i, 3, true)
+        break
     }
 }
 
@@ -195,7 +195,7 @@ function run_trial(seed, N, show_debug) {
             var val = sync9_read(x.s9)
             console.log('val: ' + JSON.stringify(val))
         })
-        throw 'stop'
+        if (!show_debug) throw 'stop'
     }
 
 
