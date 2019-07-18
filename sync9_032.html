@@ -34,7 +34,7 @@ function run_trial(seed, N, show_debug) {
                 set: (pid, vid, parents, changes) => {
                     if (show_debug) console.log('SEND: ' + pid + ' set')
                     peers[pid].incoming.push([p.uid, () => {
-                        if (show_debug) console.log('RECV: ' + pid + ' set')
+                        if (show_debug) console.log('RECV: ' + pid + ' set ' + JSON.stringify({vid, parents, changes}))
                         peers[pid].set(p.uid, vid, parents, changes)
                     }])
                 },
