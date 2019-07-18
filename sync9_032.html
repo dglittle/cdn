@@ -12,9 +12,9 @@
 function main() {
     for (var i = 0; i < 1000; i++) {
         console.log('TRIAL: ' + i)
-        // i = 24
-        run_trial('seEEEEEeeeeEeEeEd:' + i, 10, false) // true)
-        // break
+        i = 162
+        run_trial('seEEEEEeeeeEeEeEd:' + i, 20, true)
+        break
     }
 }
 
@@ -177,6 +177,11 @@ function run_trial(seed, N, show_debug) {
             while (p.incoming.length > 0) {
                 if (show_debug) console.log('t => ' + tt++)
                 notes = null
+                
+                // work here
+                if (tt == 35) {
+                    debugger
+                }
                 
                 p.incoming.shift()[1]()
                 
