@@ -7,9 +7,9 @@
 <script>
 
 function main() {
-    for (var i = 0; i < 1; i++) {
+    for (var i = 0; i < 100; i++) {
         console.log('TRIAL: ' + i)
-        run_trial('seEEEEEed:' + i, 1000, true)
+        run_trial('seEEEEEeed:' + i, 50, false)
     }
 }
 
@@ -17,7 +17,7 @@ function run_trial(seed, N, show_debug) {
     Math.randomSeed(seed)
     var rand = () => Math.random()
     
-    var debug_frames = []
+    //var debug_frames = []
     var notes = null
 
     var n_peers = 3
@@ -170,6 +170,7 @@ function run_trial(seed, N, show_debug) {
     } catch (e) {
         console.log('ERROR')
         console.log(e)
+        throw 'stop'
     }
     
     var check_val = null
@@ -189,7 +190,7 @@ function run_trial(seed, N, show_debug) {
             var val = sync9_read(x.s9)
             console.log('val: ' + JSON.stringify(val))
         })
-        //throw 'stop'
+        throw 'stop'
     }
 
 
@@ -210,9 +211,11 @@ function run_trial(seed, N, show_debug) {
         }
     }
 
-    Object.values(peers).forEach(x => {
-        console.log('peer: ' + JSON.stringify(sync9_read(x.s9)))
-    })
+    if (show_debug) {
+        Object.values(peers).forEach(x => {
+            console.log('peer: ' + JSON.stringify(sync9_read(x.s9)))
+        })
+    }
     
     if (debug_frames) {
         console.log('got here!?')
