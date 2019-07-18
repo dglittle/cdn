@@ -13,7 +13,7 @@ function main() {
     for (var i = 0; i < 1000; i++) {
         console.log('TRIAL: ' + i)
         i = 779
-        run_trial('seEEEEEeeeeE2EeEeeeEde:' + i, 50, true)
+        run_trial('seEEEEEeeeeE2EeEeeeEde:' + i, 50, true) //, true)
         break
     }
 }
@@ -177,6 +177,10 @@ function run_trial(seed, N, show_debug) {
             while (p.incoming.length > 0) {
                 if (show_debug) console.log('t => ' + tt++)
                 notes = null
+                
+                if (tt == 35) {
+                    debugger
+                }
                 
                 p.incoming.shift()[1]()
                 
@@ -555,8 +559,10 @@ function sync9_create_peer(p_funcs) {
     }
     
     self.ack = (pid, vid) => {
-        self.phase_one[vid].count--
-        check_ack_count(vid)
+        if (self.phase_one[vid]) {
+            self.phase_one[vid].count--
+            check_ack_count(vid)
+        }
     }
     
     function check_ack_count(vid) {
