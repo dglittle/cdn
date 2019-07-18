@@ -273,7 +273,7 @@ function run_trial(seed, N, show_debug) {
                 g.fillStyle = 'grey'
                 var x = 100
                 var y = 300 + 300*i
-                g.fillText(node.vid, x, y + 40)
+                g.fillText(p.uid, x, y + 40)
                 draw_space_dag(p, g, sync9_space_dag_get(d.peer_s9s[i].val.S, 0).S, x, y)
             })
         }
