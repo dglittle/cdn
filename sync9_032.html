@@ -182,7 +182,7 @@ function run_trial(seed, N, show_debug) {
                 p.incoming.shift()[1]()
                 
                 if (debug_frames) debug_frames.push({
-                    tt: t - 1,
+                    tt: tt,
                     notes: notes,
                     peer_s9s: peers_array.map(x => JSON.parse(JSON.stringify(x.s9)))
                 })
