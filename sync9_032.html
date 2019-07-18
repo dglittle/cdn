@@ -424,7 +424,7 @@ function sync9_create_peer(p_funcs) {
     
     function on_fissure(fissure, on_old, on_new, on_delete) {
         if (self.old_fissures[fissure.a + ':' + fissure.b]) {
-            if (fissure.a && on_old) on_old()
+            if (fissure.top && on_old) on_old()
             return
         }
         if (!self.fissures[fissure.a + ':' + fissure.b]) {
