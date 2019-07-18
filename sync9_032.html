@@ -9,9 +9,9 @@
 function main() {
     for (var i = 0; i < 1000; i++) {
         console.log('TRIAL: ' + i)
-        //i = 779
-        run_trial('seEEEEEeeeeE2EeEeeeeEde:' + i, 50, false) //, true)
-        //break
+        i = 748
+        run_trial('seEEEEEeeeeE2EeEeeeeEde:' + i, 50, true) //, true)
+        break
     }
 }
 
@@ -169,15 +169,11 @@ function run_trial(seed, N, show_debug) {
     }
     
     var tt = 0
-    for (var t = 0; t < 10000; t++) {
+    for (var t = 0; t < 1000; t++) {
         Object.values(peers).forEach(p => {
             while (p.incoming.length > 0) {
                 if (show_debug) console.log('t => ' + tt++)
                 notes = null
-                
-                if (tt == 35) {
-                    debugger
-                }
                 
                 p.incoming.shift()[1]()
                 
