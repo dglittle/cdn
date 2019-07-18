@@ -18,56 +18,38 @@ function run_trial(seed, N, show_debug) {
     var rand = () => Math.random()
     
     var debug_frames = []
+    var notes = null
 
     var n_peers = 3
     var peers = {}
     for (var i = 0; i < n_peers; i++) {
         ;(() => {
-            var p = sync9_create_peer({
-                get: (pid, id) => {
-                    if (show_debug) console.log('SEND: ' + pid + ' get ' + id)
-                    peers[pid].incoming.push([p.uid, () => {
-                        if (show_debug) console.log('RECV: ' + pid + ' get ' + id)
-                        peers[pid].get(p.uid, id)
-                    }])
-                },
-                set: (pid, vid, parents, changes) => {
-                    if (show_debug) console.log('SEND: ' + pid + ' set')
-                    peers[pid].incoming.push([p.uid, () => {
-                        if (show_debug) console.log('RECV: ' + pid + ' set ' + JSON.stringify({vid, parents, changes}))
-                        peers[pid].set(p.uid, vid, parents, changes)
-                    }])
-                },
-                set_multi: (pid, vs, fs) => {
-                    fs = Object.assign({}, fs)
-                    if (show_debug) console.log('SEND: ' + pid + ' set_multi')
-                    peers[pid].incoming.push([p.uid, () => {
-                        if (show_debug) console.log('RECV: ' + pid + ' set_multi')
-                        peers[pid].set_multi(p.uid, vs, fs)
-                    }])
-                },
-                ack: (pid, vid) => {
-                    if (show_debug) console.log('SEND: ' + pid + ' ack ' + vid)
-                    peers[pid].incoming.push([p.uid, () => {
-                        if (show_debug) console.log('RECV: ' + pid + ' ack ' + vid)
-                        peers[pid].ack(p.uid, vid)
-                    }])
-                },
-                full_ack: (pid, vid) => {
-                    if (show_debug) console.log('SEND: ' + pid + ' full_ack ' + vid)
-                    peers[pid].incoming.push([p.uid, () => {
-                        if (show_debug) console.log('RECV: ' + pid + ' full_ack ' + vid)
-                        peers[pid].full_ack(p.uid, vid)
-                    }])
-                },
-                fissure: (pid, fissure) => {
-                    if (show_debug) console.log('SEND: ' + pid + ' fissure')
-                    peers[pid].incoming.push([p.uid, () => {
-                        if (show_debug) console.log('RECV: ' + pid + ' fissure')
-                        peers[pid].fissure(p.uid, fissure)
+            var p = null
+            var m = {}
+            function def_func(key) {
+                m[key] = (a, b, c, d) => {
+                    a = JSON.parse(JSON.stringify(a))
+                    b = JSON.parse(JSON.stringify(b))
+                    c = JSON.parse(JSON.stringify(c))
+                    d = JSON.parse(JSON.stringify(d))
+                    notes = notes + ' SEND: ' + a + ' ' + key + ' ' + JSON.stringify(a) + ' ' + JSON.stringify(b) + ' ' + JSON.stringify(c) + ' ' + JSON.stringify(d)
+                    if (show_debug) console.log(notes)
+                    peers[a].incoming.push([p.uid, () => {
+                        notes = notes + ' RECV: ' + a + ' ' + key + ' ' + JSON.stringify(a) + ' ' + JSON.stringify(b) + ' ' + JSON.stringify(c) + ' ' + JSON.stringify(d)                        
+                        if (show_debug) console.log(notes)
+                        peers[a][key](p.uid, a, b, c, d)
                     }])
                 }
-            })
+            }
+            Object.keys({
+                get: true,
+                set: true,
+                set_multi: true,
+                ack: true,
+                full_ack: true,
+                fissure: true
+            }).forEach(def_func)
+            p = sync9_create_peer(m)
             p.incoming = []
             peers[p.uid] = p
             
@@ -112,6 +94,8 @@ function run_trial(seed, N, show_debug) {
         var i = Math.floor(rand() * n_peers)
         var p = peers_array[i]
         
+        notes = null
+        
         if (rand() < 0.1) {
             if (rand() < 0.9) {
                 if (p.letters_i >= p.letters.length) {
@@ -151,6 +135,7 @@ function run_trial(seed, N, show_debug) {
             
         if (debug_frames) debug_frames.push({
             t: t,
+            notes: notes,
             peer_s9s: peers_array.map(x => JSON.parse(JSON.stringify(x.s9)))
         })
     }
@@ -166,12 +151,14 @@ function run_trial(seed, N, show_debug) {
     
     for (var t = 0; t < 10000; t++) {
         if (show_debug) console.log('t => ' + t)
+        notes = null
         Object.values(peers).forEach(p => {
             while (p.incoming.length > 0) {
                 p.incoming.shift()[1]()
                 
                 if (debug_frames) debug_frames.push({
                     tt: t - 1,
+                    notes: notes,
                     peer_s9s: peers_array.map(x => JSON.parse(JSON.stringify(x.s9)))
                 })
             }
@@ -251,8 +238,8 @@ function run_trial(seed, N, show_debug) {
             g.font = '20px Ariel'
             g.fillStyle = 'black'
             g.textBaseline = 'top'
-            if (d.tt) g.fillText('v3 tt: ' + d.tt, 0, 0)
-            else g.fillText('v3 t: ' + d.t, 0, 0)
+            if (d.tt) g.fillText('v3 tt: ' + d.tt + ' ' + d.notes, 0, 0)
+            else g.fillText('v3 t: ' + d.t + ' ' + d.notes, 0, 0)
 
             peers_array.forEach((p, i) => {
                 draw_space_dag(p, g, sync9_space_dag_get(d.peer_s9s[i].val.S, 0).S, 100, 300 + 300*i)
