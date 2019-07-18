@@ -7,15 +7,15 @@
 <script>
 
 // work here:
-// make old phase_one attempts get cleared out on newer full_acks
 // when we get a set_multi, be careful about adding nodes which were pruned by us (check in reverse order whether to add nodes, or something along those lines)
+// make old phase_one attempts get cleared out on newer full_acks
 
 function main() {
     for (var i = 0; i < 1000; i++) {
         console.log('TRIAL: ' + i)
-        //i = 162
-        run_trial('seEEEEEeeeeEeEeeEd:' + i, 20, false) //true)
-        //break
+        i = 876
+        run_trial('seEEEEEeeeeEeEeeEde:' + i, 30, true)
+        break
     }
 }
 
