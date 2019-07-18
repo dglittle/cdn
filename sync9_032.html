@@ -424,7 +424,7 @@ function sync9_create_peer(p_funcs) {
     
     function on_fissure(fissure, on_old, on_new, on_delete) {
         if (self.old_fissures[fissure.a + ':' + fissure.b]) {
-            if (on_old) on_old()
+            if (fissure.a && on_old) on_old()
             return
         }
         if (!self.fissures[fissure.a + ':' + fissure.b]) {
@@ -444,9 +444,7 @@ function sync9_create_peer(p_funcs) {
         on_fissure(fissure, () => {
             p_funcs.fissure(pid, {
                 a: fissure.b,
-                b: fissure.a,
-                top: {},
-                bottom: {}
+                b: fissure.a
             })
         }, () => {
             get_true_peers().forEach(p => {
@@ -496,9 +494,7 @@ function sync9_create_peer(p_funcs) {
                 var key = x[1].b + ':' + x[1].a
                 return_fs[key] = {
                     a: x[1].b,
-                    b: x[1].a,
-                    top: x[1].top,
-                    bottom: x[1].bottom
+                    b: x[1].a
                 }
             }, () => {
                 if (!new_fs) new_fs = {}
