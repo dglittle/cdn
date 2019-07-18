@@ -465,6 +465,15 @@ function sync9_create_peer(p_funcs) {
     
     self.set_multi = (pid, vs, fs) => {
         var new_vs = null
+
+        
+        var leaves = {}
+        vs.forEach(v => leaves[v.vid] = true)
+        vs.forEach(v => Object.keys(v.parents).forEach(p => delete leaves[p]))
+        work here : when people log back in, we can't collapse their nodes right away it seems..
+        
+
+
         
         var vs_T = {}
         vs.forEach(v => vs_T[v.vid] = v.parents)
