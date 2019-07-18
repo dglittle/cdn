@@ -77,8 +77,14 @@ function run_trial(seed, N, show_debug) {
                     p.letters += String.fromCharCode(12032 + ii)
                 }
                 p.letters_i = 0
-            } else {
+            } else if (i == 1) {
                 p.letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+                for (var ii = 0; ii < 100; ii++) {
+                    p.letters += String.fromCharCode(12032 + 100 + ii)
+                }
+                p.letters_i = 0
+            } else {
+                p.letters = ''
                 for (var ii = 0; ii < 100; ii++) {
                     p.letters += String.fromCharCode(12032 + 100 + ii)
                 }
@@ -102,13 +108,6 @@ function run_trial(seed, N, show_debug) {
     
     for (var t = 0; t < N; t++) {
         if (show_debug) console.log('t == ' + t)
-        
-        
-        if (t == 325) {
-            debugger
-        }
-        
-        
         
         var i = Math.floor(rand() * n_peers)
         var p = peers_array[i]
