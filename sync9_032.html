@@ -170,10 +170,11 @@ function run_trial(seed, N, show_debug) {
         }
     }
     
+    var tt = 0
     for (var t = 0; t < 10000; t++) {
-        if (show_debug) console.log('t => ' + t)
         Object.values(peers).forEach(p => {
             while (p.incoming.length > 0) {
+                if (show_debug) console.log('t => ' + tt++)
                 notes = null
                 
                 p.incoming.shift()[1]()
