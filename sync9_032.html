@@ -87,6 +87,8 @@ function run_trial(seed, N, show_debug) {
             }
         }
     }
+
+    //debugger
     
     try {
     
@@ -372,6 +374,10 @@ function sync9_create_peer(p_funcs) {
         delete self.peers[pid]
     }
     
+    function get_true_peers() {
+        return Object.keys(self.peers).filter(p => p.b)
+    }
+    
     function on_fissure(fissure, on_old, on_new, on_delete) {
         if (self.old_fissures[fissure.a + ':' + fissure.b]) {
             if (on_old) on_old()
@@ -399,9 +405,9 @@ function sync9_create_peer(p_funcs) {
                 bottom: {}
             })
         }, () => {
-            Object.entries(self.peers).forEach(x => {
-                if (x[0] != pid)
-                    p_funcs.fissure(x[0], fissure)
+            get_true_peers().forEach(p => {
+                if (p != pid)
+                    p_funcs.fissure(p, fissure)
             })
         }, () => {
             self.prune()
@@ -442,7 +448,7 @@ function sync9_create_peer(p_funcs) {
             })
         })
         if (new_vs || new_fs) {
-            Object.keys(self.peers).forEach(p => {
+            get_true_peers().forEach(p => {
                 if (p != pid)
                     p_funcs.set_multi(p, new_vs || [], new_fs || {})
             })
@@ -467,7 +473,7 @@ function sync9_create_peer(p_funcs) {
     
     self.local_set = (vid, parents, changes) => {
         sync9_add_version(self.s9, vid, parents, changes)
-        var ps = Object.keys(self.peers)
+        var ps = get_true_peers()
         self.phase_one[vid] = {origin: null, count: ps.length}
         ps.forEach(p => {
             p_funcs.set(p, vid, parents, changes)
@@ -489,7 +495,7 @@ function sync9_create_peer(p_funcs) {
             // }
             
             
-            var ps = Object.keys(self.peers)
+            var ps = get_true_peers()
             self.phase_one[vid] = {origin: pid, count: ps.length - 1}
             ps.forEach(p => {
                 if (p != pid)
@@ -512,7 +518,7 @@ function sync9_create_peer(p_funcs) {
                 p_funcs.ack(self.phase_one[vid].origin, vid)
             else {
                 add_full_ack_leaf(vid)
-                Object.keys(self.peers).forEach(p => {
+                get_true_peers().forEach(p => {
                     p_funcs.full_ack(p, vid)
                 })
             }
@@ -523,7 +529,7 @@ function sync9_create_peer(p_funcs) {
         var ancs = sync9_get_ancestors(self.s9, self.full_ack_leaves)
         if (!ancs[vid]) {
             add_full_ack_leaf(vid)
-            Object.keys(self.peers).forEach(p => {
+            get_true_peers().forEach(p => {
                 if (p != pid)
                     p_funcs.full_ack(p, vid)
             })
