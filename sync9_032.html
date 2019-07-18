@@ -82,8 +82,16 @@ function run_trial(seed, N, show_debug) {
     for (var p1 = 0; p1 < n_peers; p1++) {
         for (var p2 = p1 + 1; p2 < n_peers; p2++) {
             if (!peers_array[p1].peers[peers_array[p2].uid]) {
+                notes = 'connecting ' + p1 + ':' + peers_array[p1].uid + ' and ' + p2 + ':' + peers_array[p2].uid
+                
                 peers_array[p1].connect(peers_array[p2].uid)
                 peers_array[p2].connect(peers_array[p1].uid)
+                
+                if (debug_frames) debug_frames.push({
+                    t: -1,
+                    notes: notes,
+                    peer_s9s: peers_array.map(x => JSON.parse(JSON.stringify(x.s9)))
+                })
             }
         }
     }
@@ -113,6 +121,7 @@ function run_trial(seed, N, show_debug) {
                     other_p = peers_array[Math.floor(rand() * n_peers)]
                 }
                 if (p.peers[other_p.uid]) {
+                    notes = notes + ' disconnect ' + p.uid + ' and ' + other_p.uid
                     p.disconnect(other_p.uid)
                     p.incoming = p.incoming.filter(x => x[0] != other_p.uid)
                     other_p.disconnect(p.uid)
@@ -147,8 +156,16 @@ function run_trial(seed, N, show_debug) {
     for (var p1 = 0; p1 < n_peers; p1++) {
         for (var p2 = p1 + 1; p2 < n_peers; p2++) {
             if (!peers_array[p1].peers[peers_array[p2].uid]) {
+                notes = 'connecting ' + p1 + ':' + peers_array[p1].uid + ' and ' + p2 + ':' + peers_array[p2].uid
+                
                 peers_array[p1].connect(peers_array[p2].uid)
                 peers_array[p2].connect(peers_array[p1].uid)
+                
+                if (debug_frames) debug_frames.push({
+                    t: -1,
+                    notes: notes,
+                    peer_s9s: peers_array.map(x => JSON.parse(JSON.stringify(x.s9)))
+                })
             }
         }
     }
