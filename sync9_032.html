@@ -269,7 +269,12 @@ function run_trial(seed, N, show_debug) {
             else g.fillText('v3 t: ' + d.t + ' ' + d.notes, 0, 0)
 
             peers_array.forEach((p, i) => {
-                draw_space_dag(p, g, sync9_space_dag_get(d.peer_s9s[i].val.S, 0).S, 100, 300 + 300*i)
+                g.font = '20px Arial'
+                g.fillStyle = 'grey'
+                var x = 100
+                var y = 300 + 300*i
+                g.fillText(node.vid, x, y + 40)
+                draw_space_dag(p, g, sync9_space_dag_get(d.peer_s9s[i].val.S, 0).S, x, y)
             })
         }
         document.body.append(slider)
