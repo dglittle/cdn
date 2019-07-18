@@ -392,7 +392,11 @@ function sync9_create_peer(p_funcs) {
     }
     
     function get_true_peers() {
-        return Object.keys(self.peers).filter(p => p.b)
+        var true_peers = []
+        Object.entries(self.peers).forEach(x => {
+            if (x[1].b) true_peers.push(x[0])
+        })
+        return true_peers
     }
     
     function on_fissure(fissure, on_old, on_new, on_delete) {
