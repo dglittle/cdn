@@ -7,9 +7,11 @@
 <script>
 
 function main() {
-    for (var i = 0; i < 100; i++) {
+    for (var i = 0; i < 1000; i++) {
         console.log('TRIAL: ' + i)
-        run_trial('seEEEEEeed:' + i, 50, false)
+        i = 723
+        run_trial('seEEEEEeeeeeEd:' + i, 3, true)
+        break
     }
 }
 
@@ -17,7 +19,7 @@ function run_trial(seed, N, show_debug) {
     Math.randomSeed(seed)
     var rand = () => Math.random()
     
-    var debug_frames = null // []
+    var debug_frames = show_debug ? [] : null
     var notes = null
 
     var n_peers = 3
@@ -170,7 +172,7 @@ function run_trial(seed, N, show_debug) {
     } catch (e) {
         console.log('ERROR')
         console.log(e)
-        throw 'stop'
+        if (!show_debug) throw 'stop'
     }
     
     var check_val = null
