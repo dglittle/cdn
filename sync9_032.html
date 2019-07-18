@@ -178,6 +178,10 @@ function run_trial(seed, N, show_debug) {
                 if (show_debug) console.log('t => ' + tt++)
                 notes = null
                 
+                if (tt == 9) {
+                    debugger
+                }
+                
                 p.incoming.shift()[1]()
                 
                 if (debug_frames) debug_frames.push({
@@ -526,7 +530,7 @@ function sync9_create_peer(p_funcs) {
     }
     
     function check_ack_count(vid) {
-        if (self.phase_one[vid].count == 0) {
+        if (self.phase_one[vid] && self.phase_one[vid].count == 0) {
             if (self.phase_one[vid].origin)
                 p_funcs.ack(self.phase_one[vid].origin, vid)
             else {
