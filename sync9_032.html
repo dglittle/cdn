@@ -305,6 +305,16 @@ function draw_space_dag(c, g, S, x, y) {
         g.strokeStyle = 'lightblue'
         g.stroke()
         
+
+        
+        // work herez
+        g.font = '15px Arial'
+        g.fillStyle = 'lightgrey'
+        g.fillText(node.vid, x, y + 40)
+        
+        
+        
+        
         if (Object.keys(node.deleted_by).length > 0) {
             g.fillStyle = 'red'
         } else {
@@ -316,10 +326,6 @@ function draw_space_dag(c, g, S, x, y) {
         
         
 
-        // work herez
-        g.font = '15px Arial'
-        g.fillStyle = 'lightgrey'
-        g.fillText(node.vid, x, y + 30)
         
         
         
