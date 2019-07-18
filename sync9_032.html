@@ -28,10 +28,10 @@ function run_trial(seed, N, show_debug) {
             var m = {}
             function def_func(key) {
                 m[key] = (a, b, c, d) => {
-                    a = JSON.parse(JSON.stringify(a))
-                    b = JSON.parse(JSON.stringify(b))
-                    c = JSON.parse(JSON.stringify(c))
-                    d = JSON.parse(JSON.stringify(d))
+                    a = a && JSON.parse(JSON.stringify(a))
+                    b = b && JSON.parse(JSON.stringify(b))
+                    c = c && JSON.parse(JSON.stringify(c))
+                    d = d && JSON.parse(JSON.stringify(d))
                     notes = notes + ' SEND: ' + a + ' ' + key + ' ' + JSON.stringify(a) + ' ' + JSON.stringify(b) + ' ' + JSON.stringify(c) + ' ' + JSON.stringify(d)
                     if (show_debug) console.log(notes)
                     peers[a].incoming.push([p.uid, () => {
