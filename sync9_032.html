@@ -45,7 +45,8 @@ function run_trial(seed, N, show_debug) {
             }
             Object.keys({
                 get: true,
-                get_ack: true,
+                init: true,
+                init_ack: true,
                 set: true,
                 set_multi: true,
                 ack: true,
@@ -400,10 +401,7 @@ function sync9_create_peer(p_funcs) {
     
     self.connect = pid => {
         self.peers[pid] = {a: sync9_guid()}
-        var vs = sync9_extract_versions(self.s9, x => x == 'root')
-        var fs = Object.assign({}, self.fissures)
-        Object.assign(fs, self.handshakes[pid] || {})
-        p_funcs.get(pid, self.peers[pid].a, vs, fs)
+        p_funcs.get(pid, self.peers[pid].a)
     }
     
     self.disconnect = pid => {
@@ -464,13 +462,20 @@ function sync9_create_peer(p_funcs) {
         })
     }
     
-    self.get = (pid, id, vs, fs) => {
+    self.get = (pid, id) => {
         self.peers[pid].b = id
-        self.handshakes[pid] = {vs, fs}
-        p_funcs.get_ack(pid)
+        var vs = sync9_extract_versions(self.s9, x => x == 'root')
+        var fs = Object.assign({}, self.fissures)
+        Object.assign(fs, self.handshakes[pid] || {})
+        p_funcs.init(pid, vs, fs)
     }
     
-    self.get_ack = (pid) => {
+    self.init = (pid, vs, fs) => {
+        self.handshakes[pid] = {vs, fs}
+        p_funcs.init_ack(pid)
+    }
+    
+    self.init_ack = (pid) => {
         var h = self.handshakes[pid]
         delete self.handshakes[pid]
         self.set_multi(pid, h.vs, h.fs)
