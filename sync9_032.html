@@ -45,6 +45,7 @@ function run_trial(seed, N, show_debug) {
             }
             Object.keys({
                 get: true,
+                get_ack: true,
                 set: true,
                 set_multi: true,
                 ack: true,
@@ -390,6 +391,7 @@ function sync9_create_peer(p_funcs) {
         self.s9.leaves = {root: true}
     }
     
+    self.handshakes = {}
     self.peers = {}
     self.fissures = {}
     self.old_fissures = {}
@@ -398,11 +400,17 @@ function sync9_create_peer(p_funcs) {
     
     self.connect = pid => {
         self.peers[pid] = {a: sync9_guid()}
-        p_funcs.get(pid, self.peers[pid].a)
+        var vs = sync9_extract_versions(self.s9, x => x == 'root')
+        var fs = Object.assign({}, self.fissures)
+        Object.assign(fs, self.handshakes[pid] || {})
+        p_funcs.get(pid, self.peers[pid].a, vs, fs)
     }
     
     self.disconnect = pid => {
         if (!self.peers[pid]) return
+        if (self.handshakes[pid]) {
+            self.handshakes[pid] = self.handshakes[pid].fs
+        }
         if (self.peers[pid].b) {
             self.fissure(pid, {
                 a: self.peers[pid].a,
@@ -456,25 +464,20 @@ function sync9_create_peer(p_funcs) {
         })
     }
     
-    self.get = (pid, id) => {
+    self.get = (pid, id, vs, fs) => {
         self.peers[pid].b = id
-        var vs = sync9_extract_versions(self.s9, x => x == 'root')
-        var fs = self.fissures
-        p_funcs.set_multi(pid, vs, fs)
+        self.handshakes[pid] = {vs, fs}
+        p_funcs.get_ack(pid)
+    }
+    
+    self.get_ack = (pid) => {
+        var h = self.handshakes[pid]
+        delete self.handshakes[pid]
+        self.set_multi(pid, h.vs, h.fs)
     }
     
     self.set_multi = (pid, vs, fs) => {
         var new_vs = null
-
-        
-        var leaves = {}
-        vs.forEach(v => leaves[v.vid] = true)
-        vs.forEach(v => Object.keys(v.parents).forEach(p => delete leaves[p]))
-        work here : when people log back in, we can't collapse their nodes right away it seems..
-        
-
-
-        
         var vs_T = {}
         vs.forEach(v => vs_T[v.vid] = v.parents)
         vs.forEach(v => {
@@ -500,8 +503,7 @@ function sync9_create_peer(p_funcs) {
         Object.entries(fs).forEach(x => {
             on_fissure(x[1], () => {
                 if (!return_fs) return_fs = {}
-                var key = x[1].b + ':' + x[1].a
-                return_fs[key] = {
+                return_fs[x[1].b + ':' + x[1].a] = {
                     a: x[1].b,
                     b: x[1].a
                 }
