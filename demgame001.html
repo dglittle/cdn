@@ -14,7 +14,9 @@
 
 // var d = document.createElement('div')
 
-var db = firebase.initializeApp({
+debugger
+
+var blah = firebase.initializeApp({
     apiKey: "AIzaSyBLV5t8a-gGxnr5ZoS0znAZLNCemTCBAWo",
     authDomain: "openworklist.firebaseapp.com",
     databaseURL: "https://openworklist.firebaseio.com",
@@ -22,7 +24,10 @@ var db = firebase.initializeApp({
     storageBucket: "openworklist.appspot.com",
     messagingSenderId: "275344271563",
     appId: "1:275344271563:web:9fdc0e0030e4593c"
-}).firestore()
+})
+
+
+var db = blah.firestore()
 
 var results = document.createElement('div')
 db.collection('demgame').get().then(x => {
