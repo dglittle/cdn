@@ -392,10 +392,8 @@ function sync9_create_peer(p_funcs) {
         self.s9.leaves = {root: true}
     }
     
-    self.handshakes = {}
     self.peers = {}
     self.fissures = {}
-    self.old_fissures = {}
     self.full_ack_leaves = {}
     self.phase_one = {}
     
@@ -406,9 +404,6 @@ function sync9_create_peer(p_funcs) {
     
     self.disconnect = pid => {
         if (!self.peers[pid]) return
-        if (self.handshakes[pid]) {
-            self.handshakes[pid] = self.handshakes[pid].fs
-        }
         if (self.peers[pid].b) {
             self.fissure(pid, {
                 a: self.peers[pid].a,
@@ -428,61 +423,22 @@ function sync9_create_peer(p_funcs) {
         return true_peers
     }
     
-    function on_fissure(fissure, on_old, on_new, on_delete) {
-        if (self.old_fissures[fissure.a + ':' + fissure.b]) {
-            if (fissure.top && on_old) on_old()
-            return
-        }
-        if (!self.fissures[fissure.a + ':' + fissure.b]) {
-            self.fissures[fissure.a + ':' + fissure.b] = fissure
-            if (on_new) on_new()
-        }
-        if (self.fissures[fissure.b + ':' + fissure.a]) {
-            delete self.fissures[fissure.b + ':' + fissure.a]
-            delete self.fissures[fissure.a + ':' + fissure.b]
-            self.old_fissures[fissure.b + ':' + fissure.a] = true
-            self.old_fissures[fissure.a + ':' + fissure.b] = true
-            if (on_delete) on_delete()
-        }
-    }
-    
     self.fissure = (pid, fissure) => {
-        on_fissure(fissure, () => {
-            p_funcs.fissure(pid, {
-                a: fissure.b,
-                b: fissure.a
-            })
-        }, () => {
-            get_true_peers().forEach(p => {
-                if (p != pid)
-                    p_funcs.fissure(p, fissure)
-            })
-        }, () => {
-            self.prune()
-        })
+        self.fissures[fissure.a + ':' + fissure.b] = fissure
     }
     
     self.get = (pid, id) => {
         self.peers[pid].b = id
         var vs = sync9_extract_versions(self.s9, x => x == 'root')
         var fs = Object.assign({}, self.fissures)
-        Object.assign(fs, self.handshakes[pid] || {})
-        p_funcs.init(pid, vs, fs)
-    }
-    
-    self.init = (pid, vs, fs) => {
-        self.handshakes[pid] = {vs, fs}
-        p_funcs.init_ack(pid)
-    }
-    
-    self.init_ack = (pid) => {
-        var h = self.handshakes[pid]
-        delete self.handshakes[pid]
-        self.set_multi(pid, h.vs, h.fs)
+        p_funcs.set_multi(pid, vs, fs)
     }
     
     self.set_multi = (pid, vs, fs) => {
-        var new_vs = null
+        // we would just add all the versions we don't have,
+        // but some "new" versions may be versions that we pruned,
+        // so this vs_T business is checking for those
+        var new_vs = []
         var vs_T = {}
         vs.forEach(v => vs_T[v.vid] = v.parents)
         vs.forEach(v => {
@@ -498,34 +454,49 @@ function sync9_create_peer(p_funcs) {
         })
         vs.forEach(v => {
             if (vs_T[v.vid]) {
-                if (!new_vs) new_vs = []
                 new_vs.push(v)
                 sync9_add_version(self.s9, v.vid, v.parents, v.changes)
             }
         })
-        var new_fs = null
-        var return_fs = null
-        Object.entries(fs).forEach(x => {
-            on_fissure(x[1], () => {
-                if (!return_fs) return_fs = {}
-                return_fs[x[1].b + ':' + x[1].a] = {
-                    a: x[1].b,
-                    b: x[1].a
-                }
-            }, () => {
-                if (!new_fs) new_fs = {}
-                new_fs[x[0]] = x[1]
-            })
+        
+        var new_fs = []
+        fs.forEach(f => {
+            var key = f.a + ':' + f.b
+            if (!self.fissures[key]) {
+                new_fs.push(f)
+                self.fissures[key] = f
+            }
         })
-        if (new_vs || new_fs) {
+        
+        if (new_vs.length > 0 || new_fs.length > 0) {
             get_true_peers().forEach(p => {
-                if (p != pid)
-                    p_funcs.set_multi(p, new_vs || [], new_fs || {})
+                if (p != pid) p_funcs.set_multi(p, new_vs, new_fs)
             })
         }
-        if (return_fs) p_funcs.set_multi(pid, [], return_fs)
         
-        self.prune()
+        // set the new self.full_ack_leaves to be the minimum between full_ack_leaves and the new stuff
+        var fully_acked = sync9_get_ancestors(self.s9, self.full_ack_leaves)
+        var vs_leaves = {}
+        Object.keys(vs_T).forEach(x => vs_leaves[x] = true)
+        Object.values(vs_T).forEach(x => {
+            Object.keys(x).forEach(y => {
+                delete vs_leaves[y]
+            })
+        })
+        var within_new_vs = sync9_get_ancestors(self.s9, vs_leaves)
+        
+        var new_full_ack_vs = {}
+        Object.keys(self.s9.T).forEach(x => {
+            if (fully_acked[x] && within_new_vs[x])
+                new_full_ack_vs[x] = true
+        })
+        var new_full_ack_leaves = Object.assign({}, new_full_ack_vs)
+        Object.keys(new_full_ack_vs).forEach(x => {
+            Object.keys(self.s9.T[x]).forEach(y => {
+                delete new_full_ack_leaves[y]
+            })
+        })
+        self.full_ack_leaves = new_full_ack_leaves
     }
     
     function add_full_ack_leaf(vid) {
@@ -540,6 +511,34 @@ function sync9_create_peer(p_funcs) {
         }
         f(vid)
         self.full_ack_leaves[vid] = true
+        
+        
+        
+        
+    
+    
+        work here
+        function on_fissure(fissure, on_old, on_new, on_delete) {
+            if (self.old_fissures[fissure.a + ':' + fissure.b]) {
+                if (fissure.top && on_old) on_old()
+                return
+            }
+            if (!self.fissures[fissure.a + ':' + fissure.b]) {
+                self.fissures[fissure.a + ':' + fissure.b] = fissure
+                if (on_new) on_new()
+            }
+            if (self.fissures[fissure.b + ':' + fissure.a]) {
+                delete self.fissures[fissure.b + ':' + fissure.a]
+                delete self.fissures[fissure.a + ':' + fissure.b]
+                self.old_fissures[fissure.b + ':' + fissure.a] = true
+                self.old_fissures[fissure.a + ':' + fissure.b] = true
+                if (on_delete) on_delete()
+            }
+        }
+        
+        
+        
+        
     }
     
     self.local_set = (vid, parents, changes) => {
