@@ -405,11 +405,18 @@ function sync9_create_peer(p_funcs) {
     self.disconnect = pid => {
         if (!self.peers[pid]) return
         if (self.peers[pid].b) {
+            var open_fissures = {}
+            Object.entries(self.fissures).forEach(x => {
+                if (!self.fissures[x[1].b + ':' + x[1].a]) {
+                    open_fissures[x[0]] = true
+                }
+            })
             self.fissure(pid, {
                 a: self.peers[pid].a,
                 b: self.peers[pid].b,
                 top: Object.assign({}, self.full_ack_leaves),
-                bottom: Object.assign({}, self.s9.leaves)
+                bottom: Object.assign({}, self.s9.leaves),
+                parents: open_fissures
             })
         }
         delete self.peers[pid]
@@ -511,34 +518,7 @@ function sync9_create_peer(p_funcs) {
         }
         f(vid)
         self.full_ack_leaves[vid] = true
-        
-        
-        
-        
-    
-    
-        work here
-        function on_fissure(fissure, on_old, on_new, on_delete) {
-            if (self.old_fissures[fissure.a + ':' + fissure.b]) {
-                if (fissure.top && on_old) on_old()
-                return
-            }
-            if (!self.fissures[fissure.a + ':' + fissure.b]) {
-                self.fissures[fissure.a + ':' + fissure.b] = fissure
-                if (on_new) on_new()
-            }
-            if (self.fissures[fissure.b + ':' + fissure.a]) {
-                delete self.fissures[fissure.b + ':' + fissure.a]
-                delete self.fissures[fissure.a + ':' + fissure.b]
-                self.old_fissures[fissure.b + ':' + fissure.a] = true
-                self.old_fissures[fissure.a + ':' + fissure.b] = true
-                if (on_delete) on_delete()
-            }
-        }
-        
-        
-        
-        
+        self.prune()
     }
     
     self.local_set = (vid, parents, changes) => {
@@ -613,14 +593,16 @@ function sync9_create_peer(p_funcs) {
             }
         }
         Object.entries(self.fissures).forEach(x => {
-            Object.keys(x[1].top).forEach(v => tag(v, x[0]))
-            Object.keys(x[1].top).forEach(v => frozen[v] = true)
-            function freeze(vid) {
-                if (tags[vid].tags[x[0]]) return
-                frozen[vid] = true
-                Object.keys(self.s9.T[vid]).forEach(freeze)
+            if (!self.fissures[x[1].b + ':' + x[1].a]) {
+                Object.keys(x[1].top).forEach(v => tag(v, x[0]))
+                Object.keys(x[1].top).forEach(v => frozen[v] = true)
+                function freeze(vid) {
+                    if (tags[vid].tags[x[0]]) return
+                    frozen[vid] = true
+                    Object.keys(self.s9.T[vid]).forEach(freeze)
+                }
+                Object.keys(x[1].bottom).forEach(freeze)
             }
-            Object.keys(x[1].bottom).forEach(freeze)
         })
         Object.keys(self.full_ack_leaves).forEach(v => tag(v, '_full_ack'))
         Object.keys(self.full_ack_leaves).forEach(v => frozen[v] = true)
@@ -634,6 +616,39 @@ function sync9_create_peer(p_funcs) {
         })
         var q = (a, b) => !frozen[a] && !frozen[b] && (tags[a].tag == tags[b].tag)
         sync9_prune2(self.s9, q, q)
+        
+        // deal with fissures
+        var unremovable = {}
+        Object.entries(self.fissures).forEach(x => {
+            if (!self.fissures[x[1].b + ':' + x[1].a]) {
+                function f(y) {
+                    if (!unremovable[y.a + ':' + y.b]) {
+                        unremovable[y.a + ':' + y.b] = true
+                        unremovable[y.b + ':' + y.a] = true
+                        Object.keys(y.parents).forEach(p => {
+                            if (self.fissures[p]) f(self.fissures[p])
+                        })
+                    }
+                }
+                f(x[1])
+            }
+        })
+        
+        var acked = sync9_get_ancestors(self.s9, self.full_ack_leaves)
+        var done = {}
+        Object.entries(self.fissures).forEach(x => {
+            var other_key = x[1].b + ':' + x[1].a
+            var other = self.fissures[other_key]
+            if (other && !done[x[0]] && !unremovable[x[0]]) {
+                done[x[0]] = true
+                done[other_key] = true
+                
+                if (Object.keys(x[1].bottom).every(x => acked[x]) && Object.keys(other.bottom).every(x => acked[x])) {
+                    delete self.fissures[x[0]]
+                    delete self.fissures[other_key]
+                }
+            }
+        })
     }    
     
     return self
