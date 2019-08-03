@@ -24,6 +24,7 @@ var db = firebase.initializeApp(config).firestore()
 
 var results = document.createElement('div')
 db.collection('demgame').get().then(x => {
+    console.log('blah!')
     x.forEach(x => {
         console.log(x.id, '=>', x.data())
     })
