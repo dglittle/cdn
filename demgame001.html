@@ -1,4 +1,6 @@
+<script src="https://www.gstatic.com/firebasejs/3.9.0/firebase.js"></script>
 
+<body>
 <div style="display:grid;grid-template-columns:1fr 1fr">
     <div>your vote on what to vote on</div>
     <div>your vote</div>
@@ -12,5 +14,20 @@
 
 // var d = document.createElement('div')
 
+var config = {
+	apiKey: "AIzaSyBLV5t8a-gGxnr5ZoS0znAZLNCemTCBAWo",
+	authDomain: "openworklist.firebaseapp.com",
+	databaseURL: "https://openworklist.firebaseio.com",
+	projectId: "openworklist",
+}
+var db = firebase.initializeApp(config).firestore()
+
+var results = document.createElement('div')
+db.collection('demgame').get().then(x => {
+    x.forEach(x => {
+        console.log(x.id, '=>', x.data())
+    })
+})
 
 </script>
+</body>
