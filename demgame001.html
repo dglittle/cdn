@@ -1,4 +1,4 @@
-<script src="https://www.gstatic.com/firebasejs/3.9.0/firebase.js"></script>
+<script src="https://www.gstatic.com/firebasejs/6.3.4/firebase-app.js"></script>
 
 <body>
 <div style="display:grid;grid-template-columns:1fr 1fr">
@@ -14,13 +14,15 @@
 
 // var d = document.createElement('div')
 
-var config = {
-	apiKey: "AIzaSyBLV5t8a-gGxnr5ZoS0znAZLNCemTCBAWo",
-	authDomain: "openworklist.firebaseapp.com",
-	databaseURL: "https://openworklist.firebaseio.com",
-	projectId: "openworklist",
-}
-var db = firebase.initializeApp(config).firestore()
+var db = firebase.initializeApp({
+    apiKey: "AIzaSyBLV5t8a-gGxnr5ZoS0znAZLNCemTCBAWo",
+    authDomain: "openworklist.firebaseapp.com",
+    databaseURL: "https://openworklist.firebaseio.com",
+    projectId: "openworklist",
+    storageBucket: "openworklist.appspot.com",
+    messagingSenderId: "275344271563",
+    appId: "1:275344271563:web:9fdc0e0030e4593c"
+}).firestore()
 
 var results = document.createElement('div')
 db.collection('demgame').get().then(x => {
