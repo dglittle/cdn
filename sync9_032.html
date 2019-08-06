@@ -36,10 +36,10 @@ function run_trial(seed, N, show_debug) {
                     c = c && JSON.parse(JSON.stringify(c))
                     d = d && JSON.parse(JSON.stringify(d))
                     e = e && JSON.parse(JSON.stringify(e))
-                    notes.push('SEND: from:' + p.uid + ' ' + key + ' to:' + JSON.stringify(a) + ' ' + JSON.stringify(b) + ' ' + JSON.stringify(c) + ' ' + JSON.stringify(d) + ' ' + JSON.stringify(e))
+                    notes.push('SEND: ' + key + ' from:' + p.uid + ' to:' + JSON.stringify(a) + ' ' + JSON.stringify(b) + ' ' + JSON.stringify(c) + ' ' + JSON.stringify(d) + ' ' + JSON.stringify(e))
                     if (show_debug) console.log(notes)
                     peers[a].incoming.push([p.uid, () => {
-                        notes.push('RECV: from:' + p.uid + ' ' + key + ' to:' + JSON.stringify(a) + ' ' + JSON.stringify(b) + ' ' + JSON.stringify(c) + ' ' + JSON.stringify(d) + ' ' + JSON.stringify(e))
+                        notes.push('RECV: ' + key + ' from:' + p.uid + ' to:' + JSON.stringify(a) + ' ' + JSON.stringify(b) + ' ' + JSON.stringify(c) + ' ' + JSON.stringify(d) + ' ' + JSON.stringify(e))
                         if (show_debug) console.log(notes)
                         peers[a][key](p.uid, b, c, d, e)
                     }])
