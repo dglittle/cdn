@@ -394,6 +394,7 @@ function sync9_create_peer(p_funcs) {
     
     self.peers = {}
     self.fissures = {}
+    self.new_connection_leaves = {}
     self.full_ack_leaves = {}
     self.phase_one = {}
     
@@ -431,7 +432,13 @@ function sync9_create_peer(p_funcs) {
     }
     
     self.fissure = (pid, fissure) => {
-        self.fissures[fissure.a + ':' + fissure.b] = fissure
+        var key = fissure.a + ':' + fissure.b
+        if (!self.fissures[key]) {
+            self.fissures[key] = fissure
+            get_true_peers().forEach(p => {
+                if (p != pid) p_funcs.fissure(p, fissure)
+            })
+        }
     }
     
     self.get = (pid, id) => {
@@ -441,7 +448,7 @@ function sync9_create_peer(p_funcs) {
         p_funcs.set_multi(pid, vs, fs)
     }
     
-    self.set_multi = (pid, vs, fs) => {
+    self.set_multi = (pid, vs, fs, new_connection_leaves) => {
         // we would just add all the versions we don't have,
         // but some "new" versions may be versions that we pruned,
         // so this vs_T business is checking for those
@@ -475,9 +482,41 @@ function sync9_create_peer(p_funcs) {
             }
         })
         
-        if (new_vs.length > 0 || new_fs.length > 0) {
+        var new_new = false
+        var new_new_connection_leaves = {}
+        if (!new_connection_leaves) {
+            new_new = true
+            Object.assign(new_new_connection_leaves, self.s9.leaves)
+            
+            
+            
+            
+            
+            
+            
+            
+            work here
+        } else {
+            var our_new_connection_nodes = sync9_get_ancestors(self.s9, self.new_connection_leaves)
+            Object.keys(new_connection_leaves).forEach(x => {
+                if (!our_new_connection_nodes[x]) {
+                    new_new = true
+                    new_new_connection_leaves[x] = true
+                }
+            })
+            
+            if (new_new) {
+                var incoming_new_connection_nodes = sync9_get_ancestors(self.s9, new_connection_leaves)
+                Object.keys(self.new_connection_leaves).forEach(x => {
+                    if (!incoming_new_connection_nodes[x] || new_connection_leaves[x])
+                        new_new_connection_leaves[x] = true
+                })
+            }
+        }
+        
+        if (new_vs.length > 0 || new_fs.length > 0 || new_new) {
             get_true_peers().forEach(p => {
-                if (p != pid) p_funcs.set_multi(p, new_vs, new_fs)
+                if (p != pid) p_funcs.set_multi(p, new_vs, new_fs, new_new_connection_leaves)
             })
         }
         
