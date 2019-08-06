@@ -175,7 +175,7 @@ function run_trial(seed, N, show_debug) {
     for (var t = 0; t < 10000; t++) {
         Object.values(peers).forEach(p => {
             while (p.incoming.length > 0) {
-                if (show_debug) console.log('t => ' + tt)
+                if (true || show_debug) console.log('t => ' + tt)
                 tt++
                 notes = null
                 
@@ -200,6 +200,9 @@ function run_trial(seed, N, show_debug) {
         console.log('ERROR')
         console.log(e)
         if (!show_debug) throw 'stop'
+
+        // work here        
+        throw 'STOP'
     }
     
     var check_val = null
@@ -220,6 +223,9 @@ function run_trial(seed, N, show_debug) {
             console.log('val: ' + JSON.stringify(val))
         })
         if (!show_debug) throw 'stop'
+        
+        // work here
+        throw 'STOP'
     }
 
 
