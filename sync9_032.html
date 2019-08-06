@@ -29,17 +29,18 @@ function run_trial(seed, N, show_debug) {
             var p = null
             var m = {}
             function def_func(key) {
-                m[key] = (a, b, c, d) => {
+                m[key] = (a, b, c, d, e) => {
                     a = a && JSON.parse(JSON.stringify(a))
                     b = b && JSON.parse(JSON.stringify(b))
                     c = c && JSON.parse(JSON.stringify(c))
                     d = d && JSON.parse(JSON.stringify(d))
-                    notes = notes + ' SEND: ' + p.uid + ' ' + key + ' ' + JSON.stringify(a) + ' ' + JSON.stringify(b) + ' ' + JSON.stringify(c) + ' ' + JSON.stringify(d)
+                    e = e && JSON.parse(JSON.stringify(e))
+                    notes = notes + ' SEND: ' + p.uid + ' ' + key + ' ' + JSON.stringify(a) + ' ' + JSON.stringify(b) + ' ' + JSON.stringify(c) + ' ' + JSON.stringify(d) + ' ' + JSON.stringify(e)
                     if (show_debug) console.log(notes)
                     peers[a].incoming.push([p.uid, () => {
-                        notes = notes + ' RECV: ' + p.uid + ' ' + key + ' ' + JSON.stringify(a) + ' ' + JSON.stringify(b) + ' ' + JSON.stringify(c) + ' ' + JSON.stringify(d)                        
+                        notes = notes + ' RECV: ' + p.uid + ' ' + key + ' ' + JSON.stringify(a) + ' ' + JSON.stringify(b) + ' ' + JSON.stringify(c) + ' ' + JSON.stringify(d) + ' ' + JSON.stringify(e)
                         if (show_debug) console.log(notes)
-                        peers[a][key](p.uid, b, c, d)
+                        peers[a][key](p.uid, b, c, d, e)
                     }])
                 }
             }
@@ -479,66 +480,75 @@ function sync9_create_peer(p_funcs) {
         })
         
         var new_conn_leaves = {}
-        if (!new_conn_leaves) {
-            new_new = true
-            Object.assign(new_new_connection_leaves, self.s9.leaves)
-            
-            
-            
-            
-            
-            
-            
-            
-            work here
+        if (!conn_leaves) {
+            Object.assign(new_conn_leaves, self.s9.leaves)
         } else {
-            var our_new_connection_nodes = sync9_get_ancestors(self.s9, self.new_connection_leaves)
-            Object.keys(new_connection_leaves).forEach(x => {
-                if (!our_new_connection_nodes[x]) {
-                    new_new = true
-                    new_new_connection_leaves[x] = true
+            var our_conn_nodes = sync9_get_ancestors(self.s9, self.conn_leaves)
+            Object.keys(conn_leaves).forEach(x => {
+                if (!our_conn_nodes[x]) {
+                    new_conn_leaves[x] = true
                 }
             })
             
-            if (new_new) {
-                var incoming_new_connection_nodes = sync9_get_ancestors(self.s9, new_connection_leaves)
-                Object.keys(self.new_connection_leaves).forEach(x => {
-                    if (!incoming_new_connection_nodes[x] || new_connection_leaves[x])
-                        new_new_connection_leaves[x] = true
+            if (Object.keys(new_conn_leaves).length > 0) {
+                var incoming_conn_nodes = sync9_get_ancestors(self.s9, conn_leaves)
+                Object.keys(self.conn_leaves).forEach(x => {
+                    if (!incoming_conn_nodes[x] || conn_leaves[x])
+                        new_conn_leaves[x] = true
                 })
             }
         }
+        self.conn_leaves = Object.assign({}, new_conn_leaves)
         
-        if (new_vs.length > 0 || new_fs.length > 0 || new_new) {
+        var new_ack_leaves = {}
+        if (!ack_leaves) {
+            var acked = sync9_get_ancestors(self.s9, self.ack_leaves)
+            var vs_leaves = {}
+            Object.keys(vs_T).forEach(x => vs_leaves[x] = true)
+            Object.values(vs_T).forEach(x => {
+                Object.keys(x).forEach(y => {
+                    delete vs_leaves[y]
+                })
+            })
+            var within_new_vs = sync9_get_ancestors(self.s9, vs_leaves)
+            
+            var new_ack_vs = {}
+            Object.keys(self.s9.T).forEach(x => {
+                if (acked[x] && within_new_vs[x])
+                    new_ack_vs[x] = true
+            })
+            new_ack_leaves = new_ack_vs
+            Object.keys(new_ack_vs).forEach(x => {
+                Object.keys(self.s9.T[x]).forEach(y => {
+                    delete new_ack_leaves[y]
+                })
+            })
+        } else {
+            var our_ack_nodes = sync9_get_ancestors(self.s9, self.ack_leaves)
+            Object.keys(ack_leaves).forEach(x => {
+                if (our_ack_nodes[x] && !self.ack_leaves[x]) {
+                    new_ack_leaves[x] = true
+                }
+            })
+            
+            if (Object.keys(new_ack_leaves).length > 0) {
+                var incoming_ack_nodes = sync9_get_ancestors(self.s9, ack_leaves)
+                Object.keys(self.ack_leaves).forEach(x => {
+                    if (incoming_ack_nodes[x])
+                        new_ack_leaves[x] = true
+                })
+            }
+        }
+        self.ack_leaves = Object.assign({}, new_ack_leaves)
+        
+        if (new_vs.length > 0 || new_fs.length > 0 || Object.keys(new_conn_leaves).length > 0 || Object.keys(new_ack_leaves).length > 0) {
             get_true_peers().forEach(p => {
-                if (p != pid) p_funcs.set_multi(p, new_vs, new_fs, new_new_connection_leaves)
+                if (p != pid) p_funcs.set_multi(p, new_vs, new_fs, new_conn_leaves, new_ack_leaves)
             })
         }
-        
-        // set the new self.full_ack_leaves to be the minimum between full_ack_leaves and the new stuff
-        var fully_acked = sync9_get_ancestors(self.s9, self.full_ack_leaves)
-        var vs_leaves = {}
-        Object.keys(vs_T).forEach(x => vs_leaves[x] = true)
-        Object.values(vs_T).forEach(x => {
-            Object.keys(x).forEach(y => {
-                delete vs_leaves[y]
-            })
-        })
-        var within_new_vs = sync9_get_ancestors(self.s9, vs_leaves)
-        
-        var new_full_ack_vs = {}
-        Object.keys(self.s9.T).forEach(x => {
-            if (fully_acked[x] && within_new_vs[x])
-                new_full_ack_vs[x] = true
-        })
-        var new_full_ack_leaves = Object.assign({}, new_full_ack_vs)
-        Object.keys(new_full_ack_vs).forEach(x => {
-            Object.keys(self.s9.T[x]).forEach(y => {
-                delete new_full_ack_leaves[y]
-            })
-        })
-        self.full_ack_leaves = new_full_ack_leaves
     }
+    
+    work here
     
     function add_full_ack_leaf(vid) {
         var marks = {}
