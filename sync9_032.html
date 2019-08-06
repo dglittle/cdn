@@ -424,14 +424,7 @@ function sync9_create_peer(p_funcs) {
     }
     
     function get_true_peers() {
-        
-        
-        
-        var true_peers = []
-        Object.entries(self.peers).forEach(x => {
-            if (x[1].b) true_peers.push(x[0])
-        })
-        return true_peers
+        return Object.entries(self.peers).filter(x => x[1].b).map(x => x[0])
     }
     
     self.fissure = (pid, fissure) => {
@@ -451,7 +444,7 @@ function sync9_create_peer(p_funcs) {
         p_funcs.set_multi(pid, vs, fs)
     }
     
-    self.set_multi = (pid, vs, fs, new_connection_leaves) => {
+    self.set_multi = (pid, vs, fs, conn_leaves, ack_leaves) => {
         // we would just add all the versions we don't have,
         // but some "new" versions may be versions that we pruned,
         // so this vs_T business is checking for those
@@ -485,9 +478,8 @@ function sync9_create_peer(p_funcs) {
             }
         })
         
-        var new_new = false
-        var new_new_connection_leaves = {}
-        if (!new_connection_leaves) {
+        var new_conn_leaves = {}
+        if (!new_conn_leaves) {
             new_new = true
             Object.assign(new_new_connection_leaves, self.s9.leaves)
             
