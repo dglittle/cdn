@@ -394,8 +394,8 @@ function sync9_create_peer(p_funcs) {
     
     self.peers = {}
     self.fissures = {}
-    self.new_connection_leaves = {}
-    self.full_ack_leaves = {}
+    self.conn_leaves = {}
+    self.ack_leaves = {}
     self.phase_one = {}
     
     self.connect = pid => {
@@ -415,7 +415,7 @@ function sync9_create_peer(p_funcs) {
             self.fissure(pid, {
                 a: self.peers[pid].a,
                 b: self.peers[pid].b,
-                top: Object.assign({}, self.full_ack_leaves),
+                top: Object.assign({}, self.ack_leaves),
                 bottom: Object.assign({}, self.s9.leaves),
                 parents: open_fissures
             })
@@ -424,6 +424,9 @@ function sync9_create_peer(p_funcs) {
     }
     
     function get_true_peers() {
+        
+        
+        
         var true_peers = []
         Object.entries(self.peers).forEach(x => {
             if (x[1].b) true_peers.push(x[0])
