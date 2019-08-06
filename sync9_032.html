@@ -21,7 +21,7 @@ function run_trial(seed, N, show_debug) {
     
     
     var debug_frames = show_debug ? [] : null
-    var notes = null
+    var notes = []
 
     var n_peers = 3
     var peers = {}
@@ -36,10 +36,10 @@ function run_trial(seed, N, show_debug) {
                     c = c && JSON.parse(JSON.stringify(c))
                     d = d && JSON.parse(JSON.stringify(d))
                     e = e && JSON.parse(JSON.stringify(e))
-                    notes = notes + '\nSEND: ' + p.uid + ' ' + key + ' ' + JSON.stringify(a) + ' ' + JSON.stringify(b) + ' ' + JSON.stringify(c) + ' ' + JSON.stringify(d) + ' ' + JSON.stringify(e)
+                    notes.push('SEND: ' + p.uid + ' ' + key + ' ' + JSON.stringify(a) + ' ' + JSON.stringify(b) + ' ' + JSON.stringify(c) + ' ' + JSON.stringify(d) + ' ' + JSON.stringify(e))
                     if (show_debug) console.log(notes)
                     peers[a].incoming.push([p.uid, () => {
-                        notes = notes + '\nRECV: ' + p.uid + ' ' + key + ' ' + JSON.stringify(a) + ' ' + JSON.stringify(b) + ' ' + JSON.stringify(c) + ' ' + JSON.stringify(d) + ' ' + JSON.stringify(e)
+                        notes.push('RECV: ' + p.uid + ' ' + key + ' ' + JSON.stringify(a) + ' ' + JSON.stringify(b) + ' ' + JSON.stringify(c) + ' ' + JSON.stringify(d) + ' ' + JSON.stringify(e))
                         if (show_debug) console.log(notes)
                         peers[a][key](p.uid, b, c, d, e)
                     }])
@@ -86,7 +86,7 @@ function run_trial(seed, N, show_debug) {
     for (var p1 = 0; p1 < n_peers; p1++) {
         for (var p2 = p1 + 1; p2 < n_peers; p2++) {
             if (!peers_array[p1].peers[peers_array[p2].uid]) {
-                notes = 'connecting ' + p1 + ':' + peers_array[p1].uid + ' and ' + p2 + ':' + peers_array[p2].uid
+                notes = ['connecting ' + p1 + ':' + peers_array[p1].uid + ' and ' + p2 + ':' + peers_array[p2].uid]
                 
                 peers_array[p1].connect(peers_array[p2].uid)
                 peers_array[p2].connect(peers_array[p1].uid)
@@ -108,7 +108,7 @@ function run_trial(seed, N, show_debug) {
         var i = Math.floor(rand() * n_peers)
         var p = peers_array[i]
         
-        notes = null
+        notes = []
         
         if (rand() < 0.1) {
             if (rand() < 0.9) {
@@ -123,7 +123,7 @@ function run_trial(seed, N, show_debug) {
                     other_p = peers_array[Math.floor(rand() * n_peers)]
                 }
                 if (p.peers[other_p.uid]) {
-                    notes = notes + ' disconnect ' + p.uid + ' and ' + other_p.uid
+                    notes.push(' disconnect ' + p.uid + ' and ' + other_p.uid)
                     p.disconnect(other_p.uid)
                     p.incoming = p.incoming.filter(x => x[0] != other_p.uid)
                     other_p.disconnect(p.uid)
@@ -158,7 +158,7 @@ function run_trial(seed, N, show_debug) {
     for (var p1 = 0; p1 < n_peers; p1++) {
         for (var p2 = p1 + 1; p2 < n_peers; p2++) {
             if (!peers_array[p1].peers[peers_array[p2].uid]) {
-                notes = 'connecting ' + p1 + ':' + peers_array[p1].uid + ' and ' + p2 + ':' + peers_array[p2].uid
+                notes = ['connecting ' + p1 + ':' + peers_array[p1].uid + ' and ' + p2 + ':' + peers_array[p2].uid]
                 
                 peers_array[p1].connect(peers_array[p2].uid)
                 peers_array[p2].connect(peers_array[p1].uid)
@@ -178,12 +178,7 @@ function run_trial(seed, N, show_debug) {
             while (p.incoming.length > 0) {
                 if (show_debug) console.log('t => ' + tt)
                 tt++
-                notes = null
-                
-                // work here
-                if (tt == 36) {
-                    debugger
-                }
+                notes = []
                 
                 if (tt > 1000) {
                     throw 'stopppppp!'
@@ -276,8 +271,12 @@ function run_trial(seed, N, show_debug) {
             g.font = '20px Ariel'
             g.fillStyle = 'black'
             g.textBaseline = 'top'
-            if (d.tt) g.fillText('v3 tt: ' + d.tt + ' ' + d.notes, 0, 0)
-            else g.fillText('v3 t: ' + d.t + ' ' + d.notes, 0, 0)
+            if (d.tt) g.fillText('v3 tt: ' + d.tt, 0, 0)
+            else g.fillText('v3 t: ' + d.t, 0, 0)
+            
+            d.notes.forEach((x, i) => {
+                g.fillText(x, 100, i * 20)
+            })
 
             peers_array.forEach((p, i) => {
                 g.font = '20px Arial'
