@@ -9,15 +9,16 @@
 function main() {
     for (var i = 0; i < 1000; i++) {
         console.log('TRIAL: ' + i)
-        i = 19
-        run_trial('seEEEEEeeeeE2EeEeeeeEdeeE:' + i, 40, false) //true) //, true)
-        break
+        //i = 19
+        run_trial('seEEEEEeeeeE2EeEeeeeEdeeeE:' + i, 20, false) //true) //, true)
+        //break
     }
 }
 
 function run_trial(seed, N, show_debug) {
     Math.randomSeed(seed)
     var rand = () => Math.random()
+    
     
     var debug_frames = show_debug ? [] : null
     var notes = null
@@ -36,10 +37,10 @@ function run_trial(seed, N, show_debug) {
                     d = d && JSON.parse(JSON.stringify(d))
                     e = e && JSON.parse(JSON.stringify(e))
                     notes = notes + ' SEND: ' + p.uid + ' ' + key + ' ' + JSON.stringify(a) + ' ' + JSON.stringify(b) + ' ' + JSON.stringify(c) + ' ' + JSON.stringify(d) + ' ' + JSON.stringify(e)
-                    if (true || show_debug) console.log(notes)
+                    if (show_debug) console.log(notes)
                     peers[a].incoming.push([p.uid, () => {
                         notes = notes + ' RECV: ' + p.uid + ' ' + key + ' ' + JSON.stringify(a) + ' ' + JSON.stringify(b) + ' ' + JSON.stringify(c) + ' ' + JSON.stringify(d) + ' ' + JSON.stringify(e)
-                        if (true || show_debug) console.log(notes)
+                        if (show_debug) console.log(notes)
                         peers[a][key](p.uid, b, c, d, e)
                     }])
                 }
@@ -102,7 +103,7 @@ function run_trial(seed, N, show_debug) {
     try {
     
     for (var t = 0; t < N; t++) {
-        if (true || show_debug) console.log('t == ' + t)
+        if (show_debug) console.log('t == ' + t)
         
         var i = Math.floor(rand() * n_peers)
         var p = peers_array[i]
@@ -133,18 +134,18 @@ function run_trial(seed, N, show_debug) {
                 }
             }
         } else {
-            if (true || show_debug) console.log('process incoming')
+            if (show_debug) console.log('process incoming')
             var did_something = false
             if (p.incoming.length > 0) {
                 did_something = true
                 p.incoming.shift()[1]()
             }
             if (!did_something) {
-                if (true || show_debug) console.log('did nothing')
+                if (show_debug) console.log('did nothing')
             }
         }
         
-        if (true || show_debug)
+        if (show_debug)
             console.log('peer: ' + p.uid + ' -> ' + JSON.stringify(sync9_read(p.s9)))
             
         if (debug_frames) debug_frames.push({
@@ -175,7 +176,7 @@ function run_trial(seed, N, show_debug) {
     for (var t = 0; t < 10000; t++) {
         Object.values(peers).forEach(p => {
             while (p.incoming.length > 0) {
-                if (true || show_debug) console.log('t => ' + tt)
+                if (show_debug) console.log('t => ' + tt)
                 tt++
                 notes = null
                 
@@ -200,9 +201,6 @@ function run_trial(seed, N, show_debug) {
         console.log('ERROR')
         console.log(e)
         if (!show_debug) throw 'stop'
-
-        // work here        
-        throw 'STOP'
     }
     
     var check_val = null
@@ -223,9 +221,6 @@ function run_trial(seed, N, show_debug) {
             console.log('val: ' + JSON.stringify(val))
         })
         if (!show_debug) throw 'stop'
-        
-        // work here
-        throw 'STOP'
     }
 
 
