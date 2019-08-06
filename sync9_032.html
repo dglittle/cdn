@@ -548,20 +548,18 @@ function sync9_create_peer(p_funcs) {
         }
     }
     
-    work here
-    
     function add_full_ack_leaf(vid) {
         var marks = {}
         function f(v) {
             if (!marks[v]) {
                 marks[v] = true
-                delete self.full_ack_leaves[v]
+                delete self.ack_leaves[v]
                 delete self.phase_one[v]
                 Object.keys(self.s9.T[v]).forEach(f)
             }
         }
         f(vid)
-        self.full_ack_leaves[vid] = true
+        self.ack_leaves[vid] = true
         self.prune()
     }
     
@@ -612,16 +610,19 @@ function sync9_create_peer(p_funcs) {
     }
     
     self.full_ack = (pid, vid) => {
-        if (!self.s9.T[vid]) return        
-        var ancs = sync9_get_ancestors(self.s9, self.full_ack_leaves)
-        if (!ancs[vid]) {
-            add_full_ack_leaf(vid)
-            get_true_peers().forEach(p => {
-                if (p != pid)
-                    p_funcs.full_ack(p, vid)
-            })
-            self.prune()
-        }
+        if (!self.s9.T[vid]) return
+        
+        var ancs = sync9_get_ancestors(self.s9, self.conn_leaves)
+        if (ancs[vid]) return
+        
+        var ancs = sync9_get_ancestors(self.s9, self.ack_leaves)
+        if (ancs[vid]) return
+        
+        add_full_ack_leaf(vid)
+        get_true_peers().forEach(p => {
+            if (p != pid) p_funcs.full_ack(p, vid)
+        })
+        self.prune()
     }
     
     self.prune = () => {
@@ -648,8 +649,8 @@ function sync9_create_peer(p_funcs) {
                 Object.keys(x[1].bottom).forEach(freeze)
             }
         })
-        Object.keys(self.full_ack_leaves).forEach(v => tag(v, '_full_ack'))
-        Object.keys(self.full_ack_leaves).forEach(v => frozen[v] = true)
+        Object.keys(self.ack_leaves).forEach(v => tag(v, '_full_ack'))
+        Object.keys(self.ack_leaves).forEach(v => frozen[v] = true)
         Object.entries(tags).forEach(x => {
             var keys = Object.keys(x[1].tags)
             if (keys.length == 0) {
@@ -678,7 +679,7 @@ function sync9_create_peer(p_funcs) {
             }
         })
         
-        var acked = sync9_get_ancestors(self.s9, self.full_ack_leaves)
+        var acked = sync9_get_ancestors(self.s9, self.ack_leaves)
         var done = {}
         Object.entries(self.fissures).forEach(x => {
             var other_key = x[1].b + ':' + x[1].a
