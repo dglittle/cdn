@@ -179,9 +179,6 @@ function run_trial(seed, N, show_debug) {
                 tt++
                 notes = null
                 
-                
-                console.log('tt====' + tt)
-                
                 if (tt > 1000) {
                     throw 'stopppppp!'
                 }
@@ -445,7 +442,7 @@ function sync9_create_peer(p_funcs) {
     self.get = (pid, id) => {
         self.peers[pid].b = id
         var vs = sync9_extract_versions(self.s9, x => x == 'root')
-        var fs = Object.assign({}, self.fissures)
+        var fs = Object.values(self.fissures)
         p_funcs.set_multi(pid, vs, fs)
     }
     
