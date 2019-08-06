@@ -175,7 +175,8 @@ function run_trial(seed, N, show_debug) {
     for (var t = 0; t < 10000; t++) {
         Object.values(peers).forEach(p => {
             while (p.incoming.length > 0) {
-                if (show_debug) console.log('t => ' + tt++)
+                if (show_debug) console.log('t => ' + tt)
+                tt++
                 notes = null
                 
                 
