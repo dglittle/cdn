@@ -456,8 +456,7 @@ function sync9_create_peer(p_funcs) {
         if (!self.fissures[key]) {
             self.fissures[key] = fissure
             
-            // work here
-            //self.phase_one = {}
+            self.phase_one = {}
             
             get_true_peers().forEach(p => {
                 if (p != pid) p_funcs.fissure(p, fissure)
