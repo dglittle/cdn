@@ -180,6 +180,14 @@ function run_trial(seed, N, show_debug) {
                 if (show_debug) console.log('t => ' + tt)
                 notes = []
                 
+                
+                
+                if (tt == 56) {
+                    debugger
+                }
+                
+                
+                
                 if (tt > 1000) {
                     throw 'stopppppp!'
                 }
@@ -547,7 +555,7 @@ function sync9_create_peer(p_funcs) {
         }
         self.ack_leaves = Object.assign({}, new_ack_leaves)
         
-        if (new_vs.length > 0 || new_fs.length > 0 || Object.keys(new_conn_leaves).length > 0 || Object.keys(new_ack_leaves).length > 0) {
+        if (new_vs.length > 0 || new_fs.length > 0) {
             get_true_peers().forEach(p => {
                 if (p != pid) p_funcs.set_multi(p, new_vs, new_fs, new_conn_leaves, new_ack_leaves)
             })
