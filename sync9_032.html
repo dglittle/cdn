@@ -45,7 +45,7 @@ function run_trial(seed, N, show_debug) {
             var m = {}
             function def_func(key) {
                 m[key] = (a, b, c, d, e) => {
-                    if (!self.peers[a]) {
+                    if (!p.peers[a]) {
                         throw 'you cannot talk to them!'
                     }
                     a = a && JSON.parse(JSON.stringify(a))
