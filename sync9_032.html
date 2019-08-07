@@ -6,25 +6,25 @@
 <body></body>
 <script>
 
-function main() {
-    for (var i = 0; i < 2000; i++) {
-        console.log('TRIAL: ' + i)
-        // i = 568
-        run_trial('seEEEEEeeeeE2EeEeeeeEdeeeEeeeJeeEeeeeFeee:' + i, 35, false)
-        // break
-    }
-}
-
-
-
 // function main() {
-//     for (var i = 0; i < 1000; i++) {
+//     for (var i = 0; i < 2000; i++) {
 //         console.log('TRIAL: ' + i)
-//         i = 568
-//         run_trial('seEEEEEeeeeE2EeEeeeeEdeeeEeeeJeeEeeeeFee:' + i, 40, true)
-//         break
+//         // i = 568
+//         run_trial('seEEEEEeeeeE2EeEeeeeEdeeeEeeeJeeEeeeeFeee:' + i, 35, false)
+//         // break
 //     }
 // }
+
+
+
+function main() {
+    for (var i = 0; i < 1000; i++) {
+        console.log('TRIAL: ' + i)
+        i = 568
+        run_trial('seEEEEEeeeeE2EeEeeeeEdeeeEeeeJeeEeeeeFee:' + i, 40, true)
+        break
+    }
+}
 
 
 
@@ -45,6 +45,9 @@ function run_trial(seed, N, show_debug) {
             var m = {}
             function def_func(key) {
                 m[key] = (a, b, c, d, e) => {
+                    if (!self.peers[a]) {
+                        throw 'you cannot talk to them!'
+                    }
                     a = a && JSON.parse(JSON.stringify(a))
                     b = b && JSON.parse(JSON.stringify(b))
                     c = c && JSON.parse(JSON.stringify(c))
@@ -452,6 +455,10 @@ function sync9_create_peer(p_funcs) {
         var key = fissure.a + ':' + fissure.b
         if (!self.fissures[key]) {
             self.fissures[key] = fissure
+            
+            // work here
+            //self.phase_one = {}
+            
             get_true_peers().forEach(p => {
                 if (p != pid) p_funcs.fissure(p, fissure)
             })
