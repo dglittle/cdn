@@ -10,7 +10,7 @@ function main() {
     for (var i = 0; i < 1000; i++) {
         console.log('TRIAL: ' + i)
         //i = 91
-        run_trial('seEEEEEeeeeE2EeEeeeeEdeeeEeeeJeeEeee:' + i, 15, false) //true) //, true)
+        run_trial('seEEEEEeeeeE2EeEeeeeEdeeeEeeeJeeEeee:' + i, 30, false) //true) //, true)
         //break
     }
 }
@@ -179,14 +179,6 @@ function run_trial(seed, N, show_debug) {
                 tt++
                 if (show_debug) console.log('t => ' + tt)
                 notes = []
-                
-                
-                
-                if (tt == 56) {
-                    debugger
-                }
-                
-                
                 
                 if (tt > 1000) {
                     throw 'stopppppp!'
