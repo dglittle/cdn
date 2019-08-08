@@ -317,6 +317,14 @@ function run_trial(seed, N, show_debug) {
 }
 
 function draw_time_dag(c, g, s9, x, y, w, h, r) {
+    
+    g.beginPath()
+    g.moveTo(x, y)
+    g.lineTo(x + w, y + h)
+    g.strokeStyle = 'red'
+    g.stroke()
+    
+    
     var vs = {}
     function get_layer(v) {
         if (!vs[v]) vs[v] = {}
