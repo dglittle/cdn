@@ -353,7 +353,7 @@ function draw_time_dag(c, g, peer, s9, x, y, w, h, r) {
             var b_pos = get_node_pos(vs[p])
             g.lineTo(b_pos[0], b_pos[1])
         })
-        g.strokeStyle = 'green'
+        g.strokeStyle = 'lightblue'
         g.stroke()
     })
     
@@ -374,9 +374,38 @@ function draw_time_dag(c, g, peer, s9, x, y, w, h, r) {
         g.beginPath()
         g.strokeStyle = 'red'
         var node_pos = get_node_pos(vs[v])
-        g.arc(node_pos[0], node_pos[1], r * 1.10, 0, Math.PI*2)
+        g.arc(node_pos[0], node_pos[1], r * 1.20, 0, Math.PI*2)
         g.stroke()
     })
+    
+    Object.keys(peer.conn_leaves).forEach(v => {
+        g.beginPath()
+        g.fillStyle = 'white'
+        var node_pos = get_node_pos(vs[v])
+        g.arc(node_pos[0], node_pos[1], r * 0.5, 0, Math.PI*2)
+        g.fill()
+    })
+    
+    Object.keys(peer.fissures).forEach(f => {
+        var top_nodes = sync9_get_ancestors(s9, f.top)
+        var bottom_nodes = sync9_get_ancestors(s9, f.bottom)
+        
+        var keepers = {}
+        Object.keys(bottom_nodes).forEach(v => {
+            if (!top_nodes[v] || f.top[v]) keepers[v] = true
+        })
+        
+        g.beginPath()
+        g.strokeStyle = 'green'
+        var node_pos = get_node_pos(vs[v])
+        g.moveTo(node_pos[0] - r, node_pos[1] - r)
+        g.lineTo(node_pos[0] + r, node_pos[1] - r)
+        g.lineTo(node_pos[0] + r, node_pos[1] + r)
+        g.lineTo(node_pos[0] - r, node_pos[1] + r)
+        g.closePath()
+        g.stroke()
+    })
+    
 }
 
 function draw_space_dag(c, g, S, x, y) {
