@@ -399,7 +399,7 @@ function draw_space_dag(c, g, S, x, y) {
         // work here
         g.font = '15px Arial'
         g.fillStyle = 'lightgrey'
-        g.fillText(node.vid, x, y + 40)
+        g.fillText(node.vid ? node.vid.slice(0, 3) : '_', x, y + 40)
         
         
         
