@@ -20,9 +20,9 @@
 function main() {
     for (var i = 0; i < 1000; i++) {
         console.log('TRIAL: ' + i)
-        // i = 568
-        run_trial('seEEEEEeeeeE2EeEeeeeEdeeeEeeeJeeEeeeeFeeeEFF:' + i, 200, false)
-        // break
+        i = 5
+        run_trial('seEEEEEeeeeE2EeEeeeeEdeeeEeeeJeeEeeeeFeeeEFF:' + i, 150, true)
+        break
     }
 }
 
@@ -197,6 +197,11 @@ function run_trial(seed, N, show_debug) {
                 if (show_debug) console.log('t => ' + tt)
                 notes = []
                 
+                
+                if (tt == 15) {
+                    debugger
+                }
+                
                 if (tt > 1000) {
                     throw 'stopppppp!'
                 }
@@ -249,6 +254,11 @@ function run_trial(seed, N, show_debug) {
         var ins = letters[Math.floor(Math.random() * letters.length)].repeat(Math.floor(Math.random() * 4) + (del == 0 ? 1 : 0))
         
         var vid = sync9_guid()
+        
+        
+        console.log('vid = ' + vid)
+        
+        
         var changes = [`[${start}:${start + del}] = ` + JSON.stringify(ins)]
         
         return {
