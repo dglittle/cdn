@@ -658,6 +658,8 @@ function sync9_create_peer(p_funcs) {
             if (ack_nodes[x]) self.ack_leaves[x] = true
         })
         
+        self.phase_one = {}
+        
         if (new_vs.length > 0 || new_fs.length > 0) {
             get_true_peers().forEach(p => {
                 if (p != pid) p_funcs.set_multi(p, new_vs, new_fs, conn_leaves, min_leaves)
