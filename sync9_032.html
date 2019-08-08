@@ -20,8 +20,8 @@
 function main() {
     for (var i = 0; i < 1000; i++) {
         console.log('TRIAL: ' + i)
-        i = 454
-        run_trial('se22eFeeeEFFeeee:' + i, 70, true)
+        i = 38
+        run_trial('se22eFeeeEFFeeeeEeee:' + i, 100, true)
         break
     }
 }
@@ -309,6 +309,24 @@ function run_trial(seed, N, show_debug) {
                 
                 draw_time_dag(c, g, d.peers[i], d.peers[i].s9, 0, y-100, 300, 300, 7)
             })
+            
+            g.beginPath()
+            g.strokeStyle = d.peers[0].peers[d.peers[1].uid] ? 'black' : 'lightgrey'
+            g.moveTo(5, 400)
+            g.lineTo(40, 800)
+            g.stroke()
+            
+            g.beginPath()
+            g.strokeStyle = d.peers[1].peers[d.peers[2].uid] ? 'black' : 'lightgrey'
+            g.moveTo(40, 800)
+            g.lineTo(5, 1200)
+            g.stroke()
+            
+            g.beginPath()
+            g.strokeStyle = d.peers[0].peers[d.peers[2].uid] ? 'black' : 'lightgrey'
+            g.moveTo(5, 400)
+            g.lineTo(5, 1200)
+            g.stroke()
         }
         document.body.append(slider)
         slider.oninput()
@@ -557,8 +575,6 @@ function sync9_create_peer(p_funcs) {
             self.fissure(pid, {
                 a: self.peers[pid].a,
                 b: self.peers[pid].b,
-                top: Object.assign({}, self.ack_leaves),
-                bottom: Object.assign({}, self.s9.leaves),
                 parents: open_fissures
             })
         }
@@ -572,7 +588,10 @@ function sync9_create_peer(p_funcs) {
     self.fissure = (pid, fissure) => {
         var key = fissure.a + ':' + fissure.b
         if (!self.fissures[key]) {
-            self.fissures[key] = fissure
+            self.fissures[key] = Object.assign({
+                top: Object.assign({}, self.ack_leaves),
+                bottom: Object.assign({}, self.s9.leaves)
+            }, fissure)
             
             self.phase_one = {}
             
