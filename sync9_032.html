@@ -312,11 +312,40 @@ function run_trial(seed, N, show_debug) {
                 var y = 300 + 300*i
                 g.fillText(p.uid, x, y + 80)
                 draw_space_dag(p, g, sync9_space_dag_get(d.peer_s9s[i].val.S, 0).S, x, y)
+                
+                draw_time_dag(c, g, d.peer_s9s[i], x, y, 100, 100, 5)
             })
         }
         document.body.append(slider)
         slider.oninput()
     }    
+}
+
+function draw_time_dag(c, g, s9, x, y, w, h, r) {
+    var vs = {}
+    function get_layer(v) {
+        if (!vs[v]) vs[v] = {}
+        if (vs[v].layer) return vs[v].layer
+        return vs[v].layer = Object.keys(s9.T[v]).reduce((x, p) => {
+            return Math.max(x, get_layer(p))
+        }, 0)
+    }
+    Object.keys(s9.T).forEach(get_layer)
+    
+    var layer_counts = {}
+    var num_layers = 0
+    Object.values(vs).forEach(v => {
+        v.layer_i = layer_counts[v.layer] || 0
+        layer_counts[v.layer] = v.layer_i + 1
+        
+        if (v.layer >= num_layers) num_layers = v.layer + 1
+    })
+    
+    Object.entries(vs).forEach(x => {
+        var layer_count = layer_counts[x[1].layer]
+        g.fillStyle = 'blue'
+        g.fillArc(lerp(0, x + r, layer_count + 1, x + w - r, x[1].layer_i), lerp(0, y + r, num_layers - 1, y + h - r, v.layer), node_radius, 0, Math.PI*2)
+    })
 }
 
 function draw_space_dag(c, g, S, x, y) {
