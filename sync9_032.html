@@ -245,7 +245,7 @@ function run_trial(seed, N, show_debug) {
         letters = letters || 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
         
         // work here
-        var s.next_letter = (s.next_letter || 0) + 1
+        s.next_letter = (s.next_letter || 0) + 1
         var letter = letters[s.next_letter - 1]
         
         var str = sync9_read(s)
