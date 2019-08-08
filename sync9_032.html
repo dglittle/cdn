@@ -341,10 +341,10 @@ function draw_time_dag(c, g, s9, x, y, w, h, r) {
         if (v.layer >= num_layers) num_layers = v.layer + 1
     })
     
-    Object.entries(vs).forEach(x => {
-        var layer_count = layer_counts[x[1].layer]
+    Object.entries(vs).forEach(e => {
+        var layer_count = layer_counts[e[1].layer]
         g.fillStyle = 'blue'
-        g.fillArc(lerp(0, x + r, layer_count + 1, x + w - r, x[1].layer_i), lerp(0, y + r, num_layers - 1, y + h - r, v.layer), node_radius, 0, Math.PI*2)
+        g.fillArc(lerp(0, x + r, layer_count + 1, x + w - r, e[1].layer_i), lerp(0, y + r, num_layers - 1, y + h - r, e[1].layer), node_radius, 0, Math.PI*2)
     })
 }
 
