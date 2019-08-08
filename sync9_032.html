@@ -243,21 +243,15 @@ function run_trial(seed, N, show_debug) {
 
     function create_random_edit(s, letters) {
         letters = letters || 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-        
-        // work here
-        s.next_letter = (s.next_letter || 0) + 1
-        var letter = letters[s.next_letter - 1]
-        
         var str = sync9_read(s)
         var start = Math.floor(Math.random() * (str.length + 1))
         var del = Math.floor(Math.random() * Math.random() * (str.length - start + 1))
-        var ins = letter.repeat(Math.floor(Math.random() * 4) + (del == 0 ? 1 : 0))
-        // var ins = letters[Math.floor(Math.random() * letters.length)].repeat(Math.floor(Math.random() * 4) + (del == 0 ? 1 : 0))
+        var ins = letters[Math.floor(Math.random() * letters.length)].repeat(Math.floor(Math.random() * 4) + (del == 0 ? 1 : 0))
         
         // work here
         //var vid = sync9_guid()
         s.next_version_id = (s.next_version_id || 0) + 1
-        var vid = letter + s.next_version_id
+        var vid = letters + s.next_version_id
         
         var changes = [`[${start}:${start + del}] = ` + JSON.stringify(ins)]
         
