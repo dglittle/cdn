@@ -248,11 +248,10 @@ function run_trial(seed, N, show_debug) {
         var del = Math.floor(Math.random() * Math.random() * (str.length - start + 1))
         var ins = letters[Math.floor(Math.random() * letters.length)].repeat(Math.floor(Math.random() * 4) + (del == 0 ? 1 : 0))
         
-        var vid = sync9_guid()
-        
-        
-        console.log('vid = ' + vid)
-        
+        // work here
+        //var vid = sync9_guid()
+        s.next_version_id = (s.next_version_id || 0) + 1
+        var vid = ins + s.next_version_id
         
         var changes = [`[${start}:${start + del}] = ` + JSON.stringify(ins)]
         
