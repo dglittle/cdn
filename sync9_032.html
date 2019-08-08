@@ -249,7 +249,7 @@ function run_trial(seed, N, show_debug) {
         var ins = letters[Math.floor(Math.random() * letters.length)].repeat(Math.floor(Math.random() * 4) + (del == 0 ? 1 : 0))
         
         // work here
-        //var vid = sync9_guid()
+        var vid = sync9_guid()
         s.next_version_id = (s.next_version_id || 0) + 1
         var vid = letters + s.next_version_id
         
@@ -583,7 +583,7 @@ function sync9_create_peer(p_funcs) {
         p_funcs.set_multi(pid, vs, fs)
     }
     
-    self.set_multi = (pid, vs, fs, conn_leaves, ack_leaves) => {
+    self.set_multi = (pid, vs, fs, conn_leaves, min_leaves) => {
         // we would just add all the versions we don't have,
         // but some "new" versions may be versions that we pruned,
         // so this vs_T business is checking for those
@@ -617,71 +617,44 @@ function sync9_create_peer(p_funcs) {
             }
         })
         
-        var new_conn_leaves = {}
         if (!conn_leaves) {
-            Object.assign(new_conn_leaves, self.s9.leaves)
-        } else {
-            var our_conn_nodes = sync9_get_ancestors(self.s9, self.conn_leaves)
-            Object.keys(conn_leaves).forEach(x => {
-                if (!our_conn_nodes[x]) {
-                    new_conn_leaves[x] = true
-                }
-            })
-            
-            if (Object.keys(new_conn_leaves).length > 0) {
-                var incoming_conn_nodes = sync9_get_ancestors(self.s9, conn_leaves)
-                Object.keys(self.conn_leaves).forEach(x => {
-                    if (!incoming_conn_nodes[x] || conn_leaves[x])
-                        new_conn_leaves[x] = true
-                })
-            }
+            conn_leaves = Object.assign({}, self.s9.leaves)
         }
-        self.conn_leaves = Object.assign({}, new_conn_leaves)
+        var our_conn_nodes = sync9_get_ancestors(self.s9, self.conn_leaves)
+        var new_conn_nodes = sync9_get_ancestors(self.s9, conn_leaves)
+        Object.keys(self.conn_leaves).forEach(x => {
+            if (new_conn_nodes[x] && !conn_leaves[x]) {
+                delete self.conn_leaves[x]
+            }
+        })
+        Object.keys(conn_leaves).forEach(x => {
+            if (!our_conn_nodes[x]) self.conn_leaves[x] = true
+        })
         
-        var new_ack_leaves = {}
-        if (!ack_leaves) {
-            var acked = sync9_get_ancestors(self.s9, self.ack_leaves)
-            var vs_leaves = {}
-            Object.keys(vs_T).forEach(x => vs_leaves[x] = true)
-            Object.values(vs_T).forEach(x => {
-                Object.keys(x).forEach(y => {
-                    delete vs_leaves[y]
+        if (!min_leaves) {
+            min_leaves = {}
+            var min = vs.filter(v => !vs_T[v.vid])
+            min.forEach(v => min_leaves[v.vid] = true)
+            min.forEach(v => {
+                Object.keys(v.parents).forEach(p => {
+                    delete min_leaves[p]
                 })
             })
-            var within_new_vs = sync9_get_ancestors(self.s9, vs_leaves)
-            
-            var new_ack_vs = {}
-            Object.keys(self.s9.T).forEach(x => {
-                if (acked[x] && within_new_vs[x])
-                    new_ack_vs[x] = true
-            })
-            new_ack_leaves = new_ack_vs
-            Object.keys(new_ack_vs).forEach(x => {
-                Object.keys(self.s9.T[x]).forEach(y => {
-                    delete new_ack_leaves[y]
-                })
-            })
-        } else {
-            var our_ack_nodes = sync9_get_ancestors(self.s9, self.ack_leaves)
-            Object.keys(ack_leaves).forEach(x => {
-                if (our_ack_nodes[x] && !self.ack_leaves[x]) {
-                    new_ack_leaves[x] = true
-                }
-            })
-            
-            if (Object.keys(new_ack_leaves).length > 0) {
-                var incoming_ack_nodes = sync9_get_ancestors(self.s9, ack_leaves)
-                Object.keys(self.ack_leaves).forEach(x => {
-                    if (incoming_ack_nodes[x])
-                        new_ack_leaves[x] = true
-                })
-            }
         }
-        self.ack_leaves = Object.assign({}, new_ack_leaves)
+        var min_nodes = sync9_get_ancestors(self.s9, min_leaves)
+        var ack_nodes = sync9_get_ancestors(self.s9, self.ack_leaves)
+        Object.keys(self.ack_leaves).forEach(x => {
+            if (!min_nodes[x]) {
+                delete self.ack_leaves[x]
+            }
+        })
+        Object.keys(min_leaves).forEach(x => {
+            if (ack_nodes[x]) self.ack_leaves[x] = true
+        })
         
         if (new_vs.length > 0 || new_fs.length > 0) {
             get_true_peers().forEach(p => {
-                if (p != pid) p_funcs.set_multi(p, new_vs, new_fs, new_conn_leaves, new_ack_leaves)
+                if (p != pid) p_funcs.set_multi(p, new_vs, new_fs, conn_leaves, min_leaves)
             })
         }
     }
