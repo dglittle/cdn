@@ -370,7 +370,7 @@ function draw_time_dag(c, g, peer, s9, x, y, w, h, r) {
         g.fillText(e[0].slice(0, 3), node_pos[0] + r, node_pos[1] + r)
     })
     
-    Object.keys(s9.ack_leaves).forEach(v => {
+    Object.keys(peer.ack_leaves).forEach(v => {
         g.beginPath()
         g.strokeStyle = 'red'
         var node_pos = get_node_pos(vs[v])
