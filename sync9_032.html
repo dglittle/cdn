@@ -111,7 +111,7 @@ function run_trial(seed, N, show_debug) {
                 if (debug_frames) debug_frames.push({
                     t: -1,
                     notes: notes,
-                    peer_s9s: peers_array.map(x => JSON.parse(JSON.stringify(x.s9)))
+                    peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
                 })
             }
         }
@@ -168,7 +168,7 @@ function run_trial(seed, N, show_debug) {
         if (debug_frames) debug_frames.push({
             t: t,
             notes: notes,
-            peer_s9s: peers_array.map(x => JSON.parse(JSON.stringify(x.s9)))
+            peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
         })
     }
 
@@ -183,7 +183,7 @@ function run_trial(seed, N, show_debug) {
                 if (debug_frames) debug_frames.push({
                     t: -1,
                     notes: notes,
-                    peer_s9s: peers_array.map(x => JSON.parse(JSON.stringify(x.s9)))
+                    peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
                 })
             }
         }
@@ -206,7 +206,7 @@ function run_trial(seed, N, show_debug) {
                 if (debug_frames) debug_frames.push({
                     tt: tt,
                     notes: notes,
-                    peer_s9s: peers_array.map(x => JSON.parse(JSON.stringify(x.s9)))
+                    peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
                 })
             }
         })
@@ -306,9 +306,9 @@ function run_trial(seed, N, show_debug) {
                 var x = 200
                 var y = 400 + 400*i
                 g.fillText(p.uid, x, y + 80)
-                draw_space_dag(p, g, sync9_space_dag_get(d.peer_s9s[i].val.S, 0).S, x, y)
+                draw_space_dag(p, g, sync9_space_dag_get(d.peers[i].s9.val.S, 0).S, x, y)
                 
-                draw_time_dag(c, g, d.peer_s9s[i], 0, y-100, 200, 200, 7)
+                draw_time_dag(c, g, d.peers[i], d.peers[i].s9, 0, y-100, 200, 200, 7)
             })
         }
         document.body.append(slider)
@@ -316,7 +316,7 @@ function run_trial(seed, N, show_debug) {
     }    
 }
 
-function draw_time_dag(c, g, s9, x, y, w, h, r) {
+function draw_time_dag(c, g, peer, s9, x, y, w, h, r) {
     var vs = {}
     function get_layer(v) {
         if (!vs[v]) vs[v] = {}
