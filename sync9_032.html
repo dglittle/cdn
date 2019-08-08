@@ -318,6 +318,7 @@ function run_trial(seed, N, show_debug) {
 
 function draw_time_dag(c, g, s9, x, y, w, h, r) {
     
+    
     g.beginPath()
     g.moveTo(x, y)
     g.lineTo(x + w, y + h)
@@ -330,7 +331,7 @@ function draw_time_dag(c, g, s9, x, y, w, h, r) {
         if (!vs[v]) vs[v] = {}
         if (vs[v].layer) return vs[v].layer
         return vs[v].layer = Object.keys(s9.T[v]).reduce((x, p) => {
-            return Math.max(x, get_layer(p))
+            return Math.max(x, get_layer(p) + 1)
         }, 0)
     }
     Object.keys(s9.T).forEach(get_layer)
