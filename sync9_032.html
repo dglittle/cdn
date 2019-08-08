@@ -363,6 +363,12 @@ function draw_time_dag(c, g, s9, x, y, w, h, r) {
         var node_pos = get_node_pos(e[1])
         g.arc(node_pos[0], node_pos[1], r, 0, Math.PI*2)
         g.fill()
+        
+        // work here
+        g.font = '15px Arial'
+        g.fillStyle = 'grey'
+        g.fillText(e[0].slice(0, 3), node_pos[0] + r, node_pos[1] + r)
+        
     })
 }
 
@@ -398,7 +404,7 @@ function draw_space_dag(c, g, S, x, y) {
         
         // work here
         g.font = '15px Arial'
-        g.fillStyle = 'lightgrey'
+        g.fillStyle = 'grey'
         g.fillText(node.vid ? node.vid.slice(0, 3) : '_', x, y + 40)
         
         
