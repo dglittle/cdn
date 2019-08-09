@@ -9,9 +9,9 @@
 function main() {
     for (var i = 0; i < 1000; i++) {
         console.log('TRIAL: ' + i)
-        // i = 288
-        run_trial('se22eFeeeEFFeeeeEeeeEeeE:' + i, 132, false)
-        // break
+        i = 315
+        run_trial('se22eFeeeEFFeeeeEeeeEeeE:' + i, 132, true)
+        break
     }
 }
 
@@ -770,7 +770,6 @@ function sync9_create_peer(p_funcs) {
         get_true_peers().forEach(p => {
             if (p != pid) p_funcs.full_ack(p, vid)
         })
-        self.prune()
     }
     
     self.prune = () => {
