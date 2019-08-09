@@ -690,6 +690,8 @@ function sync9_create_peer(p_funcs) {
                 if (p != pid) p_funcs.set_multi(p, new_vs, new_fs, conn_leaves, min_leaves)
             })
         }
+        
+        self.prune()
     }
     
     function add_full_ack_leaf(vid) {
@@ -822,6 +824,7 @@ function sync9_create_peer(p_funcs) {
             }
         })
         
+        var acked = sync9_get_ancestors(self.s9, self.ack_leaves)
         var done = {}
         Object.entries(self.fissures).forEach(x => {
             var other_key = x[1].b + ':' + x[1].a
@@ -829,8 +832,11 @@ function sync9_create_peer(p_funcs) {
             if (other && !done[x[0]] && !unremovable[x[0]]) {
                 done[x[0]] = true
                 done[other_key] = true
-                delete self.fissures[x[0]]
-                delete self.fissures[other_key]
+                
+                if (Object.keys(x[1].bottom).every(x => acked[x]) && Object.keys(other.bottom).every(x => acked[x])) {
+                    delete self.fissures[x[0]]
+                    delete self.fissures[other_key]
+                }
             }
         })
     }
