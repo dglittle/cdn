@@ -777,6 +777,7 @@ function sync9_create_peer(p_funcs) {
         }
         Object.entries(self.fissures).forEach(x => {
             Object.keys(x[1].nodes).forEach(v => {
+                if (!self.s9.T[v]) return
                 tag(v, x[0])
                 frozen[v] = true
             })
