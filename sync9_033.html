@@ -413,24 +413,8 @@ function draw_time_dag(c, g, peer, s9, x, y, w, h, r) {
     })
     
     Object.values(peer.fissures).forEach(f => {
-        try {
-        var top_nodes = sync9_get_ancestors(s9, f.top)
-        var bottom_nodes = sync9_get_ancestors(s9, f.bottom)
-        } catch (e) {
-            g.beginPath()
-            g.strokeStyle = 'red'
-            g.moveTo(x, y)
-            g.lineTo(x + w, y + h)
-            g.stroke()
-            return
-        }
-        
-        var keepers = {}
-        Object.keys(bottom_nodes).forEach(v => {
-            if (!top_nodes[v] || f.top[v]) keepers[v] = true
-        })
-        
-        Object.keys(keepers).forEach(v => {
+        Object.keys(f.nodes).forEach(v => {
+            if (!s9.T[v]) return
             g.beginPath()
             g.strokeStyle = 'green'
             var node_pos = get_node_pos(vs[v])
