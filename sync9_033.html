@@ -690,8 +690,6 @@ function sync9_create_peer(p_funcs) {
                 if (p != pid) p_funcs.set_multi(p, new_vs, new_fs, conn_leaves, min_leaves)
             })
         }
-        
-        self.prune()
     }
     
     function add_full_ack_leaf(vid) {
