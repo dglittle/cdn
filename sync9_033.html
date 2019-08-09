@@ -9,8 +9,8 @@
 function main() {
     for (var i = 0; i < 1000; i++) {
         console.log('TRIAL: ' + i)
-        i = 315
-        run_trial('se22eFeeeEFFeeeeEeeeEeeE:' + i, 132, true)
+        i = 644
+        run_trial('se22eFeeeEFFeeeeEeeeEeeEee:' + i, 170, true)
         break
     }
 }
@@ -581,9 +581,19 @@ function sync9_create_peer(p_funcs) {
                     open_fissures[x[0]] = true
                 }
             })
+            
+            var nodes = {}
+            var ack_nodes = sync9_get_ancestors(self.s9, self.ack_leaves)
+            Object.keys(self.s9.T).forEach(v => {
+                if (!ack_nodes[v] || self.ack_leaves[v]) {
+                    nodes[v] = true
+                }
+            })
+            
             self.fissure(pid, {
                 a: self.peers[pid].a,
                 b: self.peers[pid].b,
+                nodes,
                 parents: open_fissures
             })
         }
@@ -597,10 +607,7 @@ function sync9_create_peer(p_funcs) {
     self.fissure = (pid, fissure) => {
         var key = fissure.a + ':' + fissure.b
         if (!self.fissures[key]) {
-            self.fissures[key] = Object.assign({
-                top: Object.assign({}, self.ack_leaves),
-                bottom: Object.assign({}, self.s9.leaves)
-            }, fissure)
+            self.fissures[key] = fissure
             
             self.phase_one = {}
             
@@ -773,6 +780,37 @@ function sync9_create_peer(p_funcs) {
     }
     
     self.prune = () => {
+        var tags = {}
+        var frozen = {root: true}
+        Object.keys(self.s9.T).forEach(vid => {
+            tags[vid] = {tags: {}}
+        })
+        function tag(vid, t) {
+            if (!tags[vid].tags[t]) {
+                tags[vid].tags[t] = true
+                Object.keys(self.s9.T[vid]).forEach(vid => tag(vid, t))
+            }
+        }
+        Object.entries(self.fissures).forEach(x => {
+            Object.keys(x[1].nodes).forEach(v => {
+                tag(v, x[0])
+                frozen[v] = true
+            })
+        })
+        Object.keys(self.ack_leaves).forEach(v => tag(v, '_full_ack'))
+        Object.keys(self.ack_leaves).forEach(v => frozen[v] = true)
+        Object.entries(tags).forEach(x => {
+            var keys = Object.keys(x[1].tags)
+            if (keys.length == 0) {
+                frozen[x[0]] = true
+            } else if (!frozen[x[0]]) {
+                x[1].tag = keys.sort().join(',')
+            }
+        })
+        var q = (a, b) => !frozen[a] && !frozen[b] && (tags[a].tag == tags[b].tag)
+        sync9_prune2(self.s9, q, q)
+
+        
         var unremovable = {}
         Object.entries(self.fissures).forEach(x => {
             if (!self.fissures[x[1].b + ':' + x[1].a]) {
@@ -789,42 +827,6 @@ function sync9_create_peer(p_funcs) {
             }
         })
         
-        var tags = {}
-        var frozen = {root: true}
-        Object.keys(self.s9.T).forEach(vid => {
-            tags[vid] = {tags: {}}
-        })
-        function tag(vid, t) {
-            if (!tags[vid].tags[t]) {
-                tags[vid].tags[t] = true
-                Object.keys(self.s9.T[vid]).forEach(vid => tag(vid, t))
-            }
-        }
-        Object.entries(self.fissures).forEach(x => {
-            if (unremovable[x[0]]) {
-                Object.keys(x[1].top).forEach(v => tag(v, x[0]))
-                Object.keys(x[1].top).forEach(v => frozen[v] = true)
-                function freeze(vid) {
-                    if (tags[vid].tags[x[0]]) return
-                    frozen[vid] = true
-                    Object.keys(self.s9.T[vid]).forEach(freeze)
-                }
-                Object.keys(x[1].bottom).forEach(freeze)
-            }
-        })
-        Object.keys(self.ack_leaves).forEach(v => tag(v, '_full_ack'))
-        Object.keys(self.ack_leaves).forEach(v => frozen[v] = true)
-        Object.entries(tags).forEach(x => {
-            var keys = Object.keys(x[1].tags)
-            if (keys.length == 0) {
-                frozen[x[0]] = true
-            } else if (!frozen[x[0]]) {
-                x[1].tag = keys.sort().join(',')
-            }
-        })
-        var q = (a, b) => !frozen[a] && !frozen[b] && (tags[a].tag == tags[b].tag)
-        sync9_prune2(self.s9, q, q)
-        
         var acked = sync9_get_ancestors(self.s9, self.ack_leaves)
         var done = {}
         Object.entries(self.fissures).forEach(x => {
@@ -834,7 +836,7 @@ function sync9_create_peer(p_funcs) {
                 done[x[0]] = true
                 done[other_key] = true
                 
-                if (Object.keys(x[1].bottom).every(x => acked[x] || !self.s9.T[x]) && Object.keys(other.bottom).every(x => acked[x] || !self.s9.T[x])) {
+                if (Object.keys(x[1].nodes).every(x => acked[x] || !self.s9.T[x])) {
                     delete self.fissures[x[0]]
                     delete self.fissures[other_key]
                 }
