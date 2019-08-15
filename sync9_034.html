@@ -15,17 +15,6 @@ function main() {
     }
 }
 
-// function main() {
-//     for (var i = 0; i < 1000; i++) {
-//         console.log('TRIAL: ' + i)
-//         i = 288
-//         run_trial('se22eFeeeEFFeeeeEeeeEee:' + i, 132, true)
-//         break
-//     }
-// }
-
-
-
 function run_trial(seed, N, show_debug) {
     Math.randomSeed(seed)
     var rand = () => Math.random()
@@ -41,7 +30,7 @@ function run_trial(seed, N, show_debug) {
             var p = null
             var m = {}
             function def_func(key) {
-                m[key] = (a, b, c, d, e) => {
+                m[key] = (a, b, c, d, e, f) => {
                     if (!p.peers[a]) {
                         throw 'you cannot talk to them!'
                     }
@@ -50,12 +39,13 @@ function run_trial(seed, N, show_debug) {
                     c = c && JSON.parse(JSON.stringify(c))
                     d = d && JSON.parse(JSON.stringify(d))
                     e = e && JSON.parse(JSON.stringify(e))
-                    notes.push('SEND: ' + key + ' from:' + p.uid + ' to:' + JSON.stringify(a) + ' ' + JSON.stringify(b) + ' ' + JSON.stringify(c) + ' ' + JSON.stringify(d) + ' ' + JSON.stringify(e))
+                    f = f && JSON.parse(JSON.stringify(f))
+                    notes.push('SEND: ' + key + ' from:' + p.uid + ' to:' + JSON.stringify(a) + ' ' + JSON.stringify(b) + ' ' + JSON.stringify(c) + ' ' + JSON.stringify(d) + ' ' + JSON.stringify(e) + ' ' + JSON.stringify(f))
                     if (show_debug) console.log(notes)
                     peers[a].incoming.push([p.uid, () => {
-                        notes.push('RECV: ' + key + ' from:' + p.uid + ' to:' + JSON.stringify(a) + ' ' + JSON.stringify(b) + ' ' + JSON.stringify(c) + ' ' + JSON.stringify(d) + ' ' + JSON.stringify(e))
+                        notes.push('RECV: ' + key + ' from:' + p.uid + ' to:' + JSON.stringify(a) + ' ' + JSON.stringify(b) + ' ' + JSON.stringify(c) + ' ' + JSON.stringify(d) + ' ' + JSON.stringify(e) + ' ' + JSON.stringify(f))
                         if (show_debug) console.log(notes)
-                        peers[a][key](p.uid, b, c, d, e)
+                        peers[a][key](p.uid, b, c, d, e, f)
                     }])
                 }
             }
@@ -550,6 +540,7 @@ function sync9_create_peer(p_funcs) {
     self.conn_leaves = {}
     self.ack_leaves = {}
     self.phase_one = {}
+    self.orig_vs = {}
     
     self.connect = pid => {
         self.peers[pid] = {a: sync9_guid()}
@@ -605,14 +596,12 @@ function sync9_create_peer(p_funcs) {
         self.peers[pid].b = id
         var vs = sync9_extract_versions(self.s9, x => x == 'root')
         var fs = Object.values(self.fissures)
-        p_funcs.set_multi(pid, vs, fs)
+        p_funcs.set_multi(pid, vs, fs, self.orig_vs)
     }
     
-    self.set_multi = (pid, vs, fs, conn_leaves, min_leaves) => {
-        // we would just add all the versions we don't have,
-        // but some "new" versions may be versions that we pruned,
-        // so this vs_T business is checking for those
+    self.set_multi = (pid, vs, fs, orig_vs, conn_leaves, min_leaves) => {
         var new_vs = []
+        var new_orig_vs = {}
         var vs_T = {}
         vs.forEach(v => vs_T[v.vid] = v.parents)
         vs.forEach(v => {
@@ -629,7 +618,14 @@ function sync9_create_peer(p_funcs) {
         vs.forEach(v => {
             if (vs_T[v.vid]) {
                 new_vs.push(v)
-                sync9_add_version(self.s9, v.vid, v.parents, v.changes)
+                var ov = orig_vs[v.vid]
+                new_orig_vs[v.vid] = ov
+                self.orig_vs[v.vid] = ov
+                if (Object.keys(ov.parents).every(x => self.s9.T[x])) {
+                    sync9_add_version(self.s9, ov.vid, ov.parents, ov.changes)
+                } else {
+                    sync9_add_version(self.s9, v.vid, v.parents, v.changes)
+                }
             }
         })
         
@@ -681,7 +677,7 @@ function sync9_create_peer(p_funcs) {
         
         if (new_vs.length > 0 || new_fs.length > 0) {
             get_true_peers().forEach(p => {
-                if (p != pid) p_funcs.set_multi(p, new_vs, new_fs, conn_leaves, min_leaves)
+                if (p != pid) p_funcs.set_multi(p, new_vs, new_fs, new_orig_vs, conn_leaves, min_leaves)
             })
         }
     }
@@ -703,6 +699,7 @@ function sync9_create_peer(p_funcs) {
     }
     
     self.local_set = (vid, parents, changes) => {
+        self.orig_vs[vid] = {vid, parents, changes}
         sync9_add_version(self.s9, vid, parents, changes)
         var ps = get_true_peers()
         self.phase_one[vid] = {origin: null, count: ps.length}
@@ -714,6 +711,7 @@ function sync9_create_peer(p_funcs) {
     
     self.set = (pid, vid, parents, changes) => {
         if (!self.s9.T[vid]) {
+            self.orig_vs[vid] = {vid, parents, changes}
             sync9_add_version(self.s9, vid, parents, changes)
             
             var ps = get_true_peers()
@@ -778,12 +776,17 @@ function sync9_create_peer(p_funcs) {
         Object.entries(self.fissures).forEach(x => {
             Object.keys(x[1].nodes).forEach(v => {
                 if (!self.s9.T[v]) return
-                tag(v, x[0])
+                tag(v, v)
                 frozen[v] = true
             })
         })
-        Object.keys(self.ack_leaves).forEach(v => tag(v, '_full_ack'))
-        Object.keys(self.ack_leaves).forEach(v => frozen[v] = true)
+        var acked = sync9_get_ancestors(self.s9, self.ack_leaves)
+        Object.keys(self.s9.T).forEach(x => {
+            if (!acked[x] || self.ack_leaves[x]) {
+                tag(x, x)
+                frozen[x] = true
+            }
+        })
         Object.entries(tags).forEach(x => {
             var keys = Object.keys(x[1].tags)
             if (keys.length == 0) {
@@ -794,7 +797,10 @@ function sync9_create_peer(p_funcs) {
         })
         var q = (a, b) => !frozen[a] && !frozen[b] && (tags[a].tag == tags[b].tag)
         sync9_prune2(self.s9, q, q)
-
+        
+        Object.keys(self.orig_vs).forEach(x => {
+            if (!self.s9.T[x]) delete self.orig_vs[x]
+        })
         
         var unremovable = {}
         Object.entries(self.fissures).forEach(x => {
@@ -916,6 +922,7 @@ function sync9_prune2(x, has_everyone_whos_seen_a_seen_b, has_everyone_whos_seen
         }
     }
     while (did_something) {
+        seen_nodes = {}
         did_something = false
         rec(x)
     }
