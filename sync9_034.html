@@ -540,7 +540,6 @@ function sync9_create_peer(p_funcs) {
     self.conn_leaves = {}
     self.ack_leaves = {}
     self.phase_one = {}
-    self.orig_vs = {}
     
     self.connect = pid => {
         self.peers[pid] = {a: sync9_guid()}
@@ -596,12 +595,11 @@ function sync9_create_peer(p_funcs) {
         self.peers[pid].b = id
         var vs = sync9_extract_versions(self.s9, x => x == 'root')
         var fs = Object.values(self.fissures)
-        p_funcs.set_multi(pid, vs, fs, self.orig_vs)
+        p_funcs.set_multi(pid, vs, fs)
     }
     
-    self.set_multi = (pid, vs, fs, orig_vs, conn_leaves, min_leaves) => {
+    self.set_multi = (pid, vs, fs, conn_leaves, min_leaves) => {
         var new_vs = []
-        var new_orig_vs = {}
         var vs_T = {}
         vs.forEach(v => vs_T[v.vid] = v.parents)
         vs.forEach(v => {
@@ -618,14 +616,7 @@ function sync9_create_peer(p_funcs) {
         vs.forEach(v => {
             if (vs_T[v.vid]) {
                 new_vs.push(v)
-                var ov = orig_vs[v.vid]
-                new_orig_vs[v.vid] = ov
-                self.orig_vs[v.vid] = ov
-                if (Object.keys(ov.parents).every(x => self.s9.T[x])) {
-                    sync9_add_version(self.s9, ov.vid, ov.parents, ov.changes)
-                } else {
-                    sync9_add_version(self.s9, v.vid, v.parents, v.changes)
-                }
+                sync9_add_version(self.s9, v.vid, v.parents, v.changes)
             }
         })
         
@@ -677,7 +668,7 @@ function sync9_create_peer(p_funcs) {
         
         if (new_vs.length > 0 || new_fs.length > 0) {
             get_true_peers().forEach(p => {
-                if (p != pid) p_funcs.set_multi(p, new_vs, new_fs, new_orig_vs, conn_leaves, min_leaves)
+                if (p != pid) p_funcs.set_multi(p, new_vs, new_fs, conn_leaves, min_leaves)
             })
         }
     }
@@ -699,7 +690,6 @@ function sync9_create_peer(p_funcs) {
     }
     
     self.local_set = (vid, parents, changes) => {
-        self.orig_vs[vid] = {vid, parents, changes}
         sync9_add_version(self.s9, vid, parents, changes)
         var ps = get_true_peers()
         self.phase_one[vid] = {origin: null, count: ps.length}
@@ -711,7 +701,6 @@ function sync9_create_peer(p_funcs) {
     
     self.set = (pid, vid, parents, changes) => {
         if (!self.s9.T[vid]) {
-            self.orig_vs[vid] = {vid, parents, changes}
             sync9_add_version(self.s9, vid, parents, changes)
             
             var ps = get_true_peers()
@@ -778,6 +767,10 @@ function sync9_create_peer(p_funcs) {
                 if (!self.s9.T[v]) return
                 tag(v, v)
                 frozen[v] = true
+                Object.keys(self.s9.T[v]).forEach(v => {
+                    tag(v, v)
+                    frozen[v] = true
+                })
             })
         })
         var acked = sync9_get_ancestors(self.s9, self.ack_leaves)
@@ -785,6 +778,10 @@ function sync9_create_peer(p_funcs) {
             if (!acked[x] || self.ack_leaves[x]) {
                 tag(x, x)
                 frozen[x] = true
+                Object.keys(self.s9.T[x]).forEach(v => {
+                    tag(v, v)
+                    frozen[v] = true
+                })
             }
         })
         Object.entries(tags).forEach(x => {
@@ -797,10 +794,6 @@ function sync9_create_peer(p_funcs) {
         })
         var q = (a, b) => !frozen[a] && !frozen[b] && (tags[a].tag == tags[b].tag)
         sync9_prune2(self.s9, q)
-        
-        Object.keys(self.orig_vs).forEach(x => {
-            if (!self.s9.T[x]) delete self.orig_vs[x]
-        })
         
         var unremovable = {}
         Object.entries(self.fissures).forEach(x => {
