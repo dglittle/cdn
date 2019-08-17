@@ -51,8 +51,6 @@ function run_trial(seed, N, show_debug) {
             }
             Object.keys({
                 get: true,
-                init: true,
-                init_ack: true,
                 set: true,
                 set_multi: true,
                 ack: true,
@@ -142,7 +140,13 @@ function run_trial(seed, N, show_debug) {
             var did_something = false
             if (p.incoming.length > 0) {
                 did_something = true
-                p.incoming.shift()[1]()
+                
+                var possible_peers = {}
+                p.incoming.forEach(x => possible_peers[x[0]] = true)
+                possible_peers = Object.keys(possible_peers)
+                var chosen_peer = possible_peers[Math.floor(Math.random() * possible_peers.length)]
+                
+                var msg = p.incoming.splice(p.incoming.findIndex(x => x[0] == chosen_peer), 1)[0][1]()
             }
             if (!did_something) {
                 if (show_debug) console.log('did nothing')
@@ -177,16 +181,12 @@ function run_trial(seed, N, show_debug) {
     }
     
     var tt = 0
-    for (var t = 0; t < 10000; t++) {
+    for (var t = 0; t < 1000; t++) {
         Object.values(peers).forEach(p => {
             while (p.incoming.length > 0) {
                 tt++
                 if (show_debug) console.log('t => ' + tt)
                 notes = []
-                
-                if (tt > 1000) {
-                    throw 'stopppppp!'
-                }
                 
                 p.incoming.shift()[1]()
                 
