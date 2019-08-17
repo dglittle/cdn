@@ -10,7 +10,7 @@ function main() {
     for (var i = 0; i < 1000; i++) {
         console.log('TRIAL: ' + i)
         //i = 4
-        run_trial('se22eFeeeEFFeeeeEeeeEeeEeeeEeefeFF:' + i, 750, false)
+        run_trial('se22eFeeeEFFeeeeEeeeEeeEeeeEeefeFFf:' + i, 750, false)
         //break
     }
 }
@@ -216,6 +216,16 @@ function run_trial(seed, N, show_debug) {
         else if (!deep_equals(val, check_val))
             check_good = false
     })
+
+    var missing_fissure = false    
+    Object.values(peers).forEach((x, i) => {
+        Object.values(x.fissures).forEach(f => {
+            if (!x.fissures[f.b + ':' + f.a]) {
+                check_good = false
+                missing_fissure = true
+            }
+        })
+    })
     
     console.log('CHECK GOOD: ' + check_good)
     if (!check_good) {
@@ -224,6 +234,7 @@ function run_trial(seed, N, show_debug) {
             var val = sync9_read(x.s9)
             console.log('val: ' + JSON.stringify(val))
         })
+        console.log('missing_fissure: ' + missing_fissure)
         if (!show_debug) throw 'stop'
     }
 
