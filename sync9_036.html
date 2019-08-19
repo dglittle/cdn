@@ -9,7 +9,7 @@
 function main() {
     for (var i = 0; i < 1000; i++) {
         console.log('TRIAL: ' + i)
-        i = 335
+        i = 524
         run_trial('se22eFeeeEFFeeeeEeeeEeeEeeeEeefeFFf:' + i, 2, true)
         break
     }
@@ -607,6 +607,16 @@ function sync9_create_peer(p_funcs) {
             get_true_peers().forEach(p => {
                 if (p != pid) p_funcs.fissure(p, fissure)
             })
+            
+            if (fissure.b == self.uid) {
+                self.fissure(null, {
+                    a: self.uid,
+                    b: fissure.a,
+                    salt: fissure.salt,
+                    nodes: {},
+                    parents: {}
+                })
+            }
         }
     }
     
