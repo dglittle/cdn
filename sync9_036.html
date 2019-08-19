@@ -1,0 +1,1682 @@
+
+<script src="https://dglittle.github.io/cdn/random001.js"></script>
+<script src="https://dglittle.github.io/cdn/utils004.js"></script>
+<script src="https://invisible-college.github.io/universal-sync/diffsync.js"></script>
+
+<body></body>
+<script>
+
+function main() {
+    for (var i = 0; i < 1000; i++) {
+        console.log('TRIAL: ' + i)
+        i = 335
+        run_trial('se22eFeeeEFFeeeeEeeeEeeEeeeEeefeFFf:' + i, 2, true)
+        break
+    }
+}
+
+function run_trial(seed, N, show_debug) {
+    Math.randomSeed(seed)
+    var rand = () => Math.random()
+    
+    
+    var debug_frames = show_debug ? [] : null
+    var notes = []
+
+    var n_peers = 3
+    var peers = {}
+    for (var i = 0; i < n_peers; i++) {
+        ;(() => {
+            var p = null
+            var m = {}
+            function def_func(key) {
+                m[key] = (a, b, c, d, e, f) => {
+                    if (!p.peers[a]) {
+                        throw 'you cannot talk to them!'
+                    }
+                    a = a && JSON.parse(JSON.stringify(a))
+                    b = b && JSON.parse(JSON.stringify(b))
+                    c = c && JSON.parse(JSON.stringify(c))
+                    d = d && JSON.parse(JSON.stringify(d))
+                    e = e && JSON.parse(JSON.stringify(e))
+                    f = f && JSON.parse(JSON.stringify(f))
+                    notes.push('SEND: ' + key + ' from:' + p.uid + ' to:' + JSON.stringify(a) + ' ' + JSON.stringify(b) + ' ' + JSON.stringify(c) + ' ' + JSON.stringify(d) + ' ' + JSON.stringify(e) + ' ' + JSON.stringify(f))
+                    if (show_debug) console.log(notes)
+                    peers[a].incoming.push([p.uid, () => {
+                        notes.push('RECV: ' + key + ' from:' + p.uid + ' to:' + JSON.stringify(a) + ' ' + JSON.stringify(b) + ' ' + JSON.stringify(c) + ' ' + JSON.stringify(d) + ' ' + JSON.stringify(e) + ' ' + JSON.stringify(f))
+                        if (show_debug) console.log(notes)
+                        peers[a][key](p.uid, b, c, d, e, f)
+                    }])
+                }
+            }
+            Object.keys({
+                get: true,
+                set: true,
+                set_multi: true,
+                ack: true,
+                full_ack: true,
+                fissure: true
+            }).forEach(def_func)
+            p = sync9_create_peer(m)
+            p.incoming = []
+            peers[p.uid] = p
+            
+            if (i == 0) {
+                p.letters = 'abcdefghijklmnopqrstuvwxyz'
+                for (var ii = 0; ii < 100; ii++) {
+                    p.letters += String.fromCharCode(12032 + ii)
+                }
+                p.letters_i = 0
+            } else if (i == 1) {
+                p.letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+                for (var ii = 0; ii < 100; ii++) {
+                    p.letters += String.fromCharCode(12032 + 100 + ii)
+                }
+                p.letters_i = 0
+            } else {
+                p.letters = ''
+                for (var ii = 0; ii < 100; ii++) {
+                    p.letters += String.fromCharCode(12032 + 100 + ii)
+                }
+                p.letters_i = 0
+            }
+        })()
+    }
+    var peers_array = Object.values(peers)
+    
+
+    for (var p1 = 0; p1 < n_peers; p1++) {
+        for (var p2 = p1 + 1; p2 < n_peers; p2++) {
+            if (!peers_array[p1].peers[peers_array[p2].uid]) {
+                notes = ['connecting ' + p1 + ':' + peers_array[p1].uid + ' and ' + p2 + ':' + peers_array[p2].uid]
+                
+                peers_array[p1].connect(peers_array[p2].uid)
+                peers_array[p2].connect(peers_array[p1].uid)
+                
+                if (debug_frames) debug_frames.push({
+                    t: -1,
+                    notes: notes,
+                    peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
+                })
+            }
+        }
+    }
+    
+    try {
+    
+    for (var t = 0; t < N; t++) {
+        if (show_debug) console.log('t == ' + t)
+        
+        var i = Math.floor(rand() * n_peers)
+        var p = peers_array[i]
+        
+        notes = []
+        
+        if (rand() < 0.1) {
+            if (rand() < 0.9) {
+                if (p.letters_i >= p.letters.length) {
+                    p.letters_i = 0
+                }
+                var e = create_random_edit(p.s9, p.letters[p.letters_i++])
+                p.local_set(e.vid, e.parents, e.changes)
+            } else {
+                var other_p = p
+                while (other_p == p) {
+                    other_p = peers_array[Math.floor(rand() * n_peers)]
+                }
+                if (p.peers[other_p.uid]) {
+                    notes.push(' disconnect ' + p.uid + ' and ' + other_p.uid)
+                    p.disconnect(other_p.uid)
+                    p.incoming = p.incoming.filter(x => x[0] != other_p.uid)
+                    other_p.disconnect(p.uid)
+                    other_p.incoming = other_p.incoming.filter(x => x[0] != p.uid)
+                } else {
+                    p.connect(other_p.uid)
+                    other_p.connect(p.uid)
+                }
+            }
+        } else {
+            if (show_debug) console.log('process incoming')
+            var did_something = false
+            if (p.incoming.length > 0) {
+                did_something = true
+                
+                var possible_peers = {}
+                p.incoming.forEach(x => possible_peers[x[0]] = true)
+                possible_peers = Object.keys(possible_peers)
+                var chosen_peer = possible_peers[Math.floor(Math.random() * possible_peers.length)]
+                
+                var msg = p.incoming.splice(p.incoming.findIndex(x => x[0] == chosen_peer), 1)[0][1]()
+            }
+            if (!did_something) {
+                if (show_debug) console.log('did nothing')
+            }
+        }
+        
+        if (show_debug)
+            console.log('peer: ' + p.uid + ' -> ' + JSON.stringify(sync9_read(p.s9)))
+            
+        if (debug_frames) debug_frames.push({
+            t: t,
+            notes: notes,
+            peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
+        })
+    }
+
+    for (var p1 = 0; p1 < n_peers; p1++) {
+        for (var p2 = p1 + 1; p2 < n_peers; p2++) {
+            if (!peers_array[p1].peers[peers_array[p2].uid]) {
+                notes = ['connecting ' + p1 + ':' + peers_array[p1].uid + ' and ' + p2 + ':' + peers_array[p2].uid]
+                
+                peers_array[p1].connect(peers_array[p2].uid)
+                peers_array[p2].connect(peers_array[p1].uid)
+                
+                if (debug_frames) debug_frames.push({
+                    t: -1,
+                    notes: notes,
+                    peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
+                })
+            }
+        }
+    }
+    
+    var tt = 0
+    for (var t = 0; t < 1000; t++) {
+        Object.values(peers).forEach(p => {
+            while (p.incoming.length > 0) {
+                tt++
+                if (show_debug) console.log('t => ' + tt)
+                notes = []
+                
+                p.incoming.shift()[1]()
+                
+                if (debug_frames) debug_frames.push({
+                    tt: tt,
+                    notes: notes,
+                    peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
+                })
+            }
+        })
+        
+        if (Object.values(peers).every(x => x.incoming.length == 0)) break
+    }
+    
+    } catch (e) {
+        console.log('ERROR')
+        console.log(e)
+        if (!show_debug) throw 'stop'
+    }
+    
+    var check_val = null
+    var check_good = true
+    Object.values(peers).forEach((x, i) => {
+        var val = sync9_read(x.s9)
+        if (i == 0)
+            check_val = val
+        else if (!deep_equals(val, check_val))
+            check_good = false
+    })
+
+    var missing_fissure = false    
+    Object.values(peers).forEach((x, i) => {
+        Object.values(x.fissures).forEach(f => {
+            if (!x.fissures[f.b + ':' + f.a]) {
+                check_good = false
+                missing_fissure = true
+            }
+        })
+    })
+    
+    console.log('CHECK GOOD: ' + check_good)
+    if (!check_good) {
+        Object.values(peers).forEach((x, i) => {
+            console.log(x)
+            var val = sync9_read(x.s9)
+            console.log('val: ' + JSON.stringify(val))
+        })
+        console.log('missing_fissure: ' + missing_fissure)
+        if (!show_debug) throw 'stop'
+    }
+
+
+    function create_random_edit(s, letters) {
+        letters = letters || 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        var str = sync9_read(s)
+        var start = Math.floor(Math.random() * (str.length + 1))
+        var del = Math.floor(Math.random() * Math.random() * (str.length - start + 1))
+        var ins = letters[Math.floor(Math.random() * letters.length)].repeat(Math.floor(Math.random() * 4) + (del == 0 ? 1 : 0))
+        
+        // work here
+        var vid = sync9_guid()
+        s.next_version_id = (s.next_version_id || 0) + 1
+        var vid = letters + s.next_version_id
+        
+        var changes = [`[${start}:${start + del}] = ` + JSON.stringify(ins)]
+        
+        return {
+            vid : vid,
+            parents : Object.assign({}, s.leaves),
+            changes : changes
+        }
+    }
+
+    if (show_debug) {
+        Object.values(peers).forEach(x => {
+            console.log('peer: ' + JSON.stringify(sync9_read(x.s9)))
+        })
+    }
+    
+    if (debug_frames) {
+        console.log('got here!?')
+        var c = document.createElement('canvas')
+        c.width = 3000
+        c.height = 1500
+        c.style.width = (c.width / devicePixelRatio) + 'px'
+        c.style.height = (c.height / devicePixelRatio) + 'px'
+        var g = c.getContext('2d')
+        document.body.append(c)
+        
+        var slider = document.createElement('input')
+        slider.style.width = '500px'
+        slider.setAttribute('type', 'range')
+        slider.setAttribute('min', '0')
+        slider.setAttribute('max', debug_frames.length - 1)
+        slider.setAttribute('value', debug_frames.length - 1)
+        slider.oninput = () => {
+            var d = debug_frames[1*slider.value]
+            
+            g.clearRect(0, 0, c.width, c.height)
+            
+            g.font = '20px Ariel'
+            g.fillStyle = 'black'
+            g.textBaseline = 'top'
+            if (d.tt) g.fillText('v3 tt: ' + d.tt, 0, 0)
+            else g.fillText('v3 t: ' + d.t, 0, 0)
+            
+            d.notes.forEach((x, i) => {
+                g.fillText(x, 100, i * 20)
+            })
+
+            peers_array.forEach((p, i) => {
+                g.font = '20px Arial'
+                g.fillStyle = 'grey'
+                var x = 300
+                var y = 400 + 400*i
+                g.fillText(p.uid, x, y + 80)
+                draw_space_dag(p, g, sync9_space_dag_get(d.peers[i].s9.val.S, 0).S, x, y)
+                
+                draw_time_dag(c, g, d.peers[i], d.peers[i].s9, 0, y-100, 300, 300, 7)
+            })
+            
+            g.beginPath()
+            g.strokeStyle = d.peers[0].peers[d.peers[1].uid] ? 'black' : 'lightgrey'
+            g.moveTo(5, 400)
+            g.lineTo(40, 800)
+            g.stroke()
+            
+            g.beginPath()
+            g.strokeStyle = d.peers[1].peers[d.peers[2].uid] ? 'black' : 'lightgrey'
+            g.moveTo(40, 800)
+            g.lineTo(5, 1200)
+            g.stroke()
+            
+            g.beginPath()
+            g.strokeStyle = d.peers[0].peers[d.peers[2].uid] ? 'black' : 'lightgrey'
+            g.moveTo(5, 400)
+            g.lineTo(5, 1200)
+            g.stroke()
+        }
+        document.body.append(slider)
+        slider.oninput()
+    }    
+}
+
+function draw_time_dag(c, g, peer, s9, x, y, w, h, r) {
+    var vs = {}
+    function get_layer(v) {
+        if (!vs[v]) vs[v] = {vid: v}
+        if (vs[v].layer) return vs[v].layer
+        return vs[v].layer = Object.keys(s9.T[v]).reduce((x, p) => {
+            return Math.max(x, get_layer(p) + 1)
+        }, 0)
+    }
+    Object.keys(s9.T).forEach(get_layer)
+    
+    var layer_members = {}
+    var num_layers = 0
+    Object.values(vs).forEach(v => {
+        layer_members[v.layer] = layer_members[v.layer] || []
+        layer_members[v.layer].push(v.vid)
+        
+        if (v.layer >= num_layers) num_layers = v.layer + 1
+    })
+    
+    Object.values(layer_members).forEach(layer => {
+        layer.sort().forEach((v, i) => {
+            vs[v].layer_i = i
+        })
+    })
+
+    function get_node_pos(v) {
+        var layer_count = layer_members[v.layer].length
+        
+        
+        // work here
+        num_layers = 11
+        
+        
+        return [
+            lerp(0, x + r, layer_count + 1, x + w - r, v.layer_i + 1),
+            lerp(0, y + r, num_layers - 1, y + h - r, v.layer)
+        ]
+    }
+
+    Object.entries(vs).forEach(e => {
+        var a_pos = get_node_pos(e[1])
+        g.beginPath()
+        Object.keys(s9.T[e[0]]).forEach(p => {
+            g.moveTo(a_pos[0], a_pos[1])
+            
+            var b_pos = get_node_pos(vs[p])
+            g.lineTo(b_pos[0], b_pos[1])
+        })
+        g.strokeStyle = 'lightblue'
+        g.stroke()
+    })
+    
+    Object.entries(vs).forEach(e => {
+        g.beginPath()
+        g.fillStyle = 'blue'
+        var node_pos = get_node_pos(e[1])
+        g.arc(node_pos[0], node_pos[1], r, 0, Math.PI*2)
+        g.fill()
+        
+        // work here
+        g.font = '15px Arial'
+        g.fillStyle = 'grey'
+        g.fillText(e[0].slice(0, 3), node_pos[0] + r, node_pos[1] + r)
+    })
+    
+    Object.keys(peer.ack_leaves).forEach(v => {
+        g.beginPath()
+        g.strokeStyle = 'red'
+        var node_pos = get_node_pos(vs[v])
+        g.arc(node_pos[0], node_pos[1], r * 1.20, 0, Math.PI*2)
+        g.stroke()
+    })
+    
+    Object.keys(peer.conn_leaves).forEach(v => {
+        g.beginPath()
+        g.fillStyle = 'white'
+        var node_pos = get_node_pos(vs[v])
+        g.arc(node_pos[0], node_pos[1], r * 0.5, 0, Math.PI*2)
+        g.fill()
+    })
+    
+    Object.values(peer.fissures).forEach(f => {
+        Object.keys(f.nodes).forEach(v => {
+            if (!s9.T[v]) return
+            g.beginPath()
+            g.strokeStyle = 'green'
+            var node_pos = get_node_pos(vs[v])
+            var rr = r * 1.3
+            if (f.a < f.b) {
+                g.moveTo(node_pos[0] - rr, node_pos[1] - rr)
+                g.lineTo(node_pos[0] + rr, node_pos[1] - rr)
+                g.lineTo(node_pos[0] + rr, node_pos[1] + rr)
+                g.lineTo(node_pos[0] - rr, node_pos[1] + rr)
+            } else {
+                var rrr = Math.sqrt(2) * rr
+                g.moveTo(node_pos[0] - rrr, node_pos[1])
+                g.lineTo(node_pos[0], node_pos[1] - rrr)
+                g.lineTo(node_pos[0] + rrr, node_pos[1])
+                g.lineTo(node_pos[0], node_pos[1] + rrr)
+            }
+            g.closePath()
+            g.stroke()
+        })
+    })
+    
+}
+
+function draw_space_dag(c, g, S, x, y) {
+    function helper(node, y, px, py) {
+        g.beginPath()
+        g.moveTo(x, y)
+        g.lineTo(px, py)
+        g.lineWidth = 1
+        g.strokeStyle = 'lightblue'
+        g.stroke()
+
+        var begin_x
+        var end_x
+
+        g.beginPath()
+        if (node.gash) {
+            begin_x = x
+            g.moveTo(x, y - 20)
+            g.bezierCurveTo(x + 10, y - 10, x + 10, y + 10, x, y + 20)
+            x += 12
+        } else {
+            begin_x = x + 10
+            g.moveTo(x + 10, y - 20)
+            g.bezierCurveTo(x, y - 10, x, y + 10, x + 10, y + 20)
+            x += 8
+        }
+        g.lineWidth = 1
+        g.strokeStyle = 'lightblue'
+        g.stroke()
+        
+
+        
+        // work here
+        g.font = '15px Arial'
+        g.fillStyle = 'grey'
+        g.fillText(node.vid ? node.vid.slice(0, 3) : '_', x, y + 40)
+        
+        
+        
+        
+        if (Object.keys(node.deleted_by).length > 0) {
+            g.fillStyle = 'red'
+        } else {
+            g.fillStyle = 'blue'
+        }
+        g.textBaseline = 'middle'
+        g.font = '20px Arial'
+        g.fillText(node.elems, x, y)
+        
+        
+
+        
+        
+        
+        // g.font = '20px Arial'
+        // g.fillStyle = 'grey'
+        // g.fillText(node.vid || 'null', x, y + Math.random()*100)
+        
+        var width = g.measureText(node.elems).width
+        x += width
+        
+        g.beginPath()
+        if (node.end_cap) {
+            end_x = x
+            g.moveTo(x, y - 20)
+            g.bezierCurveTo(x + 10, y - 10, x + 10, y + 10, x, y + 20)
+            x += 10
+        } else {
+            end_x = x + 10
+            g.moveTo(x + 10, y - 20)
+            g.bezierCurveTo(x, y - 10, x, y + 10, x + 10, y + 20)
+            x += 8
+        }
+        g.moveTo(begin_x, y - 20)
+        g.lineTo(end_x, y - 20)
+        g.moveTo(begin_x, y + 20)
+        g.lineTo(end_x, y + 20)
+        g.lineWidth = 1
+        g.strokeStyle = 'lightblue'
+        g.stroke()
+
+        var px = x
+        x += 10
+        for (var n of node.nexts) helper(n, y - 40, px, y)
+        if (node.next) helper(node.next, y, px, y)
+    }
+    helper(S, y, x, y)
+}
+
+
+
+
+
+
+
+function sync9_create_peer(p_funcs) {
+    var self = {}
+    
+    self.s9 = sync9_create()
+    self.uid = sync9_guid()
+    
+    // work here : creating single string within json
+    if (true) {
+        sync9_add_version(self.s9, 'v1', {root: true}, [' = ""'])
+        sync9_prune(self.s9, (a, b) => true, (a, b) => true)
+        delete self.s9.T.v1
+        self.s9.leaves = {root: true}
+    }
+    
+    self.peers = {}
+    self.fissures = {}
+    self.conn_leaves = {}
+    self.ack_leaves = {}
+    self.phase_one = {}
+    
+    self.connect = pid => {
+        self.peers[pid] = {a: sync9_guid()}
+        p_funcs.get(pid, self.peers[pid].a)
+    }
+    
+    self.disconnect = pid => {
+        if (!self.peers[pid]) return
+        if (self.peers[pid].b) {
+            var open_fissures = {}
+            Object.entries(self.fissures).forEach(x => {
+                if (!self.fissures[x[1].b + ':' + x[1].a]) {
+                    open_fissures[x[0]] = true
+                }
+            })
+            
+            var nodes = {}
+            var ack_nodes = sync9_get_ancestors(self.s9, self.ack_leaves)
+            Object.keys(self.s9.T).forEach(v => {
+                if (!ack_nodes[v] || self.ack_leaves[v]) {
+                    nodes[v] = true
+                }
+            })
+            
+            self.fissure(pid, {
+                a: self.peers[pid].a,
+                b: self.peers[pid].b,
+                nodes,
+                parents: open_fissures
+            })
+        }
+        delete self.peers[pid]
+    }
+    
+    function get_true_peers() {
+        return Object.entries(self.peers).filter(x => x[1].b).map(x => x[0])
+    }
+    
+    self.fissure = (pid, fissure) => {
+        var key = fissure.a + ':' + fissure.b
+        if (!self.fissures[key]) {
+            self.fissures[key] = fissure
+            
+            self.phase_one = {}
+            
+            get_true_peers().forEach(p => {
+                if (p != pid) p_funcs.fissure(p, fissure)
+            })
+        }
+    }
+    
+    self.get = (pid, id) => {
+        self.peers[pid].b = id
+        var vs = sync9_extract_versions(self.s9, x => x == 'root')
+        var fs = Object.values(self.fissures)
+        p_funcs.set_multi(pid, vs, fs)
+    }
+    
+    self.set_multi = (pid, vs, fs, conn_leaves, min_leaves) => {
+        var new_vs = []
+        var vs_T = {}
+        vs.forEach(v => vs_T[v.vid] = v.parents)
+        vs.forEach(v => {
+            if (self.s9.T[v.vid]) {
+                function f(v) {
+                    if (vs_T[v]) {
+                        Object.keys(vs_T[v]).forEach(f)
+                        delete vs_T[v]
+                    }
+                }
+                f(v.vid)
+            }
+        })
+        vs.forEach(v => {
+            if (vs_T[v.vid]) {
+                new_vs.push(v)
+                sync9_add_version(self.s9, v.vid, v.parents, v.changes)
+            }
+        })
+        
+        var new_fs = []
+        fs.forEach(f => {
+            var key = f.a + ':' + f.b
+            if (!self.fissures[key]) {
+                new_fs.push(f)
+                self.fissures[key] = f
+            }
+        })
+        
+        if (!conn_leaves) {
+            conn_leaves = Object.assign({}, self.s9.leaves)
+        }
+        var our_conn_nodes = sync9_get_ancestors(self.s9, self.conn_leaves)
+        var new_conn_nodes = sync9_get_ancestors(self.s9, conn_leaves)
+        Object.keys(self.conn_leaves).forEach(x => {
+            if (new_conn_nodes[x] && !conn_leaves[x]) {
+                delete self.conn_leaves[x]
+            }
+        })
+        Object.keys(conn_leaves).forEach(x => {
+            if (!our_conn_nodes[x]) self.conn_leaves[x] = true
+        })
+        
+        if (!min_leaves) {
+            min_leaves = {}
+            var min = vs.filter(v => !vs_T[v.vid])
+            min.forEach(v => min_leaves[v.vid] = true)
+            min.forEach(v => {
+                Object.keys(v.parents).forEach(p => {
+                    delete min_leaves[p]
+                })
+            })
+        }
+        var min_nodes = sync9_get_ancestors(self.s9, min_leaves)
+        var ack_nodes = sync9_get_ancestors(self.s9, self.ack_leaves)
+        Object.keys(self.ack_leaves).forEach(x => {
+            if (!min_nodes[x]) {
+                delete self.ack_leaves[x]
+            }
+        })
+        Object.keys(min_leaves).forEach(x => {
+            if (ack_nodes[x]) self.ack_leaves[x] = true
+        })
+        
+        self.phase_one = {}
+        
+        if (new_vs.length > 0 || new_fs.length > 0) {
+            get_true_peers().forEach(p => {
+                if (p != pid) p_funcs.set_multi(p, new_vs, new_fs, conn_leaves, min_leaves)
+            })
+        }
+    }
+    
+    function add_full_ack_leaf(vid) {
+        var marks = {}
+        function f(v) {
+            if (!marks[v]) {
+                marks[v] = true
+                delete self.conn_leaves[v]
+                delete self.ack_leaves[v]
+                delete self.phase_one[v]
+                Object.keys(self.s9.T[v]).forEach(f)
+            }
+        }
+        f(vid)
+        self.ack_leaves[vid] = true
+        self.prune()
+    }
+    
+    self.local_set = (vid, parents, changes) => {
+        sync9_add_version(self.s9, vid, parents, changes)
+        var ps = get_true_peers()
+        self.phase_one[vid] = {origin: null, count: ps.length}
+        ps.forEach(p => {
+            p_funcs.set(p, vid, parents, changes)
+        })
+        check_ack_count(vid)
+    }
+    
+    self.set = (pid, vid, parents, changes) => {
+        if (!self.s9.T[vid]) {
+            sync9_add_version(self.s9, vid, parents, changes)
+            
+            var ps = get_true_peers()
+            self.phase_one[vid] = {origin: pid, count: ps.length - 1}
+            ps.forEach(p => {
+                if (p != pid)
+                    p_funcs.set(p, vid, parents, changes)
+            })
+        } else if (self.phase_one[vid]) {
+            self.phase_one[vid].count--
+        }
+        check_ack_count(vid)
+    }
+    
+    self.ack = (pid, vid) => {
+        if (self.phase_one[vid]) {
+            self.phase_one[vid].count--
+            check_ack_count(vid)
+        }
+    }
+    
+    function check_ack_count(vid) {
+        if (self.phase_one[vid] && self.phase_one[vid].count == 0) {
+            if (self.phase_one[vid].origin)
+                p_funcs.ack(self.phase_one[vid].origin, vid)
+            else {
+                add_full_ack_leaf(vid)
+                get_true_peers().forEach(p => {
+                    p_funcs.full_ack(p, vid)
+                })
+            }
+        }
+    }
+    
+    self.full_ack = (pid, vid) => {
+        if (!self.s9.T[vid]) return
+        
+        var ancs = sync9_get_ancestors(self.s9, self.conn_leaves)
+        if (ancs[vid]) return
+        
+        var ancs = sync9_get_ancestors(self.s9, self.ack_leaves)
+        if (ancs[vid]) return
+        
+        add_full_ack_leaf(vid)
+        get_true_peers().forEach(p => {
+            if (p != pid) p_funcs.full_ack(p, vid)
+        })
+    }
+    
+    self.prune = () => {
+        var tags = {}
+        var frozen = {root: true}
+        Object.keys(self.s9.T).forEach(vid => {
+            tags[vid] = {tags: {}}
+        })
+        function tag(vid, t) {
+            if (!tags[vid].tags[t]) {
+                tags[vid].tags[t] = true
+                Object.keys(self.s9.T[vid]).forEach(vid => tag(vid, t))
+            }
+        }
+        Object.entries(self.fissures).forEach(x => {
+            Object.keys(x[1].nodes).forEach(v => {
+                if (!self.s9.T[v]) return
+                tag(v, v)
+                frozen[v] = true
+                Object.keys(self.s9.T[v]).forEach(v => {
+                    tag(v, v)
+                    frozen[v] = true
+                })
+            })
+        })
+        var acked = sync9_get_ancestors(self.s9, self.ack_leaves)
+        Object.keys(self.s9.T).forEach(x => {
+            if (!acked[x] || self.ack_leaves[x]) {
+                tag(x, x)
+                frozen[x] = true
+                Object.keys(self.s9.T[x]).forEach(v => {
+                    tag(v, v)
+                    frozen[v] = true
+                })
+            }
+        })
+        Object.entries(tags).forEach(x => {
+            var keys = Object.keys(x[1].tags)
+            if (keys.length == 0) {
+                frozen[x[0]] = true
+            } else if (!frozen[x[0]]) {
+                x[1].tag = keys.sort().join(',')
+            }
+        })
+        var q = (a, b) => !frozen[a] && !frozen[b] && (tags[a].tag == tags[b].tag)
+        sync9_prune2(self.s9, q)
+        
+        var unremovable = {}
+        Object.entries(self.fissures).forEach(x => {
+            if (!self.fissures[x[1].b + ':' + x[1].a]) {
+                function f(y) {
+                    if (!unremovable[y.a + ':' + y.b]) {
+                        unremovable[y.a + ':' + y.b] = true
+                        unremovable[y.b + ':' + y.a] = true
+                        Object.keys(y.parents).forEach(p => {
+                            if (self.fissures[p]) f(self.fissures[p])
+                        })
+                    }
+                }
+                f(x[1])
+            }
+        })
+        
+        var acked = sync9_get_ancestors(self.s9, self.ack_leaves)
+        var done = {}
+        Object.entries(self.fissures).forEach(x => {
+            var other_key = x[1].b + ':' + x[1].a
+            var other = self.fissures[other_key]
+            if (other && !done[x[0]] && !unremovable[x[0]]) {
+                done[x[0]] = true
+                done[other_key] = true
+                
+                if (Object.keys(x[1].nodes).every(x => acked[x] || !self.s9.T[x])) {
+                    delete self.fissures[x[0]]
+                    delete self.fissures[other_key]
+                }
+            }
+        })
+    }
+    
+    return self
+}
+
+
+
+
+function sync9_extract_versions(x, is_anc, is_new_anc) {
+    var versions = sync9_space_dag_extract_versions(sync9_space_dag_get(x.val.S, 0).S, x, is_anc, is_new_anc)
+    versions.forEach(x => {
+        x.changes = x.splices.map(x => {
+            return `[${x[0]}:${x[0] + x[1]}] = ${JSON.stringify(x[2])}`
+        })
+        delete x.splices
+    })
+    return versions
+}
+
+function sync9_space_dag_extract_versions(S, s9, is_anc) {
+    return Object.keys(s9.T).filter(x => !is_anc(x)).map(vid => {
+        var v = {
+            vid,
+            parents : Object.assign({}, s9.T[vid]),
+            splices : []
+        }
+        
+        function add_result(offset, del, ins) {
+            if (v.splices.length > 0) {
+                var prev = v.splices[v.splices.length - 1]
+                if (prev[0] + prev[1] == offset) {
+                    prev[1] += del
+                    prev[2] = prev[2].concat(ins)
+                    return
+                }
+            }
+            v.splices.push([offset, del, ins])
+        }
+        
+        var ancs = sync9_get_ancestors(s9, {[vid]: true})
+        delete ancs[vid]
+        var offset = 0
+        function helper(node, vid) {
+            if (vid == v.vid) {
+                add_result(offset, 0, node.elems.slice(0))
+            } else if (node.deleted_by[v.vid]) {
+                add_result(offset, node.elems.length, node.elems.slice(0, 0))
+            }
+            
+            if (ancs[vid] && !Object.keys(node.deleted_by).some(x => ancs[x])) {
+                offset += node.elems.length
+            }
+                
+            for (var next of node.nexts)
+                helper(next, next.vid)
+            if (node.next) helper(node.next, vid)
+        }
+        helper(S, S.vid)
+        return v
+    })
+}
+
+
+
+function sync9_prune2(x, has_everyone_whos_seen_a_seen_b) {
+    var seen_nodes = {}
+    var did_something = true
+    function rec(x) {
+        if (x && typeof(x) == 'object') {
+            if (!x.t && x.val) {
+                rec(x.val)
+            } else if (x.t == 'val') {
+                if (sync9_space_dag_prune2(x.S, has_everyone_whos_seen_a_seen_b, seen_nodes)) did_something = true
+                sync9_trav_space_dag(x.S, () => true, node => {
+                    node.elems.forEach(rec)
+                }, true)
+            } else if (x.t == 'obj') {
+                Object.values(x.S).forEach(v => rec(v))
+            } else if (x.t == 'arr') {
+                if (sync9_space_dag_prune2(x.S, has_everyone_whos_seen_a_seen_b, seen_nodes)) did_something = true
+                sync9_trav_space_dag(x.S, () => true, node => {
+                    node.elems.forEach(rec)
+                }, true)
+            } else if (x.t == 'str') {
+                if (sync9_space_dag_prune2(x.S, has_everyone_whos_seen_a_seen_b, seen_nodes)) did_something = true
+            }
+        }
+    }
+    while (did_something) {
+        seen_nodes = {}
+        did_something = false
+        rec(x)
+    }
+
+    var delete_us = {}
+    Object.keys(x.T).forEach(x => {
+        if (!seen_nodes[x]) delete_us[x] = true
+    })
+
+    var visited = {}
+    var forwards = {}
+    function g(vid) {
+        if (visited[vid]) return
+        visited[vid] = true
+        if (delete_us[vid])
+            forwards[vid] = {}
+        Object.keys(x.T[vid]).forEach(pid => {
+            g(pid)
+            if (delete_us[vid]) {
+                if (delete_us[pid])
+                    Object.assign(forwards[vid], forwards[pid])
+                else
+                    forwards[vid][pid] = true
+            } else if (delete_us[pid]) {
+                delete x.T[vid][pid]
+                Object.assign(x.T[vid], forwards[pid])
+            }
+        })
+    }
+    Object.keys(x.leaves).forEach(g)
+    Object.keys(delete_us).forEach(vid => delete x.T[vid])
+    return delete_us
+}
+
+function sync9_space_dag_prune2(S, has_everyone_whos_seen_a_seen_b, seen_nodes) {
+    function set_nnnext(node, next) {
+        while (node.next) node = node.next
+        node.next = next
+    }
+    function process_node(node, offset, vid, prev) {
+        var nexts = node.nexts
+        var next = node.next
+        
+        var all_nexts_prunable = nexts.every(x => has_everyone_whos_seen_a_seen_b(vid, x.vid))
+        if (nexts.length > 0 && all_nexts_prunable) {
+            var first_prunable = 0
+            var gamma = next
+            if (first_prunable + 1 < nexts.length) {
+                gamma = sync9_create_space_dag_node(null, typeof(node.elems) == 'string' ? '' : [])
+                gamma.nexts = nexts.slice(first_prunable + 1)
+                gamma.next = next
+            }
+            if (first_prunable == 0) {
+                if (nexts[0].elems.length == 0 && !nexts[0].end_cap && nexts[0].nexts.length > 0) {
+                    var beta = gamma
+                    if (nexts[0].next) {
+                        beta = nexts[0].next
+                        set_nnnext(beta, gamma)
+                    }
+                    node.nexts = nexts[0].nexts
+                    node.next = beta
+                } else {
+                    delete node.end_cap
+                    node.nexts = []
+                    node.next = nexts[0]
+                    node.next.vid = null
+                    set_nnnext(node, gamma)
+                }
+            } else {
+                node.nexts = nexts.slice(0, first_prunable)
+                node.next = nexts[first_prunable]
+                node.next.vid = null
+                set_nnnext(node, gamma)
+            }
+            return true
+        }
+        
+        if (Object.keys(node.deleted_by).some(k => has_everyone_whos_seen_a_seen_b(vid, k))) {
+            node.deleted_by = {}
+            node.elems = node.elems.slice(0, 0)
+            delete node.gash
+            return true
+        } else {
+            Object.assign(seen_nodes, node.deleted_by)
+        }
+        
+        if (next && !next.nexts[0] && (Object.keys(next.deleted_by).some(k => has_everyone_whos_seen_a_seen_b(vid, k)) || next.elems.length == 0)) {
+            node.next = next.next
+            return true
+        }
+        
+        if (nexts.length == 0 && next &&
+            !(next.elems.length == 0 && !next.end_cap && next.nexts.length > 0) &&
+            Object.keys(node.deleted_by).every(x => next.deleted_by[x]) &&
+            Object.keys(next.deleted_by).every(x => node.deleted_by[x])) {
+            node.elems = node.elems.concat(next.elems)
+            node.end_cap = next.end_cap
+            node.nexts = next.nexts
+            node.next = next.next
+            return true
+        }
+    }
+    var did_something = false
+    sync9_trav_space_dag(S, () => true, (node, offset, has_nexts, prev, vid) => {
+        if (!prev) seen_nodes[vid] = true
+        while (process_node(node, offset, vid, prev)) {
+            did_something = true
+        }
+    }, true)
+    return did_something
+}
+
+
+
+function sync9_create() {
+    return {
+        T: {root : {}},
+        leaves: {root: true},
+        val: sync9_create_val()
+    }
+}
+
+function sync9_add_version(x, vid, parents, changes, is_anc) {
+    if (x.T[vid]) return
+    x.T[vid] = Object.assign({}, parents)
+    
+    Object.keys(parents).forEach(k => {
+        if (x.leaves[k]) delete x.leaves[k]
+    })
+    x.leaves[vid] = true
+    
+    if (!is_anc) {
+        if (parents == x.leaves) {
+            is_anc = (_vid) => _vid != vid
+        } else {
+            var ancs = sync9_get_ancestors(x, parents)
+            is_anc = _vid => ancs[_vid]
+        }
+    }
+    
+    changes.forEach(change => {
+        var parse = sync9_parse_change(change)
+        var cur = x.val
+        each(parse.keys, (key, i) => {
+            if (cur.t == 'val') cur = sync9_space_dag_get(cur.S, 0, is_anc)
+            if (!cur) throw 'bad'
+            if (typeof(key) == 'string' && cur.t == 'obj') {
+                if (!cur.S[key]) cur.S[key] = sync9_create_val()
+                cur = cur.S[key]
+            } else if (typeof(key) == 'number') {
+                if (i == parse.keys.length - 1) {
+                    parse.range = [key, key + 1]
+                    parse.val = [parse.val]
+                } else if (i < parse.keys.length - 1 && cur.t == 'arr') {
+                    cur = sync9_space_dag_get(cur.S, key, is_anc)
+                } else throw 'bad'
+            } else {
+                throw 'bad'
+            }
+        })
+        if (!parse.range) {
+            if (cur.t != 'val') throw 'bad'
+            var len = sync9_space_dag_length(cur.S, is_anc)
+            sync9_space_dag_add_version(cur.S, vid, [[0, len, [sync9_wrap(parse.val, vid)]]], is_anc)
+        } else {
+            if (cur.t == 'val') cur = sync9_space_dag_get(cur.S, 0, is_anc)
+            if (parse.val instanceof Array && cur.t != 'arr') throw 'bad'
+            if (parse.val instanceof String && cur.t != 'str') throw 'bad'
+            if (parse.val instanceof Array) parse.val = parse.val.map(x => sync9_wrap(x, vid))
+            sync9_space_dag_add_version(cur.S, vid, [[parse.range[0], parse.range[1] - parse.range[0], parse.val]], is_anc)
+        }
+    })
+}
+
+function sync9_read(x, is_anc) {
+    if (!is_anc) is_anc = () => true
+    if (x && typeof(x) == 'object') {
+        if (!x.t && x.val) return sync9_read(x.val, is_anc)
+        if (x.t == 'val') return sync9_read(sync9_space_dag_get(x.S, 0, is_anc), is_anc)
+        if (x.t == 'obj') {
+            var o = {}
+            Object.entries(x.S).forEach(([k, v]) => {
+                o[k] = sync9_read(v, is_anc)
+            })
+            return o
+        }
+        if (x.t == 'arr') {
+            var a = []
+            sync9_trav_space_dag(x.S, is_anc, (node) => {
+                node.elems.forEach((e) => {
+                    a.push(sync9_read(e, is_anc))
+                })
+            })
+            return a
+        }
+        if (x.t == 'str') {
+            var s = []
+            sync9_trav_space_dag(x.S, is_anc, (node) => {
+                s.push(node.elems)
+            })
+            return s.join('')
+        }
+    } return x
+}
+
+function sync9_wrap(x, vid) {
+    if (typeof(x) == 'number' || x == null || typeof(x) == 'boolean') {
+        return x
+    } else if (typeof(x) == 'string') {
+        var s = sync9_create_str()
+        sync9_space_dag_add_version(s.S, vid, [[0, 0, x]], _vid => _vid != vid)
+        return s
+    } else if (typeof(x) == 'object') {
+        if (x instanceof Array) {
+            var a = sync9_create_arr()
+            sync9_space_dag_add_version(a.S, vid, [[0, 0, x.map(x => sync9_wrap(x, vid))]], _vid => _vid != vid)
+            return a
+        } else {
+            var o = sync9_create_obj()
+            Object.entries(x).forEach(([k, v]) => {
+                var val = sync9_create_val()
+                sync9_space_dag_add_version(val.S, vid, [[0, 0, [sync9_wrap(v, vid)]]], _vid => _vid != vid)
+                o.S[k] = val
+            })
+            return o
+        }
+    } else throw 'bad'
+}
+
+
+function sync9_create_val() {
+    return {
+        t : 'val',
+        S : sync9_create_space_dag_node('root', [])
+    }
+}
+
+function sync9_create_obj() {
+    return {
+        t : 'obj',
+        S : {}
+    }
+}
+
+function sync9_create_arr() {
+    return {
+        t : 'arr',
+        S : sync9_create_space_dag_node('root', [])
+    }
+}
+
+function sync9_create_str() {
+    return {
+        t : 'str',
+        S : sync9_create_space_dag_node('root', '')
+    }
+}
+
+function sync9_create_space_dag_node(vid, elems, end_cap) {
+    return {
+        vid : vid,
+        elems : elems,
+        deleted_by : {},
+        end_cap : end_cap,
+        nexts : [],
+        next : null
+    }
+}
+
+function sync9_space_dag_get(S, i, is_anc) {
+    var ret = null
+    var offset = 0
+    sync9_trav_space_dag(S, is_anc ? is_anc : () => true, (node) => {
+        if (i - offset < node.elems.length) {
+            ret = node.elems[i - offset]
+            return false
+        }
+        offset += node.elems.length
+    })
+    return ret
+}
+
+function sync9_space_dag_length(S, is_anc) {
+    var count = 0
+    sync9_trav_space_dag(S, is_anc ? is_anc : () => true, node => {
+        count += node.elems.length
+    })
+    return count
+}
+
+function sync9_space_dag_break_node(node, x, end_cap, new_next) {
+    function subseq(x, start, stop) {
+        return (x instanceof Array) ?
+            x.slice(start, stop) :
+            x.substring(start, stop)
+    }
+    
+    var tail = sync9_create_space_dag_node(null, subseq(node.elems, x), node.end_cap)
+    Object.assign(tail.deleted_by, node.deleted_by)
+    tail.nexts = node.nexts
+    tail.next = node.next
+    
+    node.elems = subseq(node.elems, 0, x)
+    node.end_cap = end_cap
+    if (end_cap) tail.gash = true
+    node.nexts = new_next ? [new_next] : []
+    node.next = tail
+    
+    return tail
+}
+
+function sync9_space_dag_add_version(S, vid, splices, is_anc) {
+    
+    function add_to_nexts(nexts, to) {
+        var i = binarySearch(nexts, function (x) {
+            if (to.vid < x.vid) return -1
+            if (to.vid > x.vid) return 1
+            return 0
+        })
+        nexts.splice(i, 0, to)
+    }
+    
+    var si = 0
+    var delete_up_to = 0
+    
+    var cb = (node, offset, has_nexts, prev, _vid, deleted) => {
+        var s = splices[si]
+        if (!s) return false
+        
+        if (deleted) {
+            if (s[1] == 0 && s[0] == offset) {
+                if (node.elems.length == 0 && !node.end_cap && has_nexts) return
+                var new_node = sync9_create_space_dag_node(vid, s[2])
+                if (node.elems.length == 0 && !node.end_cap)
+                    add_to_nexts(node.nexts, new_node)
+                else
+                    sync9_space_dag_break_node(node, 0, undefined, new_node)
+                si++
+            }
+            return            
+        }
+        
+        if (s[1] == 0) {
+            var d = s[0] - (offset + node.elems.length)
+            if (d > 0) return
+            if (d == 0 && !node.end_cap && has_nexts) return
+            var new_node = sync9_create_space_dag_node(vid, s[2])
+            if (d == 0 && !node.end_cap) {
+                add_to_nexts(node.nexts, new_node)
+            } else {
+                sync9_space_dag_break_node(node, s[0] - offset, undefined, new_node)
+            }
+            si++
+            return
+        }
+        
+        if (delete_up_to <= offset) {
+            var d = s[0] - (offset + node.elems.length)
+            if (d >= 0) return
+            delete_up_to = s[0] + s[1]
+            
+            if (s[2]) {
+                var new_node = sync9_create_space_dag_node(vid, s[2])
+                if (s[0] == offset && node.gash) {
+                    if (!prev.end_cap) throw 'no end_cap?'
+                    add_to_nexts(prev.nexts, new_node)
+                } else {
+                    sync9_space_dag_break_node(node, s[0] - offset, true, new_node)
+                    return
+                }
+            } else {
+                if (s[0] == offset) {
+                } else {
+                    sync9_space_dag_break_node(node, s[0] - offset)
+                    return
+                }
+            }
+        }
+        
+        if (delete_up_to > offset) {
+            if (delete_up_to <= offset + node.elems.length) {
+                if (delete_up_to < offset + node.elems.length) {
+                    sync9_space_dag_break_node(node, delete_up_to - offset)
+                }
+                si++
+            }
+            node.deleted_by[vid] = true
+            return
+        }
+    }
+    
+    var f = is_anc
+    var exit_early = {}
+    var offset = 0
+    function helper(node, prev, vid) {
+        var has_nexts = node.nexts.find(next => f(next.vid))
+        var deleted = Object.keys(node.deleted_by).some(vid => f(vid))
+        if (cb(node, offset, has_nexts, prev, vid, deleted) == false)
+            throw exit_early
+        if (!deleted) {
+            offset += node.elems.length
+        }
+        for (var next of node.nexts)
+            if (f(next.vid)) helper(next, null, next.vid)
+        if (node.next) helper(node.next, node, vid)
+    }
+    try {
+        helper(S, null, S.vid)
+    } catch (e) {
+        if (e != exit_early) throw e
+    }
+    
+}
+
+function sync9_trav_space_dag(S, f, cb, view_deleted, tail_cb) {
+    var exit_early = {}
+    var offset = 0
+    function helper(node, prev, vid) {
+        var has_nexts = node.nexts.find(next => f(next.vid))
+        if (view_deleted ||
+            !Object.keys(node.deleted_by).some(vid => f(vid))) {
+            if (cb(node, offset, has_nexts, prev, vid) == false)
+                throw exit_early
+            offset += node.elems.length
+        }
+        for (var next of node.nexts)
+            if (f(next.vid)) helper(next, null, next.vid)
+        if (node.next) helper(node.next, node, vid)
+        else if (tail_cb) tail_cb(node)
+    }
+    try {
+        helper(S, null, S.vid)
+    } catch (e) {
+        if (e != exit_early) throw e
+    }
+}
+
+function sync9_get_ancestors(x, vids) {
+    var ancs = {}
+    function mark_ancs(key) {
+        if (!ancs[key]) {
+            ancs[key] = true
+            Object.keys(x.T[key]).forEach(mark_ancs)
+        }
+    }
+    Object.keys(vids).forEach(mark_ancs)
+    return ancs
+}
+
+function sync9_parse_change(change) {
+    var ret = { keys : [] }
+    
+    var re = /\.?([^\.\[ =]+)|\[((\-?\d+)(:\-?\d+)?|'(\\'|[^'])*'|"(\\"|[^"])*")\]|\s*=\s*(.*)/g
+    var m
+    while (m = re.exec(change)) {
+        if (m[1])
+            ret.keys.push(m[1])
+        else if (m[2] && m[4])
+            ret.range = [
+                JSON.parse(m[3]),
+                JSON.parse(m[4].substr(1))
+            ]
+        else if (m[2])
+            ret.keys.push(JSON.parse(m[2]))
+        else if (m[7])
+            ret.val = JSON.parse(m[7])
+    }
+    
+    return ret
+}
+
+function sync9_diff_ODI(a, b) {
+    var offset = 0
+    var prev = null
+    var ret = []
+    var d = diff_main(a, b)
+    for (var i = 0; i < d.length; i++) {
+        if (d[i][0] == 0) {
+            if (prev) ret.push(prev)
+            prev = null
+            offset += d[i][1].length
+        } else if (d[i][0] == 1) {
+            if (prev)
+                prev[2] += d[i][1]
+            else
+                prev = [offset, 0, d[i][1]]
+        } else {
+            if (prev)
+                prev[1] += d[i][1].length
+            else
+                prev = [offset, d[i][1].length, '']
+            offset += d[i][1].length
+        }
+    }
+    if (prev) ret.push(prev)
+    return ret
+}
+
+function sync9_guid() {
+    var x = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    var s = []
+    for (var i = 0; i < 15; i++)
+        s.push(x[Math.floor(Math.random() * x.length)])
+    return s.join('')
+}
+
+function sync9_create_proxy(x, cb, path) {
+    path = path || ''
+    var child_path = key => path + '[' + JSON.stringify(key) + ']'
+    return new Proxy(x, {
+        get : (x, key) => {
+            if (['copyWithin', 'reverse', 'sort', 'fill'].includes(key))
+                throw 'proxy does not support function: ' + key
+            if (key == 'push') return function () {
+                var args = Array.from(arguments)
+                cb([path + '[' + x.length + ':' + x.length + '] = ' + JSON.stringify(args)])
+                return x.push.apply(x, args)
+            }
+            if (key == 'pop') return function () {
+                cb([path + '[' + (x.length - 1) + ':' + x.length + '] = []'])
+                return x.pop()
+            }
+            if (key == 'shift') return function () {
+                cb([path + '[0:1] = []'])
+                return x.shift()
+            }
+            if (key == 'unshift') return function () {
+                var args = Array.from(arguments)
+                cb([path + '[0:0] = ' + JSON.stringify(args)])
+                return x.unshift.apply(x, args)
+            }
+            if (key == 'splice') return function () {
+                var args = Array.from(arguments)
+                cb([child_path(key) + '[' + args[0] + ':' + (args[0] + args[1]) + '] = ' + JSON.stringify(args.slice(2))])
+                return x.splice.apply(x, args)
+            }
+            
+            var y = x[key]
+            if (y && typeof(y) == 'object') {
+                return sync9_create_proxy(y, cb, child_path(key))
+            } else return y
+        },
+        set : (x, key, val) => {
+            if (typeof(val) == 'string' && typeof(x[key]) == 'string') {
+                cb(sync9_diff_ODI(x[key], val).map(splice => {
+                    return child_path(key) + '[' + splice[0] + ':' + (splice[0] + splice[1]) + '] = ' + JSON.stringify(splice[2])
+                }))
+            } else {
+                if ((x instanceof Array) && key.match(/^\d+$/)) key = +key
+                cb([child_path(key) + ' = ' + JSON.stringify(val)])
+            }
+            x[key] = val
+            return true
+        }
+    })
+}
+
+function sync9_prune(x, has_everyone_whos_seen_a_seen_b, has_everyone_whos_seen_a_seen_b_2) {
+    var seen_nodes = {}
+    var did_something = true
+    function rec(x) {
+        if (x && typeof(x) == 'object') {
+            if (!x.t && x.val) {
+                rec(x.val)
+            } else if (x.t == 'val') {
+                if (sync9_space_dag_prune(x.S, has_everyone_whos_seen_a_seen_b, seen_nodes)) did_something = true
+                rec(sync9_space_dag_get(x.S, 0))
+            } else if (x.t == 'obj') {
+                Object.values(x.S).forEach(v => rec(v))
+            } else if (x.t == 'arr') {
+                if (sync9_space_dag_prune(x.S, has_everyone_whos_seen_a_seen_b, seen_nodes)) did_something = true
+                sync9_trav_space_dag(x.S, () => true, node => {
+                    node.elems.forEach(e => rec(e))
+                })
+            } else if (x.t == 'str') {
+                if (sync9_space_dag_prune(x.S, has_everyone_whos_seen_a_seen_b, seen_nodes)) did_something = true
+            }
+        }
+    }
+    while (did_something) {
+        did_something = false
+        rec(x)
+    }
+
+    var visited = {}    
+    var delete_us = {}
+    function f(vid) {
+        if (visited[vid]) return
+        visited[vid] = true
+        Object.keys(x.T[vid]).forEach(pid => {
+            if (has_everyone_whos_seen_a_seen_b_2(pid, vid) && !seen_nodes[pid]) {
+                delete_us[pid] = true
+            }
+            f(pid)
+        })
+    }
+    Object.keys(x.leaves).forEach(f)
+
+    var visited = {}
+    var forwards = {}
+    function g(vid) {
+        if (visited[vid]) return
+        visited[vid] = true
+        if (delete_us[vid])
+            forwards[vid] = {}
+        Object.keys(x.T[vid]).forEach(pid => {
+            g(pid)
+            if (delete_us[vid]) {
+                if (delete_us[pid])
+                    Object.assign(forwards[vid], forwards[pid])
+                else
+                    forwards[vid][pid] = true
+            } else if (delete_us[pid]) {
+                delete x.T[vid][pid]
+                Object.assign(x.T[vid], forwards[pid])
+            }
+        })
+    }
+    Object.keys(x.leaves).forEach(g)
+    Object.keys(delete_us).forEach(vid => delete x.T[vid])
+    return delete_us
+}
+
+function sync9_space_dag_prune(S, has_everyone_whos_seen_a_seen_b, seen_nodes) {
+    function set_nnnext(node, next) {
+        while (node.next) node = node.next
+        node.next = next
+    }
+    function process_node(node, offset, vid, prev) {
+        var nexts = node.nexts
+        var next = node.next
+
+        var first_prunable = nexts.findIndex(x => has_everyone_whos_seen_a_seen_b(vid, x.vid))
+        if (first_prunable > 0 && (node.elems.length > 0 || !prev)) {
+            first_prunable = nexts.findIndex((x, i) => (i > first_prunable) && has_everyone_whos_seen_a_seen_b(vid, x.vid))
+        }
+        
+        if (first_prunable >= 0) {
+            var gamma = next
+            if (first_prunable + 1 < nexts.length) {
+                gamma = sync9_create_space_dag_node(null, typeof(node.elems) == 'string' ? '' : [])
+                gamma.nexts = nexts.slice(first_prunable + 1)
+                gamma.next = next
+            }
+            if (first_prunable == 0) {
+                if (nexts[0].elems.length == 0 && !nexts[0].end_cap && nexts[0].nexts.length > 0) {
+                    var beta = gamma
+                    if (nexts[0].next) {
+                        beta = nexts[0].next
+                        set_nnnext(beta, gamma)
+                    }
+                    node.nexts = nexts[0].nexts
+                    node.next = beta
+                } else {
+                    delete node.end_cap
+                    node.nexts = []
+                    node.next = nexts[0]
+                    node.next.vid = null
+                    set_nnnext(node, gamma)
+                }
+            } else {
+                node.nexts = nexts.slice(0, first_prunable)
+                node.next = nexts[first_prunable]
+                node.next.vid = null
+                set_nnnext(node, gamma)
+            }
+            return true
+        }
+        
+        if (Object.keys(node.deleted_by).some(k => has_everyone_whos_seen_a_seen_b(vid, k))) {
+            node.deleted_by = {}
+            node.elems = typeof(node.elems) == 'string' ? '' : []
+            delete node.gash
+            return true
+        } else {
+            Object.assign(seen_nodes, node.deleted_by)
+        }
+        
+        if (next && !next.nexts[0] && (Object.keys(next.deleted_by).some(k => has_everyone_whos_seen_a_seen_b(vid, k)) || next.elems.length == 0)) {
+            node.next = next.next
+            return true
+        }
+        
+        if (nexts.length == 0 && next &&
+            !(next.elems.length == 0 && !next.end_cap && next.nexts.length > 0) &&
+            Object.keys(node.deleted_by).every(x => next.deleted_by[x]) &&
+            Object.keys(next.deleted_by).every(x => node.deleted_by[x])) {
+            node.elems = node.elems.concat(next.elems)
+            node.end_cap = next.end_cap
+            node.nexts = next.nexts
+            node.next = next.next
+            return true
+        }
+    }
+    var did_something = false
+    sync9_trav_space_dag(S, () => true, (node, offset, has_nexts, prev, vid) => {
+        if (!prev) seen_nodes[vid] = true
+        while (process_node(node, offset, vid, prev)) {
+            did_something = true
+        }
+    }, true)
+    return did_something
+}
+
+// modified from https://stackoverflow.com/questions/22697936/binary-search-in-javascript
+function binarySearch(ar, compare_fn) {
+    var m = 0;
+    var n = ar.length - 1;
+    while (m <= n) {
+        var k = (n + m) >> 1;
+        var cmp = compare_fn(ar[k]);
+        if (cmp > 0) {
+            m = k + 1;
+        } else if(cmp < 0) {
+            n = k - 1;
+        } else {
+            return k;
+        }
+    }
+    return m;
+}
+
+
+
+
+
+
+function deep_equals(a, b) {
+    if (typeof(a) != 'object' || typeof(b) != 'object') return a == b
+    if (a == null) return b == null
+    if (Array.isArray(a)) {
+        if (!Array.isArray(b)) return false
+        if (a.length != b.length) return false
+        for (var i = 0; i < a.length; i++)
+            if (!deep_equals(a[i], b[i])) return false
+        return true
+    }
+    var ak = Object.keys(a).sort()
+    var bk = Object.keys(b).sort()
+    if (ak.length != bk.length) return false
+    for (var k of ak)
+        if (!deep_equals(a[k], b[k])) return false
+    return true
+}
+
+
+
+
+
+main()
+
+
+</script>
