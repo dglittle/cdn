@@ -654,11 +654,19 @@ function sync9_create_peer(p_funcs) {
         })
         
         var new_fs = []
+        var gen_fs = []
         fs.forEach(f => {
             var key = f.a + ':' + f.b + ':' + f.salt
             if (!self.fissures[key]) {
                 new_fs.push(f)
                 self.fissures[key] = f
+                if (f.b == self.uid) gen_fs.push({
+                    a: self.uid,
+                    b: f.a,
+                    salt: f.salt,
+                    nodes: {},
+                    parents: {}
+                })
             }
         })
         
@@ -704,6 +712,7 @@ function sync9_create_peer(p_funcs) {
                 if (p != pid) p_funcs.set_multi(p, new_vs, new_fs, conn_leaves, min_leaves)
             })
         }
+        gen_fs.forEach(f => self.fissure(null, f))
     }
     
     function add_full_ack_leaf(vid) {
