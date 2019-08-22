@@ -19,11 +19,11 @@ var offset = [0, 0]
 tile_floor(c, offset, props)
 
 
-function make_button(text, cb) {
+function make_button(i, text, cb) {
     var d = document.createElement('div')
     d.textContent = text
     d.style.position = 'fixed'
-    d.style.left = window.innerWidth / 10 / 2 + 'px'
+    d.style.left = window.innerWidth / 10 / 2 + (window.innerWidth / 10 / 2 * 3 * i) + 'px'
     d.style.bottom = window.innerWidth / 10 / 2 + 'px'
     d.style.width = window.innerWidth / 10 + 'px'
     d.style.height = window.innerWidth / 10 + 'px'
@@ -31,12 +31,12 @@ function make_button(text, cb) {
     d.onclick = cb
     document.body.append(d)
 }
-make_button('lines', () => {
+make_button(0, 'lines', () => {
     props.fillStyle = 'rgba(255, 255, 255, 0.5)'
     props.justLines = true
     tile_floor(c, offset, props)
 })
-make_button('points', () => {
+make_button(1, 'points', () => {
     props.fillStyle = 'rgba(255, 255, 255, 0.5)'
     props.justPoints = true
     tile_floor(c, offset, props)
