@@ -197,8 +197,8 @@ function tile_floor(c, offset, props) {
                     var r = line_intersect(a[0][0], a[0][1], a[1][0], a[1][1], b[0][0], b[0][1], b[1][0], b[1][1])
                     if (r.seg1 && r.seg2) {
                         if (props.justPoints) {
-                            g.moveTo(r.x + 1.5, r.y)
-                            g.arc(r.x, r.y, 1.5, 0, Math.PI*2)
+                            g.moveTo(r.x + 2, r.y)
+                            g.arc(r.x, r.y, 2, 0, Math.PI*2)
                         }
                         
                         var e_scale = 0.4
