@@ -43,6 +43,12 @@ make_button(1, 'points', () => {
     props.justPoints = true
     tile_floor(c, offset, props)
 })
+make_button(1, 'rhombs', () => {
+    props = {}
+    props.fillStyle = 'rgba(255, 255, 255, 0.5)'
+    props.justRhombs = true
+    tile_floor(c, offset, props)
+})
 
 
 c.ontouchstart = function (e) {
@@ -238,11 +244,13 @@ function tile_floor(c, offset, props) {
     
                         var diff = ((i - ii) + 5) % 5
                         if (diff == 2 || diff == 3) {
-                            // drawPoly(g, corners, 'rgba(0, 128, 255, 0.5)')
+                            if (props.justRhombs)
+                                drawPoly(g, corners, 'rgba(0, 128, 255, 0.5)')
                             
                             thin_rhombs.push(corners)
                         } else {
-                            // drawPoly(g, corners, 'rgba(255, 255, 0, 0.5)')
+                            if (props.justRhombs)
+                                drawPoly(g, corners, 'rgba(255, 255, 0, 0.5)')
                             
                             each(corners, function (c) {
                                 point_set.add(c)
@@ -263,6 +271,8 @@ function tile_floor(c, offset, props) {
         g.fill()
         return
     }
+    
+    if (props.justRhombs) return
     
     var kites = create_point_set()
     
