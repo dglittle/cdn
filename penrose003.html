@@ -32,11 +32,13 @@ function make_button(i, text, cb) {
     document.body.append(d)
 }
 make_button(0, 'lines', () => {
+    props = {}
     props.fillStyle = 'rgba(255, 255, 255, 0.5)'
     props.justLines = true
     tile_floor(c, offset, props)
 })
 make_button(1, 'points', () => {
+    props = {}
     props.fillStyle = 'rgba(255, 255, 255, 0.5)'
     props.justPoints = true
     tile_floor(c, offset, props)
@@ -195,6 +197,7 @@ function tile_floor(c, offset, props) {
                     var r = line_intersect(a[0][0], a[0][1], a[1][0], a[1][1], b[0][0], b[0][1], b[1][0], b[1][1])
                     if (r.seg1 && r.seg2) {
                         if (props.justPoints) {
+                            g.moveTo(r.x + 1.5, r.y)
                             g.arc(r.x, r.y, 1.5, 0, Math.PI*2)
                         }
                         
