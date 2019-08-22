@@ -32,6 +32,7 @@ function make_button(text, cb) {
     document.body.append(d)
 }
 make_button('hi', () => {
+    props.fillStyle = 'rgba(255, 255, 255, 0.5)'
     props.justLines = true
     tile_floor(c, offset, props)
 })
@@ -95,7 +96,7 @@ function tile_floor(c, offset, props) {
     offset = offset.map(x => x * dpr)
     var g = c.getContext('2d')
     
-    g.fillStyle = 'rgba(255, 255, 255, 1)'
+    g.fillStyle = props.fillStyle || 'rgba(255, 255, 255, 1)'
     g.fillRect(0, 0, c.width, c.height)
     
     var r = Math.sqrt(Math.pow(c.width/2, 2) + Math.pow(c.height/2, 2))
