@@ -90,6 +90,7 @@ tile_floor(c, offset)
 
 
 function tile_floor(c, offset) {
+    offset = offset.map(x => x * dpr)
     var g = c.getContext('2d')
     
     g.fillStyle = 'rgba(255, 0, 255, 1)'
