@@ -1,6 +1,8 @@
 <body>
 <script>
 
+var dpr = window.devicePixelRatio
+
 var each = function (o, cb) {
 	if (o instanceof Array) {
 		for (var i = 0; i < o.length; i++) {
@@ -24,8 +26,8 @@ c.style.left = '0px'
 c.style.top = '0px'
 c.style.width = window.innerWidth
 c.style.height = window.innerHeight
-c.width = window.innerWidth
-c.height = window.innerHeight
+c.width = window.innerWidth * dpr
+c.height = window.innerHeight * dpr
 
 var offset = [0, 0]
 
