@@ -3,23 +3,6 @@
 
 var dpr = window.devicePixelRatio
 
-var each = function (o, cb) {
-	if (o instanceof Array) {
-		for (var i = 0; i < o.length; i++) {
-			if (cb(o[i], i, o) == false)
-				return false
-		}
-	} else {
-		for (var k in o) {
-			if (o.hasOwnProperty(k)) {
-				if (cb(o[k], k, o) == false)
-					return false
-			}
-		}
-	}
-	return true
-}
-
 var c = document.createElement('canvas')
 c.style.position = 'absolute'
 c.style.left = '0px'
@@ -28,8 +11,28 @@ c.style.width = window.innerWidth
 c.style.height = window.innerHeight
 c.width = window.innerWidth * dpr
 c.height = window.innerHeight * dpr
+document.body.append(c)
 
 var offset = [0, 0]
+tile_floor(c, offset)
+
+
+function make_button(text, cb) {
+    var d = document.createElement('div')
+    d.textContent = text
+    d.style.position = 'fixed'
+    d.style.left = window.innerWidth / 10 / 2 + 'px'
+    d.style.bottom = window.innerWidth / 10 / 2 + 'px'
+    d.style.width = window.innerWidth / 10 + 'px'
+    d.style.height = window.innerWidth / 10 + 'px'
+    d.style.background = 'white'
+    d.onclick = cb
+    document.body.append(d)
+}
+make_button('hi', () => {
+    alert('yo!')
+})
+
 
 c.ontouchstart = function (e) {
     e.preventDefault()
@@ -84,10 +87,6 @@ c.onmousedown = function (e) {
         document.onmouseup = oldUp
     }
 }
-
-document.body.append(c)
-tile_floor(c, offset)
-
 
 function tile_floor(c, offset) {
     offset = offset.map(x => x * dpr)
@@ -435,6 +434,23 @@ function getRelPos(to, positionedObject) {
         x : positionedObject.pageX - pos.x,
         y : positionedObject.pageY - pos.y
     }
+}
+
+function each(o, cb) {
+	if (o instanceof Array) {
+		for (var i = 0; i < o.length; i++) {
+			if (cb(o[i], i, o) == false)
+				return false
+		}
+	} else {
+		for (var k in o) {
+			if (o.hasOwnProperty(k)) {
+				if (cb(o[k], k, o) == false)
+					return false
+			}
+		}
+	}
+	return true
 }
 
 </script>
