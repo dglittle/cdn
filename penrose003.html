@@ -56,6 +56,7 @@ c.ontouchstart = function (e) {
     document.ontouchend = function (e) {
         var d = sub(new_pos, start_pos)
         offset = sub(offset, d)
+        props.fillStyle = 'white'
         tile_floor(c, offset, props)
         c.style.left = '0px'
         c.style.top = '0px'
@@ -83,6 +84,7 @@ c.onmousedown = function (e) {
         var new_pos = [e.pageX, e.pageY]
         var d = sub(new_pos, start_pos)
         offset = sub(offset, d)
+        props.fillStyle = 'white'
         tile_floor(c, offset, props)
         c.style.left = '0px'
         c.style.top = '0px'
