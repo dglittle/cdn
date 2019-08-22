@@ -47,8 +47,8 @@ make_button(i++, 'points', () => {
 make_button(i++, 'rhombs', () => {
     props = {}
     props.fillStyle = 'rgba(255, 255, 255, 0.5)'
-    props.colorA = 'rgba(0, 0, 255, 0.25)'
-    props.colorB = 'rgba(255, 255, 0, 0.25)'
+    props.colorA = 'rgba(0, 0, 255, 0.01)'
+    props.colorB = 'rgba(255, 255, 0, 0.01)'
     props.justRhombs = true
     tile_floor(c, offset, props)
 })
@@ -190,9 +190,9 @@ function tile_floor(c, offset, props) {
     var point_set = create_point_set()
     var thin_rhombs = []
     
-    if (props.justPoints) {
-        g.beginPath()
-    }
+    // if (props.justPoints) {
+    //     g.beginPath()
+    // }
     
     var iiii = 0
     for (var i = 0; i < liness.length; i++) {
@@ -205,9 +205,19 @@ function tile_floor(c, offset, props) {
                     var b = lines_b[bi]
                     var r = line_intersect(a[0][0], a[0][1], a[1][0], a[1][1], b[0][0], b[0][1], b[1][0], b[1][1])
                     if (r.seg1 && r.seg2) {
-                        if (props.justPoints) {
+                        // if (props.justPoints) {
+                        //     g.moveTo(r.x + 2, r.y)
+                        //     g.arc(r.x, r.y, 2, 0, Math.PI*2)
+                        // }
+                        
+                        var color = Array(3).map(x => Math.floor(Math.random() * 256))
+                        
+                        if (props.justRhombs) {
+                            g.beginPath()
                             g.moveTo(r.x + 2, r.y)
                             g.arc(r.x, r.y, 2, 0, Math.PI*2)
+                            g.fillStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 1)`
+                            g.fill()
                         }
                         
                         var e_scale = 0.4
@@ -248,12 +258,12 @@ function tile_floor(c, offset, props) {
                         var diff = ((i - ii) + 5) % 5
                         if (diff == 2 || diff == 3) {
                             if (props.justRhombs)
-                                drawPoly(g, corners, props.colorA)
+                                drawPoly(g, corners, `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.3)`)//props.colorA)
                             
                             thin_rhombs.push(corners)
                         } else {
                             if (props.justRhombs)
-                                drawPoly(g, corners, props.colorB)
+                                drawPoly(g, corners, `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.3)`)//props.colorB)
                             
                             each(corners, function (c) {
                                 point_set.add(c)
@@ -269,11 +279,11 @@ function tile_floor(c, offset, props) {
         }
     }
     
-    if (props.justPoints) {
-        g.fillStyle = 'red'
-        g.fill()
-        return
-    }
+    // if (props.justPoints) {
+    //     g.fillStyle = 'red'
+    //     g.fill()
+    //     return
+    // }
     
     if (props.justRhombs) return
     
