@@ -13,9 +13,7 @@ c.width = window.innerWidth * dpr
 c.height = window.innerHeight * dpr
 document.body.append(c)
 
-var props = {
-    justLines: true
-}
+var props = {}
 
 var offset = [0, 0]
 tile_floor(c, offset, props)
@@ -34,7 +32,8 @@ function make_button(text, cb) {
     document.body.append(d)
 }
 make_button('hi', () => {
-    alert('yo!')
+    props.justLines = true
+    tile_floor(c, offset, props)
 })
 
 
