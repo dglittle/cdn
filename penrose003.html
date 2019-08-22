@@ -13,6 +13,10 @@ c.width = window.innerWidth * dpr
 c.height = window.innerHeight * dpr
 document.body.append(c)
 
+var props = {
+    justLines: true
+}
+
 var offset = [0, 0]
 tile_floor(c, offset)
 
@@ -88,7 +92,7 @@ c.onmousedown = function (e) {
     }
 }
 
-function tile_floor(c, offset) {
+function tile_floor(c, offset, props) {
     offset = offset.map(x => x * dpr)
     var g = c.getContext('2d')
     
@@ -117,7 +121,6 @@ function tile_floor(c, offset) {
         var lines = []
         liness.push(lines)
         
-        // g.beginPath()
         var M = [e[1], -e[0], e[0], e[1]]
         
         var pert = -(dot(e, offset)%gap) + e[2]
@@ -132,13 +135,21 @@ function tile_floor(c, offset) {
             b = add(b, center)
             
             lines.push([a, b])
-            
-            // g.moveTo(a[0], a[1])
-            // g.lineTo(b[0], b[1])
         }
-        // g.strokeStyle = 'black'
-        // g.stroke()
     })
+    
+    if (props.justLines) {
+        g.beginPath()
+        liness.forEach(lines => {
+            lines.forEach(x => {
+                g.moveTo(x[0][0], x[0][1])
+                g.lineTo(x[1][0], x[1][1])
+            })
+        })
+        g.strokeStyle = 'black'
+        g.stroke()
+        return
+    }
     
     function create_point_set() {
         var self = {}
