@@ -31,21 +31,24 @@ function make_button(i, text, cb) {
     d.onclick = cb
     document.body.append(d)
 }
-make_button(0, 'lines', () => {
+var i = 0
+make_button(i++, 'lines', () => {
     props = {}
     props.fillStyle = 'rgba(255, 255, 255, 0.5)'
     props.justLines = true
     tile_floor(c, offset, props)
 })
-make_button(1, 'points', () => {
+make_button(i++, 'points', () => {
     props = {}
     props.fillStyle = 'rgba(255, 255, 255, 0.5)'
     props.justPoints = true
     tile_floor(c, offset, props)
 })
-make_button(1, 'rhombs', () => {
+make_button(i++, 'rhombs', () => {
     props = {}
     props.fillStyle = 'rgba(255, 255, 255, 0.5)'
+    props.colorA = 'rgba(0, 0, 255, 0.25)'
+    props.colorB = 'rgba(255, 255, 0, 0.25)'
     props.justRhombs = true
     tile_floor(c, offset, props)
 })
@@ -245,12 +248,12 @@ function tile_floor(c, offset, props) {
                         var diff = ((i - ii) + 5) % 5
                         if (diff == 2 || diff == 3) {
                             if (props.justRhombs)
-                                drawPoly(g, corners, 'rgba(0, 128, 255, 0.5)')
+                                drawPoly(g, corners, props.colorA)
                             
                             thin_rhombs.push(corners)
                         } else {
                             if (props.justRhombs)
-                                drawPoly(g, corners, 'rgba(255, 255, 0, 0.5)')
+                                drawPoly(g, corners, props.colorB)
                             
                             each(corners, function (c) {
                                 point_set.add(c)
