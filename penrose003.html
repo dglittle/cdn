@@ -31,9 +31,14 @@ function make_button(text, cb) {
     d.onclick = cb
     document.body.append(d)
 }
-make_button('hi', () => {
+make_button('lines', () => {
     props.fillStyle = 'rgba(255, 255, 255, 0.5)'
     props.justLines = true
+    tile_floor(c, offset, props)
+})
+make_button('points', () => {
+    props.fillStyle = 'rgba(255, 255, 255, 0.5)'
+    props.justPoints = true
     tile_floor(c, offset, props)
 })
 
@@ -174,6 +179,10 @@ function tile_floor(c, offset, props) {
     var point_set = create_point_set()
     var thin_rhombs = []
     
+    if (props.justPoints) {
+        g.beginPath()
+    }
+    
     var iiii = 0
     for (var i = 0; i < liness.length; i++) {
         for (var ii = i + 1; ii < liness.length; ii++) {
@@ -185,8 +194,9 @@ function tile_floor(c, offset, props) {
                     var b = lines_b[bi]
                     var r = line_intersect(a[0][0], a[0][1], a[1][0], a[1][1], b[0][0], b[0][1], b[1][0], b[1][1])
                     if (r.seg1 && r.seg2) {
-                        // g.fillStyle = 'red'
-                        // g.fillRect(r.x, r.y, 3, 3)
+                        if (props.justPoints) {
+                            g.arc(r.x, r.y, 1.5, 0, Math.PI*2)
+                        }
                         
                         var e_scale = 0.4
                         var corners = [[0, 0], [0, 0], [0, 0], [0, 0]]
@@ -243,6 +253,12 @@ function tile_floor(c, offset, props) {
                 }
             }
         }
+    }
+    
+    if (props.justPoints) {
+        g.fillStyle = 'red'
+        g.fill()
+        return
     }
     
     var kites = create_point_set()
