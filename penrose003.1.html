@@ -154,9 +154,8 @@ slider.style.position = 'fixed'
 slider.style.left = '0px'
 slider.style.bottom = '0px'
 document.body.append(slider)
-slider.oninput = draw_rhombs
+slider.oninput = () => g_redraw = true
 
-draw_rhombs()
 function draw_rhombs() {
     rhombs.forEach(r => {
         if (r.thin) {
@@ -165,6 +164,16 @@ function draw_rhombs() {
             drawPoly(g, r.corners, `rgba(0, 0, 255, 0.3)`)
         }
     })
+}
+
+var g_redraw = true
+loop()
+function loop() {
+    if (g_redraw) {
+        draw_rhombs()
+    }
+    g_redraw = false
+    requestAnimationFrame(loop)
 }
 
 ///////////////////////
