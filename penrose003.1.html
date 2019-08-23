@@ -12,84 +12,13 @@ c.style.height = window.innerHeight
 c.width = window.innerWidth * dpr
 c.height = window.innerHeight * dpr
 document.body.append(c)
+var g = c.getContext('2d')
 
-var props = {}
+var rhombs = []
 
-var offset = [0, 0]
-tile_floor(c, offset, props)
-
-var slider = document.createElement('input')
-slider.setAttribute('type', 'range')
-slider.setAttribute('min', '0')
-slider.setAttribute('max', '100')
-slider.setAttribute('value', '50')
-slider.style.position = 'fixed'
-slider.style.left = '0px'
-slider.style.bottom = '0px'
-document.body.append(slider)
-
-c.ontouchstart = function (e) {
-    e.preventDefault()
-    var start_pos = [e.touches[0].pageX, e.touches[0].pageY]
-    var new_pos = start_pos
-
-    var oldMove = document.ontouchmove
-    document.ontouchmove = function (e) {
-        new_pos = [e.touches[0].pageX, e.touches[0].pageY]
-        var d = sub(new_pos, start_pos)
-        c.style.left = d[0] + 'px'
-        c.style.top = d[1] + 'px'
-    }
-    
-    var oldEnd = document.ontouchend;
-    var oldCancel = document.ontouchcancel
-    document.ontouchend = function (e) {
-        var d = sub(new_pos, start_pos)
-        offset = sub(offset, d)
-        props.fillStyle = 'white'
-        tile_floor(c, offset, props)
-        c.style.left = '0px'
-        c.style.top = '0px'
-        
-        document.ontouchmove = oldMove
-        document.ontouchend = oldEnd
-        document.ontouchcancel = oldCancel
-    }
-}
-
-c.onmousedown = function (e) {
-    e.preventDefault()
-    var start_pos = [e.pageX, e.pageY]
-
-    var oldMove = document.onmousemove
-    document.onmousemove = function (e) {
-        var new_pos = [e.pageX, e.pageY]
-        var d = sub(new_pos, start_pos)
-        c.style.left = d[0] + 'px'
-        c.style.top = d[1] + 'px'
-    }
-    
-    var oldUp = document.onmouseup
-    document.onmouseup = function (e) {
-        var new_pos = [e.pageX, e.pageY]
-        var d = sub(new_pos, start_pos)
-        offset = sub(offset, d)
-        props.fillStyle = 'white'
-        tile_floor(c, offset, props)
-        c.style.left = '0px'
-        c.style.top = '0px'
-        
-        document.onmousemove = oldMove
-        document.onmouseup = oldUp
-    }
-}
-
-function tile_floor(c, offset, props) {
-    offset = offset.map(x => x * dpr)
-    var g = c.getContext('2d')
-    
-    g.fillStyle = props.fillStyle || 'rgba(255, 255, 255, 1)'
-    g.fillRect(0, 0, c.width, c.height)
+calc_rhombs()
+function calc_rhombs() {
+    offset = [0, 0]
     
     var r = Math.sqrt(Math.pow(c.width/2, 2) + Math.pow(c.height/2, 2))
     //var r = Math.min(c.width, c.height) / 2
@@ -162,14 +91,6 @@ function tile_floor(c, offset, props) {
         return self
     }
     
-    var point_set = create_point_set()
-    var thin_rhombs = []
-    
-    // if (props.justPoints) {
-    //     g.beginPath()
-    // }
-    
-    var iiii = 0
     for (var i = 0; i < liness.length; i++) {
         for (var ii = i + 1; ii < liness.length; ii++) {
             var lines_a = liness[i]
@@ -180,21 +101,6 @@ function tile_floor(c, offset, props) {
                     var b = lines_b[bi]
                     var r = line_intersect(a[0][0], a[0][1], a[1][0], a[1][1], b[0][0], b[0][1], b[1][0], b[1][1])
                     if (r.seg1 && r.seg2) {
-                        // if (props.justPoints) {
-                        //     g.moveTo(r.x + 2, r.y)
-                        //     g.arc(r.x, r.y, 2, 0, Math.PI*2)
-                        // }
-                        
-                        var color = new Uint8Array(3).map(x => Math.floor(Math.random() * 256))
-                        
-                        if (props.justRhombs) {
-                            g.beginPath()
-                            g.moveTo(r.x + 4, r.y)
-                            g.arc(r.x, r.y, 4, 0, Math.PI*2)
-                            g.fillStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 1)`
-                            g.fill()
-                        }
-                        
                         var e_scale = 0.4
                         var corners = [[0, 0], [0, 0], [0, 0], [0, 0]]
                         for (var ei = 0; ei < es.length; ei++) {
@@ -232,160 +138,45 @@ function tile_floor(c, offset, props) {
     
                         var diff = ((i - ii) + 5) % 5
                         if (diff == 2 || diff == 3) {
-                            if (props.justRhombs) {
-                                
-                                
-                                g.beginPath()
-                                g.moveTo(r.x, r.y)
-                                g.lineTo(corners[0][0], corners[0][1])
-                                g.strokeStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 1)`
-                                g.stroke()
-                                
-                                
-                                drawPoly(g, corners, `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.3)`)//props.colorA)
-                            }
-                            
-                            thin_rhombs.push(corners)
+                            rhombs.push({
+                                thin: true,
+                                x: r.x,
+                                y: r.y,
+                                corners
+                            })
                         } else {
-                            if (props.justRhombs) {
-                                
-                                g.beginPath()
-                                g.moveTo(r.x, r.y)
-                                g.lineTo(corners[0][0], corners[0][1])
-                                g.strokeStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 1)`
-                                g.stroke()
-                                
-                                
-                                drawPoly(g, corners, `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.3)`)//props.colorB)
-                            }
-                            
-                            each(corners, function (c) {
-                                point_set.add(c)
+                            rhombs.push({
+                                thin: false,
+                                x: r.x,
+                                y: r.y,
+                                corners
                             })
                         }
-                        
-                        // iiii++
-                        // if (iiii >= 1200)
-                        //     throw 'blah'
                     }
                 }
             }
         }
     }
-    
-    // if (props.justPoints) {
-    //     g.fillStyle = 'red'
-    //     g.fill()
-    //     return
-    // }
-    
-    if (props.justRhombs) return
-    
-    var kites = create_point_set()
-    
-    each(thin_rhombs, function (t, i) {
-        function to_rhomb(x) {
-            var a = sub(t[2], t[0])
-            a = trans(x, [a[0], a[1], -a[1], a[0]])
-            return add(a, t[0])
-        }
-        
-        
-        
-        
-                // var color = ''
-                // if (Math.random() < 0.3333) {
-                //     if (Math.random() < 0.5) {
-                //         color = 'rgba(255, ' + Math.floor(256 * Math.random()) + ', 0, 1)'
-                //     } else {
-                //         color = 'rgba(255, 0, ' + Math.floor(256 * Math.random()) + ', 1)'
-                //     }
-                // } else if (Math.random() < 0.5) {
-                //     if (Math.random() < 0.5) {
-                //         color = 'rgba(' + Math.floor(256 * Math.random()) + ', 255, 0, 1)'
-                //     } else {
-                //         color = 'rgba(0, 255, ' + Math.floor(256 * Math.random()) + ', 1)'
-                //     }
-                // } else {
-                //     if (Math.random() < 0.5) {
-                //         color = 'rgba(' + Math.floor(256 * Math.random()) + ', 0, 255, 1)'
-                //     } else {
-                //         color = 'rgba(0, ' + Math.floor(256 * Math.random()) + ', 255, 1)'
-                //     }
-                // }
-                
-                var kiteColor = 'rgba(127, 21, 84, 1)'
-                var dartColor = 'rgba(183, 157, 112, 1)'
+}
 
-        
-        
-        
-        var a = to_rhomb([.5, .5 * Math.tan(54/360*Math.PI*2)])
-        if (point_set.ask(a)) {
-            var further = null
-            if (distSq(t[1], a) > distSq(t[3], a)) {
-                t[3] = a
-                further = t[1]
-            } else {
-                t[1] = a
-                further = t[3]
-            }
-            drawPoly(g, t, kiteColor)
-    
-            var dx = .5 * Math.sin(36/360*Math.PI*2)/Math.cos(18/360*Math.PI*2)
-            if (point_set.ask(to_rhomb([.5 - dx, -.5*Math.cos(36/360*Math.PI*2)/Math.cos(18/360*Math.PI*2) - .5*Math.sin(18/360*Math.PI*2)/Math.cos(18/360*Math.PI*2)]))) {
-                if (!kites.ask(t[0])) {
-                    kites.add(t[0])
-                    
-                    var v = [.5*Math.cos(54/360*Math.PI*2)/Math.cos(18/360*Math.PI*2), .5*Math.sin(54/360*Math.PI*2)/Math.cos(18/360*Math.PI*2)]
-                    var p = [t[0], further, to_rhomb([-v[0], -v[1]]), to_rhomb([-v[0], v[1]])]
-                    drawPoly(g, p, dartColor)
-                }
-            }
-            if (point_set.ask(to_rhomb([.5 + dx, -.5*Math.cos(36/360*Math.PI*2)/Math.cos(18/360*Math.PI*2) - .5*Math.sin(18/360*Math.PI*2)/Math.cos(18/360*Math.PI*2)]))) {
-                if (!kites.ask(t[2])) {
-                    kites.add(t[2])
-                    
-                    var v = [1 + .5*Math.cos(54/360*Math.PI*2)/Math.cos(18/360*Math.PI*2), .5*Math.sin(54/360*Math.PI*2)/Math.cos(18/360*Math.PI*2)]
-                    var p = [t[2], further, to_rhomb([v[0], -v[1]]), to_rhomb([v[0], v[1]])]
-                    drawPoly(g, p, dartColor)
-                }
-            }
-            
+var slider = document.createElement('input')
+slider.setAttribute('type', 'range')
+slider.setAttribute('min', '0')
+slider.setAttribute('max', '100')
+slider.setAttribute('value', '50')
+slider.style.position = 'fixed'
+slider.style.left = '0px'
+slider.style.bottom = '0px'
+document.body.append(slider)
+slider.oninput = draw_rhombs
+
+draw_rhombs()
+function draw_rhombs() {
+    rhombs.forEach(r => {
+        if (r.thin) {
+            drawPoly(g, r.corners, `rgba(255, 255, 0, 0.3)`
         } else {
-            var a = to_rhomb([.5, -.5 * Math.tan(54/360*Math.PI*2)])
-            if (point_set.ask(a)) {
-                var further = null
-                if (distSq(t[1], a) > distSq(t[3], a)) {
-                    t[3] = a
-                    further = t[1]
-                } else {
-                    t[1] = a
-                    further = t[3]
-                }
-
-                drawPoly(g, t, kiteColor)
-                
-                var dx = .5 * Math.sin(36/360*Math.PI*2)/Math.cos(18/360*Math.PI*2)
-                if (point_set.ask(to_rhomb([.5 - dx, .5*Math.cos(36/360*Math.PI*2)/Math.cos(18/360*Math.PI*2) + .5*Math.sin(18/360*Math.PI*2)/Math.cos(18/360*Math.PI*2)]))) {
-                    if (!kites.ask(t[0])) {
-                        kites.add(t[0])
-                        
-                        var v = [.5*Math.cos(54/360*Math.PI*2)/Math.cos(18/360*Math.PI*2), .5*Math.sin(54/360*Math.PI*2)/Math.cos(18/360*Math.PI*2)]
-                        var p = [t[0], further, to_rhomb([-v[0], v[1]]), to_rhomb([-v[0], -v[1]])]
-                        drawPoly(g, p, dartColor)
-                    }
-                }
-                if (point_set.ask(to_rhomb([.5 + dx, .5*Math.cos(36/360*Math.PI*2)/Math.cos(18/360*Math.PI*2) + .5*Math.sin(18/360*Math.PI*2)/Math.cos(18/360*Math.PI*2)]))) {
-                    if (!kites.ask(t[2])) {
-                        kites.add(t[2])
-                        
-                        var v = [1 + .5*Math.cos(54/360*Math.PI*2)/Math.cos(18/360*Math.PI*2), .5*Math.sin(54/360*Math.PI*2)/Math.cos(18/360*Math.PI*2)]
-                        var p = [t[2], further, to_rhomb([v[0], v[1]]), to_rhomb([v[0], -v[1]])]
-                        drawPoly(g, p, dartColor)
-                    }
-                }
-            }
+            drawPoly(g, r.corners, `rgba(0, 0, 255, 0.3)`
         }
     })
 }
