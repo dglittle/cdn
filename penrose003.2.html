@@ -17,7 +17,7 @@ var g = c.getContext('2d')
 var liness = []
 var rhombs = []
 
-var N = 7
+var N = 5
 
 calc_rhombs()
 function calc_rhombs() {
@@ -30,7 +30,7 @@ function calc_rhombs() {
     var center = [c.width/2, c.height/2]
 
     //var rr = 0.6021310716578796 // Math.random() // -0.8013333924608401
-    var rr = 0.9
+    var rr = 0.2
     // var rr = 0.2
     //var rr = 0.45637382882929
     console.log('rr: ' + rr)
@@ -72,7 +72,7 @@ function calc_rhombs() {
                     var b = lines_b[bi]
                     var r = line_intersect(a[0][0], a[0][1], a[1][0], a[1][1], b[0][0], b[0][1], b[1][0], b[1][1])
                     if (r.seg1 && r.seg2) {
-                        var e_scale = 0.4
+                        var e_scale = 2 * 1/N
                         var corners = [[0, 0], [0, 0], [0, 0], [0, 0]]
                         for (var ei = 0; ei < es.length; ei++) {
                             var e = es[ei]
@@ -107,22 +107,13 @@ function calc_rhombs() {
                         corners[1] = corners[0]
                         corners[0] = save
     
-                        // var diff = ((i - ii) + 5) % 5
-                        // if (diff == 2 || diff == 3) {
-                            rhombs.push({
-                                // thin: true,
-                                x: r.x,
-                                y: r.y,
-                                corners
-                            })
-                        // } else {
-                        //     rhombs.push({
-                        //         thin: false,
-                        //         x: r.x,
-                        //         y: r.y,
-                        //         corners
-                        //     })
-                        // }
+                        var diff = ((i - ii) + N) % N
+                        rhombs.push({
+                            type: (diff == 2 || diff == 3) ? 0 : 1,
+                            x: r.x,
+                            y: r.y,
+                            corners
+                        })
                     }
                 }
             }
@@ -154,6 +145,10 @@ function draw_lines(alpha) {
 }
 
 function draw_rhombs(alpha) {
+    var colors= [
+        `rgba(255, 255, 0, ${alpha})`,
+        `rgba(0, 0, 255, ${alpha})`
+    ]
     rhombs.forEach(r => {
         var corners = r.corners.map(c => {
             return [
@@ -161,11 +156,7 @@ function draw_rhombs(alpha) {
                 lerp(0, r.y, 100, c[1], slider.value)
             ]
         })
-        if (r.thin) {
-            drawPoly(g, corners, `rgba(255, 255, 0, ${alpha})`)
-        } else {
-            drawPoly(g, corners, `rgba(0, 0, 255, ${alpha})`)
-        }
+        drawPoly(g, corners, colors[r.type])
     })
 }
 
