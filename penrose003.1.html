@@ -18,41 +18,15 @@ var props = {}
 var offset = [0, 0]
 tile_floor(c, offset, props)
 
-
-function make_button(i, text, cb) {
-    var d = document.createElement('div')
-    d.textContent = text
-    d.style.position = 'fixed'
-    d.style.left = window.innerWidth / 10 / 2 + (window.innerWidth / 10 / 2 * 3 * i) + 'px'
-    d.style.bottom = window.innerWidth / 10 / 2 + 'px'
-    d.style.width = window.innerWidth / 10 + 'px'
-    d.style.height = window.innerWidth / 10 + 'px'
-    d.style.background = 'white'
-    d.onclick = cb
-    document.body.append(d)
-}
-var i = 0
-make_button(i++, 'lines', () => {
-    props = {}
-    props.fillStyle = 'rgba(255, 255, 255, 0.5)'
-    props.justLines = true
-    tile_floor(c, offset, props)
-})
-make_button(i++, 'points', () => {
-    props = {}
-    props.fillStyle = 'rgba(255, 255, 255, 0.5)'
-    props.justPoints = true
-    tile_floor(c, offset, props)
-})
-make_button(i++, 'rhombs', () => {
-    props = {}
-    props.fillStyle = 'rgba(255, 255, 255, 1)'
-    props.colorA = 'rgba(0, 0, 255, 0.01)'
-    props.colorB = 'rgba(255, 255, 0, 0.01)'
-    props.justRhombs = true
-    tile_floor(c, offset, props)
-})
-
+var slider = document.createElement('input')
+slider.setAttribute('type', 'range')
+slider.setAttribute('min', '0')
+slider.setAttribute('max', '100')
+slider.setAttribute('value', '50')
+d.style.position = 'fixed'
+d.style.left = '0px'
+d.style.bottom = '0px'
+document.body.append(slider)
 
 c.ontouchstart = function (e) {
     e.preventDefault()
