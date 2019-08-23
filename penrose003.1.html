@@ -14,6 +14,7 @@ c.height = window.innerHeight * dpr
 document.body.append(c)
 var g = c.getContext('2d')
 
+var liness = []
 var rhombs = []
 
 calc_rhombs()
@@ -38,7 +39,6 @@ function calc_rhombs() {
         es.push([-Math.sin(angle), Math.cos(angle), perterb])
     }
     
-    var liness = []
     each(es, function (e) {
         var lines = []
         liness.push(lines)
@@ -156,8 +156,19 @@ slider.style.bottom = '0px'
 document.body.append(slider)
 slider.oninput = () => g_redraw = true
 
-function draw_rhombs() {
-    g.clearRect(0, 0, c.width, c.height)
+function draw_lines(alpha) {
+    g.beginPath()
+    liness.forEach(lines => {
+        lines.forEach(x => {
+            g.moveTo(x[0][0], x[0][1])
+            g.lineTo(x[1][0], x[1][1])
+        })
+    })
+    g.strokeStyle = 'rgba(0, 0, 0, ' + alpha + ')'
+    g.stroke()
+}
+
+function draw_rhombs(alpha) {
     rhombs.forEach(r => {
         var corners = r.corners.map(c => {
             return [
@@ -166,9 +177,9 @@ function draw_rhombs() {
             ]
         })
         if (r.thin) {
-            drawPoly(g, corners, `rgba(255, 255, 0, 0.3)`)
+            drawPoly(g, corners, `rgba(255, 255, 0, ${alpha})`)
         } else {
-            drawPoly(g, corners, `rgba(0, 0, 255, 0.3)`)
+            drawPoly(g, corners, `rgba(0, 0, 255, ${alpha})`)
         }
     })
 }
@@ -177,7 +188,9 @@ var g_redraw = true
 loop()
 function loop() {
     if (g_redraw) {
-        draw_rhombs()
+        g.clearRect(0, 0, c.width, c.height)
+        draw_lines(lerp(0, 1, 100, 0, slider.value))
+        draw_rhombs(lerp(0, 0, 100, 1, slider.value))
     }
     g_redraw = false
     requestAnimationFrame(loop)
