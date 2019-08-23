@@ -157,7 +157,14 @@ document.body.append(slider)
 slider.oninput = () => g_redraw = true
 
 function draw_rhombs() {
+    g.clearRect(0, 0, c.width, c.height)
     rhombs.forEach(r => {
+        var corners = r.corners.map(c => {
+            return [
+                lerp(0, r.x, 100, c[0], slider.value),
+                lerp(0, r.y, 100, c[1], slider.value)
+            ]
+        })
         if (r.thin) {
             drawPoly(g, r.corners, `rgba(255, 255, 0, 0.3)`)
         } else {
