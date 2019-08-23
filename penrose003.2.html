@@ -17,6 +17,8 @@ var g = c.getContext('2d')
 var liness = []
 var rhombs = []
 
+var N = 7
+
 calc_rhombs()
 function calc_rhombs() {
     offset = [0, 0]
@@ -35,7 +37,7 @@ function calc_rhombs() {
     var perterb = rr * -gap
     
     var es = []
-    for (var angle = 0; angle < Math.PI*2; angle += Math.PI*2/5) {
+    for (var angle = 0; angle < Math.PI*2 - 0.001; angle += Math.PI*2/N) {
         es.push([-Math.sin(angle), Math.cos(angle), perterb])
     }
     
@@ -59,23 +61,6 @@ function calc_rhombs() {
             lines.push([a, b])
         }
     })
-    
-    function create_point_set() {
-        var self = {}
-        self.point_set = {}
-        self.add = function (a) {
-            self.point_set[Math.round(a[0] * 1000000) + ',' + Math.round(a[1] * 1000000)] = true
-        }
-        self.ask = function (a) {
-            for (var y = -1; y <= 1; y++) {
-                for (var x = -1; x <= 1; x++) {
-                    var key = (Math.round(a[0] * 1000000) + x) + ',' + (Math.round(a[1] * 1000000) + y)
-                    if (self.point_set[key]) return true
-                }
-            }
-        }
-        return self
-    }
     
     for (var i = 0; i < liness.length; i++) {
         for (var ii = i + 1; ii < liness.length; ii++) {
@@ -122,22 +107,22 @@ function calc_rhombs() {
                         corners[1] = corners[0]
                         corners[0] = save
     
-                        var diff = ((i - ii) + 5) % 5
-                        if (diff == 2 || diff == 3) {
+                        // var diff = ((i - ii) + 5) % 5
+                        // if (diff == 2 || diff == 3) {
                             rhombs.push({
-                                thin: true,
+                                // thin: true,
                                 x: r.x,
                                 y: r.y,
                                 corners
                             })
-                        } else {
-                            rhombs.push({
-                                thin: false,
-                                x: r.x,
-                                y: r.y,
-                                corners
-                            })
-                        }
+                        // } else {
+                        //     rhombs.push({
+                        //         thin: false,
+                        //         x: r.x,
+                        //         y: r.y,
+                        //         corners
+                        //     })
+                        // }
                     }
                 }
             }
