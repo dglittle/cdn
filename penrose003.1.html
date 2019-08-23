@@ -60,20 +60,6 @@ function calc_rhombs() {
         }
     })
     
-    if (props.justLines) {
-        g.beginPath()
-        liness.forEach(lines => {
-            lines.forEach(x => {
-                g.moveTo(x[0][0], x[0][1])
-                g.lineTo(x[1][0], x[1][1])
-            })
-        })
-        g.strokeStyle = 'black'
-        g.stroke()
-        console.log('hi?')
-        return
-    }
-    
     function create_point_set() {
         var self = {}
         self.point_set = {}
