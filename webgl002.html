@@ -3,8 +3,8 @@
 
 var dpr = window.devicePixelRatio
 
-var W = 512
-var H = 512
+var W = 1024
+var H = 1024
 
 var c = document.createElement('canvas')
 c.width = W
@@ -74,7 +74,7 @@ float process_neighbor(vec4 us, vec2 d) {
 }
 
 void main() {
-    float dt = 0.05;
+    float dt = 0.1;
     
     vec4 t = texture(u_image, vec2(gl_FragCoord.x / float(${W}), gl_FragCoord.y / float(${H})));
 
@@ -178,33 +178,32 @@ gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tar
 
 loop()
 function loop() {
-    //gl.activeTexture(gl.TEXTURE0)
+    
+    for (var i = 0; i < 10; i++) {
+        gl.bindTexture(gl.TEXTURE_2D, targetTexture)
+        
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fb)
+        gl.useProgram(program2)
+        gl.uniform1f(iteration, iteration_num)
+        iteration_num++
+        
+        gl.drawArrays(gl.TRIANGLES, 0, 3)
+        
+        var save = targetTexture
+        targetTexture = targetTexture2
+        targetTexture2 = save
+        
+        var save = fb
+        fb = fb2
+        fb2 = save
+        
+    }
+    
     gl.bindTexture(gl.TEXTURE_2D, targetTexture)
-    
-    gl.bindFramebuffer(gl.FRAMEBUFFER, fb)
-    gl.useProgram(program2)
-    gl.uniform1i(iteration, iteration_num)
-    iteration_num++
-    gl.drawArrays(gl.TRIANGLES, 0, 3)
-    
-    
-    
-    //gl.activeTexture(gl.TEXTURE0)
-    gl.bindTexture(gl.TEXTURE_2D, targetTexture2)
     
     gl.bindFramebuffer(gl.FRAMEBUFFER, null)
     gl.useProgram(program)
     gl.drawArrays(gl.TRIANGLES, 0, 3)
-    
-    
-    var save = targetTexture
-    targetTexture = targetTexture2
-    targetTexture2 = save
-    
-    var save = fb
-    fb = fb2
-    fb2 = save
-    
     
     //setTimeout(loop, 1000)
     window.requestAnimationFrame(loop)
