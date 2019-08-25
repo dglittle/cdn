@@ -25,8 +25,6 @@ void main() {
 }
 `)
 
-throw 'stop'
-
 var program = createProgram(gl, vs, fs)
 var a_position = gl.getAttribLocation(program, 'a_position')
 var positionBuffer = gl.createBuffer()
