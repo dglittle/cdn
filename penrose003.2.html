@@ -17,7 +17,7 @@ var g = c.getContext('2d')
 var liness = []
 var rhombs = []
 
-var N = 7
+var N = 5
 
 calc_rhombs()
 function calc_rhombs() {
@@ -30,7 +30,7 @@ function calc_rhombs() {
     var center = [c.width/2, c.height/2]
 
     //var rr = 0.6021310716578796 // Math.random() // -0.8013333924608401
-    var rr = 0.2
+    var rr = 1/N //0.2
     // var rr = 0.2
     //var rr = 0.45637382882929
     console.log('rr: ' + rr)
@@ -40,6 +40,9 @@ function calc_rhombs() {
     for (var angle = 0; angle < Math.PI*2 - 0.001; angle += Math.PI*2/N) {
         es.push([-Math.sin(angle), Math.cos(angle), perterb])
     }
+    // es[0][2] = 0
+    // es[1][2] = 0.2
+    // es[5][2] = 0.8
     
     each(es, function (e) {
         var lines = []
@@ -149,9 +152,11 @@ function draw_lines(alpha) {
 
 function draw_rhombs(alpha) {
     var colors= [
-        `rgba(255, 255, 0, ${alpha})`,
         `rgba(0, 0, 255, ${alpha})`,
+        `rgba(255, 255, 0, ${alpha})`,
         `rgba(0, 255, 0, ${alpha})`,
+        `rgba(255, 0, 0, ${alpha})`,
+        `rgba(255, 0, 255, ${alpha})`,
     ]
     rhombs.forEach(r => {
         var corners = r.corners.map(c => {
