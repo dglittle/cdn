@@ -1,7 +1,19 @@
 <body></body>
 <script>
 
+var dpr = window.devicePixelRatio
+
+var W = 8
+var H = 8
+
 var c = document.createElement('canvas')
+c.width = W
+c.height = H
+// c.style.width = c.width / dpr
+// c.style.height = c.height / dpr
+c.style.width = '400px'
+c.style.height = '400px'
+c.style['image-rendering'] = 'pixelated'
 document.body.append(c)
 var gl = c.getContext('webgl2')
 gl.getExtension("EXT_color_buffer_float")
@@ -20,8 +32,25 @@ uniform sampler2D u_image;
 
 out vec4 outColor;
 
+float lerp(float t0, float v0, float t1, float v1, float t) {
+    return (t - t0) * (v1 - v0) / (t1 - t0) + v0;
+}
+
 void main() {
-    outColor = texture(u_image, vec2(gl_FragCoord.x / 100.0, gl_FragCoord.y / 100.0));
+    vec3 c = vec3(0.0, 0.0, 0.0);
+    vec4 t = texture(u_image, vec2(gl_FragCoord.x / float(${W}), gl_FragCoord.y / float(${H})));
+    float a = t.r;
+    if (a < PI*2/3) {
+        c.r = lerp(0, 1, PI*2/3, 0, a);
+        c.g = lerp(0, 0, PI*2/3, 1, a);
+    } else if (a < PI*2*2/3) {
+        c.g = lerp(PI*2/3, 1, PI*2*2/3, 0, a);
+        c.b = lerp(PI*2/3, 0, PI*2*2/3, 1, a);
+    } else {
+        c.b = lerp(PI*2*2/3, 1, PI*2, 0, a);
+        c.r = lerp(PI*2*2/3, 0, PI*2, 1, a);
+    }
+    outColor.a = vec4(c, 1.0);
 }
 `)
 
@@ -55,24 +84,25 @@ gl.vertexAttribPointer(a_position, 2, gl.FLOAT, false, 0, 0)
 gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1)
 
 
-var f = new Uint8Array(100 * 100 * 4)
+// var f = new Uint8Array(8 * 8 * 4)
+// for (var i = 0; i < f.length; i++) {
+//     f[i] = Math.floor(Math.random() * 256)
+// }
+var f = new Float32Array(W * H * 4)
 for (var i = 0; i < f.length; i++) {
     f[i] = Math.random()
 }
-// var f = new Float32Array(100 * 100 * 4)
-// for (var i = 0; i < f.length; i++) {
-//     f[i] = Math.random()
-// }
 
 
 const targetTexture = gl.createTexture()
 gl.activeTexture(gl.TEXTURE0 + 0);
 
 gl.bindTexture(gl.TEXTURE_2D, targetTexture)
-//gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, 100, 100, 0, gl.RGBA, gl.FLOAT, f)
-gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 100, 100, 0, gl.RGBA, gl.UNSIGNED_BYTE, f)
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, W, H, 0, gl.RGBA, gl.FLOAT, f)
+//gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 8, 8, 0, gl.RGBA, gl.UNSIGNED_BYTE, f)
 
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
 
