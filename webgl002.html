@@ -40,7 +40,7 @@ void main() {
     const float PI = 3.1415926535897932384626433832795;
     vec3 c = vec3(0.0, 0.0, 0.0);
     vec4 t = texture(u_image, vec2(gl_FragCoord.x / float(${W}), gl_FragCoord.y / float(${H})));
-    float a = mod(t.r, PI);
+    float a = mod(t.r, PI*2.0);
     if (a < PI*2.0/3.0) {
         c.r = lerp(0.0, 1.0, PI*2.0/3.0, 0.0, a);
         c.g = lerp(0.0, 0.0, PI*2.0/3.0, 1.0, a);
@@ -69,7 +69,7 @@ float lerp(float t0, float v0, float t1, float v1, float t) {
 void main() {
     vec4 t = texture(u_image, vec2(gl_FragCoord.x / float(${W}), gl_FragCoord.y / float(${H})));
     
-    outColor = t + 1.0;
+    outColor = t + 0.01;
 }
 `)
 
@@ -131,7 +131,7 @@ gl.vertexAttribPointer(a_position, 2, gl.FLOAT, false, 0, 0)
 gl.uniform1i(gl.getUniformLocation(program2, 'u_image'), 0);
 
 var targetTexture2 = gl.createTexture()
-gl.activeTexture(gl.TEXTURE1)
+//gl.activeTexture(gl.TEXTURE1)
 
 gl.bindTexture(gl.TEXTURE_2D, targetTexture2)
 gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, W, H, 0, gl.RGBA, gl.FLOAT, null)
@@ -155,7 +155,7 @@ gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tar
 
 loop()
 function loop() {
-    gl.activeTexture(gl.TEXTURE0)
+    //gl.activeTexture(gl.TEXTURE0)
     gl.bindTexture(gl.TEXTURE_2D, targetTexture)
     
     gl.bindFramebuffer(gl.FRAMEBUFFER, fb)
@@ -164,7 +164,7 @@ function loop() {
     
     
     
-    gl.activeTexture(gl.TEXTURE0)
+    //gl.activeTexture(gl.TEXTURE0)
     gl.bindTexture(gl.TEXTURE_2D, targetTexture2)
     
     gl.bindFramebuffer(gl.FRAMEBUFFER, null)
@@ -181,8 +181,8 @@ function loop() {
     fb2 = save
     
     
-    setTimeout(loop, 1000)
-    //window.requestAnimationFrame(loop)
+    //setTimeout(loop, 1000)
+    window.requestAnimationFrame(loop)
 }
 
 
