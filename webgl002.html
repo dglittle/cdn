@@ -66,7 +66,7 @@ float lerp(float t0, float v0, float t1, float v1, float t) {
     return (t - t0) * (v1 - v0) / (t1 - t0) + v0;
 }
 
-function process_neighbor(vec4 us, vec2 d) {
+float process_neighbor(vec4 us, vec2 d) {
     vec4 them = texture(u_image, vec2((gl_FragCoord.x + d.x) / float(${W}), (gl_FragCoord.y + d.y) / float(${H})));
     
     return -sin(us.x - them.x);
