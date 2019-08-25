@@ -26,6 +26,9 @@ void main() {
 `)
 
 var program = createProgram(gl, vs, fs)
+gl.useProgram(program)
+
+
 var a_position = gl.getAttribLocation(program, 'a_position')
 var positionBuffer = gl.createBuffer()
 
@@ -43,7 +46,6 @@ gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
 gl.clearColor(0, 0, 0, 0)
 gl.clear(gl.COLOR_BUFFER_BIT)
 
-gl.useProgram(program)
 gl.enableVertexAttribArray(a_position)
 
 gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
