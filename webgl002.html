@@ -13,7 +13,7 @@ void main() {
 }
 `)
 
-var fs = createShader(gl, gl.FRAGMENT_SHADER, `
+var fs = createShader(gl, gl.FRAGMENT_SHADER, `#version 300 es
 precision mediump float;
 
 uniform sampler2D u_image;
@@ -22,6 +22,8 @@ void main() {
     gl_FragColor = texture(u_image, vec2(gl_FragCoord.x / 100.0, gl_FragCoord.y / 100.0))
 }
 `)
+
+throw 'stop'
 
 var program = createProgram(gl, vs, fs)
 var a_position = gl.getAttribLocation(program, 'a_position')
