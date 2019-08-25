@@ -3,16 +3,16 @@
 
 var dpr = window.devicePixelRatio
 
-var W = 8
-var H = 8
+var W = 512
+var H = 512
 
 var c = document.createElement('canvas')
 c.width = W
 c.height = H
 // c.style.width = c.width / dpr
 // c.style.height = c.height / dpr
-c.style.width = '400px'
-c.style.height = '400px'
+c.style.width = '512px'
+c.style.height = '512px'
 c.style['image-rendering'] = 'pixelated'
 document.body.append(c)
 var gl = c.getContext('webgl2')
@@ -59,6 +59,7 @@ var fs2 = createShader(gl, gl.FRAGMENT_SHADER, `#version 300 es
 precision mediump float;
 
 uniform sampler2D u_image;
+uniform float iteration;
 
 out vec4 outColor;
 
@@ -73,7 +74,7 @@ float process_neighbor(vec4 us, vec2 d) {
 }
 
 void main() {
-    float dt = 1;
+    float dt = 0.05;
     
     vec4 t = texture(u_image, vec2(gl_FragCoord.x / float(${W}), gl_FragCoord.y / float(${H})));
 
@@ -82,8 +83,11 @@ void main() {
     t.y += process_neighbor(t, vec2(0.0, 1.0)) * dt;
     t.y += process_neighbor(t, vec2(-1.0, 0.0)) * dt;
     
-    t.x += t.y * dt;
+    if (iteration < 1000.0) {
+        t.y *= 1.0 - 1.0/(iteration/3.0 + 1.0);
+    }
     
+    t.x += t.y * dt;
     outColor = t;
 }
 `)
@@ -127,8 +131,8 @@ gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, W, H, 0, gl.RGBA, gl.FLOAT, f)
 
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
 
 gl.drawArrays(gl.TRIANGLES, 0, 3)
 
@@ -137,6 +141,9 @@ gl.drawArrays(gl.TRIANGLES, 0, 3)
 
 var program2 = createProgram(gl, vs, fs2)
 gl.useProgram(program2)
+
+var iteration_num = 0
+var iteration = gl.getUniformLocation(program2, 'iteration')
 
 
 var a_position = gl.getAttribLocation(program2, 'a_position')
@@ -154,8 +161,8 @@ gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, W, H, 0, gl.RGBA, gl.FLOAT, null)
 
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
 
 
 
@@ -176,6 +183,8 @@ function loop() {
     
     gl.bindFramebuffer(gl.FRAMEBUFFER, fb)
     gl.useProgram(program2)
+    gl.uniform1i(iteration, iteration_num)
+    iteration_num++
     gl.drawArrays(gl.TRIANGLES, 0, 3)
     
     
