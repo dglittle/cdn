@@ -102,7 +102,7 @@ for (var i = 0; i < f.length; i++) {
 }
 
 const targetTexture = gl.createTexture()
-gl.activeTexture(gl.TEXTURE0 + 0);
+gl.activeTexture(gl.TEXTURE0)
 
 gl.bindTexture(gl.TEXTURE_2D, targetTexture)
 gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, W, H, 0, gl.RGBA, gl.FLOAT, f)
@@ -128,18 +128,44 @@ gl.vertexAttribPointer(a_position, 2, gl.FLOAT, false, 0, 0)
 
 gl.uniform1i(gl.getUniformLocation(program2, 'u_image'), 0);
 
+const targetTexture2 = gl.createTexture()
+gl.activeTexture(gl.TEXTURE1)
+
+gl.bindTexture(gl.TEXTURE_2D, targetTexture2)
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, W, H, 0, gl.RGBA, gl.FLOAT, null)
+
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+
+
+
+const fb = gl.createFramebuffer()
+gl.bindFramebuffer(gl.FRAMEBUFFER, fb)
+gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, targetTexture2, 0)
+
+gl.viewport(0, 0, W, H)
+
+
+gl.drawArrays(gl.TRIANGLES, 0, 3)
+
+
+var f = new Float32Array(64 * 4)
+gl.readPixels(0, 0, 2, 2, gl.RGBA, gl.FLOAT, f)
+console.log(f)
 
 
 
 
-loop()
-function loop() {
+// loop()
+// function loop() {
     
     
     
     
-    window.requestAnimationFrame(loop)
-}
+//     window.requestAnimationFrame(loop)
+// }
 
 
 
