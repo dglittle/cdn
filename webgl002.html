@@ -103,7 +103,7 @@ for (var i = 0; i < f.length; i++) {
     f[i] = Math.random() * Math.PI * 2
 }
 
-const targetTexture = gl.createTexture()
+var targetTexture = gl.createTexture()
 gl.activeTexture(gl.TEXTURE0)
 
 gl.bindTexture(gl.TEXTURE_2D, targetTexture)
@@ -130,7 +130,7 @@ gl.vertexAttribPointer(a_position, 2, gl.FLOAT, false, 0, 0)
 
 gl.uniform1i(gl.getUniformLocation(program2, 'u_image'), 0);
 
-const targetTexture2 = gl.createTexture()
+var targetTexture2 = gl.createTexture()
 gl.activeTexture(gl.TEXTURE1)
 
 gl.bindTexture(gl.TEXTURE_2D, targetTexture2)
@@ -143,11 +143,11 @@ gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
 
 
 
-const fb = gl.createFramebuffer()
+var fb = gl.createFramebuffer()
 gl.bindFramebuffer(gl.FRAMEBUFFER, fb)
 gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, targetTexture2, 0)
 
-const fb2 = gl.createFramebuffer()
+var fb2 = gl.createFramebuffer()
 gl.bindFramebuffer(gl.FRAMEBUFFER, fb2)
 gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, targetTexture, 0)
 
