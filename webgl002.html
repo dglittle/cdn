@@ -67,7 +67,9 @@ float lerp(float t0, float v0, float t1, float v1, float t) {
 }
 
 void main() {
-    outColor = vec4(1.0, 0.0, 0.5, 1.0);
+    vec4 t = texture(u_image, vec2(gl_FragCoord.x / float(${W}), gl_FragCoord.y / float(${H})));
+    
+    outColor = t + 1.0;
 }
 `)
 
@@ -145,27 +147,36 @@ const fb = gl.createFramebuffer()
 gl.bindFramebuffer(gl.FRAMEBUFFER, fb)
 gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, targetTexture2, 0)
 
-gl.viewport(0, 0, W, H)
+const fb2 = gl.createFramebuffer()
+gl.bindFramebuffer(gl.FRAMEBUFFER, fb2)
+gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, targetTexture, 0)
 
 
-gl.drawArrays(gl.TRIANGLES, 0, 3)
-
-
-var f = new Float32Array(64 * 4)
-gl.readPixels(0, 0, 2, 2, gl.RGBA, gl.FLOAT, f)
-console.log(f)
-
-
-
-
-// loop()
-// function loop() {
+loop()
+function loop() {
+    gl.activeTexture(gl.TEXTURE0)
+    gl.bindTexture(gl.TEXTURE_2D, targetTexture)
+    
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fb)
+    gl.useProgram(program2)
+    gl.drawArrays(gl.TRIANGLES, 0, 3)
+    
+    
+    
+    gl.activeTexture(gl.TEXTURE0)
+    gl.bindTexture(gl.TEXTURE_2D, targetTexture2)
+    
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+    gl.useProgram(program)
+    gl.drawArrays(gl.TRIANGLES, 0, 3)
     
     
     
     
-//     window.requestAnimationFrame(loop)
-// }
+    
+    setTimeout(loop, 1000)
+    //window.requestAnimationFrame(loop)
+}
 
 
 
