@@ -69,7 +69,8 @@ float lerp(float t0, float v0, float t1, float v1, float t) {
 void main() {
     vec4 t = texture(u_image, vec2(gl_FragCoord.x / float(${W}), gl_FragCoord.y / float(${H})));
     
-    outColor = t + 1.0;
+    outColor = vec4(1.0, 0.0, 0.5, 1.0);
+    //outColor = t + 1.0;
 }
 `)
 
@@ -180,7 +181,7 @@ function loop() {
     fb2 = save
     
     
-    setTimeout(loop, 1000)
+    //setTimeout(loop, 1000)
     //window.requestAnimationFrame(loop)
 }
 
