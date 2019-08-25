@@ -6,7 +6,7 @@ document.body.append(c)
 var gl = c.getContext('webgl2')
 gl.getExtension("EXT_color_buffer_float")
 
-var vs = createShader(gl, gl.VERTEX_SHADER, `version 300 es
+var vs = createShader(gl, gl.VERTEX_SHADER, `#version 300 es
 attribute vec4 a_position;
 void main() {
     gl_Position = a_position;
