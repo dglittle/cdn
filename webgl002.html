@@ -66,10 +66,25 @@ float lerp(float t0, float v0, float t1, float v1, float t) {
     return (t - t0) * (v1 - v0) / (t1 - t0) + v0;
 }
 
-void main() {
-    vec4 t = texture(u_image, vec2(gl_FragCoord.x / float(${W}), gl_FragCoord.y / float(${H})));
+function process_neighbor(vec4 us, vec2 d) {
+    vec4 them = texture(u_image, vec2((gl_FragCoord.x + d.x) / float(${W}), (gl_FragCoord.y + d.y) / float(${H})));
     
-    outColor = t + 0.01;
+    return -sin(us.x - them.x);
+}
+
+void main() {
+    float dt = 1;
+    
+    vec4 t = texture(u_image, vec2(gl_FragCoord.x / float(${W}), gl_FragCoord.y / float(${H})));
+
+    t.y += process_neighbor(t, vec2(0.0, -1.0)) * dt;
+    t.y += process_neighbor(t, vec2(1.0, 0.0)) * dt;
+    t.y += process_neighbor(t, vec2(0.0, 1.0)) * dt;
+    t.y += process_neighbor(t, vec2(-1.0, 0.0)) * dt;
+    
+    t.x += t.y * dt;
+    
+    outColor = t;
 }
 `)
 
@@ -100,7 +115,8 @@ gl.vertexAttribPointer(a_position, 2, gl.FLOAT, false, 0, 0)
 
 var f = new Float32Array(W * H * 4)
 for (var i = 0; i < f.length; i++) {
-    f[i] = Math.random() * Math.PI * 2
+    if (i % 4 == 0) f[i] = Math.random() * Math.PI * 2
+    else f[i] = 0
 }
 
 var targetTexture = gl.createTexture()
