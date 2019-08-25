@@ -53,18 +53,22 @@ gl.vertexAttribPointer(a_position, 2, gl.FLOAT, false, 0, 0)
 gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1)
 
 
-var f = new Float32Array(100 * 100 * 4)
+var f = new Uint8Array(100 * 100 * 4)
 for (var i = 0; i < f.length; i++) {
     f[i] = Math.random()
 }
+// var f = new Float32Array(100 * 100 * 4)
+// for (var i = 0; i < f.length; i++) {
+//     f[i] = Math.random()
+// }
 
 
 const targetTexture = gl.createTexture()
 gl.activeTexture(gl.TEXTURE0 + 0);
 
 gl.bindTexture(gl.TEXTURE_2D, targetTexture)
-gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, 100, 100, 0, gl.RGBA, gl.FLOAT, f)
-//gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 2, 2, 0, gl.RGBA, gl.UNSIGNED_BYTE, null)
+//gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, 100, 100, 0, gl.RGBA, gl.FLOAT, f)
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 100, 100, 0, gl.RGBA, gl.UNSIGNED_BYTE, f)
 
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
