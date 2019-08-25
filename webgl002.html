@@ -171,7 +171,13 @@ function loop() {
     gl.drawArrays(gl.TRIANGLES, 0, 3)
     
     
+    var save = targetTexture
+    targetTexture = targetTexture2
+    targetTexture2 = save
     
+    var save = fb
+    fb = fb2
+    fb2 = save
     
     
     setTimeout(loop, 1000)
