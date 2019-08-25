@@ -40,7 +40,7 @@ void main() {
     const float PI = 3.1415926535897932384626433832795;
     vec3 c = vec3(0.0, 0.0, 0.0);
     vec4 t = texture(u_image, vec2(gl_FragCoord.x / float(${W}), gl_FragCoord.y / float(${H})));
-    float a = t.r;
+    float a = mod(t.r, PI);
     if (a < PI*2.0/3.0) {
         c.r = lerp(0.0, 1.0, PI*2.0/3.0, 0.0, a);
         c.g = lerp(0.0, 0.0, PI*2.0/3.0, 1.0, a);
@@ -152,6 +152,7 @@ gl.bindFramebuffer(gl.FRAMEBUFFER, fb2)
 gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, targetTexture, 0)
 
 
+
 loop()
 function loop() {
     gl.activeTexture(gl.TEXTURE0)
@@ -180,7 +181,7 @@ function loop() {
     fb2 = save
     
     
-    //setTimeout(loop, 1000)
+    setTimeout(loop, 1000)
     //window.requestAnimationFrame(loop)
 }
 
