@@ -16,7 +16,7 @@ c.style.height = '400px'
 c.style['image-rendering'] = 'pixelated'
 document.body.append(c)
 var gl = c.getContext('webgl2')
-gl.getExtension("EXT_color_buffer_float")
+gl.getExtension('EXT_color_buffer_float')
 
 var vs = createShader(gl, gl.VERTEX_SHADER, `#version 300 es
 in vec4 a_position;
@@ -37,28 +37,44 @@ float lerp(float t0, float v0, float t1, float v1, float t) {
 }
 
 void main() {
+    const float PI = 3.1415926535897932384626433832795;
     vec3 c = vec3(0.0, 0.0, 0.0);
     vec4 t = texture(u_image, vec2(gl_FragCoord.x / float(${W}), gl_FragCoord.y / float(${H})));
     float a = t.r;
-    if (a < PI*2/3) {
-        c.r = lerp(0, 1, PI*2/3, 0, a);
-        c.g = lerp(0, 0, PI*2/3, 1, a);
-    } else if (a < PI*2*2/3) {
-        c.g = lerp(PI*2/3, 1, PI*2*2/3, 0, a);
-        c.b = lerp(PI*2/3, 0, PI*2*2/3, 1, a);
+    if (a < PI*2.0/3.0) {
+        c.r = lerp(0.0, 1.0, PI*2.0/3.0, 0.0, a);
+        c.g = lerp(0.0, 0.0, PI*2.0/3.0, 1.0, a);
+    } else if (a < PI*2.0*2.0/3.0) {
+        c.g = lerp(PI*2.0/3.0, 1.0, PI*2.0*2.0/3.0, 0.0, a);
+        c.b = lerp(PI*2.0/3.0, 0.0, PI*2.0*2.0/3.0, 1.0, a);
     } else {
-        c.b = lerp(PI*2*2/3, 1, PI*2, 0, a);
-        c.r = lerp(PI*2*2/3, 0, PI*2, 1, a);
+        c.b = lerp(PI*2.0*2.0/3.0, 1.0, PI*2.0, 0.0, a);
+        c.r = lerp(PI*2.0*2.0/3.0, 0.0, PI*2.0, 1.0, a);
     }
-    outColor.a = vec4(c, 1.0);
+    outColor = vec4(c, 1.0);
+}
+`)
+
+var fs2 = createShader(gl, gl.FRAGMENT_SHADER, `#version 300 es
+precision mediump float;
+
+uniform sampler2D u_image;
+
+out vec4 outColor;
+
+float lerp(float t0, float v0, float t1, float v1, float t) {
+    return (t - t0) * (v1 - v0) / (t1 - t0) + v0;
+}
+
+void main() {
+    outColor = vec4(1.0, 0.0, 0.5, 1.0);
 }
 `)
 
 var program = createProgram(gl, vs, fs)
 gl.useProgram(program)
-
-
 var a_position = gl.getAttribLocation(program, 'a_position')
+
 var positionBuffer = gl.createBuffer()
 
 var u_image = gl.getUniformLocation(program, 'u_image')
@@ -80,61 +96,50 @@ gl.enableVertexAttribArray(a_position)
 gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
 gl.vertexAttribPointer(a_position, 2, gl.FLOAT, false, 0, 0)
 
-
-gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1)
-
-
-// var f = new Uint8Array(8 * 8 * 4)
-// for (var i = 0; i < f.length; i++) {
-//     f[i] = Math.floor(Math.random() * 256)
-// }
 var f = new Float32Array(W * H * 4)
 for (var i = 0; i < f.length; i++) {
-    f[i] = Math.random()
+    f[i] = Math.random() * Math.PI * 2
 }
-
 
 const targetTexture = gl.createTexture()
 gl.activeTexture(gl.TEXTURE0 + 0);
 
 gl.bindTexture(gl.TEXTURE_2D, targetTexture)
 gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, W, H, 0, gl.RGBA, gl.FLOAT, f)
-//gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 8, 8, 0, gl.RGBA, gl.UNSIGNED_BYTE, f)
 
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
 
-
-
-
-
-
-
-
-
-// const fb = gl.createFramebuffer()
-// gl.bindFramebuffer(gl.FRAMEBUFFER, fb)
- 
-// gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, targetTexture, 0)
-
-// gl.viewport(0, 0, 2, 2)
-
-// gl.clearColor(0.5, 0.4, 0.3, 0.2)
-// gl.clear(gl.COLOR_BUFFER_BIT)
-
 gl.drawArrays(gl.TRIANGLES, 0, 3)
 
-// var f = new Uint8Array(4 * 4)
-// var f = new Float32Array(4 * 4)
-// //gl.readPixels(0, 0, 2, 2, gl.RGBA, gl.UNSIGNED_BYTE, f)
-// gl.readPixels(0, 0, 2, 2, gl.RGBA, gl.FLOAT, f)
-// console.log(f)
 
 
 
-// gl.drawArrays(gl.TRIANGLES, 0, 3)
+var program2 = createProgram(gl, vs, fs2)
+gl.useProgram(program2)
+
+
+var a_position = gl.getAttribLocation(program2, 'a_position')
+gl.enableVertexAttribArray(a_position)
+gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
+gl.vertexAttribPointer(a_position, 2, gl.FLOAT, false, 0, 0)
+
+gl.uniform1i(gl.getUniformLocation(program2, 'u_image'), 0);
+
+
+
+
+
+loop()
+function loop() {
+    
+    
+    
+    
+    window.requestAnimationFrame(loop)
+}
 
 
 
