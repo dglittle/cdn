@@ -4,6 +4,8 @@
 var c = document.createElement('canvas')
 document.body.append(c)
 var gl = c.getContext('webgl2')
+var ext = gl.getExtension("EXT_color_buffer_float")
+
 
 var vs = createShader(gl, gl.VERTEX_SHADER, `
 attribute vec4 a_position;
@@ -50,7 +52,7 @@ console.log('blah?')
 
 const targetTexture = gl.createTexture()
 gl.bindTexture(gl.TEXTURE_2D, targetTexture)
-// gl.texImage2D(gl.TEXTURE_2D, 0, gl.R32F, 2, 2, 0, gl.RED, gl.FLOAT, null)
+//gl.texImage2D(gl.TEXTURE_2D, 0, gl.R32F, 2, 2, 0, gl.RED, gl.FLOAT, null)
 gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 2, 2, 0, gl.RGBA, gl.UNSIGNED_BYTE, null)
 
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
@@ -64,9 +66,10 @@ gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tar
 
 gl.viewport(0, 0, 2, 2)
 
-gl.clearColor(1, 0, 0, 1)
-gl.clear(gl.COLOR_BUFFER_BIT)
+// gl.clearColor(1, 0, 0, 1)
+// gl.clear(gl.COLOR_BUFFER_BIT)
 
+gl.drawArrays(gl.TRIANGLES, 0, 3)
 
 
 
