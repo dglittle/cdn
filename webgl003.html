@@ -122,7 +122,7 @@ void main() {
     process_neighbor(p, v, vec2(0.0, 1.0), dt);
     process_neighbor(p, v, vec2(-1.0, 0.0), dt);
     
-    if (iteration < 1000) {
+    if (iteration < 1000.0) {
         v = v * (1.0 - 1.0/(iteration/3.0 + 1.0));
     }
     
