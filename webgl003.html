@@ -63,7 +63,7 @@ float lerp(float t0, float v0, float t1, float v1, float t) {
     return (t - t0) * (v1 - v0) / (t1 - t0) + v0;
 }
 
-float process_neighbor(vec4 p, inout vec4 v, vec2 d, float dt) {
+void process_neighbor(vec4 p, inout vec4 v, vec2 d, float dt) {
     vec4 _p = texture(in_pos, vec2((gl_FragCoord.x + d.x) / float(${W}), (gl_FragCoord.y + d.y) / float(${H})));
     
     vec3 F = cross(p.xyz, _p.xyz) * dt;
