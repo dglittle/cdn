@@ -112,7 +112,7 @@ vec3 rotate_vertex_position(vec3 position, vec3 axis, float angle)
 
 
 void main() {
-    float dt = 0.01;
+    float dt = 5.0;
     
     vec4 p = texture(in_pos, vec2(gl_FragCoord.x / float(${W}), gl_FragCoord.y / float(${H})));
     vec4 v = texture(in_vel, vec2(gl_FragCoord.x / float(${W}), gl_FragCoord.y / float(${H})));
@@ -219,29 +219,29 @@ gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT1, gl.TEXTURE_2D, vel
 loop()
 function loop() {
     
-    // for (var i = 0; i < 1; i++) {
-    //     gl.activeTexture(gl.TEXTURE0)
-    //     gl.bindTexture(gl.TEXTURE_2D, pos_tex_A)
+    for (var i = 0; i < 1; i++) {
+        gl.activeTexture(gl.TEXTURE0)
+        gl.bindTexture(gl.TEXTURE_2D, pos_tex_A)
         
-    //     gl.activeTexture(gl.TEXTURE1)
-    //     gl.bindTexture(gl.TEXTURE_2D, vel_tex_A)
+        gl.activeTexture(gl.TEXTURE1)
+        gl.bindTexture(gl.TEXTURE_2D, vel_tex_A)
         
-    //     gl.bindFramebuffer(gl.FRAMEBUFFER, fb_to_b)
-    //     gl.drawBuffers([
-    //         gl.COLOR_ATTACHMENT0,
-    //         gl.COLOR_ATTACHMENT1
-    //     ])
-    //     gl.useProgram(program_phy)
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fb_to_b)
+        gl.drawBuffers([
+            gl.COLOR_ATTACHMENT0,
+            gl.COLOR_ATTACHMENT1
+        ])
+        gl.useProgram(program_phy)
         
-    //     gl.uniform1f(iteration, iteration_num)
-    //     iteration_num++
+        gl.uniform1f(iteration, iteration_num)
+        iteration_num++
         
-    //     gl.drawArrays(gl.TRIANGLES, 0, 3)
+        gl.drawArrays(gl.TRIANGLES, 0, 3)
         
-    //     ;[pos_tex_A, pos_tex_B] = [pos_tex_B, pos_tex_A]
-    //     ;[vel_tex_A, vel_tex_B] = [vel_tex_B, vel_tex_A]
-    //     ;[fb_to_a, fb_to_b] = [fb_to_b, fb_to_a]
-    // }
+        ;[pos_tex_A, pos_tex_B] = [pos_tex_B, pos_tex_A]
+        ;[vel_tex_A, vel_tex_B] = [vel_tex_B, vel_tex_A]
+        ;[fb_to_a, fb_to_b] = [fb_to_b, fb_to_a]
+    }
     
     gl.bindTexture(gl.TEXTURE_2D, pos_tex_A)
     
@@ -250,7 +250,7 @@ function loop() {
     gl.drawArrays(gl.TRIANGLES, 0, 3)
     
     //setTimeout(loop, 1000)
-    //window.requestAnimationFrame(loop)
+    window.requestAnimationFrame(loop)
 }
 
 
