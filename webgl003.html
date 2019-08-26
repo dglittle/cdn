@@ -183,7 +183,6 @@ function create_texture(rand) {
     return tex
 }
 
-
 var pos_tex_A = create_texture(true)
 var vel_tex_A = create_texture(false)
 var pos_tex_B = create_texture(false)
@@ -247,9 +246,6 @@ function loop() {
     gl.bindTexture(gl.TEXTURE_2D, pos_tex_A)
     
     gl.bindFramebuffer(gl.FRAMEBUFFER, null)
-    gl.drawBuffers([
-        gl.COLOR_ATTACHMENT0,
-    ])
     gl.useProgram(program_draw)
     gl.drawArrays(gl.TRIANGLES, 0, 3)
     
