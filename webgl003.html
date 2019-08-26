@@ -40,9 +40,9 @@ float lerp(float t0, float v0, float t1, float v1, float t) {
 void main() {
     const float PI = 3.1415926535897932384626433832795;
     vec4 p = texture(in_pos, vec2(gl_FragCoord.x / float(${W}), gl_FragCoord.y / float(${H})));
-    out_color.r = lerp(-1, 0, 1, 1, p.x);
-    out_color.g = lerp(-1, 0, 1, 1, p.y);
-    out_color.b = lerp(-1, 0, 1, 1, p.z);
+    out_color.r = lerp(-1.0, 0.0, 1.0, 1.0, p.x);
+    out_color.g = lerp(-1.0, 0.0, 1.0, 1.0, p.y);
+    out_color.b = lerp(-1.0, 0.0, 1.0, 1.0, p.z);
     out_color.a = 1.0;
 }
 
