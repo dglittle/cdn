@@ -163,10 +163,10 @@ function create_texture(rand) {
     if (rand) {
         for (var i = 0; i < f.length; i += 4) {
             var v = vec3.random(vec3.create())
-            f[0] = v[0]
-            f[1] = v[1]
-            f[2] = v[2]
-            f[3] = 1
+            f[i + 0] = v[0]
+            f[i + 1] = v[1]
+            f[i + 2] = v[2]
+            f[i + 3] = 1
         }
     }
     
