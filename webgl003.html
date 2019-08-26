@@ -127,7 +127,7 @@ void main() {
     }
     
     float length = length(v.xyz);
-    if (length > 0) {
+    if (length > 0.0) {
         vec3 unit = v.xyz / length;
         p.xyz = rotate_vertex_position(p.xyz, unit, length * dt);
     }
