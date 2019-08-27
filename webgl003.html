@@ -19,6 +19,9 @@ document.body.append(c)
 var gl = c.getContext('webgl2')
 gl.getExtension('EXT_color_buffer_float')
 
+var output_pane = document.createElement('div')
+document.body.append(output_pane)
+
 var vs = createShader(gl, gl.VERTEX_SHADER, `#version 300 es
 in vec4 a_position;
 void main() {
@@ -248,6 +251,17 @@ function loop() {
     gl.bindFramebuffer(gl.FRAMEBUFFER, null)
     gl.useProgram(program_draw)
     gl.drawArrays(gl.TRIANGLES, 0, 3)
+    
+    
+    
+    var buf = new Float32Array(4)
+    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.FLOAT, buf)
+    
+    
+    output_pane.textContent = 'buf: ' + buf
+    
+    
+    
     
     //setTimeout(loop, 1000)
     window.requestAnimationFrame(loop)
