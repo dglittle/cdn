@@ -1,0 +1,276 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.6.1/gl-matrix-min.js"></script>
+<body></body>
+<script>
+
+var dpr = window.devicePixelRatio
+
+var W = 1500
+var H = 1500
+
+var c = document.createElement('canvas')
+c.width = W
+c.height = H
+c.style.width = c.width / dpr + 'px'
+c.style.height = c.height / dpr + 'px'
+c.style['image-rendering'] = 'pixelated'
+document.body.append(c)
+var gl = c.getContext('webgl2')
+gl.getExtension('EXT_color_buffer_float')
+
+var vs = createShader(gl, gl.VERTEX_SHADER, `#version 300 es
+in vec4 a_position;
+void main() {
+    gl_Position = a_position;
+}
+`)
+
+var fs_draw = createShader(gl, gl.FRAGMENT_SHADER, `#version 300 es
+precision mediump float;
+
+uniform sampler2D in_pos;
+
+out vec4 out_color;
+
+float lerp(float t0, float v0, float t1, float v1, float t) {
+    return (t - t0) * (v1 - v0) / (t1 - t0) + v0;
+}
+
+void main() {
+    const float PI = 3.1415926535897932384626433832795;
+    vec4 p = texture(in_pos, vec2(gl_FragCoord.x / float(${W}), gl_FragCoord.y / float(${H})));
+    out_color.r = lerp(-1.0, 0.0, 1.0, 1.0, p.x);
+    out_color.g = lerp(-1.0, 0.0, 1.0, 1.0, p.y);
+    out_color.b = lerp(-1.0, 0.0, 1.0, 1.0, p.z);
+    out_color.a = 1.0;
+}
+
+`)
+
+var fs_phy = createShader(gl, gl.FRAGMENT_SHADER, `#version 300 es
+precision mediump float;
+
+uniform float iteration;
+
+uniform sampler2D in_pos;
+uniform sampler2D in_vel;
+
+layout(location = 0) out vec4 out_pos;
+layout(location = 1) out vec4 out_vel;
+
+float lerp(float t0, float v0, float t1, float v1, float t) {
+    return (t - t0) * (v1 - v0) / (t1 - t0) + v0;
+}
+
+void process_neighbor(vec4 p, inout vec4 v, vec2 d, float dt) {
+    vec4 _p = texture(in_pos, vec2((gl_FragCoord.x + d.x) / float(${W}), (gl_FragCoord.y + d.y) / float(${H})));
+    
+    vec3 F = cross(p.xyz, _p.xyz) * dt;
+    v.xyz = v.xyz + F;
+}
+
+
+// https://stackoverflow.com/questions/51793336/webgl-2-0-multiple-output-textures-from-the-same-program
+vec4 quat_from_axis_angle(vec3 axis, float angle)
+{ 
+  vec4 qr;
+  float half_angle = (angle * 0.5) * 3.14159 / 180.0;
+  qr.x = axis.x * sin(half_angle);
+  qr.y = axis.y * sin(half_angle);
+  qr.z = axis.z * sin(half_angle);
+  qr.w = cos(half_angle);
+  return qr;
+}
+
+vec4 quat_conj(vec4 q)
+{ 
+  return vec4(-q.x, -q.y, -q.z, q.w); 
+}
+  
+vec4 quat_mult(vec4 q1, vec4 q2)
+{ 
+  vec4 qr;
+  qr.x = (q1.w * q2.x) + (q1.x * q2.w) + (q1.y * q2.z) - (q1.z * q2.y);
+  qr.y = (q1.w * q2.y) - (q1.x * q2.z) + (q1.y * q2.w) + (q1.z * q2.x);
+  qr.z = (q1.w * q2.z) + (q1.x * q2.y) - (q1.y * q2.x) + (q1.z * q2.w);
+  qr.w = (q1.w * q2.w) - (q1.x * q2.x) - (q1.y * q2.y) - (q1.z * q2.z);
+  return qr;
+}
+
+vec3 rotate_vertex_position(vec3 position, vec3 axis, float angle)
+{ 
+  vec4 qr = quat_from_axis_angle(axis, angle);
+  vec4 qr_conj = quat_conj(qr);
+  vec4 q_pos = vec4(position.x, position.y, position.z, 0);
+  
+  vec4 q_tmp = quat_mult(qr, q_pos);
+  qr = quat_mult(q_tmp, qr_conj);
+  
+  return vec3(qr.x, qr.y, qr.z);
+}
+
+
+void main() {
+    float dt = 5.0;
+    
+    vec4 p = texture(in_pos, vec2(gl_FragCoord.x / float(${W}), gl_FragCoord.y / float(${H})));
+    vec4 v = texture(in_vel, vec2(gl_FragCoord.x / float(${W}), gl_FragCoord.y / float(${H})));
+
+    process_neighbor(p, v, vec2(0.0, -1.0), dt);
+    process_neighbor(p, v, vec2(1.0, 0.0), dt);
+    process_neighbor(p, v, vec2(0.0, 1.0), dt);
+    process_neighbor(p, v, vec2(-1.0, 0.0), dt);
+    
+    if (iteration < 1000.0) {
+        v = v * (1.0 - 1.0/(iteration/3.0 + 1.0));
+    }
+    
+    float length = length(v.xyz);
+    if (length > 0.0) {
+        vec3 unit = v.xyz / length;
+        p.xyz = rotate_vertex_position(p.xyz, unit, length * dt);
+    }
+    
+    out_pos = p;
+    out_vel = v;
+}
+`)
+
+var program_draw = createProgram(gl, vs, fs_draw)
+gl.useProgram(program_draw)
+var a_position = gl.getAttribLocation(program_draw, 'a_position')
+
+var positionBuffer = gl.createBuffer()
+
+gl.uniform1i(gl.getUniformLocation(program_draw, 'in_pos'), 0)
+
+gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+    -1, -1,
+    -1, 3,
+    3, -1,
+]), gl.STATIC_DRAW)
+
+gl.enableVertexAttribArray(a_position)
+
+gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
+gl.vertexAttribPointer(a_position, 2, gl.FLOAT, false, 0, 0)
+
+
+function create_texture(rand) {
+    var f = new Float32Array(W * H * 4)
+    if (rand) {
+        for (var i = 0; i < f.length; i += 4) {
+            var v = vec3.random(vec3.create())
+            f[i + 0] = v[0]
+            f[i + 1] = v[1]
+            f[i + 2] = v[2]
+            f[i + 3] = 1
+        }
+    }
+    
+    var tex = gl.createTexture()
+    
+    gl.bindTexture(gl.TEXTURE_2D, tex)
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, W, H, 0, gl.RGBA, gl.FLOAT, f)
+    
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
+    
+    return tex
+}
+
+var pos_tex_A = create_texture(true)
+var vel_tex_A = create_texture(false)
+var pos_tex_B = create_texture(false)
+var vel_tex_B = create_texture(false)
+
+
+
+var program_phy = createProgram(gl, vs, fs_phy)
+gl.useProgram(program_phy)
+
+var iteration_num = 0
+var iteration = gl.getUniformLocation(program_phy, 'iteration')
+
+var a_position = gl.getAttribLocation(program_phy, 'a_position')
+gl.enableVertexAttribArray(a_position)
+gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
+gl.vertexAttribPointer(a_position, 2, gl.FLOAT, false, 0, 0)
+
+gl.uniform1i(gl.getUniformLocation(program_phy, 'in_pos'), 0);
+gl.uniform1i(gl.getUniformLocation(program_phy, 'in_vel'), 1);
+
+
+var fb_to_a = gl.createFramebuffer()
+gl.bindFramebuffer(gl.FRAMEBUFFER, fb_to_a)
+gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, pos_tex_A, 0)
+gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT1, gl.TEXTURE_2D, vel_tex_A, 0)
+
+var fb_to_b = gl.createFramebuffer()
+gl.bindFramebuffer(gl.FRAMEBUFFER, fb_to_b)
+gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, pos_tex_B, 0)
+gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT1, gl.TEXTURE_2D, vel_tex_B, 0)
+
+
+loop()
+function loop() {
+    
+    for (var i = 0; i < 2; i++) {
+        gl.activeTexture(gl.TEXTURE0)
+        gl.bindTexture(gl.TEXTURE_2D, pos_tex_A)
+        
+        gl.activeTexture(gl.TEXTURE1)
+        gl.bindTexture(gl.TEXTURE_2D, vel_tex_A)
+        
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fb_to_b)
+        gl.drawBuffers([
+            gl.COLOR_ATTACHMENT0,
+            gl.COLOR_ATTACHMENT1
+        ])
+        gl.useProgram(program_phy)
+        
+        gl.uniform1f(iteration, iteration_num)
+        iteration_num++
+        
+        gl.drawArrays(gl.TRIANGLES, 0, 3)
+        
+        ;[pos_tex_A, pos_tex_B] = [pos_tex_B, pos_tex_A]
+        ;[vel_tex_A, vel_tex_B] = [vel_tex_B, vel_tex_A]
+        ;[fb_to_a, fb_to_b] = [fb_to_b, fb_to_a]
+    }
+    
+    gl.bindTexture(gl.TEXTURE_2D, pos_tex_A)
+    
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+    gl.useProgram(program_draw)
+    gl.drawArrays(gl.TRIANGLES, 0, 3)
+    
+    //setTimeout(loop, 1000)
+    window.requestAnimationFrame(loop)
+}
+
+
+
+
+function createShader(gl, type, source) {
+    var shader = gl.createShader(type)
+    gl.shaderSource(shader, source)
+    gl.compileShader(shader)
+    if (gl.getShaderParameter(shader, gl.COMPILE_STATUS)) return shader
+    console.log(gl.getShaderInfoLog(shader))
+    gl.deleteShader(shader)
+}
+
+function createProgram(gl, vertexShader, fragmentShader) {
+    var program = gl.createProgram()
+    gl.attachShader(program, vertexShader)
+    gl.attachShader(program, fragmentShader)
+    gl.linkProgram(program)
+    if (gl.getProgramParameter(program, gl.LINK_STATUS)) return program
+    console.log(gl.getProgramInfoLog(program))
+    gl.deleteProgram(program)
+}
+
+</script>
