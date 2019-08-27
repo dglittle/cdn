@@ -246,6 +246,12 @@ function loop() {
         ;[fb_to_a, fb_to_b] = [fb_to_b, fb_to_a]
     }
     
+    
+    var buf = new Float32Array(4)
+    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.FLOAT, buf)
+
+    
+    
     gl.bindTexture(gl.TEXTURE_2D, pos_tex_A)
     
     gl.bindFramebuffer(gl.FRAMEBUFFER, null)
@@ -254,11 +260,9 @@ function loop() {
     
     
     
-    var buf = new Float32Array(4)
-    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.FLOAT, buf)
     
     
-    output_pane.textContent = 'buf: ' + buf
+    output_pane.textContent = 'buf: ' + buf.map(x => x.toFixed(3))
     
     
     
