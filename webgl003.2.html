@@ -70,6 +70,13 @@ void process_neighbor(vec4 p, inout vec4 v, vec2 d, float dt) {
     v.xyz = v.xyz + F;
 }
 
+void process_neighbor2(vec4 p, inout vec4 v, vec2 d, float dt) {
+    vec4 _p = texture(in_pos2, vec2((gl_FragCoord.x + d.x) / float(${W}), (gl_FragCoord.y + d.y) / float(${H})));
+    
+    vec3 F = cross(p.xyz, _p.xyz) * dt;
+    v.xyz = v.xyz + F;
+}
+
 
 // https://stackoverflow.com/questions/51793336/webgl-2-0-multiple-output-textures-from-the-same-program
 vec4 quat_from_axis_angle(vec3 axis, float angle)
@@ -112,7 +119,7 @@ vec3 rotate_vertex_position(vec3 position, vec3 axis, float angle)
 
 
 void main() {
-    float dt = 1.0;
+    float dt = 0.5;
     
     vec4 p = texture(in_pos, vec2(gl_FragCoord.x / float(${W}), gl_FragCoord.y / float(${H})));
     vec4 p2 = texture(in_pos2, vec2(gl_FragCoord.x / float(${W}), gl_FragCoord.y / float(${H})));
@@ -123,10 +130,10 @@ void main() {
     process_neighbor(p, v, vec2(0.0, 1.0), dt);
     process_neighbor(p, v, vec2(-1.0, 0.0), dt);
 
-    process_neighbor(p2, v, vec2(0.0, -1.0), dt);
-    process_neighbor(p2, v, vec2(1.0, 0.0), dt);
-    process_neighbor(p2, v, vec2(0.0, 1.0), dt);
-    process_neighbor(p2, v, vec2(-1.0, 0.0), dt);
+    process_neighbor2(p2, v, vec2(0.0, -1.0), dt);
+    process_neighbor2(p2, v, vec2(1.0, 0.0), dt);
+    process_neighbor2(p2, v, vec2(0.0, 1.0), dt);
+    process_neighbor2(p2, v, vec2(-1.0, 0.0), dt);
     
     if (iteration < 1000.0) {
         v = v * (1.0 - 1.0/(iteration/3.0 + 1.0));
@@ -250,7 +257,7 @@ gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT2, gl.TEXTURE_2D, vel
 loop()
 function loop() {
     
-    for (var i = 0; i < 1; i++) {
+    for (var i = 0; i < 5; i++) {
         gl.activeTexture(gl.TEXTURE0)
         gl.bindTexture(gl.TEXTURE_2D, pos_tex_A)
         
