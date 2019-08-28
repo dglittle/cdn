@@ -112,7 +112,7 @@ vec3 rotate_vertex_position(vec3 position, vec3 axis, float angle)
 
 
 void main() {
-    float dt = 5.0;
+    float dt = 1.0;
     
     vec4 p = texture(in_pos, vec2(gl_FragCoord.x / float(${W}), gl_FragCoord.y / float(${H})));
     vec4 p2 = texture(in_pos2, vec2(gl_FragCoord.x / float(${W}), gl_FragCoord.y / float(${H})));
@@ -137,6 +137,10 @@ void main() {
         vec3 unit = v.xyz / length;
         p.xyz = rotate_vertex_position(p.xyz, unit, length * dt);
         p2.xyz = rotate_vertex_position(p2.xyz, unit, length * dt);
+    }
+    
+    if (length > 1.0) {
+        v.xyz = v.xyz / length;
     }
     
     out_pos = p;
@@ -165,18 +169,31 @@ gl.enableVertexAttribArray(a_position)
 gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
 gl.vertexAttribPointer(a_position, 2, gl.FLOAT, false, 0, 0)
 
-
-function create_texture(rand) {
+var prev_f = null
+function create_texture(rand, use_prev_f) {
     var f = new Float32Array(W * H * 4)
     if (rand) {
-        for (var i = 0; i < f.length; i += 4) {
-            var v = vec3.random(vec3.create())
-            f[i + 0] = v[0]
-            f[i + 1] = v[1]
-            f[i + 2] = v[2]
-            f[i + 3] = 1
+        if (use_prev_f) {
+            for (var i = 0; i < f.length; i += 4) {
+                var prev_v = vec3.fromValues(prev_f[i], prev_f[i+1], prev_f[i+2])
+                var v = vec3.random(vec3.create())
+                vec3.cross(v, prev_v, v)
+                f[i + 0] = v[0]
+                f[i + 1] = v[1]
+                f[i + 2] = v[2]
+                f[i + 3] = 1
+            }
+        } else {
+            for (var i = 0; i < f.length; i += 4) {
+                var v = vec3.random(vec3.create())
+                f[i + 0] = v[0]
+                f[i + 1] = v[1]
+                f[i + 2] = v[2]
+                f[i + 3] = 1
+            }
         }
     }
+    prev_f = f
     
     var tex = gl.createTexture()
     
@@ -192,7 +209,7 @@ function create_texture(rand) {
 }
 
 var pos_tex_A = create_texture(true)
-var pos2_tex_A = create_texture(true)
+var pos2_tex_A = create_texture(true, true)
 var vel_tex_A = create_texture(false)
 
 var pos_tex_B = create_texture(false)
@@ -233,7 +250,7 @@ gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT2, gl.TEXTURE_2D, vel
 loop()
 function loop() {
     
-    for (var i = 0; i < 2; i++) {
+    for (var i = 0; i < 1; i++) {
         gl.activeTexture(gl.TEXTURE0)
         gl.bindTexture(gl.TEXTURE_2D, pos_tex_A)
         
