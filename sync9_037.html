@@ -13,9 +13,7 @@
         <!-- Sync9 scripts -->
         <script defer src="https://dglittle.github.io/cdn/random001.js"></script>
         <script defer src="https://dglittle.github.io/cdn/utils004.js"></script>
-        
-        
-        
+        <script defer src="https://cdnjs.cloudflare.com/ajax/libs/sjcl/1.0.8/sjcl.min.js"></script>
         
         
 <script>
@@ -41,6 +39,7 @@ function sync9_create_peer(p_funcs) {
     self.conn_leaves = {}
     self.ack_leaves = {}
     self.phase_one = {}
+    self.joiners = {}
     
     self.connect = (pid, alpha) => {
         if (alpha) {
@@ -210,33 +209,42 @@ function sync9_create_peer(p_funcs) {
                 delete self.conn_leaves[v]
                 delete self.ack_leaves[v]
                 delete self.phase_one[v]
+                delete self.joiners[v]
                 Object.keys(self.s9.T[v]).forEach(f)
             }
         }
         f(vid)
         self.ack_leaves[vid] = true
         self.prune()
+        
+        if (Object.keys(self.s9.leaves).every(x => self.ack_leaves[x]) && Object.keys(self.s9.leaves).length > 1) {
+            var vid = sjcl.codec.hex.fromBits(sjcl.hash.sha256.hash(Object.keys(self.s9.leaves).sort().join(':')))
+            var joiner_num = Math.random()
+            self.local_set(vid, self.s9.leaves, [], joiner_num)
+        }
     }
     
-    self.local_set = (vid, parents, changes) => {
+    self.local_set = (vid, parents, changes, joiner_num) => {
         sync9_add_version(self.s9, vid, parents, changes)
         var ps = get_true_peers()
         self.phase_one[vid] = {origin: null, count: ps.length}
+        if (joiner_num) self.joiners[vid] = joiner_num
         ps.forEach(p => {
-            p_funcs.set(p, vid, parents, changes)
+            p_funcs.set(p, vid, parents, changes, joiner_num)
         })
         check_ack_count(vid)
     }
     
-    self.set = (pid, vid, parents, changes) => {
-        if (!self.s9.T[vid]) {
+    self.set = (pid, vid, parents, changes, joiner_num) => {
+        if (!self.s9.T[vid] || (joiner_num > self.joiners[vid])) {
             sync9_add_version(self.s9, vid, parents, changes)
             
             var ps = get_true_peers()
             self.phase_one[vid] = {origin: pid, count: ps.length - 1}
+            if (joiner_num) self.joiners[vid] = joiner_num
             ps.forEach(p => {
                 if (p != pid)
-                    p_funcs.set(p, vid, parents, changes)
+                    p_funcs.set(p, vid, parents, changes, joiner_num)
             })
         } else if (self.phase_one[vid]) {
             self.phase_one[vid].count--
