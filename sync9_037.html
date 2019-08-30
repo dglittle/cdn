@@ -200,11 +200,11 @@ function sync9_create_peer(p_funcs) {
         }
         gen_fs.forEach(f => self.fissure(null, f))
         
-        if (true) {
-            var vid = sjcl.codec.hex.fromBits(sjcl.hash.sha256.hash(Object.keys(self.s9.leaves).sort().join(':')))
-            var joiner_num = Math.random()
-            self.local_set(vid, self.s9.leaves, [], joiner_num)
-        }
+        // if (true) {
+        //     var vid = sjcl.codec.hex.fromBits(sjcl.hash.sha256.hash(Object.keys(self.s9.leaves).sort().join(':')))
+        //     var joiner_num = Math.random()
+        //     self.local_set(vid, self.s9.leaves, [], joiner_num)
+        // }
     }
     
     function add_full_ack_leaf(vid) {
@@ -223,11 +223,11 @@ function sync9_create_peer(p_funcs) {
         self.ack_leaves[vid] = true
         self.prune()
         
-        if (Object.keys(self.s9.leaves).every(x => self.ack_leaves[x]) && Object.keys(self.s9.leaves).length > 1) {
-            var vid = sjcl.codec.hex.fromBits(sjcl.hash.sha256.hash(Object.keys(self.s9.leaves).sort().join(':')))
-            var joiner_num = Math.random()
-            self.local_set(vid, self.s9.leaves, [], joiner_num)
-        }
+        // if (Object.keys(self.s9.leaves).every(x => self.ack_leaves[x]) && Object.keys(self.s9.leaves).length > 1) {
+        //     var vid = sjcl.codec.hex.fromBits(sjcl.hash.sha256.hash(Object.keys(self.s9.leaves).sort().join(':')))
+        //     var joiner_num = Math.random()
+        //     self.local_set(vid, self.s9.leaves, [], joiner_num)
+        // }
     }
     
     self.local_set = (vid, parents, changes, joiner_num) => {
