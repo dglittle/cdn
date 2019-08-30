@@ -1352,8 +1352,9 @@ class Trial {
         for (var p1 = 0; p1 < this.n_peers; p1++) {
             for (var p2 = p1 + 1; p2 < this.n_peers; p2++) {
                 if (!this.peers_array[p1].peers[this.peers_array[p2].uid]) {
-                    this.peers_array[p1].connect(this.peers_array[p2].uid)
-                    this.peers_array[p2].connect(this.peers_array[p1].uid)
+                    var a = Math.random() < 0.5
+                    this.peers_array[p1].connect(this.peers_array[p2].uid, a)
+                    this.peers_array[p2].connect(this.peers_array[p1].uid, !a)
                 }
             }
         }
@@ -1407,8 +1408,9 @@ class Trial {
                 pf.incoming = pf.incoming.filter(x => x[0] != p.uid)
             // if they aren't connected, connect them
             } else {
-                p.connect(pf.uid)
-                pf.connect(p.uid)
+                var a = Math.random() < 0.5
+                p.connect(pf.uid, a)
+                pf.connect(p.uid, !a)
             }
 
             this.emit("topology", this.peers)
