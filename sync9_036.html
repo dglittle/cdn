@@ -788,7 +788,7 @@ function sync9_create_peer(p_funcs) {
     function check_ack_count(vid) {
         if (self.phase_one[vid] && self.phase_one[vid].count == 0) {
             if (self.phase_one[vid].origin)
-                p_funcs.ack(self.phase_one[vid].origin, vid)
+                p_funcs.ack(self.phase_one[vid].origin, vid, self.joiners[vid])
             else {
                 add_full_ack_leaf(vid)
                 get_true_peers().forEach(p => {
