@@ -42,9 +42,13 @@ function sync9_create_peer(p_funcs) {
     self.ack_leaves = {}
     self.phase_one = {}
     
-    self.connect = pid => {
-        self.peers[pid] = {a: sync9_guid()}
-        p_funcs.get(pid, self.peers[pid].a)
+    self.connect = (pid, alpha) => {
+        if (alpha) {
+            self.peers[pid] = {salt: sync9_guid()}
+            p_funcs.get(pid, self.uid, self.peers[pid].salt)
+        } else {
+            self.peers[pid] = {}
+        }
     }
     
     self.disconnect = pid => {
@@ -52,7 +56,7 @@ function sync9_create_peer(p_funcs) {
         if (self.peers[pid].b) {
             var open_fissures = {}
             Object.entries(self.fissures).forEach(x => {
-                if (!self.fissures[x[1].b + ':' + x[1].a]) {
+                if (!self.fissures[x[1].b + ':' + x[1].a + ':' + x[1].salt]) {
                     open_fissures[x[0]] = true
                 }
             })
@@ -66,8 +70,9 @@ function sync9_create_peer(p_funcs) {
             })
             
             self.fissure(pid, {
-                a: self.peers[pid].a,
+                a: self.uid,
                 b: self.peers[pid].b,
+                salt: self.peers[pid].salt,
                 nodes,
                 parents: open_fissures
             })
@@ -80,7 +85,7 @@ function sync9_create_peer(p_funcs) {
     }
     
     self.fissure = (pid, fissure) => {
-        var key = fissure.a + ':' + fissure.b
+        var key = fissure.a + ':' + fissure.b + ':' + fissure.salt
         if (!self.fissures[key]) {
             self.fissures[key] = fissure
             
@@ -89,11 +94,25 @@ function sync9_create_peer(p_funcs) {
             get_true_peers().forEach(p => {
                 if (p != pid) p_funcs.fissure(p, fissure)
             })
+            
+            if (fissure.b == self.uid) {
+                self.fissure(null, {
+                    a: self.uid,
+                    b: fissure.a,
+                    salt: fissure.salt,
+                    nodes: fissure.nodes,
+                    parents: {}
+                })
+            }
         }
     }
     
-    self.get = (pid, id) => {
-        self.peers[pid].b = id
+    self.get = (pid, uid, salt) => {
+        self.peers[pid].b = uid
+        if (salt) {
+            self.peers[pid].salt = salt
+            p_funcs.get(pid, self.uid)
+        }
         var vs = sync9_extract_versions(self.s9, x => x == 'root')
         var fs = Object.values(self.fissures)
         p_funcs.set_multi(pid, vs, fs)
@@ -122,11 +141,19 @@ function sync9_create_peer(p_funcs) {
         })
         
         var new_fs = []
+        var gen_fs = []
         fs.forEach(f => {
-            var key = f.a + ':' + f.b
+            var key = f.a + ':' + f.b + ':' + f.salt
             if (!self.fissures[key]) {
                 new_fs.push(f)
                 self.fissures[key] = f
+                if (f.b == self.uid) gen_fs.push({
+                    a: self.uid,
+                    b: f.a,
+                    salt: f.salt,
+                    nodes: f.nodes,
+                    parents: {}
+                })
             }
         })
         
@@ -172,6 +199,7 @@ function sync9_create_peer(p_funcs) {
                 if (p != pid) p_funcs.set_multi(p, new_vs, new_fs, conn_leaves, min_leaves)
             })
         }
+        gen_fs.forEach(f => self.fissure(null, f))
     }
     
     function add_full_ack_leaf(vid) {
@@ -298,11 +326,11 @@ function sync9_create_peer(p_funcs) {
         
         var unremovable = {}
         Object.entries(self.fissures).forEach(x => {
-            if (!self.fissures[x[1].b + ':' + x[1].a]) {
+            if (!self.fissures[x[1].b + ':' + x[1].a + ':' + x[1].salt]) {
                 function f(y) {
-                    if (!unremovable[y.a + ':' + y.b]) {
-                        unremovable[y.a + ':' + y.b] = true
-                        unremovable[y.b + ':' + y.a] = true
+                    if (!unremovable[y.a + ':' + y.b + ':' + y.salt]) {
+                        unremovable[y.a + ':' + y.b + ':' + y.salt] = true
+                        unremovable[y.b + ':' + y.a + ':' + y.salt] = true
                         Object.keys(y.parents).forEach(p => {
                             if (self.fissures[p]) f(self.fissures[p])
                         })
@@ -315,7 +343,7 @@ function sync9_create_peer(p_funcs) {
         var acked = sync9_get_ancestors(self.s9, self.ack_leaves)
         var done = {}
         Object.entries(self.fissures).forEach(x => {
-            var other_key = x[1].b + ':' + x[1].a
+            var other_key = x[1].b + ':' + x[1].a + ':' + x[1].salt
             var other = self.fissures[other_key]
             if (other && !done[x[0]] && !unremovable[x[0]]) {
                 done[x[0]] = true
@@ -328,6 +356,8 @@ function sync9_create_peer(p_funcs) {
             }
         })
     }
+    
+    
     self.v_state = () => {
         var tags = {}
         var frozen = {root: true}
@@ -384,7 +414,7 @@ function sync9_create_peer(p_funcs) {
         function fis(f) {
             let m = f.a < f.b ? f.a : f.b,
                 p = f.a < f.b ? f.b : f.a;
-            return `${m}:${p}`;
+            return `${m}:${p}:${f.salt}`;
         };
         function mark_version(v, tag) {
             if (!states[v])
@@ -397,7 +427,10 @@ function sync9_create_peer(p_funcs) {
         };
         Object.values(self.fissures).forEach(mark);
         return v => states[v] || {};
-    }
+    }    
+    
+    
+    
     return self
 }
 
