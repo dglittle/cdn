@@ -192,6 +192,10 @@ function run_trial(seed, N, show_debug) {
                 if (show_debug) console.log('t => ' + tt)
                 notes = []
                 
+                if (tt == 3) {
+                    debugger
+                }
+                
                 p.incoming.shift()[1]()
                 
                 if (debug_frames) debug_frames.push({
@@ -719,7 +723,7 @@ function sync9_create_peer(p_funcs) {
         if (true) {
             var vid = sjcl.codec.hex.fromBits(sjcl.hash.sha256.hash(Object.keys(self.s9.leaves).sort().join(':')))
             var joiner_num = Math.random()
-            self.local_set(vid, self.s9.leaves, [], joiner_num)
+            self.local_set(vid, Object.assign({}, self.s9.leaves), [], joiner_num)
         }
     }
     
