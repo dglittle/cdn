@@ -199,6 +199,12 @@ function sync9_create_peer(p_funcs) {
             })
         }
         gen_fs.forEach(f => self.fissure(null, f))
+        
+        if (true) {
+            var vid = sjcl.codec.hex.fromBits(sjcl.hash.sha256.hash(Object.keys(self.s9.leaves).sort().join(':')))
+            var joiner_num = Math.random()
+            self.local_set(vid, self.s9.leaves, [], joiner_num)
+        }
     }
     
     function add_full_ack_leaf(vid) {
@@ -246,14 +252,14 @@ function sync9_create_peer(p_funcs) {
                 if (p != pid)
                     p_funcs.set(p, vid, parents, changes, joiner_num)
             })
-        } else if (self.phase_one[vid]) {
+        } else if (self.phase_one[vid] && (joiner_num == self.joiners[vid])) {
             self.phase_one[vid].count--
         }
         check_ack_count(vid)
     }
     
-    self.ack = (pid, vid) => {
-        if (self.phase_one[vid]) {
+    self.ack = (pid, vid, joiner_num) => {
+        if (self.phase_one[vid] && (joiner_num == self.joiners[vid])) {
             self.phase_one[vid].count--
             check_ack_count(vid)
         }
