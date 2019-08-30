@@ -305,7 +305,7 @@ function run_trial(seed, N, show_debug) {
                 g.font = '20px Arial'
                 g.fillStyle = 'grey'
                 var x = 300
-                var y = 400 + 400*i
+                var y = 300 + 500*i
                 g.fillText(p.uid, x, y + 80)
                 draw_space_dag(p, g, sync9_space_dag_get(d.peers[i].s9.val.S, 0).S, x, y)
                 
@@ -314,20 +314,20 @@ function run_trial(seed, N, show_debug) {
             
             g.beginPath()
             g.strokeStyle = d.peers[0].peers[d.peers[1].uid] ? 'black' : 'lightgrey'
-            g.moveTo(5, 400)
+            g.moveTo(5, 300)
             g.lineTo(40, 800)
             g.stroke()
             
             g.beginPath()
             g.strokeStyle = d.peers[1].peers[d.peers[2].uid] ? 'black' : 'lightgrey'
             g.moveTo(40, 800)
-            g.lineTo(5, 1200)
+            g.lineTo(5, 1300)
             g.stroke()
             
             g.beginPath()
             g.strokeStyle = d.peers[0].peers[d.peers[2].uid] ? 'black' : 'lightgrey'
-            g.moveTo(5, 400)
-            g.lineTo(5, 1200)
+            g.moveTo(5, 300)
+            g.lineTo(5, 1300)
             g.stroke()
         }
         document.body.append(slider)
