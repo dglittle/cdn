@@ -1,0 +1,882 @@
+
+var my_vr_device = null
+
+var WEBVR = {
+
+	createButton: function ( renderer, options ) {
+
+		if ( options && options.referenceSpaceType ) {
+
+			renderer.vr.setReferenceSpaceType( options.referenceSpaceType );
+
+		}
+
+		function showEnterVR( device ) {
+		    
+		    my_vr_device = device
+
+			button.style.display = '';
+
+			button.style.cursor = 'pointer';
+			button.style.left = 'calc(50% - 50px)';
+			button.style.width = '100px';
+
+			button.textContent = 'ENTER VR';
+
+			button.onmouseenter = function () {
+
+				button.style.opacity = '1.0';
+
+			};
+
+			button.onmouseleave = function () {
+
+				button.style.opacity = '0.5';
+
+			};
+
+			button.onclick = function () {
+
+				device.isPresenting ? device.exitPresent() : device.requestPresent( [ { source: renderer.domElement } ] );
+
+			};
+
+			renderer.vr.setDevice( device );
+
+		}
+
+		function showEnterXR( /*device*/ ) {
+
+			var currentSession = null;
+
+			function onSessionStarted( session ) {
+
+				session.addEventListener( 'end', onSessionEnded );
+
+				renderer.vr.setSession( session );
+				button.textContent = 'EXIT XR';
+
+				currentSession = session;
+
+			}
+
+			function onSessionEnded( /*event*/ ) {
+
+				currentSession.removeEventListener( 'end', onSessionEnded );
+
+				renderer.vr.setSession( null );
+				button.textContent = 'ENTER XR';
+
+				currentSession = null;
+
+			}
+
+			//
+
+			button.style.display = '';
+
+			button.style.cursor = 'pointer';
+			button.style.left = 'calc(50% - 50px)';
+			button.style.width = '100px';
+
+			button.textContent = 'ENTER XR';
+
+			button.onmouseenter = function () {
+
+				button.style.opacity = '1.0';
+
+			};
+
+			button.onmouseleave = function () {
+
+				button.style.opacity = '0.5';
+
+			};
+
+			button.onclick = function () {
+
+				if ( currentSession === null ) {
+
+					navigator.xr.requestSession( 'immersive-vr' ).then( onSessionStarted );
+
+				} else {
+
+					currentSession.end();
+
+				}
+
+			};
+
+		}
+
+		function disableButton() {
+
+			button.style.display = '';
+
+			button.style.cursor = 'auto';
+			button.style.left = 'calc(50% - 75px)';
+			button.style.width = '150px';
+
+			button.onmouseenter = null;
+			button.onmouseleave = null;
+
+			button.onclick = null;
+
+		}
+
+		function showVRNotFound() {
+
+			disableButton();
+
+			button.textContent = 'VR NOT FOUND';
+
+			renderer.vr.setDevice( null );
+
+		}
+
+		function showXRNotFound() {
+
+			disableButton();
+
+			button.textContent = 'XR NOT FOUND';
+
+		}
+
+		function stylizeElement( element ) {
+
+			element.style.position = 'absolute';
+			element.style.bottom = '20px';
+			element.style.padding = '12px 6px';
+			element.style.border = '1px solid #fff';
+			element.style.borderRadius = '4px';
+			element.style.background = 'rgba(0,0,0,0.1)';
+			element.style.color = '#fff';
+			element.style.font = 'normal 13px sans-serif';
+			element.style.textAlign = 'center';
+			element.style.opacity = '0.5';
+			element.style.outline = 'none';
+			element.style.zIndex = '999';
+
+		}
+
+		if ( 'xr' in navigator && 'supportsSession' in navigator.xr ) {
+
+			var button = document.createElement( 'button' );
+			button.style.display = 'none';
+
+			stylizeElement( button );
+
+			navigator.xr.supportsSession( 'immersive-vr' ).then( showEnterXR ).catch( showXRNotFound );
+
+			return button;
+
+		} else if ( 'getVRDisplays' in navigator ) {
+
+			var button = document.createElement( 'button' );
+			button.style.display = 'none';
+
+			stylizeElement( button );
+
+			window.addEventListener( 'vrdisplayconnect', function ( event ) {
+
+				showEnterVR( event.display );
+
+			}, false );
+
+			window.addEventListener( 'vrdisplaydisconnect', function ( /*event*/ ) {
+
+				showVRNotFound();
+
+			}, false );
+
+			window.addEventListener( 'vrdisplaypresentchange', function ( event ) {
+
+				button.textContent = event.display.isPresenting ? 'EXIT VR' : 'ENTER VR';
+
+			}, false );
+
+			window.addEventListener( 'vrdisplayactivate', function ( event ) {
+
+				event.display.requestPresent( [ { source: renderer.domElement } ] );
+
+			}, false );
+
+			navigator.getVRDisplays()
+				.then( function ( displays ) {
+
+					if ( displays.length > 0 ) {
+
+						showEnterVR( displays[ 0 ] );
+
+					} else {
+
+						showVRNotFound();
+
+					}
+
+				} ).catch( showVRNotFound );
+
+			return button;
+
+		} else {
+
+			var message = document.createElement( 'a' );
+			message.href = 'https://webvr.info';
+			message.innerHTML = 'WEBVR NOT SUPPORTED';
+
+			message.style.left = 'calc(50% - 90px)';
+			message.style.width = '180px';
+			message.style.textDecoration = 'none';
+
+			stylizeElement( message );
+
+			return message;
+
+		}
+
+	}
+
+};
+
+
+import * as THREE from 'https://threejs.org/build/three.module.js'
+import {GLTFLoader} from 'https://threejs.org/examples/jsm/loaders/GLTFLoader.js'
+
+// Create an empty scene
+var scene = new THREE.Scene();
+
+// Create a basic perspective camera
+var camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
+
+
+// var camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 10, 10000 );
+
+
+camera.position.x = 0
+camera.position.y = 0
+camera.position.z = 0
+
+//camera.position.z = 4;
+
+// Create a renderer with Antialiasing
+var renderer = new THREE.WebGLRenderer({antialias:true});
+
+// Configure renderer clear color
+renderer.setClearColor("#000000");
+
+// Configure renderer size
+renderer.setSize( window.innerWidth, window.innerHeight );
+
+// Append Renderer to DOM
+document.body.appendChild( renderer.domElement );    
+
+
+
+var geometry = new THREE.BoxGeometry( 2, 2, 2 );
+var geometry2 = new THREE.BoxGeometry( 2, 2, 2 );
+var hand_geometry = new THREE.BoxGeometry( 0.2, 0.2, 0.2 );
+var material = new THREE.MeshBasicMaterial( { color: "#433F81" } );
+var material2 = new THREE.MeshBasicMaterial( { color: "#00FF00" } );
+var cube = new THREE.Mesh( geometry, material );
+var cube2 = new THREE.Mesh( geometry2, material2 );
+
+
+
+var loader = new GLTFLoader();
+loader.load('https://froop.s3.amazonaws.com/scene.gltf', gltf => {
+    
+    console.log('got here!!')
+    
+    //gltf.scene.position.y =
+    
+    // camera.position.set(0, 10, 0)
+    // camera.lookAt(0, 0, 0)
+    
+    
+    var light = new THREE.PointLight( 0xffffff, 1 );
+    light.position.set( 0, 10, 0 );
+    scene.add( light );    
+    
+    gltf.scene.scale.set(1/1300, 1/1300, 1/1300)
+    gltf.scene.position.set(0, -1, -0.7)
+    
+    gltf.scene.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), -Math.PI/2)
+
+    scene.add( gltf.scene );
+    
+    console.log(gltf)
+    
+})
+
+
+
+
+cube.position.set(0, -2, -3)
+
+cube2.position.z = -5
+
+var leftHand = new THREE.Mesh( hand_geometry, material );
+var rightHand = new THREE.Mesh( hand_geometry, material );
+
+leftHand.position.x = 1
+rightHand.position.x = -1
+
+// Add cube to Scene
+scene.add( cube );
+scene.add( cube2 );
+scene.add( leftHand );
+scene.add( rightHand );
+
+
+document.body.appendChild(WEBVR.createButton(renderer, {referenceSpaceType: 'not-local-floor'}))
+renderer.vr.enabled = !!navigator.getVRDisplays
+
+
+function count_non_null_gamepads() {
+    var count = 0
+    Object.values(navigator.getGamepads()).forEach(x => {
+        if (x) count++
+    })
+    return count
+}
+
+
+var main_screen_canvas = document.createElement('canvas')
+var c = main_screen_canvas
+c.width = 512
+c.height = 512
+
+var g = c.getContext('2d')
+
+g.fillStyle = 'red'
+g.fillRect(0, 0, c.width, c.height)
+
+g.fillStyle = 'orange'
+g.font = '50pt Arial'
+g.fillText('orange', c.width / 2, c.height / 2)
+
+var texture = new THREE.Texture(c);
+var ms_geometry = new THREE.BoxGeometry( 1, 1, 1 )
+var c_material = new THREE.MeshBasicMaterial( { map: texture } );
+var ms_mesh = new THREE.Mesh( ms_geometry, c_material );
+
+ms_mesh.position.z = -2
+
+//scene.add(ms_mesh)
+
+
+
+
+texture.needsUpdate = true;
+
+
+cube2.material = c_material
+
+
+renderer.setAnimationLoop(function () {
+    
+    if (count_non_null_gamepads() == 2) {
+        cube.material = new THREE.MeshBasicMaterial( { color: "#FF8000" } );
+        
+        var left = navigator.getGamepads()[0]
+        leftHand.position.x = left.pose.position[0]
+        leftHand.position.y = left.pose.position[1]
+        leftHand.position.z = left.pose.position[2]
+        
+        
+        leftHand.quaternion.x = left.pose.orientation[0]
+        leftHand.quaternion.y = left.pose.orientation[1]
+        leftHand.quaternion.z = left.pose.orientation[2]
+        leftHand.quaternion.w = left.pose.orientation[3]
+        
+        
+        
+        var r = navigator.getGamepads()[1]
+        rightHand.position.x = r.pose.position[0]
+        rightHand.position.y = r.pose.position[1]
+        rightHand.position.z = r.pose.position[2]
+        
+        rightHand.quaternion.x = r.pose.orientation[0]
+        rightHand.quaternion.y = r.pose.orientation[1]
+        rightHand.quaternion.z = r.pose.orientation[2]
+        rightHand.quaternion.w = r.pose.orientation[3]
+        
+
+        g.fillStyle = 'red'
+        g.fillRect(0, 0, c.width, c.height)
+        
+        g.textBaseline = "top"; 
+        g.textAlign = "start"; 
+        g.fillStyle = 'orange'
+        g.font = '50pt Arial'
+        
+        
+        var frameData = new VRFrameData()
+        my_vr_device.getFrameData(frameData)
+        
+        //
+        
+        var p = frameData.leftViewMatrix
+
+        
+        var s = `view x : ${p[12].toFixed(6)}`
+        g.fillText(s, 0, 0)
+
+        var s = `view y : ${p[13].toFixed(6)}`
+        g.fillText(s, 0, c.height / 6)
+
+        var s = `view z : ${p[14].toFixed(6)}`
+        g.fillText(s, 0, c.height * 2 / 6)
+
+
+
+        // var p = frameData.pose.position
+        
+        var p = camera.position
+
+        var s = `cpos x : ${p.x.toFixed(6)}`
+        g.fillText(s, 0, c.height * 3 / 6)
+
+        var s = `cpos y : ${p.y.toFixed(6)}`
+        g.fillText(s, 0, c.height * 4 / 6)
+
+        var s = `cpos z : ${p.z.toFixed(6)}`
+        g.fillText(s, 0, c.height * 5 / 6)
+        
+        // var s = `pos x : ${p[0].toFixed(6)}`
+        // g.fillText(s, 0, c.height * 3 / 6)
+
+        // var s = `pos y : ${p[1].toFixed(6)}`
+        // g.fillText(s, 0, c.height * 4 / 6)
+
+        // var s = `pos z : ${p[2].toFixed(6)}`
+        // g.fillText(s, 0, c.height * 5 / 6)
+
+
+        
+        
+        // var s = `pos x : ${r.pose.position[0].toFixed(6)}`
+        // g.fillText(s, 0, 0)
+
+        // var s = `pos y : ${r.pose.position[1].toFixed(6)}`
+        // g.fillText(s, 0, c.height / 3)
+
+        // var s = `pos z : ${r.pose.position[2].toFixed(6)}`
+        // g.fillText(s, 0, c.height * 2 / 3)
+
+
+        texture.needsUpdate = true;
+        
+    }
+
+    // cube.rotation.x += 0.01;
+    // cube.rotation.y += 0.01;    
+    
+	renderer.render( scene, camera )
+
+})
+
+
+var d = document.createElement('div')
+d.style.position = 'absolute'
+d.style.left = '0px'
+d.style.top = '0px'
+d.style.height = '100%'
+d.style.width = '100%'
+d.style.fontSize = '40px'
+d.style.color = 'red'
+d.textContent = ':!' + navigator.getGamepads
+document.body.append(d)
+
+
+
+
+
+//navigator.getGamepads().
+
+// window.addEventListener("gamepadconnected", function(e) {
+//   //var gp = navigator.getGamepads()[e.gamepad.index];
+  
+//   d.textContent = ':!!' + e
+  
+// //   console.log(
+// //     "Gamepad connected at index %d: %s. %d buttons, %d axes.",
+// //     gp.index, gp.id, gp.buttons.length, gp.axes.length
+// //   );
+// });    
+
+
+
+// function my_log(msg) {
+//     var key = 'x' + Math.random().toString(36).slice(2)
+//     db.child('aa/test_node/' + key).set({msg})
+// }
+
+
+// my_log('got here!!3')
+
+
+// var c = document.createElement('canvas')
+// c.style.position = 'absolute'
+// c.style.left = '0px'
+// c.style.top = '0px'
+// c.style.height = '100%'
+// c.style.width = '100%'
+
+
+// var gl = c.getContext("webgl2")
+
+// // var glAttribs = {
+// //   alpha: false,
+// //   antialias: false,
+// //   preserveDrawingBuffer: preserveDrawingBuffer
+// // };
+// // gl = webglCanvas.getContext("webgl", glAttribs);
+// // gl.enable(gl.DEPTH_TEST);
+// // gl.enable(gl.CULL_FACE);
+
+
+
+// var b = document.createElement('button')
+// document.body.append(b)
+// b.textContent = 'enter VR'
+// b.style.padding = '30px'
+// b.onclick = () => {
+    
+//     b.textContent = 'HI!3'
+    
+//     navigator.getVRDisplays().then(ds => {
+//         b.textContent = 'HI!2'
+        
+//         try {
+//             ds[0].requestPresent([{source: c}]).then(() => {
+//                 b.textContent = 'HI!'
+//             }).catch(e => {
+//                 b.textContent = 'HI!6: ' + e
+//             })
+//             b.textContent = 'HI!4'
+//         } catch (e) {
+            
+//             b.textContent = 'HI!5: ' + e
+            
+//         }
+//     })
+// }
+    
+
+
+    
+    
+// vrDisplayInstance.requestPresent(layers).then(function() {
+//   // Do something after the presentation has begun
+// });    
+    
+//         var s = []
+//         ds.forEach(d => {
+//             s.push('' + d)
+//         })
+//         d.textContent = '::' + s.join(', ') + ' (' + ds.length + ')'
+//     })
+
+// }
+
+
+
+
+// var b = document.createElement('button')
+// b.textContent = 'enter VR'
+// b.click = () => {
+    
+    
+    
+
+//     navigator.getVRDisplays().then(ds => {
+//         var s = []
+//         ds.forEach(d => {
+//             s.push('' + d)
+//         })
+//         d.textContent = '::' + s.join(', ') + ' (' + ds.length + ')'
+//     })
+
+// }
+
+
+
+
+// var d = document.createElement('div')
+// d.style.position = 'absolute'
+// d.style.left = '0px'
+// d.style.top = '0px'
+// d.style.height = '100%'
+// d.style.width = '100%'
+// d.style.fontSize = '40px'
+// d.textContent = ':!' + navigator.getGamepads
+// document.body.append(d)
+
+
+// vrDisplayInstance.requestPresent(layers).then(function() {
+//   // Do something after the presentation has begun
+// });
+
+
+
+// navigator.getVRDisplays().then(ds => {
+//     var s = []
+//     ds.forEach(d => {
+//         s.push('' + d)
+//     })
+//     d.textContent = '::' + s.join(', ') + ' (' + ds.length + ')'
+// })
+
+
+// var ds = navigator.getGamepads()
+// console.log(ds)
+// var s = []
+// Object.values(ds).forEach(d => {
+//     s.push('' + d)
+// })
+// d.textContent += '::' + s.join(', ') + ' (' + ds.length + ')'
+
+
+
+// if (navigator.getVRDisplays) {
+//     frameData = new VRFrameData();
+    
+//     navigator.getVRDisplays().then(function (displays) {
+
+
+
+// navigator.xr.requestDevice().then((device) => {
+//     d.textContent = 'got here!'
+// })
+
+
+// navigator.xr.supportsSession('immersive-vr').then(() => {
+// })
+
+
+
+
+
+// var d = document.createElement('div')
+// d.style.position = 'absolute'
+// d.style.left = '0px'
+// d.style.top = '0px'
+// d.style.height = '100%'
+// d.style.width = '100%'
+// d.style.fontSize = '300px'
+// d.textContent = 'hel2!'
+// document.body.append(d)
+
+
+// function my_log(msg) {
+//     var key = 'x' + Math.random().toString(36).slice(2)
+//     db.child('aa/test_node/' + key).set({msg})
+// }
+
+
+
+// prefix = 'https://webvr.info/samples/'
+// include(
+//     prefix + 'js/third-party/wglu/wglu-url.js',
+//     prefix + 'js/third-party/gl-matrix-min.js',
+//     prefix + 'js/third-party/wglu/wglu-program.js',
+//     prefix + 'js/third-party/wglu/wglu-stats.js',
+//     prefix + 'js/vr-panorama.js',
+//     prefix + 'js/vr-samples-util.js',
+//     () => {
+
+// var c = document.createElement('canvas')
+// c.style.position = 'absolute'
+// c.style.left = '0px'
+// c.style.top = '0px'
+// c.style.height = '100%'
+// c.style.width = '100%'
+
+// var vrDisplay = null;
+// var frameData = null;
+// var projectionMat = mat4.create();
+// var poseMat = mat4.create();
+// var viewMat = mat4.create();
+// var vrPresentButton = null;
+
+// var gl = null;
+// var panorama = null;
+// var stats = null;
+
+// var webglCanvas = c
+
+// function init (preserveDrawingBuffer) {
+//     var glAttribs = {
+//       alpha: false,
+//       antialias: false,
+//       preserveDrawingBuffer: preserveDrawingBuffer
+//     };
+//     gl = webglCanvas.getContext("webgl", glAttribs);
+//     gl.enable(gl.DEPTH_TEST);
+//     gl.enable(gl.CULL_FACE);
+    
+//     panorama = new VRPanorama(gl);
+//     panorama.setImage(prefix + "media/textures/pano_4k.jpg");
+    
+//     var enablePerformanceMonitoring = WGLUUrl.getBool(
+//         'enablePerformanceMonitoring', false);
+//     stats = new WGLUStats(gl, enablePerformanceMonitoring);
+    
+//     // Wait until we have a WebGL context to resize and start rendering.
+//     window.addEventListener("resize", onResize, false);
+//     onResize();
+//     window.requestAnimationFrame(onAnimationFrame);
+// }
+
+// // ================================
+// // WebVR-specific code begins here.
+// // ================================
+
+// function onVRRequestPresent () {
+//     vrDisplay.requestPresent([{ source: webglCanvas }]).then(function () {
+//     }, function (err) {
+//       var errMsg = "requestPresent failed.";
+//       if (err && err.message) {
+//         errMsg += "<br/>" + err.message
+//       }
+//       VRSamplesUtil.addError(errMsg, 2000);
+//     });
+// }
+
+// function onVRExitPresent () {
+//     if (!vrDisplay.isPresenting)
+//       return;
+    
+//     vrDisplay.exitPresent().then(function () {
+//     }, function () {
+//       VRSamplesUtil.addError("exitPresent failed.", 2000);
+//     });
+// }
+
+// function onVRPresentChange () {
+//     onResize();
+    
+//     if (vrDisplay.isPresenting) {
+//       if (vrDisplay.capabilities.hasExternalDisplay) {
+//         VRSamplesUtil.removeButton(vrPresentButton);
+//         vrPresentButton = VRSamplesUtil.addButton("Exit VR", "E", "media/icons/cardboard64.png", onVRExitPresent);
+//       }
+//     } else {
+//       if (vrDisplay.capabilities.hasExternalDisplay) {
+//         VRSamplesUtil.removeButton(vrPresentButton);
+//         vrPresentButton = VRSamplesUtil.addButton("Enter VR", "E", "media/icons/cardboard64.png", onVRRequestPresent);
+//       }
+//     }
+// }
+
+// if (navigator.getVRDisplays) {
+//     frameData = new VRFrameData();
+    
+//     navigator.getVRDisplays().then(function (displays) {
+//       if (displays.length > 0) {
+//         vrDisplay = displays[displays.length - 1];
+//         vrDisplay.depthNear = 0.1;
+//         vrDisplay.depthFar = 1024.0;
+    
+//         init(true);
+    
+//         if (vrDisplay.capabilities.canPresent)
+//           vrPresentButton = VRSamplesUtil.addButton("Enter VR", "E", "media/icons/cardboard64.png", onVRRequestPresent);
+    
+//         // For the benefit of automated testing. Safe to ignore.
+//         if (vrDisplay.capabilities.canPresent && WGLUUrl.getBool('canvasClickPresents', false))
+//           webglCanvas.addEventListener("click", onVRRequestPresent, false);
+    
+//         window.addEventListener('vrdisplaypresentchange', onVRPresentChange, false);
+//         window.addEventListener('vrdisplayactivate', onVRRequestPresent, false);
+//         window.addEventListener('vrdisplaydeactivate', onVRExitPresent, false);
+//       } else {
+//         init(false);
+//         VRSamplesUtil.addInfo("WebVR supported, but no VRDisplays found.", 3000);
+//       }
+//     }, function () {
+//       VRSamplesUtil.addError("Your browser does not support WebVR. See <a href='http://webvr.info'>webvr.info</a> for assistance.");
+//     });
+// } else if (navigator.getVRDevices) {
+//     init(false);
+//     VRSamplesUtil.addError("Your browser supports WebVR but not the latest version. See <a href='http://webvr.info'>webvr.info</a> for more info.");
+// } else {
+//     init(false);
+//     VRSamplesUtil.addError("Your browser does not support WebVR. See <a href='http://webvr.info'>webvr.info</a> for assistance.");
+// }
+
+// function onResize () {
+//     if (vrDisplay && vrDisplay.isPresenting) {
+//       var leftEye = vrDisplay.getEyeParameters("left");
+//       var rightEye = vrDisplay.getEyeParameters("right");
+    
+//       webglCanvas.width = Math.max(leftEye.renderWidth, rightEye.renderWidth) * 2;
+//       webglCanvas.height = Math.max(leftEye.renderHeight, rightEye.renderHeight);
+//     } else {
+//       webglCanvas.width = webglCanvas.offsetWidth * window.devicePixelRatio;
+//       webglCanvas.height = webglCanvas.offsetHeight * window.devicePixelRatio;
+//     }
+// }
+
+// function getPoseMatrix (out, pose) {
+//     // When rendering a panorama ignore the pose position. You want the
+//     // users head to stay centered at all times. This would be terrible
+//     // advice for any other type of VR scene, by the way!
+//     var orientation = pose.orientation;
+//     if (!orientation) { orientation = [0, 0, 0, 1]; }
+//     mat4.fromQuat(out, orientation);
+//     mat4.invert(out, out);
+//     }
+    
+//     function onAnimationFrame (t) {
+//     // do not attempt to render if there is no available WebGL context
+//     if (!gl || !stats || !panorama) {
+//       return;
+//     }
+//     stats.begin();
+    
+//     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    
+//     if (vrDisplay) {
+//       vrDisplay.requestAnimationFrame(onAnimationFrame);
+    
+//       vrDisplay.getFrameData(frameData);
+    
+//       // FYI: When rendering a panorama do NOT use view matricies directly!
+//       // That will make the viewer feel like their head is trapped in a tiny
+//       // ball, which is usually not the desired effect. Instead, render both
+//       // eyes from a single viewpoint.
+//       getPoseMatrix(viewMat, frameData.pose);
+    
+//       if (vrDisplay.isPresenting) {
+//         gl.viewport(0, 0, webglCanvas.width * 0.5, webglCanvas.height);
+//         panorama.render(frameData.leftProjectionMatrix, viewMat);
+    
+//         gl.viewport(webglCanvas.width * 0.5, 0, webglCanvas.width * 0.5, webglCanvas.height);
+//         panorama.render(frameData.rightProjectionMatrix, viewMat);
+    
+//         vrDisplay.submitFrame();
+//       } else {
+//         gl.viewport(0, 0, webglCanvas.width, webglCanvas.height);
+//         mat4.perspective(projectionMat, Math.PI*0.4, webglCanvas.width / webglCanvas.height, 0.1, 1024.0);
+//         panorama.render(projectionMat, viewMat);
+//         stats.renderOrtho();
+//       }
+//     } else {
+//       window.requestAnimationFrame(onAnimationFrame);
+    
+//       // No VRDisplay found.
+//       gl.viewport(0, 0, webglCanvas.width, webglCanvas.height);
+//       mat4.perspective(projectionMat, Math.PI*0.4, webglCanvas.width / webglCanvas.height, 0.1, 1024.0);
+//       mat4.identity(viewMat);
+//       panorama.render(projectionMat, viewMat);
+    
+//       stats.renderOrtho();
+//     }
+    
+//     stats.end();
+// }
+
+    
+// })
