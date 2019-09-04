@@ -28,9 +28,9 @@
  firebase.initializeApp(firebaseConfig);
 
 
-var db = firebase.firestore()
-
 console.log(firebase)
+
+var db = firebase.firestore()
 
 var results = document.createElement('div')
 db.collection('demgame').get().then(x => {
