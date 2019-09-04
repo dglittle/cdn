@@ -9,7 +9,7 @@ var H = 1024
 
 var D = 5 // dimensions
 var L = 10 // lines
-var G = 0.1 // gap between lines
+var G = 0.2 // gap between lines
 
 var c = document.createElement('canvas')
 c.width = W
@@ -51,8 +51,8 @@ void main() {
     float G = ${G.toFixed(1)};
     float ang1 = in_a.x * tau / D;
     float ang2 = in_a.z * tau / D;
-    float len1 = in_a.y * G;
-    float len2 = in_a.w * G;
+    float len1 = (in_a.y + 0.2) * G;
+    float len2 = (in_a.w + 0.2) * G;
 
     vec2 pos = get_intersection(
         cos(ang1)*len1, sin(ang1)*len1,
@@ -69,25 +69,34 @@ void main() {
         vec2 unit = vec2(cos(ang), sin(ang));
         float units = 0.0;
         if (in_a.x == i) {
-            units = round(dot(unit, pos) / G);
+            units = round((dot(unit, pos) - 0.2*G) / G);
             if (in_b.x == 0.0 || in_b.x == 1.0) {
                 units -= 1.0;
             }
         } else if (in_a.z == i) {
-            units = round(dot(unit, pos) / G);
+            units = round((dot(unit, pos) - 0.2*G) / G);
             if (in_b.x == 1.0 || in_b.x == 2.0) {
                 units -= 1.0;
             }
         } else {
-            units = floor(dot(unit, pos) / G);
+            units = floor((dot(unit, pos) - 0.2*G) / G);
         }
         goal += unit * (units * G * e_scale);
     }
-    v = vec4(in_b.x / 5.0, 0.0, 0.0, 1.0);
+
+
+    float diff = mod((in_a.x - in_a.z) + 5.0, 5.0);
+    if (diff == 2.0 || diff == 3.0) {
+        v = vec4(in_b.x / 5.0, 0.0, 0.0, 1.0);
+    } else {
+        v = vec4(0.0, in_b.x / 5.0, in_b.x / 5.0, 1.0);
+    }
+    
     gl_Position = vec4(goal, 0.0, 1.0);
     
     
-    
+
+    // v = vec4(1.0, 0.0, 0.0, 1.0);    
     // if (in_b.x == 0.0) {
     //     gl_Position = vec4(pos.x + 0.01, pos.y, 0.0, 1.0);
     // } else if (in_b.x == 1.0) {
@@ -156,7 +165,7 @@ loop()
 function loop() {
     gl.bindFramebuffer(gl.FRAMEBUFFER, null)
     gl.useProgram(program)
-    gl.drawArrays(gl.TRIANGLES, 0, 3 * 30)// a.length / 4)
+    gl.drawArrays(gl.TRIANGLES, 0, a.length / 4)// a.length / 4)
     
     //window.requestAnimationFrame(loop)
 }
