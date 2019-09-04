@@ -61,7 +61,7 @@ void main() {
     for (float i = 0.0; i < D; i += 1.0) {
         float ang = i * tau / D;
         vec2 unit = vec2(cos(ang), sin(ang));
-        float units = 0;
+        float units = 0.0;
         if (in_a.x == i) {
             units = round(dot(unit, pos));
             if (in_b.x == 0.0 || in_b.x == 1.0) {
