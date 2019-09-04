@@ -25,10 +25,10 @@
     appId: "1:275344271563:web:9fdc0e0030e4593c"
   };
   // Initialize Firebase
- var app = firebase.initializeApp(firebaseConfig);
+ firebase.initializeApp(firebaseConfig);
 
 
-var db = app.firestore()
+var db = firebase.firestore()
 
 var results = document.createElement('div')
 db.collection('demgame').get().then(x => {
