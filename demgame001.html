@@ -45,6 +45,17 @@ var db = firebase.firestore()
 var button = document.createElement('button')
 button.style.padding = '30px'
 button.textButton = 'BUTTON'
+button.onclick = () => {
+    db.collection('demgame').doc('super').set({yo: 'what?'})
+    
+    
+    // db.collection('demgame').get().then(x => {
+    //     console.log('blah!')
+    //     x.forEach(x => {
+    //         console.log(x.id, '=>', x.data())
+    //     })
+    // })    
+}
 document.body.append(button)
 
 
