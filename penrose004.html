@@ -26,7 +26,7 @@ var vs = createShader(gl, gl.VERTEX_SHADER, `#version 300 es
 in vec4 in_a;
 in vec4 in_b;
 void main() {
-    gl_Position = vec4(0.0, 0.0, 0.0, 0.0);
+    gl_Position = vec4(in_a.x, in_b.y, 0.0, 0.0);
 }
 `)
 
@@ -70,7 +70,17 @@ var in_a = gl.getAttribLocation(program, 'in_a')
 var a_buf = gl.createBuffer()
 gl.bindBuffer(gl.ARRAY_BUFFER, a_buf)
 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(a), gl.STATIC_DRAW)
+
+
+console.log(in_a)
+
 gl.enableVertexAttribArray(in_a)
+
+throw 'stop'
+
+
+
+
 gl.vertexAttribPointer(in_a, 4, gl.FLOAT, false, 0, 0)
 
 var in_b = gl.getAttribLocation(program, 'in_b')
@@ -86,7 +96,7 @@ function loop() {
     gl.useProgram(program)
     gl.drawArrays(gl.TRIANGLES, 0, a.length / 4 / 3)
     
-    window.requestAnimationFrame(loop)
+    //window.requestAnimationFrame(loop)
 }
 
 function createShader(gl, type, source) {
