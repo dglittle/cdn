@@ -9,6 +9,7 @@ var H = 1024
 
 var D = 5 // dimensions
 var L = 10 // lines
+var G = 0.1 // gap between lines
 
 var c = document.createElement('canvas')
 c.width = W
@@ -47,6 +48,7 @@ void main() {
     const float _90 = tau/4.0;
     
     float D = ${D.toFixed(1)};
+    float G = ${G.toFixed(1)};
     float ang1 = in_a.x * tau / D;
     float ang2 = in_a.z * tau / D;
     float len1 = in_a.y;
@@ -65,17 +67,17 @@ void main() {
         vec2 unit = vec2(cos(ang), sin(ang));
         float units = 0.0;
         if (in_a.x == i) {
-            units = round(dot(unit, pos));
+            units = round(dot(unit, pos) / G);
             if (in_b.x == 0.0 || in_b.x == 1.0) {
                 units -= 1.0;
             }
         } else if (in_a.z == i) {
-            units = round(dot(unit, pos));
+            units = round(dot(unit, pos) / G);
             if (in_b.x == 1.0 || in_b.x == 2.0) {
                 units -= 1.0;
             }
         } else {
-            units = floor(dot(unit, pos));
+            units = floor(dot(unit, pos) / G);
         }
         goal += unit * units;
     }
