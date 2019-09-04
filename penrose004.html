@@ -26,7 +26,7 @@ var vs = createShader(gl, gl.VERTEX_SHADER, `#version 300 es
 in vec4 in_a;
 in vec4 in_b;
 
-varying vec4 v;
+out vec4 v;
 
 vec2 get_intersection(float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4) {
     x2 += x1;
@@ -99,7 +99,7 @@ void main() {
 var fs = createShader(gl, gl.FRAGMENT_SHADER, `#version 300 es
 precision mediump float;
 
-varying vec4 v;
+in vec4 v;
 
 out vec4 out_color;
 
