@@ -25,8 +25,42 @@ gl.getExtension('EXT_color_buffer_float')
 var vs = createShader(gl, gl.VERTEX_SHADER, `#version 300 es
 in vec4 in_a;
 in vec4 in_b;
+
+vec2 get_intersection(float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4) {
+    return vec2(
+        ((x1*y2 - y1*x2)*(x3 - x4) - (x1 - x2)*(x3*y4 - y3*x4)) /
+        ((x1 - x2)*(y3 - y4) - (y1 - y2)*(x3 - x4)),
+        
+        ((x1*y2 - y1*x2)*(y3 - y4) - (y1 - y2)*(x3*y4 - y3*x4)) /
+        ((x1 - x2)*(y3 - y4) - (y1 - y2)*(x3 - x4))
+    );
+}
+
 void main() {
-    gl_Position = vec4(in_a.x, in_b.y, 0.0, 0.0);
+    const float tau = 6.283185307179586;
+    
+    float d = ${D.toFixed(1)};
+    float ang1 = in_a.x * tau / d;
+    float ang2 = in_a.z * tau / d;
+    float len1 = in_a.y;
+    float len2 = in_a.w;
+
+    vec2 pos = get_intersection(
+        cos(ang1)*len1, sin(ang1)*len1,
+        cos(ang1 + tau/8.0)*len1*sqrt(2), sin(ang1 + tau/8.0)*len1*sqrt(2),
+        cos(ang2)*len2, sin(ang2)*len2,
+        cos(ang2 + tau/8.0)*len2*sqrt(2), sin(ang2 + tau/8.0)*len2*sqrt(2)
+        )
+    
+    if (in_b.x == 0.0) {
+        gl_Position = vec4(pos.x + 0.01, pos.y, 0.0, 1.0);
+    } else if (in_b.x == 1.0) {
+        gl_Position = vec4(pos.x, pos.y + 0.01, 0.0, 1.0);
+    } else if (in_b.x == 2.0) {
+        gl_Position = vec4(pos.x - 0.01, pos.y, 0.0, 1.0);
+    } else if (in_b.x == 3.0) {
+        gl_Position = vec4(pos.x, pos.y - 0.01, 0.0, 1.0);
+    }
 }
 `)
 
@@ -49,9 +83,9 @@ for (var d1 = 0; d1 < D; d1++) {
             for (var ii = 0; ii < L; ii++) {
                 ;[0, 1, 3, 1, 2, 3].forEach(c => {
                     a.push(d1)
-                    a.push(i)
+                    a.push(i / 10)
                     a.push(d2)
-                    a.push(ii)
+                    a.push(ii / 10)
                     
                     b.push(c)
                     b.push(0)
@@ -70,17 +104,7 @@ var in_a = gl.getAttribLocation(program, 'in_a')
 var a_buf = gl.createBuffer()
 gl.bindBuffer(gl.ARRAY_BUFFER, a_buf)
 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(a), gl.STATIC_DRAW)
-
-
-console.log(in_a)
-
 gl.enableVertexAttribArray(in_a)
-
-throw 'stop'
-
-
-
-
 gl.vertexAttribPointer(in_a, 4, gl.FLOAT, false, 0, 0)
 
 var in_b = gl.getAttribLocation(program, 'in_b')
