@@ -30,6 +30,8 @@
 
 var db = firebase.firestore()
 
+console.log(firebase)
+
 var results = document.createElement('div')
 db.collection('demgame').get().then(x => {
     console.log('blah!')
