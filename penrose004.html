@@ -1,0 +1,313 @@
+<body>
+<script>
+
+var dpr = window.devicePixelRatio
+
+var c = document.createElement('canvas')
+c.style.position = 'absolute'
+c.style.left = '0px'
+c.style.top = '0px'
+c.style.width = window.innerWidth
+c.style.height = window.innerHeight
+c.width = window.innerWidth * dpr
+c.height = window.innerHeight * dpr
+document.body.append(c)
+var g = c.getContext('2d')
+
+var liness = []
+var rhombs = []
+
+calc_rhombs()
+function calc_rhombs() {
+    offset = [0, 0]
+    
+    var r = Math.sqrt(Math.pow(c.width/2, 2) + Math.pow(c.height/2, 2))
+    //var r = Math.min(c.width, c.height) / 2
+    var gap = r*2/10
+    // var gap = r*2/30
+    var center = [c.width/2, c.height/2]
+
+    //var rr = 0.6021310716578796 // Math.random() // -0.8013333924608401
+    var rr = 0.9
+    // var rr = 0.2
+    //var rr = 0.45637382882929
+    console.log('rr: ' + rr)
+    var perterb = rr * -gap
+    
+    var es = []
+    for (var angle = 0; angle < Math.PI*2; angle += Math.PI*2/5) {
+        es.push([-Math.sin(angle), Math.cos(angle), perterb])
+    }
+    
+    each(es, function (e) {
+        var lines = []
+        liness.push(lines)
+        
+        var M = [e[1], -e[0], e[0], e[1]]
+        
+        var pert = -(dot(e, offset)%gap) + e[2]
+    
+        for (var y = -r + pert; y <= r; y += gap) {
+            var a = [-r, y]
+            var b = [r, y]
+    
+            a = trans(a, M)
+            b = trans(b, M)
+            a = add(a, center)
+            b = add(b, center)
+            
+            lines.push([a, b])
+        }
+    })
+    
+    function create_point_set() {
+        var self = {}
+        self.point_set = {}
+        self.add = function (a) {
+            self.point_set[Math.round(a[0] * 1000000) + ',' + Math.round(a[1] * 1000000)] = true
+        }
+        self.ask = function (a) {
+            for (var y = -1; y <= 1; y++) {
+                for (var x = -1; x <= 1; x++) {
+                    var key = (Math.round(a[0] * 1000000) + x) + ',' + (Math.round(a[1] * 1000000) + y)
+                    if (self.point_set[key]) return true
+                }
+            }
+        }
+        return self
+    }
+    
+    for (var i = 0; i < liness.length; i++) {
+        for (var ii = i + 1; ii < liness.length; ii++) {
+            var lines_a = liness[i]
+            var lines_b = liness[ii]
+            for (var ai = 0; ai < lines_a.length; ai++) {
+                for (var bi = 0; bi < lines_b.length; bi++) {
+                    var a = lines_a[ai]
+                    var b = lines_b[bi]
+                    var r = line_intersect(a[0][0], a[0][1], a[1][0], a[1][1], b[0][0], b[0][1], b[1][0], b[1][1])
+                    if (r.seg1 && r.seg2) {
+                        var e_scale = 0.4
+                        var corners = [[0, 0], [0, 0], [0, 0], [0, 0]]
+                        for (var ei = 0; ei < es.length; ei++) {
+                            var e = es[ei]
+                            var iii = (dot(e, add(sub([r.x, r.y], center), offset)) - e[2]) / gap
+                            
+                            if (ei == i) {
+                                iii = Math.round(iii)
+                                corners[0] = add(corners[0], mul(e, iii * gap * e_scale))
+                                corners[1] = add(corners[1], mul(e, iii * gap * e_scale))
+                                iii -= 1
+                                corners[2] = add(corners[2], mul(e, iii * gap * e_scale))
+                                corners[3] = add(corners[3], mul(e, iii * gap * e_scale))
+                            } else if (ei == ii) {
+                                iii = Math.round(iii)
+                                corners[0] = add(corners[0], mul(e, iii * gap * e_scale))
+                                corners[2] = add(corners[2], mul(e, iii * gap * e_scale))
+                                iii -= 1
+                                corners[1] = add(corners[1], mul(e, iii * gap * e_scale))
+                                corners[3] = add(corners[3], mul(e, iii * gap * e_scale))
+                            } else {
+                                iii = Math.floor(iii)
+                                for (var cc = 0; cc < 4; cc++) {
+                                    corners[cc] = add(corners[cc], mul(e, iii * gap * e_scale))
+                                }
+                            }
+                        }
+                        each(corners, function (c, i) {
+                            corners[i] = add(sub(c, offset), center)
+                        })
+    
+                        var save = corners[1]
+                        corners[1] = corners[0]
+                        corners[0] = save
+    
+                        var diff = ((i - ii) + 5) % 5
+                        if (diff == 2 || diff == 3) {
+                            rhombs.push({
+                                thin: true,
+                                x: r.x,
+                                y: r.y,
+                                corners
+                            })
+                        } else {
+                            rhombs.push({
+                                thin: false,
+                                x: r.x,
+                                y: r.y,
+                                corners
+                            })
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+var slider = document.createElement('input')
+slider.setAttribute('type', 'range')
+slider.setAttribute('min', '0')
+slider.setAttribute('max', '100')
+slider.setAttribute('value', '50')
+slider.style.position = 'fixed'
+slider.style.left = '0px'
+slider.style.bottom = '0px'
+document.body.append(slider)
+slider.oninput = () => g_redraw = true
+
+function draw_lines(alpha) {
+    g.beginPath()
+    liness.forEach(lines => {
+        lines.forEach(x => {
+            g.moveTo(x[0][0], x[0][1])
+            g.lineTo(x[1][0], x[1][1])
+        })
+    })
+    g.strokeStyle = 'rgba(0, 0, 0, ' + alpha + ')'
+    g.stroke()
+}
+
+function draw_rhombs(alpha) {
+    rhombs.forEach(r => {
+        var corners = r.corners.map(c => {
+            return [
+                lerp(0, r.x, 100, c[0], slider.value),
+                lerp(0, r.y, 100, c[1], slider.value)
+            ]
+        })
+        if (r.thin) {
+            drawPoly(g, corners, `rgba(255, 255, 0, ${alpha})`)
+        } else {
+            drawPoly(g, corners, `rgba(0, 0, 255, ${alpha})`)
+        }
+    })
+}
+
+var g_redraw = true
+loop()
+function loop() {
+    if (g_redraw) {
+        g.clearRect(0, 0, c.width, c.height)
+        draw_lines(lerp(0, 1, 100, 0, slider.value))
+        draw_rhombs(lerp(0, 0, 100, 1, slider.value))
+    }
+    g_redraw = false
+    requestAnimationFrame(loop)
+}
+
+///////////////////////
+
+function distSq(a, b) {
+    var x = sub(a, b)
+    return dot(x, x)
+}
+
+function mul(a, b) {
+    return [a[0] * b, a[1] * b]
+}
+
+function dot(a, b) {
+    return a[0] * b[0] + a[1] * b[1]
+}
+
+function sub(a, b) {
+    return [a[0] - b[0], a[1] - b[1]]
+}
+
+function add(a, b) {
+    return [a[0] + b[0], a[1] + b[1]]
+}
+
+function trans(a, B) {
+    return [a[0] * B[0] + a[1] * B[2], a[0] * B[1] + a[1] * B[3]]
+}
+
+// https://stackoverflow.com/questions/13937782/calculating-the-point-of-intersection-of-two-lines
+function line_intersect(x1, y1, x2, y2, x3, y3, x4, y4)
+{
+    var ua, ub, denom = (y4 - y3)*(x2 - x1) - (x4 - x3)*(y2 - y1);
+    if (denom == 0) {
+        return null;
+    }
+    ua = ((x4 - x3)*(y1 - y3) - (y4 - y3)*(x1 - x3))/denom;
+    ub = ((x2 - x1)*(y1 - y3) - (y2 - y1)*(x1 - x3))/denom;
+    return {
+        x: x1 + ua*(x2 - x1),
+        y: y1 + ua*(y2 - y1),
+        seg1: ua >= 0 && ua <= 1,
+        seg2: ub >= 0 && ub <= 1
+    };
+}
+
+function drawPoly(g, p, color) {
+    g.beginPath()
+    each(p, function (v, i) {
+        if (i == 0) g.moveTo(v[0], v[1])
+        else g.lineTo(v[0], v[1])
+    })
+    g.lineTo(p[0][0], p[0][1])
+    g.strokeStyle = 'black'
+    g.fillStyle = color
+    g.fill()
+    g.stroke()
+}
+
+function drawPolyNoBorder(g, p, color) {
+    g.beginPath()
+    each(p, function (v, i) {
+        if (i == 0) g.moveTo(v[0], v[1])
+        else g.lineTo(v[0], v[1])
+    })
+    g.lineTo(p[0][0], p[0][1])
+    g.fillStyle = color
+    g.fill()
+}
+
+function cap(t, mi, ma) {
+    if (t < mi) return mi
+    if (t > ma) return ma
+    return t
+}
+
+function lerp(t0, v0, t1, v1, t) {
+    return (t - t0) * (v1 - v0) / (t1 - t0) + v0
+}
+
+function getPos(e) {
+    var x = 0, y = 0
+    while (e != null) {
+        x += e.offsetLeft
+        y += e.offsetTop
+        e = e.offsetParent
+    }
+    return {x : x, y : x}
+}
+
+function getRelPos(to, positionedObject) {
+    var pos = getPos(to)
+    return {
+        x : positionedObject.pageX - pos.x,
+        y : positionedObject.pageY - pos.y
+    }
+}
+
+function each(o, cb) {
+	if (o instanceof Array) {
+		for (var i = 0; i < o.length; i++) {
+			if (cb(o[i], i, o) == false)
+				return false
+		}
+	} else {
+		for (var k in o) {
+			if (o.hasOwnProperty(k)) {
+				if (cb(o[k], k, o) == false)
+					return false
+			}
+		}
+	}
+	return true
+}
+
+</script>
+</body>
