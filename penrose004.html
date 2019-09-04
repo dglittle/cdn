@@ -51,8 +51,8 @@ void main() {
     float G = ${G.toFixed(1)};
     float ang1 = in_a.x * tau / D;
     float ang2 = in_a.z * tau / D;
-    float len1 = in_a.y;
-    float len2 = in_a.w;
+    float len1 = in_a.y * G;
+    float len2 = in_a.w * G;
 
     vec2 pos = get_intersection(
         cos(ang1)*len1, sin(ang1)*len1,
@@ -61,25 +61,27 @@ void main() {
         cos(ang2 + _90), sin(ang2 + _90)
     );
     
+    float e_scale = 0.4;
+    
     vec2 goal = vec2(0.0, 0.0);
     for (float i = 0.0; i < D; i += 1.0) {
         float ang = i * tau / D;
         vec2 unit = vec2(cos(ang), sin(ang));
         float units = 0.0;
         if (in_a.x == i) {
-            units = round(dot(unit, pos));
+            units = round(dot(unit, pos) / G);
             if (in_b.x == 0.0 || in_b.x == 1.0) {
                 units -= 1.0;
             }
         } else if (in_a.z == i) {
-            units = round(dot(unit, pos));
+            units = round(dot(unit, pos) / G);
             if (in_b.x == 1.0 || in_b.x == 2.0) {
                 units -= 1.0;
             }
         } else {
-            units = floor(dot(unit, pos));
+            units = floor(dot(unit, pos) / G);
         }
-        goal += unit * units;
+        goal += unit * (units * G * e_scale);
     }
     v = vec4(in_b.x / 5.0, 0.0, 0.0, 1.0);
     gl_Position = vec4(goal, 0.0, 1.0);
