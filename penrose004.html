@@ -7,7 +7,7 @@ var dpr = window.devicePixelRatio
 var W = 1024
 var H = 1024
 
-var D = 3 // dimensions
+var D = 5 // dimensions
 var L = 10 // lines
 
 var c = document.createElement('canvas')
@@ -44,9 +44,9 @@ void main() {
     const float tau = 6.283185307179586;
     const float _90 = tau/4.0;
     
-    float d = ${D.toFixed(1)};
-    float ang1 = in_a.x * tau / d;
-    float ang2 = in_a.z * tau / d;
+    float D = ${D.toFixed(1)};
+    float ang1 = in_a.x * tau / D;
+    float ang2 = in_a.z * tau / D;
     float len1 = in_a.y;
     float len2 = in_a.w;
 
@@ -57,15 +57,39 @@ void main() {
         cos(ang2 + _90), sin(ang2 + _90)
     );
     
-    if (in_b.x == 0.0) {
-        gl_Position = vec4(pos.x + 0.01, pos.y, 0.0, 1.0);
-    } else if (in_b.x == 1.0) {
-        gl_Position = vec4(pos.x, pos.y + 0.01, 0.0, 1.0);
-    } else if (in_b.x == 2.0) {
-        gl_Position = vec4(pos.x - 0.01, pos.y, 0.0, 1.0);
-    } else if (in_b.x == 3.0) {
-        gl_Position = vec4(pos.x, pos.y - 0.01, 0.0, 1.0);
+    vec2 goal = vec2(0.0, 0.0);
+    for (float i = 0; i < D; i += 1.0) {
+        float ang = i * tau / D;
+        vec2 unit = vec2(cos(ang), sin(ang));
+        float units = 0;
+        if (in_a.x == i) {
+            units = round(dot(unit, pos));
+            if (in_b.x == 0.0 || in_b.x == 1.0) {
+                units -= 1.0;
+            }
+        } else if (in_a.z == i) {
+            units = round(dot(unit, pos));
+            if (in_b.x == 1.0 || in_b.x == 2.0) {
+                units -= 1.0;
+            }
+        } else {
+            units = floor(dot(unit, pos));
+        }
+        goal += unit * units;
     }
+    gl_Position = vec4(goal, 0.0, 1.0);
+    
+    
+    
+    // if (in_b.x == 0.0) {
+    //     gl_Position = vec4(pos.x + 0.01, pos.y, 0.0, 1.0);
+    // } else if (in_b.x == 1.0) {
+    //     gl_Position = vec4(pos.x, pos.y + 0.01, 0.0, 1.0);
+    // } else if (in_b.x == 2.0) {
+    //     gl_Position = vec4(pos.x - 0.01, pos.y, 0.0, 1.0);
+    // } else if (in_b.x == 3.0) {
+    //     gl_Position = vec4(pos.x, pos.y - 0.01, 0.0, 1.0);
+    // }
 }
 `)
 
