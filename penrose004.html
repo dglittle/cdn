@@ -67,17 +67,17 @@ void main() {
         vec2 unit = vec2(cos(ang), sin(ang));
         float units = 0.0;
         if (in_a.x == i) {
-            units = round(dot(unit, pos) / G);
+            units = round(dot(unit, pos));
             if (in_b.x == 0.0 || in_b.x == 1.0) {
                 units -= 1.0;
             }
         } else if (in_a.z == i) {
-            units = round(dot(unit, pos) / G);
+            units = round(dot(unit, pos));
             if (in_b.x == 1.0 || in_b.x == 2.0) {
                 units -= 1.0;
             }
         } else {
-            units = floor(dot(unit, pos) / G);
+            units = floor(dot(unit, pos));
         }
         goal += unit * units;
     }
@@ -119,9 +119,9 @@ for (var d1 = 0; d1 < D; d1++) {
             for (var ii = 0; ii < L; ii++) {
                 ;[0, 1, 3, 1, 2, 3].forEach(c => {
                     a.push(d1)
-                    a.push((i - L/2) / 10)
+                    a.push(i - Math.floor(L/2))
                     a.push(d2)
-                    a.push((ii - L/2) / 10)
+                    a.push(ii - Math.floor(L/2))
                     
                     b.push(c)
                     b.push(0)
