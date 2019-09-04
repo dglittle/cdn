@@ -7,7 +7,7 @@ var dpr = window.devicePixelRatio
 var W = 1024
 var H = 1024
 
-var D = 2 // dimensions
+var D = 3 // dimensions
 var L = 10 // lines
 
 var c = document.createElement('canvas')
@@ -123,7 +123,7 @@ loop()
 function loop() {
     gl.bindFramebuffer(gl.FRAMEBUFFER, null)
     gl.useProgram(program)
-    gl.drawArrays(gl.TRIANGLES, 0, a.length / 4 / 3)
+    gl.drawArrays(gl.TRIANGLES, 0, a.length / 4)
     
     //window.requestAnimationFrame(loop)
 }
