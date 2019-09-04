@@ -54,6 +54,41 @@ firebase.auth().onAuthStateChanged(function(user) {
     var uid = user.uid;
     // ...
     console.log('got here!?')
+    
+    
+    var button = document.createElement('button')
+button.style.padding = '30px'
+button.textButton = 'BUTTON'
+button.onclick = () => {
+    
+    
+    db.collection('demgame').doc('super').set({
+        uid: uid,
+        time: firebase.firestore.Timestamp.fromDate(new Date()),
+        yo: 'what?'
+    }).then(() => {
+        console.log('got here!!>?')
+        }).catch(e => {
+            console.log('got here!!>?:: + ' + e)
+            })
+    
+    
+    
+    // uid == request.auth.uid &&
+    //     request.resource.data.time == request.time
+    
+    // db.collection('demgame').get().then(x => {
+    //     console.log('blah!')
+    //     x.forEach(x => {
+    //         console.log(x.id, '=>', x.data())
+    //     })
+    // })    
+}
+document.body.append(button)
+
+
+    
+    
   } else {
     // User is signed out.
         console.log('User is signed out....')
@@ -69,28 +104,6 @@ firebase.auth().onAuthStateChanged(function(user) {
 
 
 
-
-// var button = document.createElement('button')
-// button.style.padding = '30px'
-// button.textButton = 'BUTTON'
-// button.onclick = () => {
-    
-    
-//     db.collection('demgame').doc('super').set({yo: 'what?'})
-    
-    
-    
-//     uid == request.auth.uid &&
-//         request.resource.data.time == request.time
-    
-//     // db.collection('demgame').get().then(x => {
-//     //     console.log('blah!')
-//     //     x.forEach(x => {
-//     //         console.log(x.id, '=>', x.data())
-//     //     })
-//     // })    
-// }
-// document.body.append(button)
 
 
 
