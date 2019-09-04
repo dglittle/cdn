@@ -33,13 +33,22 @@ console.log(firebase)
 
 var db = firebase.firestore()
 
-var results = document.createElement('div')
-db.collection('demgame').get().then(x => {
-    console.log('blah!')
-    x.forEach(x => {
-        console.log(x.id, '=>', x.data())
-    })
-})
+// var results = document.createElement('div')
+// db.collection('demgame').get().then(x => {
+//     console.log('blah!')
+//     x.forEach(x => {
+//         console.log(x.id, '=>', x.data())
+//     })
+// })
+
+
+var button = document.createElement('button')
+button.style.padding = '30px'
+button.textButton = 'BUTTON'
+document.body.append(button)
+
+
+
 
 </script>
 </body>
