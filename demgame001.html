@@ -42,21 +42,54 @@ var db = firebase.firestore()
 // })
 
 
-var button = document.createElement('button')
-button.style.padding = '30px'
-button.textButton = 'BUTTON'
-button.onclick = () => {
-    db.collection('demgame').doc('super').set({yo: 'what?'})
+
+
+
+firebase.auth().signInAnonymously()
+firebase.auth().onAuthStateChanged(function(user) {
+  if (user) {
+    // User is signed in.
+    var isAnonymous = user.isAnonymous;
+    var uid = user.uid;
+    // ...
+    console.log('got here!?')
+  } else {
+    // User is signed out.
+        console.log('User is signed out....')
+
+    // ...
+  }
+  // ...
+});
+
+
+
+
+
+
+
+
+// var button = document.createElement('button')
+// button.style.padding = '30px'
+// button.textButton = 'BUTTON'
+// button.onclick = () => {
     
     
-    // db.collection('demgame').get().then(x => {
-    //     console.log('blah!')
-    //     x.forEach(x => {
-    //         console.log(x.id, '=>', x.data())
-    //     })
-    // })    
-}
-document.body.append(button)
+//     db.collection('demgame').doc('super').set({yo: 'what?'})
+    
+    
+    
+//     uid == request.auth.uid &&
+//         request.resource.data.time == request.time
+    
+//     // db.collection('demgame').get().then(x => {
+//     //     console.log('blah!')
+//     //     x.forEach(x => {
+//     //         console.log(x.id, '=>', x.data())
+//     //     })
+//     // })    
+// }
+// document.body.append(button)
 
 
 
