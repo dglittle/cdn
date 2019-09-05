@@ -149,7 +149,8 @@ for (var d1 = 0; d1 < D; d1++) {
 var program = createProgram(gl, vs, fs)
 gl.useProgram(program)
 
-var es = [0.2, 0.2, 0.2, 0.2, 0.2]
+ var es = [0.2, 0.2, 0.2, 0.2, 0.2]
+//var es = [-0.8, -0.8, -0.8, -0.8, -0.8]
 var u_es = gl.getUniformLocation(program, 'u_es')
 gl.uniform1fv(u_es, es)
 
