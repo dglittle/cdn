@@ -207,6 +207,7 @@ function on_move(dx, dy) {
     es = es.map((e, i) => {
         var ang = Math.PI*2/D*i
         e -= dy*Math.sin(ang)
+        e -= dx*Math.sin(ang)
         
         e = e % 1.0
         if (e > 0.5) e -= 1
