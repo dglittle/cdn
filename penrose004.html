@@ -206,7 +206,16 @@ function createProgram(gl, vertexShader, fragmentShader) {
 function on_move(dx, dy) {
     es = es.map((e, i) => {
         var ang = Math.PI*2/D*i
-        return e - dy*Math.sin(ang) - dx*Math.cos(ang)
+        e -= dy*Math.sin(ang)
+        
+        e = e % 1.0
+        if (e > 0.5) e -= 1
+        if (e < -0.5) e += 1
+        
+        return e
+        
+        
+        // + dx*Math.cos(ang)
     })
     
     
