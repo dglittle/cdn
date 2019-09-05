@@ -69,13 +69,17 @@ void main() {
     for (float i = 0.0; i < D; i += 1.0) {
         float ang = i * tau / D;
         vec2 unit = vec2(cos(ang), sin(ang));
-        float units = dot(unit, pos)/G - u_es[(int)i];
+        float units = dot(unit, pos)/G - u_es[int(i)];
         if (in_a.x == i) {
             units = round(units);
-            if (in_b.x == 0.0 || in_b.x == 1.0) units -= 1.0;
+            if (in_b.x == 0.0 || in_b.x == 1.0) {
+                units -= 1.0;
+            }
         } else if (in_a.z == i) {
             units = round(units);
-            if (in_b.x == 1.0 || in_b.x == 2.0) units -= 1.0;
+            if (in_b.x == 1.0 || in_b.x == 2.0) {
+                units -= 1.0;
+            }
         } else {
             units = floor(units);
         }
@@ -145,9 +149,9 @@ for (var d1 = 0; d1 < D; d1++) {
 var program = createProgram(gl, vs, fs)
 gl.useProgram(program)
 
-
+var es = [0.2, 0.2, 0.2, 0.2, 0.2]
 var u_es = gl.getUniformLocation(program, 'u_es')
-gl.uniform1fv(u_es, [0.2, 0.2, 0.2, 0.2, 0.2])
+gl.uniform1fv(u_es, es)
 
 
 var in_a = gl.getAttribLocation(program, 'in_a')
@@ -164,13 +168,17 @@ gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(b), gl.STATIC_DRAW)
 gl.enableVertexAttribArray(in_b)
 gl.vertexAttribPointer(in_b, 4, gl.FLOAT, false, 0, 0)
 
+var dirty = true
 loop()
 function loop() {
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null)
-    gl.useProgram(program)
-    gl.drawArrays(gl.TRIANGLES, 0, a.length / 4)// a.length / 4)
+    if (dirty) {
+        dirty = false
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+        gl.useProgram(program)
+        gl.drawArrays(gl.TRIANGLES, 0, a.length / 4)// a.length / 4)
+    }
     
-    //window.requestAnimationFrame(loop)
+    window.requestAnimationFrame(loop)
 }
 
 function createShader(gl, type, source) {
@@ -192,6 +200,32 @@ function createProgram(gl, vertexShader, fragmentShader) {
     gl.deleteProgram(program)
 }
 
+
+
+function on_move(dx, dy) {
+    dirty = true
+    es[0] += dx
+    gl.uniform1fv(u_es, es)
+    
+}
+
+c.onmousedown = function (e) {
+    e.preventDefault()
+    var prev_pos = [e.pageX, e.pageY]
+
+    var oldMove = document.onmousemove
+    document.onmousemove = function (e) {
+        var new_pos = [e.pageX, e.pageY]
+        on_move(new_pos[0] - prev_pos[0], new_pos[1] - prev_pos[1])
+        prev_pos = new_pos
+    }
+    
+    var oldUp = document.onmouseup
+    document.onmouseup = function (e) {
+        document.onmousemove = oldMove
+        document.onmouseup = oldUp
+    }
+}
 
 
 
