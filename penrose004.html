@@ -204,8 +204,15 @@ function createProgram(gl, vertexShader, fragmentShader) {
 
 
 function on_move(dx, dy) {
+    es = es.map((e, i) => {
+        var ang = Math.PI*2/D*i
+        return e - dy*Math.sin(ang) - dx*Math.cos(ang)
+    })
+    
+    
+    
     dirty = true
-    es[1] += dx
+    // es[1] += dx
     gl.uniform1fv(u_es, es)
     
 }
