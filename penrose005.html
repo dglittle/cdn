@@ -9,7 +9,7 @@ var H = 1024
 
 var D = 5 // dimensions
 var L = 10 // lines
-var G = 0.5 // gap between lines
+var G = 0.1 // gap between lines
 var off_x = 0
 var off_y = 0
 
@@ -109,7 +109,7 @@ void main() {
 
     float r = rand(vec2(qx, qy + in_b.x));
     float diff = mod((in_a.x - in_a.z) + 5.0, 5.0);
-    float amount = 0.7 + (1.0-0.7)*r;
+    float amount = 0.8 + (0.2)*r;
     if (diff == 2.0 || diff == 3.0) {
         v = vec4(amount, 0.0, 0.0, 1.0);
     } else {
@@ -181,15 +181,15 @@ for (var d1 = 0; d1 < D; d1++) {
             for (var ii = 0; ii < L; ii++) {
                 //;[0, 1, 2, 0, 2, 3]
                 ;[0, 1, 1, 2, 2, 3, 3, 0].forEach(c => {
-                    a.push(d1)
-                    a.push(i - Math.floor(L/2))
-                    a.push(d2)
-                    a.push(ii - Math.floor(L/2))
+                    la.push(d1)
+                    la.push(i - Math.floor(L/2))
+                    la.push(d2)
+                    la.push(ii - Math.floor(L/2))
                     
-                    b.push(c)
-                    b.push(1)
-                    b.push(0)
-                    b.push(0)
+                    lb.push(c)
+                    lb.push(1)
+                    lb.push(0)
+                    lb.push(0)
                 })
             }
         }
@@ -220,12 +220,11 @@ gl.enableVertexAttribArray(in_b)
 var a_buf = gl.createBuffer()
 gl.bindBuffer(gl.ARRAY_BUFFER, a_buf)
 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(a), gl.STATIC_DRAW)
-gl.vertexAttribPointer(in_a, 4, gl.FLOAT, false, 0, 0)
 
 var b_buf = gl.createBuffer()
 gl.bindBuffer(gl.ARRAY_BUFFER, b_buf)
 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(b), gl.STATIC_DRAW)
-gl.vertexAttribPointer(in_b, 4, gl.FLOAT, false, 0, 0)
+
 
 var la_buf = gl.createBuffer()
 gl.bindBuffer(gl.ARRAY_BUFFER, la_buf)
@@ -244,21 +243,23 @@ function loop() {
         gl.bindFramebuffer(gl.FRAMEBUFFER, null)
         gl.useProgram(program)
         
+        gl.bindBuffer(gl.ARRAY_BUFFER, a_buf)
+        gl.vertexAttribPointer(in_a, 4, gl.FLOAT, false, 0, 0)
         
+        gl.bindBuffer(gl.ARRAY_BUFFER, b_buf)
+        gl.vertexAttribPointer(in_b, 4, gl.FLOAT, false, 0, 0)
         
         gl.drawArrays(gl.TRIANGLES, 0, a.length / 4)
         
         
         
-        // gl.lineWidth(0.01)
+        gl.bindBuffer(gl.ARRAY_BUFFER, la_buf)
+        gl.vertexAttribPointer(in_a, 4, gl.FLOAT, false, 0, 0)
         
-        // gl.bindBuffer(gl.ARRAY_BUFFER, la_buf)
-        // gl.vertexAttribPointer(in_a, 4, gl.FLOAT, false, 0, 0)
+        gl.bindBuffer(gl.ARRAY_BUFFER, lb_buf)
+        gl.vertexAttribPointer(in_b, 4, gl.FLOAT, false, 0, 0)
         
-        // gl.bindBuffer(gl.ARRAY_BUFFER, lb_buf)
-        // gl.vertexAttribPointer(in_b, 4, gl.FLOAT, false, 0, 0)
-        
-        // gl.drawArrays(gl.LINES, 0, la.length / 4)
+        gl.drawArrays(gl.LINES, 0, la.length / 4)
         
     }
     
@@ -332,6 +333,26 @@ c.onmousedown = function (e) {
     document.onmouseup = function (e) {
         document.onmousemove = oldMove
         document.onmouseup = oldUp
+    }
+}
+
+c.ontouchstart = function (e) {
+    e.preventDefault()
+    var prev_pos = [e.touches[0].pageX, e.touches[0].pageY]
+
+    var oldMove = document.ontouchmove
+    document.ontouchmove = function (e) {
+        var new_pos = [e.touches[0].pageX, e.touches[0].pageY]
+        on_move(new_pos[0] - prev_pos[0], new_pos[1] - prev_pos[1])
+        prev_pos = new_pos
+    }
+    
+    var oldEnd = document.ontouchend;
+    var oldCancel = document.ontouchcancel
+    document.ontouchend = function (e) {
+        document.ontouchmove = oldMove
+        document.ontouchend = oldEnd
+        document.ontouchcancel = oldCancel
     }
 }
 
