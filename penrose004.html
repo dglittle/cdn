@@ -204,7 +204,7 @@ function createProgram(gl, vertexShader, fragmentShader) {
 
 function on_move(dx, dy) {
     dirty = true
-    es[0] += dx
+    es[1] += dx
     gl.uniform1fv(u_es, es)
     
 }
