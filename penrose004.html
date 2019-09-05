@@ -27,6 +27,8 @@ var vs = createShader(gl, gl.VERTEX_SHADER, `#version 300 es
 in vec4 in_a;
 in vec4 in_b;
 
+uniform float u_es[${D}];
+
 out vec4 v;
 
 vec2 get_intersection(float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4) {
@@ -67,19 +69,15 @@ void main() {
     for (float i = 0.0; i < D; i += 1.0) {
         float ang = i * tau / D;
         vec2 unit = vec2(cos(ang), sin(ang));
-        float units = 0.0;
+        float units = dot(unit, pos)/G - u_es[(int)i];
         if (in_a.x == i) {
-            units = round((dot(unit, pos) - 0.2*G) / G);
-            if (in_b.x == 0.0 || in_b.x == 1.0) {
-                units -= 1.0;
-            }
+            units = round(units);
+            if (in_b.x == 0.0 || in_b.x == 1.0) units -= 1.0;
         } else if (in_a.z == i) {
-            units = round((dot(unit, pos) - 0.2*G) / G);
-            if (in_b.x == 1.0 || in_b.x == 2.0) {
-                units -= 1.0;
-            }
+            units = round(units);
+            if (in_b.x == 1.0 || in_b.x == 2.0) units -= 1.0;
         } else {
-            units = floor((dot(unit, pos) - 0.2*G) / G);
+            units = floor(units);
         }
         goal += unit * (units * G * e_scale);
     }
@@ -146,6 +144,11 @@ for (var d1 = 0; d1 < D; d1++) {
 
 var program = createProgram(gl, vs, fs)
 gl.useProgram(program)
+
+
+var u_es = gl.getUniformLocation(program, 'u_es')
+gl.uniform1fv(u_es, [0.2, 0.2, 0.2, 0.2, 0.2])
+
 
 var in_a = gl.getAttribLocation(program, 'in_a')
 var a_buf = gl.createBuffer()
