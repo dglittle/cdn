@@ -6,11 +6,14 @@ var dpr = window.devicePixelRatio
 
 var D = 5 // dimensions
 var L = 21 // lines
-var G = 0.1 // gap between lines
+var G = 0.2 // gap between lines
 var off_x = 0
 var off_y = 0
 
 var c = document.createElement('canvas')
+c.style.position = 'fixed'
+c.style.left = '0px'
+c.style.top = '0px'
 c.style.width = '100%'
 c.style.height = '100%'
 document.body.append(c)
@@ -129,8 +132,13 @@ void main() {
         v = vec4(0.0, 0.0, 0.0, 1.0);
     }
     
+    if (u_w > u_h) {
+        gl_Position = vec4(goal.x, goal.y * u_w / u_h, 0.0, 1.0);
+    } else {
+        gl_Position = vec4(goal.x * u_h / u_w, goal.y, 0.0, 1.0);
+    }
     
-    gl_Position = vec4(goal.x, goal.y * u_w / u_h, 0.0, 1.0);
+    
     
 
     // v = vec4(1.0, 0.0, 0.0, 1.0);    
@@ -309,81 +317,93 @@ function createProgram(gl, vertexShader, fragmentShader) {
 }
 
 window.onresize = () => {
+    document.body.style.width = 3*window.innerWidth + 'px'
+    document.body.style.height = 3*window.innerHeight + 'px'
+    document.body.scrollLeft = window.innerWidth
+    document.body.scrollTop = window.innerHeight
+    dirty = true
+}
+window.onresize()
+
+window.onscroll = () => {
+    off_x = (document.body.scrollLeft - document.innerWidth)*dpr/c.width*2
+    off_y = (document.body.scrollTop - document.innerHeight)*dpr/c.height*2
     dirty = true
 }
 
-function on_move(dx, dy) {
-    
-    off_x -= dx*dpr / c.width * 2
-    off_y += dy*dpr / c.height * 2
-    
-    gl.uniform1f(u_off_x, off_x)
-    gl.uniform1f(u_off_y, off_y)
-    
-    // es = es.map((e, i) => {
-    //     var ang = Math.PI*2/D*i
-    //     e -= dy*Math.sin(ang)
-    //     e -= dx*Math.sin(ang)
-        
-    //     e = e % 1.0
-    //     if (e > 0.5) e -= 1
-    //     if (e < -0.5) e += 1
-        
-    //     return e
-        
-        
-    //     // + dx*Math.cos(ang)
-    // })
-    
-    
-    
-    dirty = true
-    // es[1] += dx
-    // gl.uniform1fv(u_es, es)
-    
-}
 
-c.onmousedown = function (e) {
-    e.preventDefault()
-    var prev_pos = [e.pageX, e.pageY]
-
-    var oldMove = document.onmousemove
-    document.onmousemove = function (e) {
-        if (e.buttons == 0) {
-            document.onmouseup()
-            return
-        }
-        var new_pos = [e.pageX, e.pageY]
-        on_move(new_pos[0] - prev_pos[0], new_pos[1] - prev_pos[1])
-        prev_pos = new_pos
-    }
+// function on_move(dx, dy) {
     
-    var oldUp = document.onmouseup
-    document.onmouseup = function (e) {
-        document.onmousemove = oldMove
-        document.onmouseup = oldUp
-    }
-}
-
-c.ontouchstart = function (e) {
-    e.preventDefault()
-    var prev_pos = [e.touches[0].pageX, e.touches[0].pageY]
-
-    var oldMove = document.ontouchmove
-    document.ontouchmove = function (e) {
-        var new_pos = [e.touches[0].pageX, e.touches[0].pageY]
-        on_move(new_pos[0] - prev_pos[0], new_pos[1] - prev_pos[1])
-        prev_pos = new_pos
-    }
+//     off_x -= dx*dpr / c.width * 2
+//     off_y += dy*dpr / c.height * 2
     
-    var oldEnd = document.ontouchend;
-    var oldCancel = document.ontouchcancel
-    document.ontouchend = function (e) {
-        document.ontouchmove = oldMove
-        document.ontouchend = oldEnd
-        document.ontouchcancel = oldCancel
-    }
-}
+//     gl.uniform1f(u_off_x, off_x)
+//     gl.uniform1f(u_off_y, off_y)
+    
+//     // es = es.map((e, i) => {
+//     //     var ang = Math.PI*2/D*i
+//     //     e -= dy*Math.sin(ang)
+//     //     e -= dx*Math.sin(ang)
+        
+//     //     e = e % 1.0
+//     //     if (e > 0.5) e -= 1
+//     //     if (e < -0.5) e += 1
+        
+//     //     return e
+        
+        
+//     //     // + dx*Math.cos(ang)
+//     // })
+    
+    
+    
+//     dirty = true
+//     // es[1] += dx
+//     // gl.uniform1fv(u_es, es)
+    
+// }
+
+// c.onmousedown = function (e) {
+//     e.preventDefault()
+//     var prev_pos = [e.pageX, e.pageY]
+
+//     var oldMove = document.onmousemove
+//     document.onmousemove = function (e) {
+//         if (e.buttons == 0) {
+//             document.onmouseup()
+//             return
+//         }
+//         var new_pos = [e.pageX, e.pageY]
+//         on_move(new_pos[0] - prev_pos[0], new_pos[1] - prev_pos[1])
+//         prev_pos = new_pos
+//     }
+    
+//     var oldUp = document.onmouseup
+//     document.onmouseup = function (e) {
+//         document.onmousemove = oldMove
+//         document.onmouseup = oldUp
+//     }
+// }
+
+// c.ontouchstart = function (e) {
+//     e.preventDefault()
+//     var prev_pos = [e.touches[0].pageX, e.touches[0].pageY]
+
+//     var oldMove = document.ontouchmove
+//     document.ontouchmove = function (e) {
+//         var new_pos = [e.touches[0].pageX, e.touches[0].pageY]
+//         on_move(new_pos[0] - prev_pos[0], new_pos[1] - prev_pos[1])
+//         prev_pos = new_pos
+//     }
+    
+//     var oldEnd = document.ontouchend;
+//     var oldCancel = document.ontouchcancel
+//     document.ontouchend = function (e) {
+//         document.ontouchmove = oldMove
+//         document.ontouchend = oldEnd
+//         document.ontouchcancel = oldCancel
+//     }
+// }
 
 
 
