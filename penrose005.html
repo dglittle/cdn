@@ -1,25 +1,18 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.6.1/gl-matrix-min.js"></script>
-<body></body>
+<body style="margin:0px"></body>
 <script>
 
 var dpr = window.devicePixelRatio
 
-var W = 1024
-var H = 1024
-
 var D = 5 // dimensions
 var L = 10 // lines
-var G = 0.3 // gap between lines
+var G = 0.5 // gap between lines
 var off_x = 0
 var off_y = 0
 
 var c = document.createElement('canvas')
-c.width = W
-c.height = H
-c.style.width = c.width / dpr
-c.style.height = c.height / dpr
-c.style['image-rendering'] = 'pixelated'
-c.style.border = '1px solid black'
+c.style.width = '100%'
+c.style.height = '100%'
 document.body.append(c)
 
 var gl = c.getContext('webgl2')
@@ -101,9 +94,6 @@ void main() {
     }
     
     
-    
-    
-    
     vec2 goal2 = vec2(0.0, 0.0);
     for (float i = 0.0; i < D; i += 1.0) {
         float ang = i * tau / D;
@@ -119,18 +109,14 @@ void main() {
         }
         goal2 += unit * (units * G * e_scale);
     }
-    
-    
-    
-
 
     float qx = round(goal2.x / 0.001);
     float qy = round(goal2.y / 0.001);
-    
+
 
     float r = rand(vec2(qx, qy + mod(floor(in_b.x/2.0), 2.0)));
     float diff = mod((in_a.x - in_a.z) + 5.0, 5.0);
-    float amount = 0.8 + (0.2)*r;
+    float amount = 0.8 + (0.1)*r;
     if (diff == 2.0 || diff == 3.0) {
         v = vec4(amount, 0.0, 0.0, 1.0);
     } else {
@@ -261,6 +247,14 @@ loop()
 function loop() {
     if (dirty) {
         dirty = false
+        
+        
+        
+        c.width = c.offsetWidth * dpr
+        c.height = c.offsetHeight * dpr
+        
+        
+        
         gl.bindFramebuffer(gl.FRAMEBUFFER, null)
         gl.useProgram(program)
         
