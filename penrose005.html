@@ -6,7 +6,7 @@ var dpr = window.devicePixelRatio
 
 var D = 5 // dimensions
 var L = 10 // lines
-var G = 0.5 // gap between lines
+var G = 0.1 // gap between lines
 var off_x = 0
 var off_y = 0
 
@@ -22,6 +22,8 @@ var vs = createShader(gl, gl.VERTEX_SHADER, `#version 300 es
 in vec4 in_a;
 in vec4 in_b;
 
+uniform float u_w;
+uniform float u_h;
 uniform float u_es[${D}];
 uniform float u_off_x;
 uniform float u_off_y;
@@ -127,8 +129,8 @@ void main() {
         v = vec4(0.0, 0.0, 0.0, 1.0);
     }
     
-    gl_Position = vec4(goal, 0.0, 1.0);
     
+    gl_Position = vec4(goal.x, goal.y * u_w / u_h, 0.0, 1.0);
     
 
     // v = vec4(1.0, 0.0, 0.0, 1.0);    
@@ -207,6 +209,9 @@ for (var d1 = 0; d1 < D; d1++) {
 var program = createProgram(gl, vs, fs)
 gl.useProgram(program)
 
+var u_w = gl.getUniformLocation(program, 'u_w')
+var u_h = gl.getUniformLocation(program, 'u_h')
+
  var es = [0.2, 0.2, 0.2, 0.2, 0.2]
 //var es = [-0.8, -0.8, -0.8, -0.8, -0.8]
 var u_es = gl.getUniformLocation(program, 'u_es')
@@ -248,10 +253,13 @@ function loop() {
     if (dirty) {
         dirty = false
         
-        
-        
         c.width = c.offsetWidth * dpr
         c.height = c.offsetHeight * dpr
+        
+        gl.viewport(0, 0, c.width, c.height)
+        
+        gl.uniform1f(u_w, c.width)
+        gl.uniform1f(u_h, c.height)
         
         
         
@@ -300,7 +308,9 @@ function createProgram(gl, vertexShader, fragmentShader) {
     gl.deleteProgram(program)
 }
 
-
+window.onresize = () => {
+    dirty = true
+}
 
 function on_move(dx, dy) {
     
