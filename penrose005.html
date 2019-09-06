@@ -5,7 +5,7 @@
 var dpr = window.devicePixelRatio
 
 var D = 5 // dimensions
-var L = 10 // lines
+var L = 21 // lines
 var G = 0.1 // gap between lines
 var off_x = 0
 var off_y = 0
@@ -349,6 +349,10 @@ c.onmousedown = function (e) {
 
     var oldMove = document.onmousemove
     document.onmousemove = function (e) {
+        if (e.buttons == 0) {
+            document.onmouseup()
+            return
+        }
         var new_pos = [e.pageX, e.pageY]
         on_move(new_pos[0] - prev_pos[0], new_pos[1] - prev_pos[1])
         prev_pos = new_pos
