@@ -1,3 +1,6 @@
+<head><meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes"></head>
+
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.6.1/gl-matrix-min.js"></script>
 <body style="margin:0px"></body>
 <script>
@@ -266,6 +269,8 @@ function loop() {
         
         gl.viewport(0, 0, c.width, c.height)
         
+        gl.uniform1f(u_off_x, off_x)
+        gl.uniform1f(u_off_y, off_y)
         gl.uniform1f(u_w, c.width)
         gl.uniform1f(u_h, c.height)
         
@@ -326,8 +331,8 @@ window.onresize = () => {
 window.onresize()
 
 window.onscroll = () => {
-    off_x = (document.body.scrollLeft - document.innerWidth)*dpr/c.width*2
-    off_y = (document.body.scrollTop - document.innerHeight)*dpr/c.height*2
+    off_x = (document.body.scrollLeft - window.innerWidth)*dpr/c.width*2
+    off_y = -(document.body.scrollTop - window.innerHeight)*dpr/c.height*2
     dirty = true
 }
 
