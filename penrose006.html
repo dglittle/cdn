@@ -28,6 +28,9 @@ var vs = createShader(gl, gl.VERTEX_SHADER, `#version 300 es
 in vec4 in_a;
 in vec4 in_b;
 
+const float tau = 6.283185307179586;
+const float _90 = tau/4.0;
+
 uniform float u_w;
 uniform float u_h;
 uniform float u_es[${D}];
@@ -55,20 +58,20 @@ float rand(vec2 co) {
     return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
 }
 
+vec2 get_e_unit(float e_i) {
+    float a = _90 + e_i * tau / D;
+    return vec2(cos(a), sin(a));
+}
+
 void main() {
-    const float tau = 6.283185307179586;
-    const float _90 = tau/4.0;
-    
     vec2 o = vec2(u_off_x, u_off_y);
     float D = ${D.toFixed(1)};
     float G = ${G.toFixed(1)};
-    float ang1 = in_a.x * tau / D;
-    float ang2 = in_a.z * tau / D;
     
-    vec2 unit = vec2(cos(ang1), sin(ang1));
+    vec2 unit = get_e_unit(in_a.x);
     float len1 = (floor(dot(unit, o)/G) + u_es[int(in_a.x)])*G + in_a.y*G;
     
-    unit = vec2(cos(ang2), sin(ang2));
+    vec2 unit = get_e_unit(in_a.z);
     float len2 = (floor(dot(unit, o)/G) + u_es[int(in_a.z)])*G + in_a.w*G;
     
     vec2 pos = get_intersection(
@@ -81,48 +84,35 @@ void main() {
     float e_scale = 2.0 * 1.0/D;
     
     vec2 goal = -o;
+    vec2 ref = vec2(0.0, 0.0);
     for (float i = 0.0; i < D; i += 1.0) {
-        float ang = i * tau / D;
-        vec2 unit = vec2(cos(ang), sin(ang));
+        vec2 unit = get_e_unit(i);
         float units = dot(unit, pos)/G - u_es[int(i)];
+        float ref_units = units;
         if (in_a.x == i) {
             units = round(units);
+            ref_units = units;
             if (in_b.x == 0.0 || in_b.x == 1.0) {
                 units -= 1.0;
             }
         } else if (in_a.z == i) {
             units = round(units);
+            ref_units = units;
             if (in_b.x == 1.0 || in_b.x == 2.0) {
                 units -= 1.0;
             }
         } else {
             units = floor(units);
+            ref_units = units;
         }
         goal += unit * (units * G * e_scale);
-    }
-    
-    
-    vec2 goal2 = vec2(0.0, 0.0);
-    for (float i = 0.0; i < D; i += 1.0) {
-        float ang = i * tau / D;
-        vec2 unit = vec2(cos(ang), sin(ang));
-        float units = dot(unit, pos)/G - u_es[int(i)];
-        if (in_a.x == i) {
-            units = round(units);
-            units -= 1.0;
-        } else if (in_a.z == i) {
-            units = round(units);
-        } else {
-            units = floor(units);
-        }
-        goal2 += unit * (units * G * e_scale);
+        ref += unit * (ref_units * G * e_scale);
     }
 
-    float qx = round(goal2.x / 0.001);
-    float qy = round(goal2.y / 0.001);
-
-
+    float qx = round(ref.x / 0.001);
+    float qy = round(ref.y / 0.001);
     float r = rand(vec2(qx, qy + mod(floor(in_b.x/2.0), 2.0)));
+    
     float diff = mod((in_a.x - in_a.z) + 5.0, 5.0);
     float amount = 0.8 + (0.1)*r;
     if (diff == 2.0 || diff == 3.0) {
