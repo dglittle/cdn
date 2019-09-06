@@ -9,7 +9,7 @@ var H = 1024
 
 var D = 5 // dimensions
 var L = 10 // lines
-var G = 0.1 // gap between lines
+var G = 0.3 // gap between lines
 var off_x = 0
 var off_y = 0
 
@@ -79,7 +79,7 @@ void main() {
     
     float e_scale = 2.0 * 1.0/D;
     
-    vec2 goal = vec2(0.0, 0.0);
+    vec2 goal = -o;
     for (float i = 0.0; i < D; i += 1.0) {
         float ang = i * tau / D;
         vec2 unit = vec2(cos(ang), sin(ang));
@@ -99,15 +99,36 @@ void main() {
         }
         goal += unit * (units * G * e_scale);
     }
-
-
-    float qx = round(goal.x / 0.001);
-    float qy = round(goal.y / 0.001);
     
-    goal -= o;
+    
+    
+    
+    
+    vec2 goal2 = vec2(0.0, 0.0);
+    for (float i = 0.0; i < D; i += 1.0) {
+        float ang = i * tau / D;
+        vec2 unit = vec2(cos(ang), sin(ang));
+        float units = dot(unit, pos)/G - u_es[int(i)];
+        if (in_a.x == i) {
+            units = round(units);
+            units -= 1.0;
+        } else if (in_a.z == i) {
+            units = round(units);
+        } else {
+            units = floor(units);
+        }
+        goal2 += unit * (units * G * e_scale);
+    }
+    
+    
     
 
-    float r = rand(vec2(qx, qy + in_b.x));
+
+    float qx = round(goal2.x / 0.001);
+    float qy = round(goal2.y / 0.001);
+    
+
+    float r = rand(vec2(qx, qy + mod(floor(in_b.x/2.0), 2.0)));
     float diff = mod((in_a.x - in_a.z) + 5.0, 5.0);
     float amount = 0.8 + (0.2)*r;
     if (diff == 2.0 || diff == 3.0) {
