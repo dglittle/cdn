@@ -13,9 +13,9 @@ function main() {
         
         
         
-        i = 600
-        run_trial('se334eeEFjeekkeeee:' + i, 115, true)
-        break
+        //i = 600
+        run_trial('se334eeEFjeekkeeee:' + i, 300, false)
+        //break
         
         
         
@@ -603,9 +603,9 @@ function sync9_create_peer(p_funcs) {
         if (self.peers[pid].b) {
             var open_fissures = {}
             Object.entries(self.fissures).forEach(x => {
-                if (!self.fissures[x[1].b + ':' + x[1].a + ':' + x[1].salt]) {
+                //if (!self.fissures[x[1].b + ':' + x[1].a + ':' + x[1].salt]) {
                     open_fissures[x[0]] = true
-                }
+                //}
             })
             
             var nodes = {}
