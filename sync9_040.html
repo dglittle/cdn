@@ -1088,8 +1088,15 @@ function sync9_prune2(x, has_everyone_whos_seen_a_seen_b) {
     }
 
     var delete_us = {}
-    Object.keys(x.T).forEach(x => {
-        if (!seen_nodes[x]) delete_us[x] = true
+    var children = {}
+    Object.keys(x.T).forEach(y => {
+        Object.keys(x.T[y]).forEach(z => {
+            if (!children[z]) children[z] = {}
+            children[z][y] = true
+        })
+    })
+    Object.keys(x.T).forEach(y => {
+        if (!seen_nodes[y] && Object.keys(children[y]).some(z => has_everyone_whos_seen_a_seen_b(y, z))) delete_us[y] = true
     })
 
     var visited = {}
