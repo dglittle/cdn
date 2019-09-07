@@ -100,7 +100,7 @@ float process_neighbor(vec4 us, vec2 d) {
 }
 
 void main() {
-    float dt = 0.15;
+    float dt = 0.6;
     
     vec4 t = texture(u_image, vec2(gl_FragCoord.x / float(${W}), gl_FragCoord.y / float(${H})));
 
