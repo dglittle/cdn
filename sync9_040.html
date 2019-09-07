@@ -228,6 +228,17 @@ function run_trial(seed, N, show_debug, trial_num) {
                 // work here
                 if (tt == 2) {
                     
+                    
+                    var c = document.createElement('canvas')
+                    c.width = 3000
+                    c.height = 1700
+                    c.style.width = (c.width / devicePixelRatio) + 'px'
+                    c.style.height = (c.height / devicePixelRatio) + 'px'
+                    var g = c.getContext('2d')
+                    document.body.append(c)
+                    
+                    
+                    
                     debug_frames[debug_frames.length - 1].peers.forEach(p => {
                         draw_time_dag(c, g, p, p.s9, 0, 0, 300, 300, 7)
                     })
