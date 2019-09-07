@@ -207,6 +207,14 @@ function run_trial(seed, N, show_debug, trial_num) {
                 if (show_debug) console.log('t => ' + tt)
                 notes = []
                 
+                
+                // work here
+                if (tt == 2) {
+                    debugger
+                }
+                
+                
+                
                 p.incoming.shift()[1]()
                 
                 if (debug_frames) debug_frames.push({
@@ -214,6 +222,18 @@ function run_trial(seed, N, show_debug, trial_num) {
                     notes: notes,
                     peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
                 })
+                
+                
+                
+                // work here
+                if (tt == 2) {
+                    
+                    debug_frames[debug_frames.length - 1].peers.forEach(p => {
+                        draw_time_dag(c, g, p, p.s9, 0, 0, 300, 300, 7)
+                    })
+                }
+                
+                
             }
         })
         
