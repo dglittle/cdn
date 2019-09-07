@@ -889,7 +889,7 @@ function sync9_create_peer(p_funcs) {
             }
         }
         Object.entries(self.fissures).forEach(x => {
-            if (!self.fissures[x[1].b + ':' + x[1].a + ':' + x[1].salt]) {
+            // if (!self.fissures[x[1].b + ':' + x[1].a + ':' + x[1].salt]) {
                 Object.keys(x[1].nodes).forEach(v => {
                     if (!self.s9.T[v]) return
                     tag(v, v)
@@ -899,7 +899,7 @@ function sync9_create_peer(p_funcs) {
                         frozen[v] = true
                     })
                 })
-            }
+            // }
         })
         var acked = sync9_get_ancestors(self.s9, self.ack_leaves)
         Object.keys(self.s9.T).forEach(x => {
