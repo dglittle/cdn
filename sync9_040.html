@@ -244,14 +244,6 @@ function run_trial(seed, N, show_debug) {
                 missing_fissure = true
             }
         })
-        
-        
-        // work here
-        // console.log('got here>>????: ' + x.uid)
-        // Object.values(x.fissures).forEach(x => {
-        //     console.log('x = ', x)
-        // })
-        
     })
         
         
@@ -355,35 +347,6 @@ function run_trial(seed, N, show_debug) {
                     lerp(0, peer_locs[a][1], 1, peer_locs[b][1], 0.5))
                 g.stroke()
             })
-            
-            
-            
-            // g.beginPath()
-            // g.strokeStyle = d.peers[0].peers[d.peers[1].uid] ? 'black' : 'lightgrey'
-            // g.moveTo(5, 300)
-            // g.lineTo(40, 800)
-            // g.stroke()
-
-            // g.beginPath()
-            // g.strokeStyle = d.peers[0].peers[d.peers[1].uid] ? 'black' : 'lightgrey'
-            // g.moveTo(5, 300)
-            // g.lineTo(40, 800)
-            // g.stroke()
-
-
-            
-            // g.beginPath()
-            // g.strokeStyle = d.peers[1].peers[d.peers[2].uid] ? 'black' : 'lightgrey'
-            // g.moveTo(40, 800)
-            // g.lineTo(5, 1300)
-            // g.stroke()
-
-            
-            // g.beginPath()
-            // g.strokeStyle = d.peers[0].peers[d.peers[2].uid] ? 'black' : 'lightgrey'
-            // g.moveTo(5, 300)
-            // g.lineTo(5, 1300)
-            // g.stroke()
         }
         document.body.append(slider)
         slider.oninput()
@@ -477,15 +440,8 @@ function draw_time_dag(c, g, peer, s9, x, y, w, h, r) {
             if (!s9.T[v]) return
             g.beginPath()
             
-            
-            
-            
-            // in: the stroke id, info
-            // out: a color
             Math.randomSeed(f.salt)
             g.strokeStyle = '#' + Math.random().toString(16).slice(2, 8)
-            
-            
             
             var node_pos = get_node_pos(vs[v])
             //var rr = r * 1.45
@@ -636,13 +592,6 @@ function sync9_create_peer(p_funcs) {
     self.disconnect = pid => {
         if (!self.peers[pid]) return
         if (self.peers[pid].b) {
-            var open_fissures = {}
-            Object.entries(self.fissures).forEach(x => {
-                //if (!self.fissures[x[1].b + ':' + x[1].a + ':' + x[1].salt]) {
-                    open_fissures[x[0]] = true
-                //}
-            })
-            
             var nodes = {}
             var ack_nodes = sync9_get_ancestors(self.s9, self.ack_leaves)
             Object.keys(self.s9.T).forEach(v => {
@@ -651,12 +600,17 @@ function sync9_create_peer(p_funcs) {
                 }
             })
             
+            var fissure_parents = {}
+            Object.keys(self.fissures).forEach(x => {
+                fissure_parents[x] = true
+            })
+            
             self.fissure(pid, {
                 a: self.uid,
                 b: self.peers[pid].b,
                 salt: self.peers[pid].salt,
                 nodes,
-                parents: open_fissures
+                parents: fissure_parents
             })
         }
         delete self.peers[pid]
@@ -889,17 +843,15 @@ function sync9_create_peer(p_funcs) {
             }
         }
         Object.entries(self.fissures).forEach(x => {
-            // if (!self.fissures[x[1].b + ':' + x[1].a + ':' + x[1].salt]) {
-                Object.keys(x[1].nodes).forEach(v => {
-                    if (!self.s9.T[v]) return
+            Object.keys(x[1].nodes).forEach(v => {
+                if (!self.s9.T[v]) return
+                tag(v, v)
+                frozen[v] = true
+                Object.keys(self.s9.T[v]).forEach(v => {
                     tag(v, v)
                     frozen[v] = true
-                    Object.keys(self.s9.T[v]).forEach(v => {
-                        tag(v, v)
-                        frozen[v] = true
-                    })
                 })
-            // }
+            })
         })
         var acked = sync9_get_ancestors(self.s9, self.ack_leaves)
         Object.keys(self.s9.T).forEach(x => {
