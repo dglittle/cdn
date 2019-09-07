@@ -41,17 +41,37 @@ void main() {
     vec3 c = vec3(0.0, 0.0, 0.0);
     vec4 t = texture(u_image, vec2(gl_FragCoord.x / float(${W}), gl_FragCoord.y / float(${H})));
     float a = mod(t.r, PI*2.0);
-    if (a < PI*2.0/3.0) {
-        c.r = lerp(0.0, 1.0, PI*2.0/3.0, 0.0, a);
-        c.g = lerp(0.0, 0.0, PI*2.0/3.0, 1.0, a);
-    } else if (a < PI*2.0*2.0/3.0) {
-        c.g = lerp(PI*2.0/3.0, 1.0, PI*2.0*2.0/3.0, 0.0, a);
-        c.b = lerp(PI*2.0/3.0, 0.0, PI*2.0*2.0/3.0, 1.0, a);
-    } else {
-        c.b = lerp(PI*2.0*2.0/3.0, 1.0, PI*2.0, 0.0, a);
-        c.r = lerp(PI*2.0*2.0/3.0, 0.0, PI*2.0, 1.0, a);
-    }
-    outColor = vec4(c, 1.0);
+    
+    
+    
+    // if (a < PI*2.0/3.0) {
+    //     c.r = lerp(0.0, 1.0, PI*2.0/3.0, 0.0, a);
+    //     c.g = lerp(0.0, 0.0, PI*2.0/3.0, 1.0, a);
+    // } else if (a < PI*2.0*2.0/3.0) {
+    //     c.g = lerp(PI*2.0/3.0, 1.0, PI*2.0*2.0/3.0, 0.0, a);
+    //     c.b = lerp(PI*2.0/3.0, 0.0, PI*2.0*2.0/3.0, 1.0, a);
+    // } else {
+    //     c.b = lerp(PI*2.0*2.0/3.0, 1.0, PI*2.0, 0.0, a);
+    //     c.r = lerp(PI*2.0*2.0/3.0, 0.0, PI*2.0, 1.0, a);
+    // }
+    
+    
+    // if (a < PI*2.0/3.0) {
+    //     c.r = lerp(0.0, 1.0, PI*2.0/3.0, 0.0, a);
+    //     c.g = lerp(0.0, 0.0, PI*2.0/3.0, 1.0, a);
+    // } else if (a < PI*2.0*2.0/3.0) {
+    //     c.g = lerp(PI*2.0/3.0, 1.0, PI*2.0*2.0/3.0, 0.0, a);
+    //     c.b = lerp(PI*2.0/3.0, 0.0, PI*2.0*2.0/3.0, 1.0, a);
+    // } else {
+    //     c.b = lerp(PI*2.0*2.0/3.0, 1.0, PI*2.0, 0.0, a);
+    //     c.r = lerp(PI*2.0*2.0/3.0, 0.0, PI*2.0, 1.0, a);
+    // }
+    
+    outColor = vec4((cos(a) + 1.0)/2.0, (sin(a) + 1.0)/2.0, 0.0, 1.0)
+    
+    
+    
+//    outColor = vec4(c, 1.0);
 }
 `)
 
@@ -74,7 +94,7 @@ float process_neighbor(vec4 us, vec2 d) {
 }
 
 void main() {
-    float dt = 0.01;
+    float dt = 0.5;
     
     vec4 t = texture(u_image, vec2(gl_FragCoord.x / float(${W}), gl_FragCoord.y / float(${H})));
 
