@@ -8,22 +8,26 @@
 <script>
 
 function main() {
-    for (var i = 0; i < 1000; i++) {
-        console.log('TRIAL: ' + i)
+    for (var i = 0; i < 10000; i++) {
+        
+        if (i % 100 == 0) {
+            console.log('TRIAL: ' + i)
+        }
         
         
+        run_trial('se334eeEFjeekkeeeeEEEEeeeF:' + i, 130, false)
+
         
-        i = 119
-        run_trial('se334eeEFjeekkeeee:' + i, 300, true)
-        break
-        
-        
+        // i = 119
+        // run_trial('se334eeEFjeekkeeee:' + i, 150, false)
+        // break
         
         // console.log('TRIAL: ' + i)
         // i = 12
         // run_trial('se334eeEFjeekk:' + i, 300, true)
         // break
     }
+    console.log('check_good: ' + check_good)
 }
 
 function run_trial(seed, N, show_debug) {
@@ -222,7 +226,7 @@ function run_trial(seed, N, show_debug) {
     }
     
     var check_val = null
-    var check_good = true
+    check_good = true
     Object.values(peers).forEach((x, i) => {
         var val = sync9_read(x.s9)
         if (i == 0)
@@ -251,7 +255,7 @@ function run_trial(seed, N, show_debug) {
         
         
         
-    console.log('CHECK GOOD: ' + check_good)
+    //console.log('CHECK GOOD: ' + check_good)
     if (!check_good) {
         Object.values(peers).forEach((x, i) => {
             console.log(x)
