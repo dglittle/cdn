@@ -337,17 +337,47 @@ function run_trial(seed, N, show_debug) {
                 draw_time_dag(c, g, d.peers[i], d.peers[i].s9, 0, y-100, 300, 300, 7)
             })
             
+            g.lineWidth = 1
+            
+            var peer_locs = [
+                [5, 300],
+                [40, 800],
+                [5, 1300]
+            ]
+            
+            ;[[0, 1], [1, 0], [1, 2], [2, 1], [2, 0], [0, 2]].forEach(([a, b]) => {
+                g.beginPath()
+                g.lineWidth = 3
+                g.strokeStyle = d.peers[a].peers[d.peers[b].uid] ? (d.peers[a].peers[d.peers[b].uid].b ? 'green' : 'orange') : 'red'
+                g.moveTo(peer_locs[a][0], peer_locs[a][1])
+                g.lineTo(
+                    lerp(0, peer_locs[a][0], 1, peer_locs[b][0], 0.5),
+                    lerp(0, peer_locs[a][1], 1, peer_locs[b][1], 0.5))
+                g.stroke()
+            })
+            
+            
+            
             g.beginPath()
             g.strokeStyle = d.peers[0].peers[d.peers[1].uid] ? 'black' : 'lightgrey'
             g.moveTo(5, 300)
             g.lineTo(40, 800)
             g.stroke()
+
+            g.beginPath()
+            g.strokeStyle = d.peers[0].peers[d.peers[1].uid] ? 'black' : 'lightgrey'
+            g.moveTo(5, 300)
+            g.lineTo(40, 800)
+            g.stroke()
+
+
             
             g.beginPath()
             g.strokeStyle = d.peers[1].peers[d.peers[2].uid] ? 'black' : 'lightgrey'
             g.moveTo(40, 800)
             g.lineTo(5, 1300)
             g.stroke()
+
             
             g.beginPath()
             g.strokeStyle = d.peers[0].peers[d.peers[2].uid] ? 'black' : 'lightgrey'
