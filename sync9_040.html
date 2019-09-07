@@ -10,12 +10,12 @@
 function main() {
     for (var i = 0; i < 1000; i++) {
         
-        // if (i % 100 == 0) {
+        if (i % 100 == 0) {
             console.log('TRIAL: ' + i)
-        // }
+        }
         
         // i = 0
-        run_trial('se334eeEFjeekkeeeeEEEEeeeFFF:' + i, 10, false)
+        run_trial('se334eeEFjeekkeeeeEEEEeeeFFF:' + i, 10, false, i)
         // break
 
         
@@ -31,7 +31,7 @@ function main() {
     console.log('check_good: ' + check_good)
 }
 
-function run_trial(seed, N, show_debug) {
+function run_trial(seed, N, show_debug, trial_num) {
     Math.randomSeed(seed)
     var rand = () => Math.random()
     
@@ -256,6 +256,7 @@ function run_trial(seed, N, show_debug) {
             console.log('val: ' + JSON.stringify(val))
         })
         console.log('missing_fissure: ' + missing_fissure)
+        console.log('trial_num: ' + trial_num)
         if (!show_debug) throw 'stop'
     }
 
