@@ -8,15 +8,15 @@
 <script>
 
 function main() {
-    for (var i = 0; i < 1000; i++) {
+    for (var i = 0; i < 100; i++) {
         
         // if (i % 100 == 0) {
             console.log('TRIAL: ' + i)
         // }
         
-        //i = 3416
-        run_trial('se334eeEFjeekkeeeeEEEEeeeFFF:' + i, 10, false)
-        //break
+        i = 0
+        run_trial('se334eeEFjeekkeeeeEEEEeeeFFF:' + i, 0, true)
+        break
 
         
         // i = 119
@@ -206,6 +206,19 @@ function run_trial(seed, N, show_debug) {
                 tt++
                 if (show_debug) console.log('t => ' + tt)
                 notes = []
+                
+                
+        
+        
+        
+                if (tt == 33) {
+                    debugger
+                }
+        
+        
+                
+                
+                
                 
                 p.incoming.shift()[1]()
                 
