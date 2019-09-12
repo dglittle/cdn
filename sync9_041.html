@@ -199,7 +199,7 @@ function run_trial(seed, N, show_debug, trial_num) {
     }
     
     var tt = 0
-    for (var t = 0; t < 1000; t++) {
+    for (var t = 0; t < 350; t++) {
         Object.values(peers).forEach(p => {
             while (p.incoming.length > 0) {
                 tt++
@@ -216,7 +216,38 @@ function run_trial(seed, N, show_debug, trial_num) {
             }
         })
         
-        if (Object.values(peers).every(x => x.incoming.length == 0)) break
+        if (Object.values(peers).every(x => x.incoming.length == 0)) {
+            var too_many_fissures = false    
+            Object.values(peers).forEach((x, i) => {
+                Object.values(x.fissures).forEach(f => {
+                    if (!x.fissures[f.b + ':' + f.a + ':' + f.salt]) {
+                        too_many_fissures = true
+                    }
+                })
+            })
+            
+            var too_many_versions = false
+            Object.values(peers).forEach((x, i) => {
+                if (Object.keys(x.s9.T).length > 2) {
+                    too_many_versions = true
+                }
+            })
+            
+            if (too_many_fissures || too_many_versions) {
+                var i = Math.floor(rand() * n_peers)
+                var p = peers_array[i]
+                
+                p.create_joiner()
+                
+                if (debug_frames) debug_frames.push({
+                    tt: tt,
+                    notes: 'creating joiner',
+                    peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
+                })
+            } else {
+                break
+            }
+        }
     }
     
     } catch (e) {
@@ -235,12 +266,12 @@ function run_trial(seed, N, show_debug, trial_num) {
             check_good = false
     })
 
-    var missing_fissure = false    
+    var too_many_fissures = false    
     Object.values(peers).forEach((x, i) => {
         Object.values(x.fissures).forEach(f => {
             if (!x.fissures[f.b + ':' + f.a + ':' + f.salt]) {
                 check_good = false
-                missing_fissure = true
+                too_many_fissures = true
             }
         })
     })
@@ -261,7 +292,7 @@ function run_trial(seed, N, show_debug, trial_num) {
             var val = sync9_read(x.s9)
             console.log('val: ' + JSON.stringify(val))
         })
-        console.log('missing_fissure: ' + missing_fissure)
+        console.log('too_many_fissures: ' + too_many_fissures)
         console.log('too_many_versions: ' + too_many_versions)
         console.log('trial_num: ' + trial_num)
         if (!show_debug) throw 'stop'
@@ -744,12 +775,6 @@ function sync9_create_peer(p_funcs) {
             })
         }
         gen_fs.forEach(f => self.fissure(null, f))
-        
-        if (true) {
-            var vid = sjcl.codec.hex.fromBits(sjcl.hash.sha256.hash(Object.keys(self.s9.leaves).sort().join(':')))
-            var joiner_num = Math.random()
-            self.local_set(vid, Object.assign({}, self.s9.leaves), [], joiner_num)
-        }
     }
     
     function add_full_ack_leaf(vid) {
@@ -767,12 +792,6 @@ function sync9_create_peer(p_funcs) {
         f(vid)
         self.ack_leaves[vid] = true
         self.prune()
-        
-        if (Object.keys(self.s9.leaves).every(x => self.ack_leaves[x]) && Object.keys(self.s9.leaves).length > 1) {
-            var vid = sjcl.codec.hex.fromBits(sjcl.hash.sha256.hash(Object.keys(self.s9.leaves).sort().join(':')))
-            var joiner_num = Math.random()
-            self.local_set(vid, Object.assign({}, self.s9.leaves), [], joiner_num)
-        }
     }
     
     self.local_set = (vid, parents, changes, joiner_num) => {
@@ -936,6 +955,12 @@ function sync9_create_peer(p_funcs) {
             
             sync9_add_version(self.s9, ls[0], {root: true}, ['[0:0] = ' + JSON.stringify(remember)])
         }
+    }
+    
+    self.create_joiner = () => {
+        var vid = sjcl.codec.hex.fromBits(sjcl.hash.sha256.hash(Object.keys(self.s9.leaves).sort().join(':')))
+        var joiner_num = Math.random()
+        self.local_set(vid, Object.assign({}, self.s9.leaves), [], joiner_num)
     }
     
     return self
