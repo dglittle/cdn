@@ -909,7 +909,7 @@ function sync9_create_peer(p_funcs) {
         })
         
         var ls = Object.keys(self.s9.leaves)
-        var as = Object.keys(self.s9.ack_leaves)
+        var as = Object.keys(self.ack_leaves)
         if (ls.length == 1 &&
             as.length == 1 &&
             ls[0] == as[0] &&
