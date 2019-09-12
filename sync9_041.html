@@ -925,6 +925,15 @@ function sync9_create_peer(p_funcs) {
             
             var remember = sync9_read(self.s9)
             self.s9 = sync9_create()
+            
+            // work here : creating single string within json
+            if (true) {
+                sync9_add_version(self.s9, 'v1', {root: true}, [' = ""'])
+                sync9_prune(self.s9, (a, b) => true, (a, b) => true)
+                delete self.s9.T.v1
+                self.s9.leaves = {root: true}
+            }
+            
             sync9_add_version(self.s9, ls[0], {root: true}, [' = ' + JSON.stringify(remember)])
         }
     }
