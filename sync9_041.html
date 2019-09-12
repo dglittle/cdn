@@ -934,7 +934,7 @@ function sync9_create_peer(p_funcs) {
                 self.s9.leaves = {root: true}
             }
             
-            sync9_add_version(self.s9, ls[0], {root: true}, [' = ' + JSON.stringify(remember)])
+            sync9_add_version(self.s9, ls[0], {root: true}, ['[0:0] = ' + JSON.stringify(remember)])
         }
     }
     
