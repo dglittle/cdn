@@ -916,16 +916,8 @@ function sync9_create_peer(p_funcs) {
             Object.keys(self.fissures).length == 0 &&
             Object.keys(self.s9.T).length > 1) {
             
-            // work here
-            debugger
-            
             var remember = sync9_read(self.s9)
-                
             self.s9 = sync9_create()
-            
-            
-            
-            
             sync9_add_version(self.s9, ls[0], {root: true}, [' = ' + JSON.stringify(remember)])
         }
     }
