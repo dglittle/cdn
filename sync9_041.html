@@ -219,11 +219,9 @@ function run_trial(seed, N, show_debug, trial_num) {
         if (Object.values(peers).every(x => x.incoming.length == 0)) {
             var too_many_fissures = false    
             Object.values(peers).forEach((x, i) => {
-                Object.values(x.fissures).forEach(f => {
-                    if (!x.fissures[f.b + ':' + f.a + ':' + f.salt]) {
-                        too_many_fissures = true
-                    }
-                })
+                if (Object.keys(x.fissures).length > 0) {
+                    too_many_fissures = true
+                }
             })
             
             var too_many_versions = false
