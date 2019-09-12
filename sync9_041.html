@@ -915,12 +915,12 @@ function sync9_create_peer(p_funcs) {
             ls[0] == as[0] &&
             Object.keys(self.fissures).length == 0 &&
             Object.keys(self.s9.T).length > 1) {
-                
-            self.s9 = sync9_create()
-            sync9_add_version(self.s9, ls[0], {root: true}, [' = ' + JSON.stringify(sync9_read(self.s9))])
             
             // work here
             debugger
+                
+            self.s9 = sync9_create()
+            sync9_add_version(self.s9, ls[0], {root: true}, [' = ' + JSON.stringify(sync9_read(self.s9))])
         }
     }
     
