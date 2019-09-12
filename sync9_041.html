@@ -244,7 +244,14 @@ function run_trial(seed, N, show_debug, trial_num) {
             }
         })
     })
-        
+    
+    var too_many_versions = false
+    Object.values(peers).forEach((x, i) => {
+        if (Object.keys(x.s9.T).length > 2) {
+            check_good = false
+            too_many_versions = true
+        }
+    })
         
         
     //console.log('CHECK GOOD: ' + check_good)
@@ -255,6 +262,7 @@ function run_trial(seed, N, show_debug, trial_num) {
             console.log('val: ' + JSON.stringify(val))
         })
         console.log('missing_fissure: ' + missing_fissure)
+        console.log('too_many_versions: ' + too_many_versions)
         console.log('trial_num: ' + trial_num)
         if (!show_debug) throw 'stop'
     }
