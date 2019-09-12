@@ -907,81 +907,22 @@ function sync9_create_peer(p_funcs) {
                 }
             }
         })
-    }
-    
-    
-    self.v_state = () => {
-        var tags = {}
-        var frozen = {root: true}
-        Object.keys(self.s9.T).forEach(vid => {
-            tags[vid] = {tags: {}}
-        })
-        function tag(vid, t) {
-            if (!tags[vid].tags[t]) {
-                tags[vid].tags[t] = true
-                Object.keys(self.s9.T[vid]).forEach(vid => tag(vid, t))
-            }
-        }
-        Object.entries(self.fissures).forEach(x => {
-            Object.keys(x[1].nodes).forEach(v => {
-                if (!self.s9.T[v]) return
-                tag(v, v)
-                frozen[v] = true
-                Object.keys(self.s9.T[v]).forEach(v => {
-                    tag(v, v)
-                    frozen[v] = true
-                })
-            })
-        })
-        var acked = sync9_get_ancestors(self.s9, self.ack_leaves)
-        Object.keys(self.s9.T).forEach(x => {
-            if (!acked[x] || self.ack_leaves[x]) {
-                tag(x, x)
-                frozen[x] = true
-                Object.keys(self.s9.T[x]).forEach(v => {
-                    tag(v, v)
-                    frozen[v] = true
-                })
-            }
-        })
-        Object.entries(tags).forEach(x => {
-            var keys = Object.keys(x[1].tags)
-            if (keys.length == 0) {
-                frozen[x[0]] = true
-            } else if (!frozen[x[0]]) {
-                x[1].tag = keys.sort().join(',')
-            }
-        })
         
-        return function(a) {
-            return {
-                frozen: frozen[a] || false,
-                acked: acked[a] || false
-            }
+        var ls = Object.keys(self.s9.leaves)
+        var as = Object.keys(self.s9.ack_leaves)
+        if (ls.length == 1 &&
+            as.length == 1 &&
+            ls[0] == as[0] &&
+            Object.keys(self.fissures).length == 0 &&
+            Object.keys(self.s9.T).length > 1) {
+                
+            self.s9 = sync9_create()
+            sync9_add_version(self.s9, ls[0], {root: true}, [' = ' + JSON.stringify(sync9_read(self.s9))])
+            
+            // work here
+            debugger
         }
     }
-
-    self.f_state = () => {
-        var states = {};
-        function fis(f) {
-            let m = f.a < f.b ? f.a : f.b,
-                p = f.a < f.b ? f.b : f.a;
-            return `${m}:${p}:${f.salt}`;
-        };
-        function mark_version(v, tag) {
-            if (!states[v])
-                states[v] = {};
-            states[v][tag] = true;
-        }
-        function mark(fissure) {
-            let fid = fis(fissure);
-            Object.keys(fissure.nodes).forEach(v => mark_version(v, fid));
-        };
-        Object.values(self.fissures).forEach(mark);
-        return v => states[v] || {};
-    }    
-    
-    
     
     return self
 }
