@@ -663,7 +663,6 @@ function sync9_create_peer(p_funcs) {
     }
     
     self.set_multi = (pid, vs, fs, conn_leaves, min_leaves) => {
-        var is_initial_set_multi = !conn_leaves
         var new_vs = []
         var vs_T = {}
         vs.forEach(v => vs_T[v.vid] = v.parents)
@@ -746,7 +745,7 @@ function sync9_create_peer(p_funcs) {
         }
         gen_fs.forEach(f => self.fissure(null, f))
         
-        if (is_initial_set_multi) {
+        if (true) {
             var vid = sjcl.codec.hex.fromBits(sjcl.hash.sha256.hash(Object.keys(self.s9.leaves).sort().join(':')))
             var joiner_num = Math.random()
             self.local_set(vid, Object.assign({}, self.s9.leaves), [], joiner_num)
