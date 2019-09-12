@@ -920,6 +920,12 @@ function sync9_create_peer(p_funcs) {
             debugger
                 
             self.s9 = sync9_create()
+            
+            
+            var x1 = sync9_read(self.s9)
+            
+            
+            
             sync9_add_version(self.s9, ls[0], {root: true}, [' = ' + JSON.stringify(sync9_read(self.s9))])
         }
     }
