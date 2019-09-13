@@ -14,9 +14,9 @@ function main() {
             console.log('TRIAL: ' + i)
         //
         
-        //i = 452
-        run_trial('seEeeeFFF23eeeEe:' + i, 25, false, i)
-        //break
+        i = 982
+        run_trial('seEeeeFFF23eeeEe:' + i, 50, true, i)
+        break
         
         // i = 119
         // run_trial('se334eeEFjeekkeeee:' + i, 150, false)
@@ -116,6 +116,18 @@ function run_trial(seed, N, show_debug, trial_num) {
                 })
             }
         }
+    }
+
+    if (true) {
+        let p = peers_array[0]
+        var e = create_random_edit(p.s9, p.letters[p.letters_i++])
+        p.local_set(e.vid, e.parents, e.changes)
+        
+        if (debug_frames) debug_frames.push({
+            t: -1,
+            notes: ['initial edit'],
+            peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
+        })
     }
     
     try {
@@ -602,14 +614,6 @@ function sync9_create_peer(p_funcs) {
     self.s9 = sync9_create()
     self.uid = sync9_guid()
     
-    // work here : creating single string within json
-    if (true) {
-        sync9_add_version(self.s9, 'v1', {root: true}, [' = ""'])
-        sync9_prune(self.s9, (a, b) => true, (a, b) => true)
-        delete self.s9.T.v1
-        self.s9.leaves = {root: true}
-    }
-    
     self.peers = {}
     self.fissures = {}
     self.conn_leaves = {}
@@ -943,15 +947,7 @@ function sync9_create_peer(p_funcs) {
             var remember = sync9_read(self.s9)
             self.s9 = sync9_create()
             
-            // work here : creating single string within json
-            if (true) {
-                sync9_add_version(self.s9, 'v1', {root: true}, [' = ""'])
-                sync9_prune(self.s9, (a, b) => true, (a, b) => true)
-                delete self.s9.T.v1
-                self.s9.leaves = {root: true}
-            }
-            
-            sync9_add_version(self.s9, ls[0], {root: true}, ['[0:0] = ' + JSON.stringify(remember)])
+            sync9_add_version(self.s9, ls[0], {root: true}, [' = ' + JSON.stringify(remember)])
         }
     }
     
