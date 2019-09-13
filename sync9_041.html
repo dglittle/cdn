@@ -130,11 +130,13 @@ function run_trial(seed, N, show_debug, trial_num) {
         
         if (rand() < 0.1) {
             if (rand() < 0.9) {
-                if (p.letters_i >= p.letters.length) {
-                    p.letters_i = 0
+                if (i == 0 || Object.keys(p.s9.T).length > 1) {
+                    if (p.letters_i >= p.letters.length) {
+                        p.letters_i = 0
+                    }
+                    var e = create_random_edit(p.s9, p.letters[p.letters_i++])
+                    p.local_set(e.vid, e.parents, e.changes)
                 }
-                var e = create_random_edit(p.s9, p.letters[p.letters_i++])
-                p.local_set(e.vid, e.parents, e.changes)
             } else {
                 var other_p = p
                 while (other_p == p) {
