@@ -120,8 +120,7 @@ function run_trial(seed, N, show_debug, trial_num) {
 
     if (true) {
         let p = peers_array[0]
-        var e = create_random_edit(p.s9, p.letters[p.letters_i++])
-        p.local_set(e.vid, e.parents, e.changes)
+        p.local_set('v1', {root: true}, [' = ""'])
         
         if (debug_frames) debug_frames.push({
             t: -1,
