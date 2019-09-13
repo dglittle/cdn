@@ -222,10 +222,6 @@ function run_trial(seed, N, show_debug, trial_num) {
                 if (show_debug) console.log('t => ' + tt)
                 notes = []
                 
-                if (tt == 5) {
-                    debugger
-                }
-                
                 p.incoming.shift()[1]()
                 
                 if (debug_frames) debug_frames.push({
