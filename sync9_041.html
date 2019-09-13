@@ -955,18 +955,21 @@ function sync9_create_peer(p_funcs) {
             Object.keys(self.fissures).length == 0 &&
             Object.keys(self.s9.T).length > 1) {
             
-            var remember = sync9_read(self.s9)
-            self.s9 = sync9_create()
+            var new_s9 = sync9_create()
             
             // work here : creating single string within json
             if (true) {
-                sync9_add_version(self.s9, 'v1', {root: true}, [' = ""'])
-                sync9_prune(self.s9, (a, b) => true, (a, b) => true)
-                delete self.s9.T.v1
-                self.s9.leaves = {root: true}
+                sync9_add_version(new_s9, 'v1', {root: true}, [' = ""'])
+                sync9_prune(new_s9, (a, b) => true, (a, b) => true)
+                delete new_s9.T.v1
+                new_s9.leaves = {root: true}
             }
             
-            sync9_add_version(self.s9, ls[0], {root: true}, ['[0:0] = ' + JSON.stringify(remember)])
+            sync9_add_version(new_s9, ls[0], {root: true}, ['[0:0] = ' + JSON.stringify(sync9_read(self.s9))])
+            
+            self.s9.T = new_s9.T
+            self.s9.leaves = new_s9.leaves
+            self.s9.val = new_s9.val
         }
     }
     
