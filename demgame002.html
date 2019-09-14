@@ -1,0 +1,112 @@
+
+<script src="https://www.gstatic.com/firebasejs/6.5.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/6.5.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/6.5.0/firebase-firestore.js"></script>
+
+<body>
+<div style="display:grid;grid-template-columns:1fr 1fr">
+    <div>your vote on what to vote on</div>
+    <div>your vote</div>
+</div>
+
+<script>
+
+// var d = document.createElement('div')
+
+// var d = document.createElement('div')
+
+// var d = document.createElement('div')
+
+  var firebaseConfig = {
+    apiKey: "AIzaSyBLV5t8a-gGxnr5ZoS0znAZLNCemTCBAWo",
+    authDomain: "openworklist.firebaseapp.com",
+    databaseURL: "https://openworklist.firebaseio.com",
+    projectId: "openworklist",
+    storageBucket: "openworklist.appspot.com",
+    messagingSenderId: "275344271563",
+    appId: "1:275344271563:web:9fdc0e0030e4593c"
+  };
+  // Initialize Firebase
+ firebase.initializeApp(firebaseConfig);
+
+
+console.log(firebase)
+
+var db = firebase.firestore()
+
+// var results = document.createElement('div')
+// db.collection('demgame').get().then(x => {
+//     console.log('blah!')
+//     x.forEach(x => {
+//         console.log(x.id, '=>', x.data())
+//     })
+// })
+
+
+
+
+
+firebase.auth().signInAnonymously()
+firebase.auth().onAuthStateChanged(function(user) {
+  if (user) {
+    // User is signed in.
+    var isAnonymous = user.isAnonymous;
+    var uid = user.uid;
+    // ...
+    console.log('got here!?')
+    
+    
+    var button = document.createElement('button')
+button.style.padding = '30px'
+button.textButton = 'BUTTON'
+button.onclick = () => {
+    
+    
+    db.collection('demgame').doc('super').set({
+        uid: uid,
+        time: firebase.firestore.Timestamp.fromDate(new Date()),
+        yo: 'what?'
+    }).then(() => {
+        console.log('got here!!>?')
+        }).catch(e => {
+            console.log('got here!!>?:: + ' + e)
+            })
+    
+    
+    
+    // uid == request.auth.uid &&
+    //     request.resource.data.time == request.time
+    
+    // db.collection('demgame').get().then(x => {
+    //     console.log('blah!')
+    //     x.forEach(x => {
+    //         console.log(x.id, '=>', x.data())
+    //     })
+    // })    
+}
+document.body.append(button)
+
+
+    
+    
+  } else {
+    // User is signed out.
+        console.log('User is signed out....')
+
+    // ...
+  }
+  // ...
+});
+
+
+
+
+
+
+
+
+
+
+
+</script>
+</body>
