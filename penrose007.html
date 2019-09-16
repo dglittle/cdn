@@ -1,0 +1,724 @@
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+</head>
+<body style="margin:0px"></body>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.6.1/gl-matrix-min.js"></script>
+<script>
+
+var tau = Math.PI*2
+
+var dpr = window.devicePixelRatio
+
+var debug_overlay = document.createElement('div')
+document.body.appendChild(debug_overlay)
+debug_overlay.style.position = 'fixed'
+debug_overlay.style.left = '0px'
+debug_overlay.style.top = '0x'
+debug_overlay.style['z-index'] = 100000
+debug_overlay.textContent = 'hello! + ' + (window.innerWidth * dpr) + ' x ' + (window.innerHeight * dpr)
+
+
+
+// include('blah.com', 'bloop.com', function () { then do this })
+var include = function () {
+    var args = arguments
+    var i = 0
+    function do_next() {
+        if (i < args.length - 1) {
+            var x = document.createElement('script')
+            document.head.appendChild(x)
+            x.onload = do_next
+            i = i + 1
+            x.src = args[i - 1]
+        } else {
+            args[args.length - 1]()
+        }
+    }
+    do_next()
+}
+
+include("https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.6.1/gl-matrix-min.js", () => {
+
+    var dpr = window.devicePixelRatio
+    
+    var D = 5 // dimensions
+    var L = 31 // 15 lines
+    var G = 0.25 // gap between lines
+    var off_x = 0
+    var off_y = 0
+    
+    var c = document.createElement('canvas')
+    c.style.position = 'absolute'
+    c.style.left = '0px'
+    c.style.top = '0px'
+    c.style.width = '100%'
+    c.style.height = '100%'
+    c.style['z-index'] = 1
+    document.body.append(c)
+    
+    var gl = c.getContext('webgl2')
+    gl.getExtension('EXT_color_buffer_float')
+    
+    var vs = createShader(gl, gl.VERTEX_SHADER, `#version 300 es
+
+    in vec4 in_a;
+    in vec4 in_b;
+    
+    const float D = ${D.toFixed(1)};
+    const float G = ${G.toFixed(100)};
+    
+    const float tau = 6.283185307179586;
+    const float _90 = tau/4.0;
+    
+    uniform float u_w;
+    uniform float u_h;
+    uniform float u_es[${D}];
+    uniform int u_es_base[${D}];
+    uniform float u_colors[${Math.floor(D/2)*3*2}];
+    uniform float u_off_x;
+    uniform float u_off_y;
+    uniform float u_slider;
+    
+    out vec4 v;
+    
+    vec2 get_intersection(float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4) {
+        x2 += x1;
+        y2 += y1;
+        x4 += x3;
+        y4 += y3;
+        return vec2(
+            ((x1*y2 - y1*x2)*(x3 - x4) - (x1 - x2)*(x3*y4 - y3*x4)) /
+            ((x1 - x2)*(y3 - y4) - (y1 - y2)*(x3 - x4)),
+            
+            ((x1*y2 - y1*x2)*(y3 - y4) - (y1 - y2)*(x3*y4 - y3*x4)) /
+            ((x1 - x2)*(y3 - y4) - (y1 - y2)*(x3 - x4))
+        );
+    }
+    
+    // https://stackoverflow.com/questions/4200224/random-noise-functions-for-glsl
+    float rand(vec2 co) {
+        return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+    }
+    
+    float get_e_ang(float e_i) {
+        return _90 + e_i * tau / D;
+    }
+
+    void main() {
+        vec2 o = vec2(0.0, 0.0);
+        
+        float ang1 = get_e_ang(in_a.x);
+        vec2 unit = vec2(cos(ang1), sin(ang1));
+        float len1 = (floor(dot(unit, o)/G) + u_es[int(in_a.x)])*G + in_a.y*G;
+        
+        float ang2 = get_e_ang(in_a.z);
+        unit = vec2(cos(ang2), sin(ang2));
+        float len2 = (floor(dot(unit, o)/G) + u_es[int(in_a.z)])*G + in_a.w*G;
+        
+        vec2 pos = get_intersection(
+            cos(ang1)*len1, sin(ang1)*len1,
+            cos(ang1 + _90), sin(ang1 + _90),
+            cos(ang2)*len2, sin(ang2)*len2,
+            cos(ang2 + _90), sin(ang2 + _90)
+        );
+        
+        float e_scale = 2.0 * 1.0/D;
+        
+        vec2 goal = -o;
+        int color_ref = 0;
+        for (float i = 0.0; i < D; i += 1.0) {
+            float ang = get_e_ang(i);
+            vec2 unit = vec2(cos(ang), sin(ang));
+            float units = dot(unit, pos)/G - u_es[int(i)];
+            float ref_units = units;
+            if (in_a.x == i) {
+                units = round(units);
+                ref_units = units;
+                if (in_b.x == 0.0 || in_b.x == 1.0) {
+                    units -= 1.0;
+                }
+            } else if (in_a.z == i) {
+                units = round(units);
+                ref_units = units;
+                if (in_b.x == 1.0 || in_b.x == 2.0) {
+                    units -= 1.0;
+                }
+            } else {
+                units = floor(units);
+                ref_units = units;
+            }
+            goal += unit * (units * G * e_scale);
+            color_ref += u_es_base[int(i)] + int(ref_units);
+        }
+        
+        vec2 nudge = vec2(u_off_x, u_off_y);
+        goal += nudge;
+
+        float r = rand(vec2(float(color_ref), float(int(in_b.x)/2%2)));
+
+        int iD = int(D);
+        int diff = (int(in_a.x) - int(in_a.z) + iD) % iD;
+        if (diff > iD/2) {
+            diff = iD - diff;
+        }
+        diff--;
+        
+        if (in_b.y == 1.0) {
+            v = vec4(0.0, 0.0, 0.0, 1.0);
+        } else {
+            v = vec4(
+                mix(u_colors[diff*6 + 0], u_colors[diff*6 + 3], r),
+                mix(u_colors[diff*6 + 1], u_colors[diff*6 + 4], r),
+                mix(u_colors[diff*6 + 2], u_colors[diff*6 + 5], r),
+                u_slider);
+        }
+
+        vec2 p = pos - o;
+        if (u_w > u_h) {
+            gl_Position = mix(
+                vec4(p.x, p.y * u_w / u_h, 0.0, 1.0),
+                vec4(goal.x, goal.y * u_w / u_h, 0.0, 1.0), u_slider);
+        } else {
+            gl_Position = mix(
+                vec4(p.x * u_h / u_w, p.y, 0.0, 1.0),
+                vec4(goal.x * u_h / u_w, goal.y, 0.0, 1.0), u_slider);
+        }
+    }
+    `)
+
+    var vs_lines = createShader(gl, gl.VERTEX_SHADER, `#version 300 es
+    in vec4 in_c;
+
+    const float D = ${D.toFixed(1)};
+    const float G = ${G.toFixed(100)};
+    
+    const float tau = 6.283185307179586;
+    const float _90 = tau/4.0;
+    
+    uniform float u_w;
+    uniform float u_h;
+    uniform float u_es[${D}];
+    uniform float u_off_x;
+    uniform float u_off_y;
+    uniform float u_slider;
+    
+    out vec4 v;
+    
+    float get_e_ang(float e_i) {
+        return _90 + e_i * tau / D;
+    }
+    
+    void main() {
+        vec2 o = vec2(0.0, 0.0);
+        
+        float ang = get_e_ang(in_c.x);
+        vec2 unit = vec2(cos(ang), sin(ang));
+        vec2 sideways = vec2(cos(ang + _90), sin(ang + _90));
+        float len = (floor(dot(unit, o)/G) + u_es[int(in_c.x)])*G + in_c.y*G;
+        
+        vec2 goal = unit*len;
+        
+        goal += sideways*dot(sideways, o);
+        
+        if (in_c.z == 0.0) {
+            goal += sideways*2.0;
+        } else {
+            goal -= sideways*2.0;
+        }
+        goal -= o;
+
+        v = vec4(0.0, 0.0, 0.0, 1.0 - u_slider);
+        
+        if (u_w > u_h) {
+            gl_Position = vec4(goal.x, goal.y * u_w / u_h, 0.0, 1.0);
+        } else {
+            gl_Position = vec4(goal.x * u_h / u_w, goal.y, 0.0, 1.0);
+        }
+    }
+    `)    
+    
+    var fs = createShader(gl, gl.FRAGMENT_SHADER, `#version 300 es
+    precision mediump float;
+    
+    in vec4 v;
+    
+    out vec4 out_color;
+    
+    void main() {
+        out_color = v; // mix(gl_Color, v, v.a);
+    }
+    
+    `)
+    
+    var a = []
+    var b = []
+    for (var d1 = 0; d1 < D; d1++) {
+        for (var d2 = d1 + 1; d2 < D; d2++) {
+            for (var i = 0; i < L; i++) {
+                for (var ii = 0; ii < L; ii++) {
+                    //;[0, 1, 2, 0, 2, 3]
+                    ;[0, 1, 3, 1, 2, 3].forEach(c => {
+                        a.push(d1)
+                        a.push(i - Math.floor(L/2))
+                        a.push(d2)
+                        a.push(ii - Math.floor(L/2))
+                        
+                        b.push(c)
+                        b.push(0)
+                        b.push(0)
+                        b.push(0)
+                    })
+                }
+            }
+        }
+    }
+    
+    var la = []
+    var lb = []
+    for (var d1 = 0; d1 < D; d1++) {
+        for (var d2 = d1 + 1; d2 < D; d2++) {
+            for (var i = 0; i < L; i++) {
+                for (var ii = 0; ii < L; ii++) {
+                    //;[0, 1, 2, 0, 2, 3]
+                    ;[0, 1, 1, 2, 2, 3, 3, 0].forEach(c => {
+                        la.push(d1)
+                        la.push(i - Math.floor(L/2))
+                        la.push(d2)
+                        la.push(ii - Math.floor(L/2))
+                        
+                        lb.push(c)
+                        lb.push(1)
+                        lb.push(0)
+                        lb.push(0)
+                    })
+                }
+            }
+        }
+    }
+    
+    var cc = []
+    for (var d1 = 0; d1 < D; d1++) {
+        for (var i = 0; i < L; i++) {
+            ;[0, 1].forEach(c => {
+                cc.push(d1)
+                cc.push(i - Math.floor(L/2))
+                cc.push(c)
+                cc.push(0)
+            })
+        }
+    }
+
+
+    var es = []
+    var es_base = []
+    
+    for (var d = 0; d < D; d++) {
+        es.push(1/D)
+        es_base.push(0)
+    }
+    
+    
+
+    
+    var program = createProgram(gl, vs, fs)
+    gl.useProgram(program)
+    
+    var u_w = gl.getUniformLocation(program, 'u_w')
+    var u_h = gl.getUniformLocation(program, 'u_h')
+    var u_es = gl.getUniformLocation(program, 'u_es')
+    var u_es_base = gl.getUniformLocation(program, 'u_es_base')
+    var u_off_x = gl.getUniformLocation(program, 'u_off_x')
+    var u_off_y = gl.getUniformLocation(program, 'u_off_y')
+    var u_slider = gl.getUniformLocation(program, 'u_slider')
+    var u_colors = gl.getUniformLocation(program, 'u_colors')
+    
+    
+    init_colors()
+    function init_colors() {
+        var color_data = []
+        var color_count = Math.floor(D/2)
+        for (var i = 0; i < color_count; i++) {
+            let r = Math.random()
+            let g = Math.random()
+            let b = Math.random()
+            color_data.push(r)
+            color_data.push(g)
+            color_data.push(b)
+            // color_data.push(Math.min(r + 0.1, 1))
+            // color_data.push(Math.min(g + 0.1, 1))
+            // color_data.push(Math.min(b + 0.1, 1))
+            color_data.push(r)
+            color_data.push(g)
+            color_data.push(b)
+        }
+        
+        gl.useProgram(program)
+        gl.uniform1fv(u_colors, color_data)
+    }
+
+    
+    
+    
+    var in_a = gl.getAttribLocation(program, 'in_a')
+    var in_b = gl.getAttribLocation(program, 'in_b')
+    gl.enableVertexAttribArray(in_a)
+    gl.enableVertexAttribArray(in_b)
+    
+
+
+
+
+    var program2 = createProgram(gl, vs_lines, fs)
+    gl.useProgram(program2)
+    
+    var u_w2 = gl.getUniformLocation(program2, 'u_w')
+    var u_h2 = gl.getUniformLocation(program2, 'u_h')
+    var u_es2 = gl.getUniformLocation(program2, 'u_es')
+    var u_es_base2 = gl.getUniformLocation(program2, 'u_es_base')
+    var u_off_x2 = gl.getUniformLocation(program2, 'u_off_x')
+    var u_off_y2 = gl.getUniformLocation(program2, 'u_off_y')
+    var u_slider2 = gl.getUniformLocation(program2, 'u_slider')
+    
+    
+    var in_c = gl.getAttribLocation(program2, 'in_c')
+    gl.enableVertexAttribArray(in_c)
+
+
+
+
+    
+    var a_buf = gl.createBuffer()
+    gl.bindBuffer(gl.ARRAY_BUFFER, a_buf)
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(a), gl.STATIC_DRAW)
+    
+    var b_buf = gl.createBuffer()
+    gl.bindBuffer(gl.ARRAY_BUFFER, b_buf)
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(b), gl.STATIC_DRAW)
+    
+    
+    var la_buf = gl.createBuffer()
+    gl.bindBuffer(gl.ARRAY_BUFFER, la_buf)
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(la), gl.STATIC_DRAW)
+    
+    var lb_buf = gl.createBuffer()
+    gl.bindBuffer(gl.ARRAY_BUFFER, lb_buf)
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(lb), gl.STATIC_DRAW)
+
+
+    
+    var c_buf = gl.createBuffer()
+    gl.bindBuffer(gl.ARRAY_BUFFER, c_buf)
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(cc), gl.STATIC_DRAW)
+
+    
+
+
+    var slider_size_px = 30    
+
+
+
+    var slider_input = document.createElement('input')
+    slider_input.setAttribute('id', 'slider')
+    slider_input.setAttribute('type', 'range')
+    slider_input.setAttribute('min', '0')
+    slider_input.setAttribute('max', '1000')
+    slider_input.setAttribute('value', '1000')
+    slider_input.style.position = 'absolute'
+    slider_input.style.left = '0px'
+    slider_input.style.width = '100%'
+    slider_input.style.bottom = '0px'
+    slider_input.style.height = slider_size_px + 'px'
+    document.body.append(slider_input)
+    slider_input.style['z-index'] = 2000
+    
+    slider_input.oninput = () => dirty = true
+    
+    
+
+    var extra_css = document.createElement('style')
+    extra_css.setAttribute('type', 'text/css')
+    document.head.append(extra_css)
+    extra_css.textContent = `
+        #slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: ${slider_size_px}px;
+            height: ${slider_size_px}px;
+            border-radius: 50%;
+            background: black;
+            cursor: pointer;
+        }
+        
+        #slider {
+            opacity: 0.5;
+            -webkit-appearance: none;
+            border-radius: 5px;
+            background: white;
+            outline: none;          
+            margin:0px;
+            
+        }
+    `
+    
+    
+    
+
+
+
+    // var slider_channel = document.createElement('div')
+    // slider_channel.style.position = 'absolute'
+    // slider_channel.style.left = '0px'
+    // slider_channel.style.width = '100%'
+    // slider_channel.style.bottom = '0px'
+    // slider_channel.style.height = slider_size_px + 'px'
+    // document.body.append(slider_channel)
+    // slider_channel.style['z-index'] = 2000
+    
+    // var slider = document.createElement('div')
+    // slider.style.position = 'absolute'
+    // slider.style.top = '0px'
+    // slider.style.width = slider_size_px + 'px'
+    // slider.style.height = slider_size_px + 'px'
+    // slider.style.background = 'green'
+    // slider_channel.append(slider)
+    
+    // function on_slider_move(x) {
+    //     slider.style.left = lerp(slider_size_px/2, 0, slider_channel.offsetWidth - slider_size_px/2, slider_channel.offsetWidth - slider_size_px, x) + 'px'
+    //     dirty = true
+    // }
+    
+    // slider_channel.onmousemove = function (e) {
+    //     if (e.buttons > 0) on_slider_move(e.pageX)
+    // }
+    
+    // slider_channel.ontouchstart = function (e) {
+    //     on_slider_move(e.touches[0].pageX)
+    // }
+    
+    // slider_channel.ontouchmove = function (e) {
+    //     on_slider_move(e.touches[0].pageX)
+    // }
+
+    
+    
+    var sa = document.createElement('div')
+    sa.style['z-index'] = 1000
+    sa.style.position = 'absolute'
+    sa.style.left = '0px'
+    sa.style.top = '0px'
+    sa.style.width = '100%'
+    sa.style.height = '100%'
+    sa.style.overflow = 'scroll'
+    document.body.append(sa)
+    
+    var times_bigger = 20
+    
+    var sb = document.createElement('div')
+    sb.style.width = times_bigger*window.innerWidth + 'px'
+    sb.style.height = times_bigger*window.innerHeight + 'px'
+    sa.append(sb)
+
+    document.body.style.width = '100%'
+    document.body.style.height = '100%'
+    
+    function get_offs() {
+        var w = window.innerWidth
+        var h = window.innerHeight
+        if (w > h) {
+            return [sa.scrollLeft/w*2,
+                -sa.scrollTop/h*2 / (w/h)]
+        } else {
+            return [sa.scrollLeft/w*2 / (h/w),
+                -sa.scrollTop/h*2]
+        }
+    }
+
+    sa.scrollLeft = (sb.offsetWidth - sa.offsetWidth)/2
+    sa.scrollTop = (sb.offsetHeight - sa.offsetHeight)/2
+    var [off_x2, off_y2] = get_offs()
+    var scroll_offset_x = off_x - off_x2
+    var scroll_offset_y = off_y - off_y2
+
+    sa.onscroll = () => {
+        [off_x, off_y] = get_offs()
+        off_x += scroll_offset_x
+        off_y += scroll_offset_y
+        
+        if (sa.scrollLeft / sa.scrollWidth < 0.2 ||
+            sa.scrollLeft / sa.scrollWidth > 0.8 ||
+            sa.scrollTop / sa.scrollHeight < 0.2 ||
+            sa.scrollTop / sa.scrollHeight > 0.8) {
+            
+            sa.scrollLeft = (sb.offsetWidth - sa.offsetWidth)/2
+            sa.scrollTop = (sb.offsetHeight - sa.offsetHeight)/2
+            var [off_x2, off_y2] = get_offs()
+            scroll_offset_x = off_x - off_x2
+            scroll_offset_y = off_y - off_y2
+        }
+        
+        dirty = true
+    }
+    
+    sb.onclick = () => {
+        init_colors()
+        dirty = true
+    }
+    
+    
+    gl.enable(gl.BLEND)
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+    
+    var dirty = true
+    loop()
+    function loop() {
+        
+        if (c.width != c.offsetWidth * dpr ||
+            c.height != c.offsetHeight * dpr) {
+            c.width = c.offsetWidth * dpr
+            c.height = c.offsetHeight * dpr
+            dirty = true
+        }
+
+        if (dirty) {
+            dirty = false
+            
+            
+            var slider_amt = slider_input.value / 1000
+
+
+            gl.viewport(0, 0, c.width, c.height)
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+            
+            
+            // work here
+            // var es = []
+            // for (var d = 0; d < D; d++) {
+            //     es.push(slider_amt)
+            // }
+            //slider_amt = 1.0
+
+            // work here
+            var fake_es = []
+            for (var i = 0; i < D; i++) {
+                var ang = tau/4 + i*tau/D
+                var unit = vec2.fromValues(Math.cos(ang), Math.sin(ang))
+                var o = vec2.fromValues(off_x, off_y)
+                var d = -(vec2.dot(unit, o)/G - es[i]) % 1
+                if (d < 0) d += 1
+                fake_es.push(d)
+            }
+
+            var e_scale = 2/D
+            var fake_off = vec2.fromValues(-off_x, -off_y)
+            var fake_es_base = []
+            for (var i = 0; i < D; i++) {
+                var ang = tau/4 + i*tau/D
+                var unit = vec2.fromValues(Math.cos(ang), Math.sin(ang))
+                var o = vec2.fromValues(off_x, off_y)
+                var units = Math.ceil(vec2.dot(unit, o)/G - es[i])
+                
+                fake_es_base.push(units)
+                
+                vec2.add(fake_off, fake_off, vec2.scale(unit, unit, units * G * e_scale))
+            }
+            
+            
+            debug_overlay.innerHTML = 'hi c! --' + (off_x.toFixed(3)) + ' x ' + (off_y.toFixed(3)) + ' coords:' + fake_es_base + '<br/>es: ' + fake_es.map(x => x.toFixed(3))
+            
+
+
+
+            gl.useProgram(program2)
+            
+            // work here
+            gl.uniform1fv(u_es2, fake_es)
+            gl.uniform1iv(u_es_base2, fake_es_base)
+            // gl.uniform1fv(u_es2, es)
+            
+            // work here
+            gl.uniform1f(u_off_x2, fake_off[0])
+            gl.uniform1f(u_off_y2, fake_off[1])
+            // gl.uniform1f(u_off_x2, off_x)
+            // gl.uniform1f(u_off_y2, off_y)
+            
+            gl.uniform1f(u_w2, c.width)
+            gl.uniform1f(u_h2, c.height)
+            gl.uniform1f(u_slider2, slider_amt)
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, c_buf)
+            gl.vertexAttribPointer(in_c, 4, gl.FLOAT, false, 0, 0)
+
+            gl.drawArrays(gl.LINES, 0, cc.length / 4)
+            
+            
+            
+            
+            gl.useProgram(program)
+            
+            // work here
+            gl.uniform1fv(u_es, fake_es)
+            gl.uniform1iv(u_es_base, fake_es_base)
+            // gl.uniform1fv(u_es, es)
+            
+            // work here
+            gl.uniform1f(u_off_x, fake_off[0])
+            gl.uniform1f(u_off_y, fake_off[1])
+            // gl.uniform1f(u_off_x, off_x)
+            // gl.uniform1f(u_off_y, off_y)
+            
+            gl.uniform1f(u_w, c.width)
+            gl.uniform1f(u_h, c.height)
+            gl.uniform1f(u_slider, slider_amt)
+            
+            gl.bindBuffer(gl.ARRAY_BUFFER, a_buf)
+            gl.vertexAttribPointer(in_a, 4, gl.FLOAT, false, 0, 0)
+            
+            gl.bindBuffer(gl.ARRAY_BUFFER, b_buf)
+            gl.vertexAttribPointer(in_b, 4, gl.FLOAT, false, 0, 0)
+            
+            gl.drawArrays(gl.TRIANGLES, 0, a.length / 4)
+            
+            
+            
+            gl.bindBuffer(gl.ARRAY_BUFFER, la_buf)
+            gl.vertexAttribPointer(in_a, 4, gl.FLOAT, false, 0, 0)
+            
+            gl.bindBuffer(gl.ARRAY_BUFFER, lb_buf)
+            gl.vertexAttribPointer(in_b, 4, gl.FLOAT, false, 0, 0)
+            
+            gl.drawArrays(gl.LINES, 0, la.length / 4)
+        }
+        
+        window.requestAnimationFrame(loop)
+    }
+    
+    function createShader(gl, type, source) {
+        var shader = gl.createShader(type)
+        gl.shaderSource(shader, source)
+        gl.compileShader(shader)
+        if (gl.getShaderParameter(shader, gl.COMPILE_STATUS)) return shader
+        console.log(gl.getShaderInfoLog(shader))
+        gl.deleteShader(shader)
+    }
+    
+    function createProgram(gl, vertexShader, fragmentShader) {
+        var program = gl.createProgram()
+        gl.attachShader(program, vertexShader)
+        gl.attachShader(program, fragmentShader)
+        gl.linkProgram(program)
+        if (gl.getProgramParameter(program, gl.LINK_STATUS)) return program
+        console.log(gl.getProgramInfoLog(program))
+        gl.deleteProgram(program)
+    }
+        
+
+})
+
+function lerp(t0, v0, t1, v1, t) {
+    return (t - t0) * (v1 - v0) / (t1 - t0) + v0
+}
+
+
+
+</script>
