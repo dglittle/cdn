@@ -18,14 +18,16 @@ var each = function (o, cb) {
 	return true
 }
 
+var dpr = window.devicePixelRatio
+
 var c = document.createElement('canvas')
 c.style.position = 'absolute'
 c.style.left = '0px'
 c.style.top = '0px'
 c.style.width = window.innerWidth
 c.style.height = window.innerHeight
-c.width = window.innerWidth
-c.height = window.innerHeight
+c.width = window.innerWidth * dpr
+c.height = window.innerHeight * dpr
 
 var offset = [0, 0]
 
@@ -88,6 +90,8 @@ tile_floor(c, offset)
 
 
 function tile_floor(c, offset) {
+    offset = [offset[0] * dpr, offset[1] * dpr]
+    
     var g = c.getContext('2d')
     
     g.fillStyle = 'rgba(255, 0, 255, 1)'
