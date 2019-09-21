@@ -612,19 +612,8 @@ function draw_space_dag(c, g, S, x, y) {
 
 function sync9_create_peer(p_funcs) {
     var self = {}
-    
-    self.s9 = sync9_create()
-    
-    // work here : creating single string within json
-    if (true) {
-        sync9_add_version(self.s9, 'v1', {root: true}, [' = ""'])
-        sync9_prune(self.s9, (a, b) => true, (a, b) => true)
-        delete self.s9.T.v1
-        self.s9.leaves = {root: true}
-    }
-    
     self.uid = sync9_guid()
-    
+    self.s9 = sync9_create()
     self.peers = {}
     self.fissures = {}
     self.conn_leaves = {}
@@ -652,9 +641,9 @@ function sync9_create_peer(p_funcs) {
                 }
             })
             
-            var fissure_parents = {}
+            var parents = {}
             Object.keys(self.fissures).forEach(x => {
-                fissure_parents[x] = true
+                parents[x] = true
             })
             
             self.fissure(pid, {
@@ -662,7 +651,7 @@ function sync9_create_peer(p_funcs) {
                 b: self.peers[pid].b,
                 salt: self.peers[pid].salt,
                 nodes,
-                parents: fissure_parents
+                parents
             })
         }
         delete self.peers[pid]
@@ -871,6 +860,38 @@ function sync9_create_peer(p_funcs) {
     }
     
     self.prune = () => {
+        var unremovable = {}
+        Object.entries(self.fissures).forEach(x => {
+            if (!self.fissures[x[1].b + ':' + x[1].a + ':' + x[1].salt]) {
+                function f(y) {
+                    if (!unremovable[y.a + ':' + y.b + ':' + y.salt]) {
+                        unremovable[y.a + ':' + y.b + ':' + y.salt] = true
+                        unremovable[y.b + ':' + y.a + ':' + y.salt] = true
+                        Object.keys(y.parents).forEach(p => {
+                            if (self.fissures[p]) f(self.fissures[p])
+                        })
+                    }
+                }
+                f(x[1])
+            }
+        })
+        
+        var acked = sync9_get_ancestors(self.s9, self.ack_leaves)
+        var done = {}
+        Object.entries(self.fissures).forEach(x => {
+            var other_key = x[1].b + ':' + x[1].a + ':' + x[1].salt
+            var other = self.fissures[other_key]
+            if (other && !done[x[0]] && !unremovable[x[0]]) {
+                done[x[0]] = true
+                done[other_key] = true
+                
+                if (Object.keys(x[1].nodes).every(x => acked[x] || !self.s9.T[x])) {
+                    delete self.fissures[x[0]]
+                    delete self.fissures[other_key]
+                }
+            }
+        })
+        
         var tags = {}
         var frozen = {root: true}
         Object.keys(self.s9.T).forEach(vid => {
@@ -914,63 +935,6 @@ function sync9_create_peer(p_funcs) {
         })
         var q = (a, b) => !frozen[a] && !frozen[b] && (tags[a].tag == tags[b].tag)
         sync9_prune2(self.s9, q)
-        
-        var unremovable = {}
-        Object.entries(self.fissures).forEach(x => {
-            if (!self.fissures[x[1].b + ':' + x[1].a + ':' + x[1].salt]) {
-                function f(y) {
-                    if (!unremovable[y.a + ':' + y.b + ':' + y.salt]) {
-                        unremovable[y.a + ':' + y.b + ':' + y.salt] = true
-                        unremovable[y.b + ':' + y.a + ':' + y.salt] = true
-                        Object.keys(y.parents).forEach(p => {
-                            if (self.fissures[p]) f(self.fissures[p])
-                        })
-                    }
-                }
-                f(x[1])
-            }
-        })
-        
-        var acked = sync9_get_ancestors(self.s9, self.ack_leaves)
-        var done = {}
-        Object.entries(self.fissures).forEach(x => {
-            var other_key = x[1].b + ':' + x[1].a + ':' + x[1].salt
-            var other = self.fissures[other_key]
-            if (other && !done[x[0]] && !unremovable[x[0]]) {
-                done[x[0]] = true
-                done[other_key] = true
-                
-                if (Object.keys(x[1].nodes).every(x => acked[x] || !self.s9.T[x])) {
-                    delete self.fissures[x[0]]
-                    delete self.fissures[other_key]
-                }
-            }
-        })
-        
-        var ls = Object.keys(self.s9.leaves)
-        var as = Object.keys(self.ack_leaves)
-        if (ls.length == 1 &&
-            as.length == 1 &&
-            ls[0] == as[0] &&
-            Object.keys(self.fissures).length == 0 &&
-            Object.keys(self.s9.T).length > 1) {
-            
-            var new_s9 = sync9_create()
-            
-            // work here : creating single string within json
-            if (true) {
-                sync9_add_version(new_s9, 'v1', {root: true}, [' = ""'])
-                sync9_prune(new_s9, (a, b) => true, (a, b) => true)
-                delete new_s9.T.v1
-                new_s9.leaves = {root: true}
-            }
-            
-            sync9_add_version(new_s9, ls[0], {root: true}, ['[0:0] = ' + JSON.stringify(sync9_read(self.s9))])
-            
-            self.s9.T = new_s9.T
-            self.s9.leaves = new_s9.leaves
-            self.s9.val = new_s9.val
-        }
     }
     
     self.create_joiner = () => {
@@ -1049,6 +1013,13 @@ function sync9_prune2(x, has_everyone_whos_seen_a_seen_b) {
             if (!x.t && x.val) {
                 rec(x.val)
             } else if (x.t == 'val') {
+                
+                
+                
+                work here
+                
+                
+                
                 if (sync9_space_dag_prune2(x.S, has_everyone_whos_seen_a_seen_b, seen_nodes)) did_something = true
                 sync9_trav_space_dag(x.S, () => true, node => {
                     node.elems.forEach(rec)
