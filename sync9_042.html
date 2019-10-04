@@ -8,27 +8,16 @@
 <script>
 
 function main() {
-    for (var i = 0; i < 2000; i++) {
-        
-        if (i % 100 == 0) {
+    
+    var special_i = -1
+    
+    for (var i = (special_i >= 0) ? special_i : 0; i < 2000; i++) {
+        if ((special_i < 0) && (i % 100 == 0)) {
             console.log('TRIAL: ' + i)
         }
-
-        // run_trial('seEeeeFFF23eeeEeeE:' + i, 500, false, i)
-
         
-        //i = 821
-        run_trial('seEeeeFFF23eeeEeE1E2E3E4E5:' + i, 1000, false, i)
-        //break
-        
-        // i = 119
-        // run_trial('se334eeEFjeekkeeee:' + i, 150, false)
-        // break
-        
-        // console.log('TRIAL: ' + i)
-        // i = 12
-        // run_trial('se334eeEFjeekk:' + i, 300, true)
-        // break
+        run_trial('seEeeeFFF23eeeEeE1E2E3E4E5:' + i, 100, special_i >= 0, i)
+        if (special_i >= 0) break
     }
     console.log('check_good: ' + check_good)
 }
@@ -36,7 +25,6 @@ function main() {
 function run_trial(seed, N, show_debug, trial_num) {
     Math.randomSeed(seed)
     var rand = () => Math.random()
-    
     
     var debug_frames = show_debug ? [] : null
     var notes = []
@@ -123,7 +111,7 @@ function run_trial(seed, N, show_debug, trial_num) {
 
     if (true) {
         let p = peers_array[0]
-        p.local_set('v1', {root: true}, [' = ""'])
+        p.local_set('v1', {}, [' = ""'])
         
         if (debug_frames) debug_frames.push({
             t: -1,
@@ -144,7 +132,7 @@ function run_trial(seed, N, show_debug, trial_num) {
         
         if (rand() < 0.1) {
             if (rand() < 0.9) {
-                if (i == 0 || Object.keys(p.s9.T).length > 1) {
+                if (i == 0 || Object.keys(p.s9.T).length > 0) {
                     if (p.letters_i >= p.letters.length) {
                         p.letters_i = 0
                     }
@@ -242,7 +230,7 @@ function run_trial(seed, N, show_debug, trial_num) {
             
             var too_many_versions = false
             Object.values(peers).forEach((x, i) => {
-                if (Object.keys(x.s9.T).length > 2) {
+                if (Object.keys(x.s9.T).length > 1) {
                     too_many_versions = true
                 }
             })
@@ -339,7 +327,6 @@ function run_trial(seed, N, show_debug, trial_num) {
     }
     
     if (debug_frames) {
-        console.log('got here!?')
         var c = document.createElement('canvas')
         c.width = 3000
         c.height = 1700
@@ -601,7 +588,8 @@ function draw_space_dag(c, g, S, x, y) {
         for (var n of node.nexts) helper(n, y - 40, px, y)
         if (node.next) helper(node.next, y, px, y)
     }
-    helper(S, y, x, y)
+    if (typeof(S) == 'string') helper(sync9_create_space_dag_node('lit', S))
+    else helper(S, y, x, y)
 }
 
 
@@ -1013,13 +1001,6 @@ function sync9_prune2(x, has_everyone_whos_seen_a_seen_b) {
             if (!x.t && x.val) {
                 rec(x.val)
             } else if (x.t == 'val') {
-                
-                
-                
-                work here
-                
-                
-                
                 if (sync9_space_dag_prune2(x.S, has_everyone_whos_seen_a_seen_b, seen_nodes)) did_something = true
                 sync9_trav_space_dag(x.S, () => true, node => {
                     node.elems.forEach(rec)
@@ -1159,11 +1140,18 @@ function sync9_space_dag_prune2(S, has_everyone_whos_seen_a_seen_b, seen_nodes) 
 
 
 
+
+
+
+
+
+
+
 function sync9_create() {
     return {
-        T: {root : {}},
-        leaves: {root: true},
-        val: sync9_create_val()
+        T: {},
+        leaves: {},
+        val: null
     }
 }
 
@@ -1185,35 +1173,46 @@ function sync9_add_version(x, vid, parents, changes, is_anc) {
         }
     }
     
+    let make_lit = x => (x && typeof(x) == 'object') ? {t: 'lit', S: x} : x
     changes.forEach(change => {
         var parse = sync9_parse_change(change)
         var cur = x.val
+        if (!cur || typeof(cur) != 'object' || cur.t == 'lit')
+            cur = x.val = {t: 'val', S: sync9_create_space_dag_node(null, [cur])}
         each(parse.keys, (key, i) => {
             if (cur.t == 'val') cur = sync9_space_dag_get(cur.S, 0, is_anc)
-            if (!cur) throw 'bad'
-            if (typeof(key) == 'string' && cur.t == 'obj') {
-                if (!cur.S[key]) cur.S[key] = sync9_create_val()
-                cur = cur.S[key]
-            } else if (typeof(key) == 'number') {
-                if (i == parse.keys.length - 1) {
-                    parse.range = [key, key + 1]
-                    parse.val = [parse.val]
-                } else if (i < parse.keys.length - 1 && cur.t == 'arr') {
-                    cur = sync9_space_dag_get(cur.S, key, is_anc)
-                } else throw 'bad'
-            } else {
-                throw 'bad'
+            if (cur.t == 'lit') {
+                if (cur.S instanceof Array) {
+                    cur.t = 'arr'
+                    cur.S = sync9_create_space_dag_node(null, cur.S.map(x => make_lit(x))
+                } else {
+                    cur.t = 'obj'
+                    let S = {}
+                    Object.entries(cur.S).forEach((x, i) => S[i] = make_lit(x))
+                    cur.S = S
+                }
             }
+            if (cur.t == 'obj') {
+                let x = cur.S[key]
+                if (!x || typeof(x) != 'object' || x.t == 'lit')
+                    x = cur.S[key] = {t: 'val', S: sync9_create_space_dag_node(null, [x])}
+                cur = x
+            } else if (i == parse.keys.length - 1) {
+                parse.range = [key, key + 1]
+                parse.val = [parse.val]
+            } else if (i < parse.keys.length - 1 && cur.t == 'arr') {
+                cur = sync9_space_dag_get(cur.S, key, is_anc)
+            } else throw 'bad'
         })
         if (!parse.range) {
             if (cur.t != 'val') throw 'bad'
             var len = sync9_space_dag_length(cur.S, is_anc)
-            sync9_space_dag_add_version(cur.S, vid, [[0, len, [sync9_wrap(parse.val, vid)]]], is_anc)
+            sync9_space_dag_add_version(cur.S, vid, [[0, len, [make_lit(parse.val)]]], is_anc)
         } else {
             if (cur.t == 'val') cur = sync9_space_dag_get(cur.S, 0, is_anc)
             if (parse.val instanceof Array && cur.t != 'arr') throw 'bad'
             if (parse.val instanceof String && cur.t != 'str') throw 'bad'
-            if (parse.val instanceof Array) parse.val = parse.val.map(x => sync9_wrap(x, vid))
+            if (parse.val instanceof Array) parse.val = parse.val.map(x => make_lit(x))
             sync9_space_dag_add_version(cur.S, vid, [[parse.range[0], parse.range[1] - parse.range[0], parse.val]], is_anc)
         }
     })
@@ -1223,6 +1222,7 @@ function sync9_read(x, is_anc) {
     if (!is_anc) is_anc = () => true
     if (x && typeof(x) == 'object') {
         if (!x.t && x.val) return sync9_read(x.val, is_anc)
+        if (x.t == 'lit') return x.S
         if (x.t == 'val') return sync9_read(sync9_space_dag_get(x.S, 0, is_anc), is_anc)
         if (x.t == 'obj') {
             var o = {}
@@ -1248,59 +1248,6 @@ function sync9_read(x, is_anc) {
             return s.join('')
         }
     } return x
-}
-
-function sync9_wrap(x, vid) {
-    if (typeof(x) == 'number' || x == null || typeof(x) == 'boolean') {
-        return x
-    } else if (typeof(x) == 'string') {
-        var s = sync9_create_str()
-        sync9_space_dag_add_version(s.S, vid, [[0, 0, x]], _vid => _vid != vid)
-        return s
-    } else if (typeof(x) == 'object') {
-        if (x instanceof Array) {
-            var a = sync9_create_arr()
-            sync9_space_dag_add_version(a.S, vid, [[0, 0, x.map(x => sync9_wrap(x, vid))]], _vid => _vid != vid)
-            return a
-        } else {
-            var o = sync9_create_obj()
-            Object.entries(x).forEach(([k, v]) => {
-                var val = sync9_create_val()
-                sync9_space_dag_add_version(val.S, vid, [[0, 0, [sync9_wrap(v, vid)]]], _vid => _vid != vid)
-                o.S[k] = val
-            })
-            return o
-        }
-    } else throw 'bad'
-}
-
-
-function sync9_create_val() {
-    return {
-        t : 'val',
-        S : sync9_create_space_dag_node('root', [])
-    }
-}
-
-function sync9_create_obj() {
-    return {
-        t : 'obj',
-        S : {}
-    }
-}
-
-function sync9_create_arr() {
-    return {
-        t : 'arr',
-        S : sync9_create_space_dag_node('root', [])
-    }
-}
-
-function sync9_create_str() {
-    return {
-        t : 'str',
-        S : sync9_create_space_dag_node('root', '')
-    }
 }
 
 function sync9_create_space_dag_node(vid, elems, end_cap) {
