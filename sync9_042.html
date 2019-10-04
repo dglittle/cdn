@@ -939,6 +939,7 @@ function sync9_create_peer(p_funcs) {
 
 function sync9_extract_versions(x, is_anc, is_new_anc) {
     // work here : make this work for json
+    if (x.val == null) return []
     var cur = x.val
     if (!cur || typeof(cur) != 'object' || cur.t == 'lit')
         cur = x.val = {t: 'val', S: sync9_create_space_dag_node(null, [cur])}
