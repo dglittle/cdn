@@ -968,6 +968,47 @@ function sync9_create_peer(p_funcs) {
 function sync9_extract_versions(x, is_anc) {
     var root_version = sync9_read(x, is_anc)
     return Object.keys(s9.T).filter(x => !is_anc(x)).map(vid => {
+        function rec(node) {
+            
+            work here
+            
+            
+            
+            
+            
+            if (is_lit(x)) return x
+            if (x.t == 'val') {
+                sync9_space_dag_prune2(x.S, has_everyone_whos_seen_a_seen_b, seen_nodes)
+                sync9_trav_space_dag(x.S, () => true, node => {
+                    node.elems = node.elems.map(rec)
+                }, true)
+                if (x.S.nexts.length == 0 && !x.S.next && x.S.elems.length == 1 && is_lit(x.S.elems[0])) return x.S.elems[0]
+                return x
+            }
+            if (x.t == 'arr') {
+                sync9_space_dag_prune2(x.S, has_everyone_whos_seen_a_seen_b, seen_nodes)
+                sync9_trav_space_dag(x.S, () => true, node => {
+                    node.elems = node.elems.map(rec)
+                }, true)
+                if (x.S.nexts.length == 0 && !x.S.next && x.S.elems.every(is_lit)) return {t: 'lit', S: x.S.elems.map(get_lit)}
+                return x
+            }
+            if (x.t == 'obj') {
+                Object.entries(x.S).forEach(e => x.S[e[0]] = rec(e[1]))
+                if (Object.values(x.S).every(is_lit)) {
+                    var o = {}
+                    Object.entries(x.S).forEach(e => o[e[0]] = get_lit(e[1]))
+                    return o
+                }
+                return x
+            }
+            if (x.t == 'str') {
+                sync9_space_dag_prune2(x.S, has_everyone_whos_seen_a_seen_b, seen_nodes)
+                if (x.S.nexts.length == 0 && !x.S.next) return x.S.elems
+                return x
+            }            
+        }
+        rec(x.val)
         
         
         
