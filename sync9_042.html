@@ -949,7 +949,7 @@ function sync9_extract_versions(x, is_anc, is_new_anc) {
     
     var y = sync9_space_dag_get(x.val.S, 0)
     if (typeof(y) == 'string') {
-        y = sync9_create_space_dag_node(x.val.S.vid, y)
+        y = {t: 'str', S: sync9_create_space_dag_node(x.val.S.vid, y)}
     }
     
     var versions = sync9_space_dag_extract_versions(y.S, x, is_anc, is_new_anc)
