@@ -1184,7 +1184,7 @@ function sync9_add_version(x, vid, parents, changes, is_anc) {
             if (cur.t == 'lit') {
                 if (cur.S instanceof Array) {
                     cur.t = 'arr'
-                    cur.S = sync9_create_space_dag_node(null, cur.S.map(x => make_lit(x))
+                    cur.S = sync9_create_space_dag_node(null, cur.S.map(x => make_lit(x)))
                 } else {
                     cur.t = 'obj'
                     let S = {}
