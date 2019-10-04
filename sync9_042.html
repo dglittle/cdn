@@ -209,6 +209,11 @@ function run_trial(seed, N, show_debug, trial_num) {
                 tt++
                 if (show_debug) console.log('t => ' + tt)
                 notes = []
+
+                // work here
+                if (tt == 115) {
+                    debugger
+                }
                 
                 p.incoming.shift()[1]()
                 
