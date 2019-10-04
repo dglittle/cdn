@@ -921,7 +921,7 @@ function sync9_create_peer(p_funcs) {
                 x[1].tag = keys.sort().join(',')
             }
         })
-        var q = (a, b) => !frozen[a] && !frozen[b] && (tags[a].tag == tags[b].tag)
+        var q = (a, b) => a && b && !frozen[a] && !frozen[b] && (tags[a].tag == tags[b].tag)
         sync9_prune2(self.s9, q)
     }
     
