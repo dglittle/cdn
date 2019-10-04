@@ -941,7 +941,7 @@ function sync9_create_peer(p_funcs) {
         }
         var q2 = (a, b) => {
             if (a == 'root') return false
-            return a && b && !frozen[a] && !frozen[b] && (tags[a].tag == tags[b].tag)
+            return a && b && !frozen[a] && !frozen[b]
         }
         sync9_prune2(self.s9, q, q2)
     }
