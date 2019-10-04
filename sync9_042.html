@@ -938,6 +938,11 @@ function sync9_create_peer(p_funcs) {
 
 
 function sync9_extract_versions(x, is_anc, is_new_anc) {
+    // work here : make this work for json
+    var cur = x.val
+    if (!cur || typeof(cur) != 'object' || cur.t == 'lit')
+        cur = x.val = {t: 'val', S: sync9_create_space_dag_node(null, [cur])}
+    
     var versions = sync9_space_dag_extract_versions(sync9_space_dag_get(x.val.S, 0).S, x, is_anc, is_new_anc)
     versions.forEach(x => {
         x.changes = x.splices.map(x => {
