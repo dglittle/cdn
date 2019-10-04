@@ -111,7 +111,7 @@ function run_trial(seed, N, show_debug, trial_num) {
 
     if (true) {
         let p = peers_array[0]
-        p.local_set('v1', {}, [' = ""'])
+        p.local_set('root', {}, [' = ""'])
         
         if (debug_frames) debug_frames.push({
             t: -1,
@@ -930,7 +930,10 @@ function sync9_create_peer(p_funcs) {
                 x[1].tag = keys.sort().join(',')
             }
         })
-        var q = (a, b) => a && b && !frozen[a] && !frozen[b] && (tags[a].tag == tags[b].tag)
+        var q = (a, b) => {
+            if (!a) a = 'root'
+            return a && b && !frozen[a] && !frozen[b] && (tags[a].tag == tags[b].tag)
+        }
         sync9_prune2(self.s9, q)
     }
     
