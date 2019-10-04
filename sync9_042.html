@@ -1053,6 +1053,18 @@ function sync9_prune2(x, has_everyone_whos_seen_a_seen_b, has_everyone_whos_seen
                 sync9_trav_space_dag(x.S, () => true, node => {
                     node.elems.forEach(rec)
                 }, true)
+                
+                
+                // if there's only one node in the space dag, and it contains a literal, then make this a literal
+                
+                if (x.S.nexts.length == 0 && !x.S.next && x.S.elems.length == 1) {
+                    var e = x.S.elems[0]
+                    if (!e || 
+                    
+                    work here
+                }
+                
+                
             } else if (x.t == 'obj') {
                 Object.values(x.S).forEach(v => rec(v))
             } else if (x.t == 'arr') {
@@ -1068,7 +1080,7 @@ function sync9_prune2(x, has_everyone_whos_seen_a_seen_b, has_everyone_whos_seen
     while (did_something) {
         seen_nodes = {}
         did_something = false
-        rec(x)
+        x.val = rec(x) work here
     }
 
     var delete_us = {}
