@@ -1193,24 +1193,35 @@ function sync9_add_version(x, vid, parents, changes, is_anc) {
         }
     }
     
+    
+    if (vid == 'a1') {
+        debugger
+    }
+    
+    
     let make_lit = x => (x && typeof(x) == 'object') ? {t: 'lit', S: x} : x
     changes.forEach(change => {
         var parse = sync9_parse_change(change)
         var cur = x.val
         if (!cur || typeof(cur) != 'object' || cur.t == 'lit')
             cur = x.val = {t: 'val', S: sync9_create_space_dag_node(null, [cur])}
+        var prev_S = null
+        var prev_i = 0
         each(parse.keys, (key, i) => {
-            if (cur.t == 'val') cur = sync9_space_dag_get(cur.S, 0, is_anc)
+            if (cur.t == 'val') cur = sync9_space_dag_get(prev_S = cur.S, prev_i = 0, is_anc)
             if (cur.t == 'lit') {
+                var new_cur = {}
                 if (cur.S instanceof Array) {
-                    cur.t = 'arr'
-                    cur.S = sync9_create_space_dag_node(null, cur.S.map(x => make_lit(x)))
+                    new_cur.t = 'arr'
+                    new_cur.S = sync9_create_space_dag_node(null, cur.S.map(x => make_lit(x)))
                 } else {
-                    cur.t = 'obj'
-                    let S = {}
-                    Object.entries(cur.S).forEach((x, i) => S[i] = make_lit(x))
-                    cur.S = S
+                    if (typeof(cur.S) != 'object') throw 'bad'
+                    new_cur.t = 'obj'
+                    new_cur.S = {}
+                    Object.entries(cur.S).forEach((x, i) => new_cur.S[i] = make_lit(x))
                 }
+                cur = new_cur
+                sync9_space_dag_set(prev_S, prev_i, cur, is_anc)
             }
             if (cur.t == 'obj') {
                 let x = cur.S[key]
@@ -1221,7 +1232,7 @@ function sync9_add_version(x, vid, parents, changes, is_anc) {
                 parse.range = [key, key + 1]
                 parse.val = [parse.val]
             } else if (i < parse.keys.length - 1 && cur.t == 'arr') {
-                cur = sync9_space_dag_get(cur.S, key, is_anc)
+                cur = sync9_space_dag_get(prev_S = cur.S, prev_i = key, is_anc)
             } else throw 'bad'
         })
         if (!parse.range) {
@@ -1229,7 +1240,15 @@ function sync9_add_version(x, vid, parents, changes, is_anc) {
             var len = sync9_space_dag_length(cur.S, is_anc)
             sync9_space_dag_add_version(cur.S, vid, [[0, len, [make_lit(parse.val)]]], is_anc)
         } else {
-            if (cur.t == 'val') cur = sync9_space_dag_get(cur.S, 0, is_anc)
+            if (cur.t == 'val') cur = sync9_space_dag_get(prev_S = cur.S, prev_i = 0, is_anc)
+            if (typeof(cur) == 'string') {
+                cur = {t: 'str', S: sync9_create_space_dag_node(null, cur)}
+                sync9_space_dag_set(prev_S, prev_i, cur, is_anc)
+            } else if (cur.t == 'lit') {
+                if (!(cur.S instanceof Array)) throw 'bad'
+                cur = {t: 'arr', S = sync9_create_space_dag_node(null, cur.S.map(x => make_lit(x)))}
+                sync9_space_dag_set(prev_S, prev_i, cur, is_anc)
+            }
             if (parse.val instanceof Array && cur.t != 'arr') throw 'bad'
             if (parse.val instanceof String && cur.t != 'str') throw 'bad'
             if (parse.val instanceof Array) parse.val = parse.val.map(x => make_lit(x))
