@@ -235,7 +235,7 @@ function run_trial(seed, N, show_debug, trial_num) {
             
             var too_many_versions = false
             Object.values(peers).forEach((x, i) => {
-                if (Object.keys(x.s9.T).length > 1) {
+                if (Object.keys(x.s9.T).length > 2) {
                     too_many_versions = true
                 }
             })
@@ -947,8 +947,12 @@ function sync9_create_peer(p_funcs) {
 
         var leaves = Object.keys(self.s9.leaves)
         var ack_leaves = Object.keys(self.ack_leaves)
-        if (leaves.length == 1 && ack_leaves.length == 1 && leaves[0] == ack_leaves[0]) {
-            work here
+        var fiss = Object.keys(self.fissures)
+        if (leaves.length == 1 && ack_leaves.length == 1 && leaves[0] == ack_leaves[0] && fiss.length == 0) {
+            self.s9.T = {
+                root: {},
+                [leaves[0]]: {root: true}
+            }
         }
     }
     
