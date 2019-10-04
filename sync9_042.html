@@ -948,6 +948,8 @@ function sync9_create_peer(p_funcs) {
                 root: {},
                 [leaves[0]]: {root: true}
             }
+            var val = sync9_read(self.s9)
+            self.s9.val = (val && typeof(val) == 'object') ? {t: 'lit', S: val} : val
         }
     }
     
