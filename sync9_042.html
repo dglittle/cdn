@@ -1043,45 +1043,42 @@ function sync9_space_dag_extract_versions(S, s9, is_anc) {
 
 function sync9_prune2(x, has_everyone_whos_seen_a_seen_b, has_everyone_whos_seen_a_seen_b2) {
     var seen_nodes = {}
-    var did_something = true
+    var is_lit = x => !x || typeof(x) != 'object' || x.t == 'lit'
+    var get_lit = x => (x && typeof(x) == 'object' && x.t == 'lit') ? x.S : x
     function rec(x) {
-        if (x && typeof(x) == 'object') {
-            if (!x.t && x.val) {
-                rec(x.val)
-            } else if (x.t == 'val') {
-                if (sync9_space_dag_prune2(x.S, has_everyone_whos_seen_a_seen_b, seen_nodes)) did_something = true
-                sync9_trav_space_dag(x.S, () => true, node => {
-                    node.elems.forEach(rec)
-                }, true)
-                
-                
-                // if there's only one node in the space dag, and it contains a literal, then make this a literal
-                
-                if (x.S.nexts.length == 0 && !x.S.next && x.S.elems.length == 1) {
-                    var e = x.S.elems[0]
-                    if (!e || 
-                    
-                    work here
-                }
-                
-                
-            } else if (x.t == 'obj') {
-                Object.values(x.S).forEach(v => rec(v))
-            } else if (x.t == 'arr') {
-                if (sync9_space_dag_prune2(x.S, has_everyone_whos_seen_a_seen_b, seen_nodes)) did_something = true
-                sync9_trav_space_dag(x.S, () => true, node => {
-                    node.elems.forEach(rec)
-                }, true)
-            } else if (x.t == 'str') {
-                if (sync9_space_dag_prune2(x.S, has_everyone_whos_seen_a_seen_b, seen_nodes)) did_something = true
+        if (is_lit(x)) return x
+        if (x.t == 'val') {
+            sync9_space_dag_prune2(x.S, has_everyone_whos_seen_a_seen_b, seen_nodes)
+            sync9_trav_space_dag(x.S, () => true, node => {
+                node.elems = node.elems.map(rec)
+            }, true)
+            if (x.S.nexts.length == 0 && !x.S.next && x.S.elems.length == 1 && is_lit(x.S.elems[0])) return x.S.elems[0]
+            return x
+        }
+        if (x.t == 'arr') {
+            sync9_space_dag_prune2(x.S, has_everyone_whos_seen_a_seen_b, seen_nodes)
+            sync9_trav_space_dag(x.S, () => true, node => {
+                node.elems = node.elems.map(rec)
+            }, true)
+            if (x.S.nexts.length == 0 && !x.S.next && x.S.elems.every(is_lit)) return {t: 'lit', S: x.S.elems.map(get_lit)}
+            return x
+        }
+        if (x.t == 'obj') {
+            Object.entries(x.S).forEach(e => x.S[e[0]] = rec(e[1]))
+            if (Object.values(x.S).every(is_lit)) {
+                var o = {}
+                Object.entries(x.S).forEach(e => o[e[0]] = get_lit(e[1]))
+                return o
             }
+            return x
+        }
+        if (x.t == 'str') {
+            sync9_space_dag_prune2(x.S, has_everyone_whos_seen_a_seen_b, seen_nodes)
+            if (x.S.nexts.length == 0 && !x.S.next) return x.S.elems
+            return x
         }
     }
-    while (did_something) {
-        seen_nodes = {}
-        did_something = false
-        x.val = rec(x) work here
-    }
+    x.val = rec(x.val)
 
     var delete_us = {}
     var children = {}
