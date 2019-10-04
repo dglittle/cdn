@@ -1188,16 +1188,23 @@ function sync9_space_dag_prune2(S, has_everyone_whos_seen_a_seen_b, seen_nodes) 
             return true
         }
     }
-    var did_something = false
+    
+    var did_something_ever = false
+    var did_something_this_time = true
+    while (did_something_this_time) {
+        did_something_this_time = false
+        sync9_trav_space_dag(S, () => true, (node, offset, has_nexts, prev, vid) => {
+            if (process_node(node, offset, vid, prev)) {
+                did_something_this_time = true
+                did_something_ever = true
+            }
+        }, true)
+    }
     sync9_trav_space_dag(S, () => true, (node, offset, has_nexts, prev, vid) => {
-        if (!prev) seen_nodes[vid] = true
-        while (process_node(node, offset, vid, prev)) {
-            did_something = true
-        }
+        if (vid) seen_nodes[vid] = true
     }, true)
-    return did_something
+    return did_something_ever
 }
-
 
 
 
