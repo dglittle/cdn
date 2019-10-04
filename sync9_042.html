@@ -1246,7 +1246,7 @@ function sync9_add_version(x, vid, parents, changes, is_anc) {
                 sync9_space_dag_set(prev_S, prev_i, cur, is_anc)
             } else if (cur.t == 'lit') {
                 if (!(cur.S instanceof Array)) throw 'bad'
-                cur = {t: 'arr', S = sync9_create_space_dag_node(null, cur.S.map(x => make_lit(x)))}
+                cur = {t: 'arr', S: sync9_create_space_dag_node(null, cur.S.map(x => make_lit(x)))}
                 sync9_space_dag_set(prev_S, prev_i, cur, is_anc)
             }
             if (parse.val instanceof Array && cur.t != 'arr') throw 'bad'
