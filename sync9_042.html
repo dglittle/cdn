@@ -944,10 +944,12 @@ function sync9_create_peer(p_funcs) {
         var ack_leaves = Object.keys(self.ack_leaves)
         var fiss = Object.keys(self.fissures)
         if (leaves.length == 1 && ack_leaves.length == 1 && leaves[0] == ack_leaves[0] && fiss.length == 0) {
-            // self.s9.T = {
-            //     root: {},
-            //     [leaves[0]]: {root: true}
-            // }
+            self.s9.T = {
+                root: {},
+                [leaves[0]]: {root: true}
+            }
+            
+            debugger
         }
     }
     
