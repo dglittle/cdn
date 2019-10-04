@@ -942,8 +942,6 @@ function sync9_extract_versions(x, is_anc, is_new_anc) {
     if (x.val == null) return []
     var cur = x.val
     
-    debugger
-    
     if (!cur || typeof(cur) != 'object' || cur.t == 'lit')
         cur = x.val = {t: 'val', S: sync9_create_space_dag_node(null, [cur])}
     
