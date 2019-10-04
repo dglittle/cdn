@@ -952,18 +952,19 @@ function sync9_extract_versions(x, is_anc, is_new_anc) {
     
     var versions = sync9_space_dag_extract_versions(y.S, x, is_anc, is_new_anc)
     
-    versions.unshift({
-        vid: 'v1',
-        parents: {},
-        changes: ` = ""`
-    })
-    
     versions.forEach(x => {
         x.changes = x.splices.map(x => {
             return `[${x[0]}:${x[0] + x[1]}] = ${JSON.stringify(x[2])}`
         })
         delete x.splices
     })
+    
+    versions.unshift({
+        vid: 'v1',
+        parents: {},
+        changes: ` = ""`
+    })
+    
     return versions
 }
 
