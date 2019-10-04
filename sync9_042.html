@@ -1313,6 +1313,17 @@ function sync9_space_dag_get(S, i, is_anc) {
     return ret
 }
 
+function sync9_space_dag_set(S, i, v, is_anc) {
+    var offset = 0
+    sync9_trav_space_dag(S, is_anc ? is_anc : () => true, (node) => {
+        if (i - offset < node.elems.length) {
+            node.elems[i - offset] = v
+            return false
+        }
+        offset += node.elems.length
+    })
+}
+
 function sync9_space_dag_length(S, is_anc) {
     var count = 0
     sync9_trav_space_dag(S, is_anc ? is_anc : () => true, node => {
