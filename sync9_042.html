@@ -941,10 +941,18 @@ function sync9_extract_versions(x, is_anc, is_new_anc) {
     // work here : make this work for json
     if (x.val == null) return []
     var cur = x.val
+    
+    debugger
+    
     if (!cur || typeof(cur) != 'object' || cur.t == 'lit')
         cur = x.val = {t: 'val', S: sync9_create_space_dag_node(null, [cur])}
     
-    var versions = sync9_space_dag_extract_versions(sync9_space_dag_get(x.val.S, 0).S, x, is_anc, is_new_anc)
+    var S = sync9_space_dag_get(x.val.S, 0).S
+    if (typeof(S) == 'string') {
+        S = sync9_create_space_dag_node(x.val.S.vid, S)
+    }
+    
+    var versions = sync9_space_dag_extract_versions(S, x, is_anc, is_new_anc)
     versions.forEach(x => {
         x.changes = x.splices.map(x => {
             return `[${x[0]}:${x[0] + x[1]}] = ${JSON.stringify(x[2])}`
