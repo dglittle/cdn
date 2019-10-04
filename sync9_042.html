@@ -1193,12 +1193,6 @@ function sync9_add_version(x, vid, parents, changes, is_anc) {
         }
     }
     
-    
-    if (vid == 'a1') {
-        debugger
-    }
-    
-    
     let make_lit = x => (x && typeof(x) == 'object') ? {t: 'lit', S: x} : x
     changes.forEach(change => {
         var parse = sync9_parse_change(change)
