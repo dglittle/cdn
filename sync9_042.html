@@ -944,6 +944,12 @@ function sync9_create_peer(p_funcs) {
             return a && b && !frozen[a] && !frozen[b]
         }
         sync9_prune2(self.s9, q, q2)
+
+        var leaves = Object.keys(self.s9.leaves)
+        var ack_leaves = Object.keys(self.ack_leaves)
+        if (leaves.length == 1 && ack_leaves.length == 1 && leaves[0] == ack_leaves[0]) {
+            work here
+        }
     }
     
     self.create_joiner = () => {
