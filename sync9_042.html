@@ -363,13 +363,15 @@ function run_trial(seed, N, show_debug, trial_num) {
                 var y = 300 + 500*i
                 g.fillText(p.uid, x, y + 80)
                 let v = d.peers[i].s9.val
-                if (v.t == 'val') {
+                if (v && v.t == 'val') {
                     let w = sync9_space_dag_get(v.S, 0)
                     if (w.t == 'str') {
                         draw_space_dag(p, g, w.S, x, y)
                     } else {
                         draw_space_dag(p, g, w, x, y)
                     }
+                } else {
+                    draw_space_dag(p, g, 'NOT YET EDITED', x, y)
                 }
                 draw_time_dag(c, g, d.peers[i], d.peers[i].s9, 0, y-100, 300, 300, 7)
             })
