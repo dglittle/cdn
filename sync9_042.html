@@ -965,51 +965,87 @@ function sync9_create_peer(p_funcs) {
 
 
 
-function sync9_extract_versions(x, is_anc) {
-    var root_version = sync9_read(x, is_anc)
-    return Object.keys(s9.T).filter(x => !is_anc(x)).map(vid => {
-        function rec(node) {
-            
-            work here
-            
-            
-            
-            
-            
-            if (is_lit(x)) return x
-            if (x.t == 'val') {
-                sync9_space_dag_prune2(x.S, has_everyone_whos_seen_a_seen_b, seen_nodes)
+function sync9_extract_versions(s9, is_anc) {
+    var is_lit = x => !x || typeof(x) != 'object' || x.t == 'lit'
+    var get_lit = x => (x && typeof(x) == 'object' && x.t == 'lit') ? x.S : x
+    
+    var root_version = sync9_read(s9, is_anc)
+    is_lit(s9.val) || Object.keys(s9.T).filter(x => !is_anc(x)).map(vid => {
+        var path = []
+        var changes = []
+        rec(s9.val)
+        function rec(x) {
+            if (is_lit(x)) {
+            } else if (x.t == 'val') {
+                sync9_space_dag_extract_version(x.S, s9, vid).forEach(s => {
+                    changes.push(`${path.join('')} = ${JSON.stringify(x[2])}`)
+                })
                 sync9_trav_space_dag(x.S, () => true, node => {
-                    node.elems = node.elems.map(rec)
+                    node.elems.forEach(rec)
                 }, true)
-                if (x.S.nexts.length == 0 && !x.S.next && x.S.elems.length == 1 && is_lit(x.S.elems[0])) return x.S.elems[0]
-                return x
-            }
-            if (x.t == 'arr') {
-                sync9_space_dag_prune2(x.S, has_everyone_whos_seen_a_seen_b, seen_nodes)
+            } else if (x.t == 'arr') {
+                sync9_space_dag_extract_version(x.S, s9, vid).forEach(s => {
+                    changes.push(`${path.join('')}[${s[0]}:${s[0] + s[1]}] = ${JSON.stringify(x[2])}`)
+                })
                 sync9_trav_space_dag(x.S, () => true, node => {
-                    node.elems = node.elems.map(rec)
+                    node.elems.forEach((e, i) => {
+                        path.push('[' + 
+                        
+                        
+                        
+                        
+                        
+                        work here
+                        
+                        
+                        )
+                        rec()
+                    })
                 }, true)
-                if (x.S.nexts.length == 0 && !x.S.next && x.S.elems.every(is_lit)) return {t: 'lit', S: x.S.elems.map(get_lit)}
-                return x
+            } else if (x.t == 'obj') {
+                Object.entries(x.S).forEach(e => {
+                    path.push('[' + JSON.stringify(e[0]) + ']')
+                    rec(e[1])
+                    path.pop()
+                })
+            } else if (x.t == 'str') {
+                sync9_space_dag_extract_version(x.S, s9, vid).forEach(s => {
+                    changes.push(`${path.join('')}[${s[0]}:${s[0] + s[1]}] = ${JSON.stringify(x[2])}`)
+                })
             }
-            if (x.t == 'obj') {
-                Object.entries(x.S).forEach(e => x.S[e[0]] = rec(e[1]))
-                if (Object.values(x.S).every(is_lit)) {
-                    var o = {}
-                    Object.entries(x.S).forEach(e => o[e[0]] = get_lit(e[1]))
-                    return o
-                }
-                return x
-            }
-            if (x.t == 'str') {
-                sync9_space_dag_prune2(x.S, has_everyone_whos_seen_a_seen_b, seen_nodes)
-                if (x.S.nexts.length == 0 && !x.S.next) return x.S.elems
-                return x
+            
+                
+                
+                
+                
+                
+                
+                
+                sync9_trav_space_dag(x.S, () => true, node => {
+                    if (node.vid == vid) {
+                        
+                    }
+                    
+                    
+                    node.elems.map(y => {
+                        
+                    })
+                }, true)
+            } else if (x.t == 'arr') {
+            } else if (x.t == 'obj') {
+            } else if (x.t == 'str') {
             }            
         }
-        rec(x.val)
         
+        
+
+            function sync9_space_dag_extract_versions(S, s9, is_anc) {
+                return Object.keys(s9.T).filter(x => !is_anc(x)).map(vid => {
+                    var v = {
+                        vid,
+                        parents : Object.assign({}, s9.T[vid]),
+                        splices : []
+                    }        
         
         
         
@@ -1101,6 +1137,8 @@ function sync9_space_dag_extract_version(S, s9, vid) {
     var splices = []
     
     function add_result(offset, del, ins) {
+        if (typeof(ins) != 'string')
+            ins = ins.map(x => sync9_read(x, () => false))
         if (splices.length > 0) {
             var prev = splices[splices.length - 1]
             if (prev[0] + prev[1] == offset) {
