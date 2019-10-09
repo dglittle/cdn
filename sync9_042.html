@@ -298,25 +298,81 @@ function run_trial(seed, N, show_debug, trial_num) {
         if (!show_debug) throw 'stop'
     }
 
+    function rand() { return Math.random() }
 
-    function create_random_edit(s, letters) {
+    function create_random_edit(s9, letters) {
         letters = letters || 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-        var str = sync9_read(s)
-        var start = Math.floor(Math.random() * (str.length + 1))
-        var del = Math.floor(Math.random() * Math.random() * (str.length - start + 1))
-        var ins = letters[Math.floor(Math.random() * letters.length)].repeat(Math.floor(Math.random() * 4) + (del == 0 ? 1 : 0))
+        var o = sync9_read(s9)
+        
+        function create_random_thing_to_insert() {
+            if (Math.random() < 0.25) {
+                return {}
+            } else if (Math.random() < 0.33) {
+                return []
+            } else if (Math.random() < 0.5) {
+                return Math.floor(Math.random() * 100)
+            } else {
+                return letters[Math.floor(rand() * letters.length)].repeat(Math.floor(rand() * 4))
+            }
+        }
+        
+        var include_vals = (o == null) || (Math.random() < 0.2)
+        
+        var paths = {}
+        function get_paths(x, path) {
+            if (include_vals || (x != null && typeof(x) == 'object'))
+                paths[path] = x
+            if (x == null) {
+            } else if (Array.isArray(x)) {
+                for (var i = 0; i < x.length; i++) {
+                    get_paths(x[i], path + `[${i}]`)
+                }
+            } else if (typeof(x) == 'object') {
+                Object.entries(x).forEach(x => {
+                    get_paths(x[1], path + `[${JSON.stringify(x[0])}]`)
+                })
+            }
+        }
+        get_paths(o, '')
+        
+        var changes = []
+        var ents = Object.entries(paths)
+        if (ents.length > 0) {
+            var ent = ents[Math.floor(Math.random() * ents.length)]
+            if (typeof(ent[1]) == 'string') {
+                var x = ent[1]
+                var start = Math.floor(rand() * (x.length + 1))
+                var del = Math.floor(rand() * rand() * (x.length - start + 1))
+                var ins = letters[Math.floor(rand() * letters.length)].repeat(Math.floor(rand() * 4) + (del == 0 ? 1 : 0))
+                changes.push(ent[0] + `[${start}:${start + del}] = ` + JSON.stringify(ins))
+            } else if (Array.isArray(ent[1])) {
+                var x = ent[1]
+                var start = Math.floor(rand() * (x.length + 1))
+                var del = Math.floor(rand() * rand() * (x.length - start + 1))
+                var ins = []
+                var ins_len = Math.floor(rand() * 3)
+                for (var i = 0; i < ins_len; i++) {
+                    ins.push(create_random_thing_to_insert())
+                }
+                changes.push(ent[0] + `[${start}:${start + del}] = ` + JSON.stringify(ins))
+            } else if (ent[1] != null && typeof(ent[1]) == 'object') {
+                var i = Math.floor(Math.random() * 3)
+                var key = 'abc'.slice(i, i + 1)
+                changes.push(ent[0] + `[${JSON.stringify(key)}] = ${JSON.stringify(create_random_thing_to_insert())}`)
+            } else {
+                changes.push(ent[0] + ' = ' + JSON.stringify(create_random_thing_to_insert()))
+            }
+        }
         
         // work here
         var vid = sync9_guid()
         s.next_version_id = (s.next_version_id || 0) + 1
         var vid = letters + s.next_version_id
         
-        var changes = [`[${start}:${start + del}] = ` + JSON.stringify(ins)]
-        
         return {
-            vid : vid,
+            vid,
             parents : Object.assign({}, s.leaves),
-            changes : changes
+            changes
         }
     }
 
@@ -943,10 +999,9 @@ function sync9_create_peer(p_funcs) {
         var leaves = Object.keys(self.s9.leaves)
         var ack_leaves = Object.keys(self.ack_leaves)
         var fiss = Object.keys(self.fissures)
-        if (leaves.length == 1 && ack_leaves.length == 1 && leaves[0] == ack_leaves[0] && fiss.length == 0 && leaves[0] != 'root') {
+        if (leaves.length == 1 && ack_leaves.length == 1 && leaves[0] == ack_leaves[0] && fiss.length == 0) {
             self.s9.T = {
-                root: {},
-                [leaves[0]]: {root: true}
+                [leaves[0]]: {}
             }
             var val = sync9_read(self.s9)
             self.s9.val = (val && typeof(val) == 'object') ? {t: 'lit', S: val} : val
@@ -969,39 +1024,39 @@ function sync9_extract_versions(s9, is_anc) {
     var is_lit = x => !x || typeof(x) != 'object' || x.t == 'lit'
     var get_lit = x => (x && typeof(x) == 'object' && x.t == 'lit') ? x.S : x
     
-    var root_version = sync9_read(s9, is_anc)
-    is_lit(s9.val) || Object.keys(s9.T).filter(x => !is_anc(x)).map(vid => {
+    var versions = [{
+        vid: 'root',
+        parents: {},
+        changes: ` = ${JSON.stringify(sync9_read(s9, is_anc))}`
+    }]
+    is_lit(s9.val) || Object.keys(s9.T).filter(x => !is_anc(x)).forEach(vid => {
+        var ancs = sync9_get_ancestors(s9, {[vid]: true})
+        delete ancs[vid]
+        var is_anc = x => ancs[x]
         var path = []
         var changes = []
         rec(s9.val)
         function rec(x) {
             if (is_lit(x)) {
             } else if (x.t == 'val') {
-                sync9_space_dag_extract_version(x.S, s9, vid).forEach(s => {
+                sync9_space_dag_extract_version(x.S, s9, vid, is_anc).forEach(s => {
                     changes.push(`${path.join('')} = ${JSON.stringify(x[2])}`)
                 })
-                sync9_trav_space_dag(x.S, () => true, node => {
+                sync9_trav_space_dag(x.S, is_anc, node => {
                     node.elems.forEach(rec)
-                }, true)
+                })
             } else if (x.t == 'arr') {
-                sync9_space_dag_extract_version(x.S, s9, vid).forEach(s => {
+                sync9_space_dag_extract_version(x.S, s9, vid, is_anc).forEach(s => {
                     changes.push(`${path.join('')}[${s[0]}:${s[0] + s[1]}] = ${JSON.stringify(x[2])}`)
                 })
-                sync9_trav_space_dag(x.S, () => true, node => {
-                    node.elems.forEach((e, i) => {
-                        path.push('[' + 
-                        
-                        
-                        
-                        
-                        
-                        work here
-                        
-                        
-                        )
-                        rec()
+                var i = 0
+                sync9_trav_space_dag(x.S, is_anc, node => {
+                    node.elems.forEach(e => {
+                        path.push(`[${i++}]`)
+                        rec(e)
+                        path.pop()
                     })
-                }, true)
+                })
             } else if (x.t == 'obj') {
                 Object.entries(x.S).forEach(e => {
                     path.push('[' + JSON.stringify(e[0]) + ']')
@@ -1009,131 +1064,22 @@ function sync9_extract_versions(s9, is_anc) {
                     path.pop()
                 })
             } else if (x.t == 'str') {
-                sync9_space_dag_extract_version(x.S, s9, vid).forEach(s => {
+                sync9_space_dag_extract_version(x.S, s9, vid, is_anc).forEach(s => {
                     changes.push(`${path.join('')}[${s[0]}:${s[0] + s[1]}] = ${JSON.stringify(x[2])}`)
                 })
             }
-            
-                
-                
-                
-                
-                
-                
-                
-                sync9_trav_space_dag(x.S, () => true, node => {
-                    if (node.vid == vid) {
-                        
-                    }
-                    
-                    
-                    node.elems.map(y => {
-                        
-                    })
-                }, true)
-            } else if (x.t == 'arr') {
-            } else if (x.t == 'obj') {
-            } else if (x.t == 'str') {
-            }            
         }
         
-        
-
-            function sync9_space_dag_extract_versions(S, s9, is_anc) {
-                return Object.keys(s9.T).filter(x => !is_anc(x)).map(vid => {
-                    var v = {
-                        vid,
-                        parents : Object.assign({}, s9.T[vid]),
-                        splices : []
-                    }        
-        
-        
-        
-        work here
-        
-        
-        
-        
-        
-        
-        var v = {
+        versions.push({
             vid,
-            parents : Object.assign({}, s9.T[vid]),
-            splices : []
-        }
-        
-        function add_result(offset, del, ins) {
-            if (v.splices.length > 0) {
-                var prev = v.splices[v.splices.length - 1]
-                if (prev[0] + prev[1] == offset) {
-                    prev[1] += del
-                    prev[2] = prev[2].concat(ins)
-                    return
-                }
-            }
-            v.splices.push([offset, del, ins])
-        }
-        
-        var ancs = sync9_get_ancestors(s9, {[vid]: true})
-        delete ancs[vid]
-        var offset = 0
-        function helper(node, vid) {
-            if (vid == v.vid) {
-                add_result(offset, 0, node.elems.slice(0))
-            } else if (node.deleted_by[v.vid] && node.elems.length > 0) {
-                add_result(offset, node.elems.length, node.elems.slice(0, 0))
-            }
-            
-            if (ancs[vid] && !Object.keys(node.deleted_by).some(x => ancs[x])) {
-                offset += node.elems.length
-            }
-            
-            for (var next of node.nexts)
-                helper(next, next.vid)
-            if (node.next) helper(node.next, vid)
-        }
-        helper(S, S.vid)
-        return v
-    })    
-    
-    
-    
-    
-    
-    
-    
-    
-    // work here : make this work for json
-    if (x.val == null) return []
-    var cur = x.val
-    
-    if (!cur || typeof(cur) != 'object' || cur.t == 'lit')
-        cur = x.val = {t: 'val', S: sync9_create_space_dag_node(null, [cur])}
-    
-    var y = sync9_space_dag_get(x.val.S, 0)
-    if (typeof(y) == 'string') {
-        y = {t: 'str', S: sync9_create_space_dag_node(x.val.S.vid, y)}
-    }
-    
-    var versions = sync9_space_dag_extract_versions(y.S, x, is_anc, is_new_anc)
-    
-    versions.forEach(x => {
-        x.changes = x.splices.map(x => {
-            return `[${x[0]}:${x[0] + x[1]}] = ${JSON.stringify(x[2])}`
+            parents: Object.assign({}, s9.T[vid]),
+            changes
         })
-        delete x.splices
     })
-    
-    versions.unshift({
-        vid: 'root',
-        parents: {},
-        changes: [` = ""`]
-    })
-    
     return versions
 }
 
-function sync9_space_dag_extract_version(S, s9, vid) {
+function sync9_space_dag_extract_version(S, s9, vid, is_anc) {
     var splices = []
     
     function add_result(offset, del, ins) {
@@ -1150,8 +1096,6 @@ function sync9_space_dag_extract_version(S, s9, vid) {
         splices.push([offset, del, ins])
     }
     
-    var ancs = sync9_get_ancestors(s9, {[vid]: true})
-    delete ancs[vid]
     var offset = 0
     function helper(node, _vid) {
         if (_vid == vid) {
@@ -1160,7 +1104,7 @@ function sync9_space_dag_extract_version(S, s9, vid) {
             add_result(offset, node.elems.length, node.elems.slice(0, 0))
         }
         
-        if (ancs[_vid] && !Object.keys(node.deleted_by).some(x => ancs[x])) {
+        if (is_anc(_vid) && !Object.keys(node.deleted_by).some(is_anc)) {
             offset += node.elems.length
         }
         
