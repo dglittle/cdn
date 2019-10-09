@@ -1024,7 +1024,7 @@ function sync9_extract_versions(s9, is_anc) {
     var versions = [{
         vid: null,
         parents: {},
-        changes: ` = ${JSON.stringify(sync9_read(s9, is_anc))}`
+        changes: [` = ${JSON.stringify(sync9_read(s9, is_anc))}`]
     }]
     is_lit(s9.val) || Object.keys(s9.T).filter(x => !is_anc(x)).forEach(vid => {
         var ancs = sync9_get_ancestors(s9, {[vid]: true})
