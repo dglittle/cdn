@@ -1296,7 +1296,7 @@ function sync9_add_version(x, vid, parents, changes, is_anc) {
     let make_lit = x => (x && typeof(x) == 'object') ? {t: 'lit', S: x} : x
     
     if (!vid && Object.keys(x.T).length == 0) {
-        var parse = sync9_parse_change(change)
+        var parse = sync9_parse_change(changes[0])
         x.val = make_lit(parse.val)
         return
     }
