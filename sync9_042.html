@@ -1000,6 +1000,9 @@ function sync9_create_peer(p_funcs) {
             self.s9.T = {
                 [leaves[0]]: {}
             }
+            
+            debugger
+            
             var val = sync9_read(self.s9)
             self.s9.val = (val && typeof(val) == 'object') ? {t: 'lit', S: val} : val
         }
@@ -1371,7 +1374,7 @@ function sync9_add_version(x, vid, parents, changes, is_anc) {
 function sync9_read(x, is_anc) {
     if (!is_anc) is_anc = () => true
     if (x && typeof(x) == 'object') {
-        if (!x.t && x.val) return sync9_read(x.val, is_anc)
+        if (!x.t) return sync9_read(x.val, is_anc)
         if (x.t == 'lit') return x.S
         if (x.t == 'val') return sync9_read(sync9_space_dag_get(x.S, 0, is_anc), is_anc)
         if (x.t == 'obj') {
@@ -1397,6 +1400,7 @@ function sync9_read(x, is_anc) {
             })
             return s.join('')
         }
+        throw 'bad'
     } return x
 }
 
