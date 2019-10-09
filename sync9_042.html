@@ -945,7 +945,7 @@ function sync9_create_peer(p_funcs) {
             }
         })
         
-        var tags = {'null': {}}
+        var tags = {'null': {tags: {}}}
         var frozen = {}
         Object.keys(self.s9.T).forEach(vid => {
             tags[vid] = {tags: {}}
