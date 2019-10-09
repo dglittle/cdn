@@ -1022,7 +1022,7 @@ function sync9_extract_versions(s9, is_anc) {
     var get_lit = x => (x && typeof(x) == 'object' && x.t == 'lit') ? x.S : x
     
     var versions = [{
-        vid: 'root',
+        vid: null,
         parents: {},
         changes: ` = ${JSON.stringify(sync9_read(s9, is_anc))}`
     }]
@@ -1293,6 +1293,14 @@ function sync9_create() {
 }
 
 function sync9_add_version(x, vid, parents, changes, is_anc) {
+    let make_lit = x => (x && typeof(x) == 'object') ? {t: 'lit', S: x} : x
+    
+    if (!vid) {
+        var parse = sync9_parse_change(change)
+        x.val = make_lit(parse.val)
+        return
+    }
+    
     if (x.T[vid]) return
     x.T[vid] = Object.assign({}, parents)
     
@@ -1310,7 +1318,6 @@ function sync9_add_version(x, vid, parents, changes, is_anc) {
         }
     }
     
-    let make_lit = x => (x && typeof(x) == 'object') ? {t: 'lit', S: x} : x
     changes.forEach(change => {
         var parse = sync9_parse_change(change)
         var cur = x.val
