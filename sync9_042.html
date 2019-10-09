@@ -124,6 +124,11 @@ function run_trial(seed, N, show_debug, trial_num) {
     
     for (var t = 0; t < N; t++) {
         if (show_debug) console.log('t == ' + t)
+
+        // work here
+        if (t == 7) {
+            debugger
+        }
         
         var i = Math.floor(rand() * n_peers)
         var p = peers_array[i]
