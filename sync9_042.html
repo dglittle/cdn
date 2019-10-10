@@ -420,6 +420,7 @@ function run_trial(seed, N, show_debug, trial_num) {
             
             peers_array.forEach((p, i) => {
                 var notes = d.peer_notes[p.uid]
+                if (!notes) return
                 var dd = document.createElement('textarea')
                 dd.value = notes.join('\n')
                 top_part.append(dd)
