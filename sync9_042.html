@@ -1643,13 +1643,6 @@ function sync9_get_ancestors(x, vids) {
 
 function sync9_parse_change(change) {
     var ret = { keys : [] }
-    
-    
-    // work here
-    console.log('change: ' + change)
-    
-    
-    
     var re = /\.?([^\.\[ =]+)|\[((\-?\d+)(:\-?\d+)?|'(\\'|[^'])*'|"(\\"|[^"])*")\]|\s*=\s*(.*)/g
     var m
     while (m = re.exec(change)) {
