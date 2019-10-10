@@ -102,7 +102,10 @@ function run_trial(seed, N, show_debug, trial_num) {
                 
                 if (debug_frames) debug_frames.push({
                     t: -1,
-                    notes: notes,
+                    peer_notes: {
+                        [peers_array[p1].uid]: notes,
+                        [[peers_array[p2].uid]: notes
+                    },
                     peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
                 })
             }
@@ -115,7 +118,7 @@ function run_trial(seed, N, show_debug, trial_num) {
         
         if (debug_frames) debug_frames.push({
             t: -1,
-            notes: ['initial edit'],
+            peer_notes: {[p.uid]: 'initial edit'},
             peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
         })
     }
@@ -124,11 +127,6 @@ function run_trial(seed, N, show_debug, trial_num) {
     
     for (var t = 0; t < N; t++) {
         if (show_debug) console.log('t == ' + t)
-
-        // work here
-        if (t == 7) {
-            debugger
-        }
         
         var i = Math.floor(rand() * n_peers)
         var p = peers_array[i]
@@ -184,7 +182,7 @@ function run_trial(seed, N, show_debug, trial_num) {
             
         if (debug_frames) debug_frames.push({
             t: t,
-            notes: notes,
+            peer_notes: {[p.uid]: notes},
             peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
         })
     }
@@ -200,7 +198,10 @@ function run_trial(seed, N, show_debug, trial_num) {
                 
                 if (debug_frames) debug_frames.push({
                     t: -1,
-                    notes: notes,
+                    peer_notes: {
+                        [peers_array[p1].uid]: notes,
+                        [[peers_array[p2].uid]: notes
+                    },
                     peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
                 })
             }
@@ -214,12 +215,12 @@ function run_trial(seed, N, show_debug, trial_num) {
                 tt++
                 if (show_debug) console.log('t => ' + tt)
                 notes = []
-                
+
                 p.incoming.shift()[1]()
                 
                 if (debug_frames) debug_frames.push({
                     tt: tt,
-                    notes: notes,
+                    peer_notes: {[p.uid]: notes},
                     peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
                 })
             }
@@ -248,7 +249,7 @@ function run_trial(seed, N, show_debug, trial_num) {
                 
                 if (debug_frames) debug_frames.push({
                     tt: tt,
-                    notes: ['creating joiner'],
+                    peer_notes: {[p.uid]: ['creating joiner']},
                     peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
                 })
             } else {
@@ -388,16 +389,23 @@ function run_trial(seed, N, show_debug, trial_num) {
     }
     
     if (debug_frames) {
+        var a = document.createElement('div')
+        a.style.display = 'grid'
+        a.style['grid-template-rows'] = '50px 1fr 20px'
+        
         var c = document.createElement('canvas')
-        c.width = 3000
-        c.height = 1700
+        c.width = window.innerWidth * devicePixelRatio
+        c.height = 50 * devicePixelRatio
         c.style.width = (c.width / devicePixelRatio) + 'px'
         c.style.height = (c.height / devicePixelRatio) + 'px'
         var g = c.getContext('2d')
-        document.body.append(c)
+        a.append(c)
+        
+        var top_part = document.createElement('div')
+        a.append(top_part)
         
         var slider = document.createElement('input')
-        slider.style.width = '500px'
+        slider.style.width = '100%'
         slider.setAttribute('type', 'range')
         slider.setAttribute('min', '0')
         slider.setAttribute('max', debug_frames.length - 1)
@@ -405,44 +413,31 @@ function run_trial(seed, N, show_debug, trial_num) {
         slider.oninput = () => {
             var d = debug_frames[1*slider.value]
             
-            g.clearRect(0, 0, c.width, c.height)
+            top_part.innerHTML = ''
+            top_part.style.display = 'grid'
+            top_part.style['grid-template-columns'] = '1fr 1fr 1fr'
+            top_part.style['grid-template-rows'] = '1fr 2fr'
             
-            g.font = '20px Ariel'
-            g.fillStyle = 'black'
-            g.textBaseline = 'top'
-            if (d.tt) g.fillText('v3 tt: ' + d.tt, 0, 0)
-            else g.fillText('v3 t: ' + d.t, 0, 0)
-            
-            d.notes.forEach((x, i) => {
-                g.fillText(x, 100, i * 20)
-            })
-
             peers_array.forEach((p, i) => {
-                g.font = '20px Arial'
-                g.fillStyle = 'grey'
-                var x = 300
-                var y = 300 + 500*i
-                g.fillText(p.uid, x, y + 80)
-                let v = d.peers[i].s9.val
-                if (v && v.t == 'val') {
-                    let w = sync9_space_dag_get(v.S, 0)
-                    if (w.t == 'str') {
-                        draw_space_dag(p, g, w.S, x, y)
-                    } else {
-                        draw_space_dag(p, g, w, x, y)
-                    }
-                } else {
-                    draw_space_dag(p, g, 'NOT YET EDITED', x, y)
-                }
-                draw_time_dag(c, g, d.peers[i], d.peers[i].s9, 0, y-100, 300, 300, 7)
+                var notes = d.peer_notes[p.uid]
+                var dd = document.createElement('textarea')
+                dd.value = notes.join('\n')
+                top_part.append(dd)
+            })            
+            
+            peers_array.forEach((p, i) => {
+                var p = d.peers[p.uid]
+                var dd = document.createElement('textarea')
+                dd.value = JSON.stringify(p, null, '    ')
+                bottom_row.append(dd)
             })
             
             g.lineWidth = 1
             
             var peer_locs = [
-                [5, 300],
-                [40, 800],
-                [5, 1300]
+                [lerp(0, 0, 1, c.width, 0.2), 40 * devicePixelRatio],
+                [lerp(0, 0, 1, c.width, 0.5), 10 * devicePixelRatio],
+                [lerp(0, 0, 1, c.width, 0.8), 40 * devicePixelRatio]
             ]
             
             ;[[0, 1], [1, 0], [1, 2], [2, 1], [2, 0], [0, 2]].forEach(([a, b]) => {
@@ -456,7 +451,7 @@ function run_trial(seed, N, show_debug, trial_num) {
                 g.stroke()
             })
         }
-        document.body.append(slider)
+        a.append(slider)
         slider.oninput()
     }    
 }
