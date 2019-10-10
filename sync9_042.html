@@ -1074,7 +1074,7 @@ function sync9_extract_versions(s9, is_anc) {
             if (is_lit(x)) {
             } else if (x.t == 'val') {
                 sync9_space_dag_extract_version(x.S, s9, vid, is_anc).forEach(s => {
-                    changes.push(`${path.join('')} = ${JSON.stringify(s[2][0])}`)
+                    if (s[2][0]) changes.push(`${path.join('')} = ${JSON.stringify(s[2][0])}`)
                 })
                 sync9_trav_space_dag(x.S, is_anc, node => {
                     node.elems.forEach(rec)
