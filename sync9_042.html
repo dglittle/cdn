@@ -372,8 +372,8 @@ function run_trial(seed, N, show_debug, trial_num) {
         
         // work here
         var vid = sync9_guid()
-        s.next_version_id = (s.next_version_id || 0) + 1
-        var vid = letters + s.next_version_id
+        s9.next_version_id = (s9.next_version_id || 0) + 1
+        var vid = letters[0] + s9.next_version_id
         
         return {
             vid,
