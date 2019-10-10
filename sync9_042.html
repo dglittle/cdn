@@ -1304,7 +1304,7 @@ function sync9_add_version(x, vid, parents, changes, is_anc) {
         var parse = sync9_parse_change(changes[0])
         x.val = make_lit(parse.val)
         return
-    }
+    } else if (!vid) return
     
     if (x.T[vid]) return
     x.T[vid] = Object.assign({}, parents)
