@@ -392,6 +392,7 @@ function run_trial(seed, N, show_debug, trial_num) {
         var a = document.createElement('div')
         a.style.display = 'grid'
         a.style['grid-template-rows'] = '50px 1fr 20px'
+        document.body.append(a)
         
         var c = document.createElement('canvas')
         c.width = window.innerWidth * devicePixelRatio
