@@ -430,7 +430,7 @@ function run_trial(seed, N, show_debug, trial_num) {
                 var p = d.peers[p.uid]
                 var dd = document.createElement('textarea')
                 dd.value = JSON.stringify(p, null, '    ')
-                bottom_row.append(dd)
+                top_part.append(dd)
             })
             
             g.lineWidth = 1
