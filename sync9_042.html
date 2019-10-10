@@ -748,7 +748,7 @@ function sync9_create_peer(p_funcs) {
             self.peers[pid].salt = salt
             p_funcs.get(pid, self.uid)
         }
-        var vs = sync9_extract_versions(self.s9, x => false)
+        var vs = (Object.keys(self.s9.T).length > 0) ? sync9_extract_versions(self.s9, x => false) : []
         var fs = Object.values(self.fissures)
         p_funcs.set_multi(pid, vs, fs)
     }
