@@ -441,7 +441,7 @@ function run_trial(seed, N, show_debug, trial_num) {
             peers_array.forEach((p, i) => {
                 p = d.peers[i]
                 var dd = document.createElement('textarea')
-                dd.value = JSON.stringify(p, null, '    ')
+                dd.value = JSON.stringify(sync9_read(p.s9)) + '\n\n' + JSON.stringify(p, null, '    ')
                 top_part.append(dd)
             })
 
