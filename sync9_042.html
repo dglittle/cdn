@@ -1172,7 +1172,7 @@ function sync9_prune2(x, has_everyone_whos_seen_a_seen_b, has_everyone_whos_seen
             if (Object.values(x.S).every(is_lit)) {
                 var o = {}
                 Object.entries(x.S).forEach(e => o[e[0]] = get_lit(e[1]))
-                return o
+                return {t: 'lit', S: o}
             }
             return x
         }
