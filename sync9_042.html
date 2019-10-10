@@ -214,6 +214,15 @@ function run_trial(seed, N, show_debug, trial_num) {
             while (p.incoming.length > 0) {
                 tt++
                 if (show_debug) console.log('t => ' + tt)
+                
+                
+                
+                if (tt == 1) {
+                    debugger
+                }
+                
+                
+                
                 notes = []
 
                 p.incoming.shift()[1]()
@@ -1126,14 +1135,14 @@ function sync9_space_dag_extract_version(S, s9, vid, is_anc) {
             add_result(offset, node.elems.length, node.elems.slice(0, 0))
         }
         
-        if (is_anc(_vid) && !Object.keys(node.deleted_by).some(is_anc)) {
+        if ((!_vid || is_anc(_vid)) && !Object.keys(node.deleted_by).some(is_anc)) {
             offset += node.elems.length
         }
         
         node.nexts.forEach(next => helper(next, next.vid))
         if (node.next) helper(node.next, _vid)
     }
-    helper(S, S.vid)
+    helper(S, null)
     return splices
 }
 
