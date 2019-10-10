@@ -1383,9 +1383,9 @@ function sync9_add_version(x, vid, parents, changes, is_anc) {
                 if (!x || typeof(x) != 'object' || x.t == 'lit')
                     x = cur.S[key] = {t: 'val', S: sync9_create_space_dag_node(null, [x])}
                 cur = x
-            } else if (i == parse.keys.length - 1) {
+            } else if (i == parse.keys.length - 1 && !parse.range) {
                 parse.range = [key, key + 1]
-                parse.val = [parse.val]
+                parse.val = (cur.t == 'str') ? parse.val : [parse.val]
             } else if (i < parse.keys.length - 1 && cur.t == 'arr') {
                 cur = sync9_space_dag_get(prev_S = cur.S, prev_i = key, is_anc)
             } else throw 'bad'
