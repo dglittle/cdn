@@ -755,6 +755,16 @@ function sync9_create_peer(p_funcs) {
     
     self.set_multi = (pid, vs, fs, conn_leaves, min_leaves) => {
         var new_vs = []
+        
+        var v = vs[0]
+        if (v && !v.vid) {
+            vs.shift()
+            if (!Object.keys(self.s9.T).length) {
+                new_vs.push(v)
+                sync9_add_version(self.s9, v.vid, v.parents, v.changes)
+            }
+        }
+        
         var vs_T = {}
         vs.forEach(v => vs_T[v.vid] = v.parents)
         vs.forEach(v => {
