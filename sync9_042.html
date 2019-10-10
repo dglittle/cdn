@@ -399,14 +399,14 @@ function run_trial(seed, N, show_debug, trial_num) {
     if (debug_frames) {
         var a = document.createElement('div')
         a.style.display = 'grid'
-        a.style['grid-template-rows'] = '200px 1fr 20px'
+        a.style['grid-template-rows'] = '300px 1fr 20px'
         a.style.width = '100%'
         a.style.height = '100%'
         document.body.append(a)
         
         var c = document.createElement('canvas')
         c.width = window.innerWidth * devicePixelRatio
-        c.height = 200 * devicePixelRatio
+        c.height = 300 * devicePixelRatio
         c.style.width = (c.width / devicePixelRatio) + 'px'
         c.style.height = (c.height / devicePixelRatio) + 'px'
         var g = c.getContext('2d')
