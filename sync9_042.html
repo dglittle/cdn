@@ -246,11 +246,12 @@ function run_trial(seed, N, show_debug, trial_num) {
                 var i = Math.floor(rand() * n_peers)
                 var p = peers_array[i]
                 
+                notes = ['creating joiner']
                 p.create_joiner()
                 
                 if (debug_frames) debug_frames.push({
                     tt: tt,
-                    peer_notes: {[p.uid]: ['creating joiner']},
+                    peer_notes: {[p.uid]: notes},
                     peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
                 })
             } else {
