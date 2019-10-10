@@ -16,12 +16,12 @@ function main() {
             console.log('TRIAL: ' + i)
         }
         
-        try {
+        // try {
             run_trial('iiiifIIiiiEiiiii:' + i, 500, special_i >= 0, i)
-        } catch (e) {
-            console.log('TRIAL: ' + i)
-            break
-        }
+        // } catch (e) {
+        //     console.log('TRIAL: ' + i)
+        //     break
+        // }
         if (special_i >= 0) break
     }
     console.log('check_good: ' + check_good)
@@ -128,7 +128,7 @@ function run_trial(seed, N, show_debug, trial_num) {
         })
     }
     
-    try {
+    // try {
     
     for (var t = 0; t < N; t++) {
         if (show_debug) console.log('t == ' + t)
@@ -266,11 +266,11 @@ function run_trial(seed, N, show_debug, trial_num) {
         }
     }
     
-    } catch (e) {
-        console.log('ERROR')
-        console.log(e)
-        if (!show_debug) throw 'stop'
-    }
+    // } catch (e) {
+    //     console.log('ERROR')
+    //     console.log(e)
+    //     if (!show_debug) throw 'stop'
+    // }
     
     var check_val = null
     check_good = true
@@ -1404,7 +1404,17 @@ function sync9_add_version(x, vid, parents, changes, is_anc) {
                 cur = {t: 'arr', S: sync9_create_space_dag_node(null, cur.S.map(x => make_lit(x)))}
                 sync9_space_dag_set(prev_S, prev_i, cur, is_anc)
             }
-            if (parse.val instanceof Array && cur.t != 'arr') throw 'bad'
+            
+            
+            
+            if (parse.val instanceof Array && cur.t != 'arr') {
+                debugger
+                throw 'bad'
+            }
+            
+            
+            
+            
             if (parse.val instanceof String && cur.t != 'str') throw 'bad'
             if (parse.val instanceof Array) parse.val = parse.val.map(x => make_lit(x))
             sync9_space_dag_add_version(cur.S, vid, [[parse.range[0], parse.range[1] - parse.range[0], parse.val]], is_anc)
