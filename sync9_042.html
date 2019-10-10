@@ -1061,16 +1061,6 @@ function sync9_extract_versions(s9, is_anc) {
         changes: [` = ${JSON.stringify(sync9_read(s9, is_anc))}`]
     }]
     Object.keys(s9.T).filter(x => !is_anc(x)).forEach(vid => {
-        
-        
-        
-        // work here
-        if (vid == 'a1') {
-            debugger
-        }
-        
-        
-        
         var ancs = sync9_get_ancestors(s9, {[vid]: true})
         delete ancs[vid]
         var is_anc = x => ancs[x]
@@ -1081,7 +1071,7 @@ function sync9_extract_versions(s9, is_anc) {
             if (is_lit(x)) {
             } else if (x.t == 'val') {
                 sync9_space_dag_extract_version(x.S, s9, vid, is_anc).forEach(s => {
-                    changes.push(`${path.join('')} = ${JSON.stringify(x[2])}`)
+                    changes.push(`${path.join('')} = ${JSON.stringify(s[2])}`)
                 })
                 sync9_trav_space_dag(x.S, is_anc, node => {
                     node.elems.forEach(rec)
