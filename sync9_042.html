@@ -1377,7 +1377,7 @@ function sync9_add_version(x, vid, parents, changes, is_anc) {
                     if (typeof(cur.S) != 'object') throw 'bad'
                     new_cur.t = 'obj'
                     new_cur.S = {}
-                    Object.entries(cur.S).forEach((x, i) => new_cur.S[i] = make_lit(x))
+                    Object.entries(cur.S).forEach(e => new_cur.S[e[0]] = make_lit(e[1]))
                 }
                 cur = new_cur
                 sync9_space_dag_set(prev_S, prev_i, cur, is_anc)
