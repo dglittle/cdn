@@ -9,7 +9,7 @@
 
 function main() {
     
-    var special_i = -1
+    var special_i = 366
     
     for (var i = (special_i >= 0) ? special_i : 0; i < 1000; i++) {
         if ((special_i < 0) && (i % 100 == 0)) {
@@ -17,7 +17,7 @@ function main() {
         }
         
         try {
-            run_trial('iiiif:' + i, 10, special_i >= 0, i)
+            run_trial('iiiif:' + i, 30, special_i >= 0, i)
         } catch (e) {
             console.log('TRIAL: ' + i)
             break
@@ -219,6 +219,16 @@ function run_trial(seed, N, show_debug, trial_num) {
             while (p.incoming.length > 0) {
                 tt++
                 if (show_debug) console.log('t => ' + tt)
+                
+                
+                
+                // work here
+                if (tt == 4) {
+                    debugger
+                }
+                
+                
+                
                 
                 notes = []
 
