@@ -423,11 +423,12 @@ function run_trial(seed, N, show_debug, trial_num) {
             
             peers_array.forEach((p, i) => {
                 var notes = d.peer_notes[p.uid]
-                if (!notes) notes = ['N/A']
+                if (notes && typeof(notes) == 'object') notes = notes.join('\n\n')
+                if (!notes) notes = 'N/A'
                 var dd = document.createElement('textarea')
                 dd.style.width = '100%'
                 dd.style.height = '100%'
-                dd.value = notes.join('\n\n')
+                dd.value = notes
                 top_part.append(dd)
             })
             
