@@ -9,7 +9,7 @@
 
 function main() {
     
-    var special_i = 995
+    var special_i = -1
     
     for (var i = (special_i >= 0) ? special_i : 0; i < 1000; i++) {
         if ((special_i < 0) && (i % 100 == 0)) {
@@ -17,7 +17,7 @@ function main() {
         }
         
         try {
-            run_trial('iiiifIIiiiEi:' + i, 100, special_i >= 0, i)
+            run_trial('iiiifIIiiiEii:' + i, 100, special_i >= 0, i)
         } catch (e) {
             console.log('TRIAL: ' + i)
             break
