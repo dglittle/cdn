@@ -12,11 +12,16 @@ function main() {
     var special_i = -1
     
     for (var i = (special_i >= 0) ? special_i : 0; i < 1000; i++) {
-        if ((special_i < 0) || (i % 100 == 0)) {
+        if ((special_i < 0) && (i % 100 == 0)) {
             console.log('TRIAL: ' + i)
         }
         
+        try {
         run_trial('iiiif:' + i, 10, special_i >= 0, i)
+        } catch (e) {
+            console.log('TRIAL: ' + i)
+            break
+        }
         if (special_i >= 0) break
     }
     console.log('check_good: ' + check_good)
