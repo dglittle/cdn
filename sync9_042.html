@@ -437,12 +437,18 @@ function run_trial(seed, N, show_debug, trial_num) {
                 top_part.append(dd)
             })
             
+            g.font = '20px Ariel'
+            g.fillStyle = 'black'
+            g.textBaseline = 'top'
+            if (d.tt) g.fillText('tt: ' + d.tt, 0, 0)
+            else g.fillText('t: ' + d.t, 0, 0)
+            
             g.lineWidth = 1
             
             var peer_locs = [
-                [lerp(0, 0, 1, c.width, 0.2), 40 * devicePixelRatio],
-                [lerp(0, 0, 1, c.width, 0.5), 10 * devicePixelRatio],
-                [lerp(0, 0, 1, c.width, 0.8), 40 * devicePixelRatio]
+                [lerp(0, 0, 1, c.width, 0.2), 10 * devicePixelRatio],
+                [lerp(0, 0, 1, c.width, 0.5), 40 * devicePixelRatio],
+                [lerp(0, 0, 1, c.width, 0.8), 10 * devicePixelRatio]
             ]
             
             ;[[0, 1], [1, 0], [1, 2], [2, 1], [2, 0], [0, 2]].forEach(([a, b]) => {
