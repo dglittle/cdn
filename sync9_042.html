@@ -1386,7 +1386,7 @@ function sync9_add_version(x, vid, parents, changes, is_anc) {
             } else if (i == parse.keys.length - 1 && !parse.range) {
                 parse.range = [key, key + 1]
                 parse.val = (cur.t == 'str') ? parse.val : [parse.val]
-            } else if (i < parse.keys.length - 1 && cur.t == 'arr') {
+            } else if (cur.t == 'arr') {
                 cur = sync9_space_dag_get(prev_S = cur.S, prev_i = key, is_anc)
             } else throw 'bad'
         })
