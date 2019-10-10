@@ -426,8 +426,6 @@ function run_trial(seed, N, show_debug, trial_num) {
                 if (notes && typeof(notes) == 'object') notes = notes.join('\n\n')
                 if (!notes) notes = 'N/A'
                 var dd = document.createElement('textarea')
-                dd.style.width = '100%'
-                dd.style.height = '100%'
                 dd.value = notes
                 top_part.append(dd)
             })
@@ -435,8 +433,6 @@ function run_trial(seed, N, show_debug, trial_num) {
             peers_array.forEach((p, i) => {
                 p = d.peers[i]
                 var dd = document.createElement('textarea')
-                dd.style.width = '100%'
-                dd.style.height = '100%'
                 dd.value = JSON.stringify(p, null, '    ')
                 top_part.append(dd)
             })
