@@ -9,7 +9,7 @@
 
 function main() {
     
-    var special_i = -1
+    var special_i = 5
     
     for (var i = (special_i >= 0) ? special_i : 0; i < 1000; i++) {
         if ((special_i < 0) && (i % 100 == 0)) {
@@ -132,6 +132,17 @@ function run_trial(seed, N, show_debug, trial_num) {
     
     for (var t = 0; t < N; t++) {
         if (show_debug) console.log('t == ' + t)
+        
+        
+        
+        
+        if (t == 94) {
+            debugger
+        }
+        
+        
+        
+        
         
         var i = Math.floor(rand() * n_peers)
         var p = peers_array[i]
@@ -1184,7 +1195,7 @@ function sync9_prune2(x, has_everyone_whos_seen_a_seen_b, has_everyone_whos_seen
         }
         if (x.t == 'str') {
             sync9_space_dag_prune2(x.S, has_everyone_whos_seen_a_seen_b, seen_nodes)
-            if (x.S.nexts.length == 0 && !x.S.next) return x.S.elems
+            if (x.S.nexts.length == 0 && !x.S.next && !Object.keys(x.S.deleted_by).length) return x.S.elems
             return x
         }
     }
