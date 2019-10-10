@@ -423,6 +423,8 @@ function run_trial(seed, N, show_debug, trial_num) {
                 var notes = d.peer_notes[p.uid]
                 if (!notes) return
                 var dd = document.createElement('textarea')
+                dd.style.width = '100%'
+                dd.style.height = '100%'
                 dd.value = notes.join('\n')
                 top_part.append(dd)
             })            
@@ -430,6 +432,8 @@ function run_trial(seed, N, show_debug, trial_num) {
             peers_array.forEach((p, i) => {
                 var p = d.peers[p.uid]
                 var dd = document.createElement('textarea')
+                dd.style.width = '100%'
+                dd.style.height = '100%'
                 dd.value = JSON.stringify(p, null, '    ')
                 top_part.append(dd)
             })
