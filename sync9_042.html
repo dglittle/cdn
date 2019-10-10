@@ -1061,6 +1061,16 @@ function sync9_extract_versions(s9, is_anc) {
         changes: [` = ${JSON.stringify(sync9_read(s9, is_anc))}`]
     }]
     Object.keys(s9.T).filter(x => !is_anc(x)).forEach(vid => {
+        
+        
+        
+        // work here
+        if (vid == 'a1') {
+            debugger
+        }
+        
+        
+        
         var ancs = sync9_get_ancestors(s9, {[vid]: true})
         delete ancs[vid]
         var is_anc = x => ancs[x]
