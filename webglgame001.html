@@ -41,7 +41,8 @@ if (true) {
 precision mediump float;
 
 uniform sampler2D u_image;
-uniform float iteration;
+uniform float u_w;
+uniform float u_h;
 
 out vec4 outColor;
 
@@ -49,27 +50,9 @@ float lerp(float t0, float v0, float t1, float v1, float t) {
     return (t - t0) * (v1 - v0) / (t1 - t0) + v0;
 }
 
-float process_neighbor(vec4 us, vec2 d) {
-    vec4 them = texture(u_image, vec2((gl_FragCoord.x + d.x) / float(${W}), (gl_FragCoord.y + d.y) / float(${H})));
-    
-    return -sin(us.x - them.x);
-}
-
 void main() {
-    float dt = 0.15;
-    
-    vec4 t = texture(u_image, vec2(gl_FragCoord.x / float(${W}), gl_FragCoord.y / float(${H})));
+    vec4 t = texture(u_image, vec2(gl_FragCoord.x / u_w, gl_FragCoord.y / u_h));
 
-    t.y += process_neighbor(t, vec2(0.0, -1.0)) * dt;
-    t.y += process_neighbor(t, vec2(1.0, 0.0)) * dt;
-    t.y += process_neighbor(t, vec2(0.0, 1.0)) * dt;
-    t.y += process_neighbor(t, vec2(-1.0, 0.0)) * dt;
-    
-    if (iteration < 1000.0) {
-        t.y *= 1.0 - 1.0/(iteration/3.0 + 1.0);
-    }
-    
-    t.x += t.y * dt;
     outColor = t;
 }
 `)
@@ -114,6 +97,12 @@ if (true) {
         
         var u_image = gl.getUniformLocation(program, 'u_image')
         gl.uniform1i(u_image, 0);
+        
+        var u_w = gl.getUniformLocation(program, 'u_w')
+        gl.uniform1f(u_w, w)
+        
+        var u_h = gl.getUniformLocation(program, 'u_h')
+        gl.uniform1f(u_h, h)
         
         gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
