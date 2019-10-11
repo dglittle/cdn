@@ -37,105 +37,7 @@ if (true) {
     editor.setBehavioursEnabled(false)
     editor.getSession().setMode('ace/mode/c')
     
-    editor.getSession().setValue('hello world')
-
-    document.body.onkeydown = function (e) {
-        if (e.metaKey) {
-            if (e.keyCode == 83 || e.keyCode == 82 || e.keyCode == 13) { // s, r, enter
-                e.preventDefault()
-                
-                alert('hi?')
-                // work here
-            }
-        }
-    }
-}
-
-throw 'blah'
-
-
-
-
-
-var W = 1024
-var H = 1024
-
-var c = document.createElement('canvas')
-c.width = W
-c.height = H
-// c.style.width = c.width / dpr
-// c.style.height = c.height / dpr
-c.style.width = '512px'
-c.style.height = '512px'
-c.style['image-rendering'] = 'pixelated'
-document.body.append(c)
-var gl = c.getContext('webgl2')
-gl.getExtension('EXT_color_buffer_float')
-
-var vs = createShader(gl, gl.VERTEX_SHADER, `#version 300 es
-in vec4 a_position;
-void main() {
-    gl_Position = a_position;
-}
-`)
-
-var fs = createShader(gl, gl.FRAGMENT_SHADER, `#version 300 es
-precision mediump float;
-
-uniform sampler2D u_image;
-
-out vec4 outColor;
-
-float lerp(float t0, float v0, float t1, float v1, float t) {
-    return (t - t0) * (v1 - v0) / (t1 - t0) + v0;
-}
-
-void main() {
-    const float PI = 3.1415926535897932384626433832795;
-    vec3 c = vec3(0.0, 0.0, 0.0);
-    vec4 t = texture(u_image, vec2(gl_FragCoord.x / float(${W}), gl_FragCoord.y / float(${H})));
-    float a = mod(t.r, PI*2.0);
-    
-    
-    
-    // if (a < PI*2.0/3.0) {
-    //     c.r = lerp(0.0, 1.0, PI*2.0/3.0, 0.0, a);
-    //     c.g = lerp(0.0, 0.0, PI*2.0/3.0, 1.0, a);
-    // } else if (a < PI*2.0*2.0/3.0) {
-    //     c.g = lerp(PI*2.0/3.0, 1.0, PI*2.0*2.0/3.0, 0.0, a);
-    //     c.b = lerp(PI*2.0/3.0, 0.0, PI*2.0*2.0/3.0, 1.0, a);
-    // } else {
-    //     c.b = lerp(PI*2.0*2.0/3.0, 1.0, PI*2.0, 0.0, a);
-    //     c.r = lerp(PI*2.0*2.0/3.0, 0.0, PI*2.0, 1.0, a);
-    // }
-    
-    
-    // if (a < PI*2.0/3.0) {
-    //     c.r = lerp(0.0, 1.0, PI*2.0/3.0, 0.0, a);
-    //     c.g = lerp(0.0, 0.0, PI*2.0/3.0, 1.0, a);
-    // } else if (a < PI*2.0*2.0/3.0) {
-    //     c.g = lerp(PI*2.0/3.0, 1.0, PI*2.0*2.0/3.0, 0.0, a);
-    //     c.b = lerp(PI*2.0/3.0, 0.0, PI*2.0*2.0/3.0, 1.0, a);
-    // } else {
-    //     c.b = lerp(PI*2.0*2.0/3.0, 1.0, PI*2.0, 0.0, a);
-    //     c.r = lerp(PI*2.0*2.0/3.0, 0.0, PI*2.0, 1.0, a);
-    // }
-    
-    if (a < 0.0) {
-        a += PI*2.0;
-    }
-    float aa = a / (PI*2.0);
-    
-    outColor = vec4(aa, aa, aa, 1.0);
-    
-    // outColor = vec4((cos(a) + 1.0)/2.0, (sin(a) + 1.0)/2.0, 0.0, 1.0);
-    
-    
-//    outColor = vec4(c, 1.0);
-}
-`)
-
-var fs2 = createShader(gl, gl.FRAGMENT_SHADER, `#version 300 es
+    editor.getSession().setValue(`#version 300 es
 precision mediump float;
 
 uniform sampler2D u_image;
@@ -172,125 +74,84 @@ void main() {
 }
 `)
 
-var program = createProgram(gl, vs, fs)
-gl.useProgram(program)
-var a_position = gl.getAttribLocation(program, 'a_position')
-
-var positionBuffer = gl.createBuffer()
-
-var u_image = gl.getUniformLocation(program, 'u_image')
-gl.uniform1i(u_image, 0);
-
-gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
-gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-    -1, -1,
-    -1, 3,
-    3, -1,
-]), gl.STATIC_DRAW)
-
-gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
-gl.clearColor(0, 0, 0, 0)
-gl.clear(gl.COLOR_BUFFER_BIT)
-
-gl.enableVertexAttribArray(a_position)
-
-gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
-gl.vertexAttribPointer(a_position, 2, gl.FLOAT, false, 0, 0)
-
-var f = new Float32Array(W * H * 4)
-for (var i = 0; i < f.length; i++) {
-    if (i % 4 == 0) f[i] = Math.random() * Math.PI * 2
-    else f[i] = 0
-}
-
-var targetTexture = gl.createTexture()
-gl.activeTexture(gl.TEXTURE0)
-
-gl.bindTexture(gl.TEXTURE_2D, targetTexture)
-gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, W, H, 0, gl.RGBA, gl.FLOAT, f)
-
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
-
-gl.drawArrays(gl.TRIANGLES, 0, 3)
-
-
-
-
-var program2 = createProgram(gl, vs, fs2)
-gl.useProgram(program2)
-
-var iteration_num = 0
-var iteration = gl.getUniformLocation(program2, 'iteration')
-
-
-var a_position = gl.getAttribLocation(program2, 'a_position')
-gl.enableVertexAttribArray(a_position)
-gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
-gl.vertexAttribPointer(a_position, 2, gl.FLOAT, false, 0, 0)
-
-gl.uniform1i(gl.getUniformLocation(program2, 'u_image'), 0);
-
-var targetTexture2 = gl.createTexture()
-//gl.activeTexture(gl.TEXTURE1)
-
-gl.bindTexture(gl.TEXTURE_2D, targetTexture2)
-gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, W, H, 0, gl.RGBA, gl.FLOAT, null)
-
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
-
-
-
-var fb = gl.createFramebuffer()
-gl.bindFramebuffer(gl.FRAMEBUFFER, fb)
-gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, targetTexture2, 0)
-
-var fb2 = gl.createFramebuffer()
-gl.bindFramebuffer(gl.FRAMEBUFFER, fb2)
-gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, targetTexture, 0)
-
-
-
-loop()
-function loop() {
-    
-    for (var i = 0; i < 10; i++) {
-        gl.bindTexture(gl.TEXTURE_2D, targetTexture)
-        
-        gl.bindFramebuffer(gl.FRAMEBUFFER, fb)
-        gl.useProgram(program2)
-        gl.uniform1f(iteration, iteration_num)
-        iteration_num++
-        
-        gl.drawArrays(gl.TRIANGLES, 0, 3)
-        
-        var save = targetTexture
-        targetTexture = targetTexture2
-        targetTexture2 = save
-        
-        var save = fb
-        fb = fb2
-        fb2 = save
-        
+    document.body.onkeydown = function (e) {
+        if (e.metaKey) {
+            if (e.keyCode == 83 || e.keyCode == 82 || e.keyCode == 13) { // s, r, enter
+                e.preventDefault()
+                g_run_shader(editor.getSession().getValue())
+            }
+        }
     }
-    
-    gl.bindTexture(gl.TEXTURE_2D, targetTexture)
-    
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null)
-    gl.useProgram(program)
-    gl.drawArrays(gl.TRIANGLES, 0, 3)
-    
-    //setTimeout(loop, 1000)
-    window.requestAnimationFrame(loop)
 }
 
-
-
+if (true) {
+    var w = window.innerWidth / 2 * dpr
+    var h = w
+    
+    var c = document.createElement('canvas')
+    c.width = w
+    c.height = h
+    c.style.width = c.width / dpr
+    c.style.height = c.height / dpr
+    c.style['image-rendering'] = 'pixelated'
+    right.append(c)
+    var gl = c.getContext('webgl2')
+    gl.getExtension('EXT_color_buffer_float')
+    
+    var vs = createShader(gl, gl.VERTEX_SHADER, `#version 300 es
+    in vec4 a_position;
+    void main() {
+        gl_Position = a_position;
+    }
+    `)
+    
+    g_run_shader = shader_code => {
+        var program = createProgram(gl, vs, shader_code)
+        gl.useProgram(program)
+        var a_position = gl.getAttribLocation(program, 'a_position')
+        
+        var positionBuffer = gl.createBuffer()
+        
+        var u_image = gl.getUniformLocation(program, 'u_image')
+        gl.uniform1i(u_image, 0);
+        
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+            -1, -1,
+            -1, 3,
+            3, -1,
+        ]), gl.STATIC_DRAW)
+        
+        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
+        gl.clearColor(0, 0, 0, 0)
+        gl.clear(gl.COLOR_BUFFER_BIT)
+        
+        gl.enableVertexAttribArray(a_position)
+        
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
+        gl.vertexAttribPointer(a_position, 2, gl.FLOAT, false, 0, 0)
+        
+        var f = new Float32Array(W * H * 4)
+        for (var i = 0; i < f.length; i++) {
+            if (i % 4 == 0) f[i] = Math.random() * Math.PI * 2
+            else f[i] = 0
+        }
+        
+        var targetTexture = gl.createTexture()
+        gl.activeTexture(gl.TEXTURE0)
+        
+        gl.bindTexture(gl.TEXTURE_2D, targetTexture)
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, W, H, 0, gl.RGBA, gl.FLOAT, f)
+        
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
+        
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+        gl.drawArrays(gl.TRIANGLES, 0, 3)        
+    }
+}
 
 function createShader(gl, type, source) {
     var shader = gl.createShader(type)
