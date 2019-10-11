@@ -1357,6 +1357,15 @@ function sync9_add_version(x, vid, parents, changes, is_anc) {
     
     changes.forEach(change => {
         var parse = sync9_parse_change(change)
+        
+        
+        
+        // work here
+        if (deep_equals(parse.keys, ['a', 'b'])) {
+            debugger
+        }
+        
+        
         var cur = x.val
         if (!cur || typeof(cur) != 'object' || cur.t == 'lit')
             cur = x.val = {t: 'val', S: sync9_create_space_dag_node(null, [cur])}
