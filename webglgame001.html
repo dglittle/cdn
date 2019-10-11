@@ -39,15 +39,16 @@ if (true) {
     
     editor.getSession().setValue('hello world')
 
-    $('body').keydown(function (e) {
+    document.body.onkeydown = function (e) {
         if (e.metaKey) {
             if (e.keyCode == 83 || e.keyCode == 82 || e.keyCode == 13) { // s, r, enter
                 e.preventDefault()
                 
+                alert('hi?')
                 // work here
             }
         }
-    })
+    }
 }
 
 throw 'blah'
