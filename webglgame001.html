@@ -91,7 +91,7 @@ if (true) {
     g_run_shader = shader_code => {
         var fs = createShader(gl, gl.FRAGMENT_SHADER, shader_code)
         
-        var program = createProgram(gl, vs, )
+        var program = createProgram(gl, vs, fs)
         gl.useProgram(program)
         var a_position = gl.getAttribLocation(program, 'a_position')
         
