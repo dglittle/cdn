@@ -1160,7 +1160,7 @@ function sync9_prune2(x, has_everyone_whos_seen_a_seen_b, has_everyone_whos_seen
         if (x.t == 'val') {
             sync9_space_dag_prune2(x.S, has_everyone_whos_seen_a_seen_b, seen_nodes)
             sync9_trav_space_dag(x.S, () => true, node => {
-                node.elems = node.elems.map(rec)
+                node.elems = node.elems.slice(0, 1).map(rec)
             }, true)
             if (x.S.nexts.length == 0 && !x.S.next && x.S.elems.length == 1 && is_lit(x.S.elems[0])) return x.S.elems[0]
             return x
@@ -1170,7 +1170,7 @@ function sync9_prune2(x, has_everyone_whos_seen_a_seen_b, has_everyone_whos_seen
             sync9_trav_space_dag(x.S, () => true, node => {
                 node.elems = node.elems.map(rec)
             }, true)
-            if (x.S.nexts.length == 0 && !x.S.next && x.S.elems.every(is_lit)) return {t: 'lit', S: x.S.elems.map(get_lit)}
+            if (x.S.nexts.length == 0 && !x.S.next && x.S.elems.every(is_lit) && !Object.keys(x.S.deleted_by).length) return {t: 'lit', S: x.S.elems.map(get_lit)}
             return x
         }
         if (x.t == 'obj') {
