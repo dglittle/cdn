@@ -52,4 +52,8 @@ var c = D.firstChild
 var g = c.getContext('2d')
 d1.append(c)
 
+function lerp(t0, v0, t1, v1, t) {
+    return (t - t0) * (v1 - v0) / (t1 - t0) + v0
+}
+
 </script>
