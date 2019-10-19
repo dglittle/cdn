@@ -32,7 +32,13 @@ editor.setOptions({
     enableLiveAutocompletion: true
 })
 editor.getSession().setMode('ace/mode/javascript')
-editor.getSession().setValue('hello world')
+editor.getSession().setValue(`
+g.beginPath()
+g.moveTo(0, 0)
+g.lineTo(c.width, c.height)
+g.strokeStyle = 'red'
+g.stroke()
+`)
 
 document.body.onkeydown = function (e) {
     if ((e.shiftKey || e.ctrlKey || e.metaKey) && ((e.keyCode == 83 && !e.shiftKey) || e.keyCode == 13)) {
