@@ -34,6 +34,13 @@ editor.setOptions({
 editor.getSession().setMode('ace/mode/javascript')
 editor.getSession().setValue('hello world')
 
+document.body.onkeydown = function (e) {
+    if ((e.shiftKey || e.ctrlKey || e.metaKey) && ((e.keyCode == 83 && !e.shiftKey) || e.keyCode == 13)) {
+        e.preventDefault()
+        eval(editor.getSession().getValue())
+    }
+}
+
 D.innerHTML = `<canvas style="width:${image_size_px};height:${image_size_px}" width="${image_size}" height="${image_size}"></canvas>`
 var c = D.firstChild
 var g = c.getContext('2d')
