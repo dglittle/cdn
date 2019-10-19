@@ -694,9 +694,95 @@ function draw_space_dag(c, g, S, x, y) {
 
 
 
+var node = init_node()
+
+function init_node() {
+    var node = () => {}
+    
+    node.id = sync9_guid()
+    node.peers = {}
+    node.keys = {}
+    
+    node.connect = from_peer => {
+        node.peers[from_peer.id] = from_peer
+    }
+    
+    // t = {version, parents, from_peer}
+    
+    function getSymetricPeers(k) {
+        return Object.entries(k.peers).filter(e => e[1]).map(e => node.peers[e[0]])
+    }
+
+    node.set = (key, patches, t, joiner_num) => {
+        var k = node.keys(key)
+        if (!t.from_peer || !k.s9.T[t.version] || (joiner_num > k.joiners[t.version])) {
+            sync9_add_version(k.s9, t.version, t.parents, patches)
+            k.phase_one[t.version] = {origin: t.from_peer, count: getSymetricPeers(k).length - (t.from_peer ? 1 : 0)}
+            if (joiner_num) k.joiners[t.version] = joiner_num
+            Object.keys(k.peers).forEach(p => {
+                p = node.peers[p]
+                if (p.id != t.from_peer) p.set(key, patches, {version: t.version, parents: t.parents, from_peer: node.id}, joiner_num)
+            })
+        } else if (k.phase_one[t.version] && (joiner_num == k.joiners[t.version])) {
+            k.phase_one[t.version].count--
+        }
+        check_ack_count(key, t.version)
+    }
+
+    node.get = (key, t, conn_id) => {
+        var k = node.keys(key)
+        if (conn_id && !k.peers[t.from_peer]) {
+            node.peers[t.from_peer].get(key, {from_peer: node.id}, conn_id)
+        }
+        k.peers[t.from_peer] = conn_id || false
+        
+        var vs = (Object.keys(k.s9.T).length > 0) ? sync9_extract_versions(k.s9, x => false) : []
+        var fs = Object.values(k.fissures)
+        node.peers[t.from_peer].multiset(key, vs, fs, null, null, {from_peer: node.id})
+    }
+
+
+
+    
+    return node
+}
+
+
+node.delete(key, t)
+node.forget(key, t) // version is not used
+node.ack(key, valid: {undefined/local/global/abort}, seen: {undefined/local/global}, t) // parents on t is not used
+node.disconnected(name, versions, parents) // The peer is in the name
+node.multiset(
+set_of_set(version,parents,patches),
+set_of_disconnected(name,versions,parents),
+conn_leaves, min_leaves, t)
+
+
+node(key).on_set = (key, val/patch, t) => // Called on each set()
+node(key).on_get = (key, t) => // Called on each get()
+node(key).on_delete = (key, t) => // Called on each delete()
+node(key).on_forget = (key, t) => // Called on each forget()
+node(key).on_disconnected = (name, versions, parents) => // Called on each disconnected
+node(key).on_connect = (name, depends_on) => // Called on each reconnect
+node(key).on_ack = (key, valid, seen, t) => // Called on each ack
+
 
 
 function sync9_create_peer(p_funcs) {
+    
+    
+    
+    
+    
+    work here
+    
+    
+    
+    
+    
+    
+    
+    
     var self = {}
     self.uid = sync9_guid()
     self.s9 = sync9_create()
