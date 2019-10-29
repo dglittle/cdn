@@ -13,14 +13,14 @@ function main() {
     
     var max_size = 0
     
-    for (var i = (special_i >= 0) ? special_i : 0; i < 1000; i++) {
+    for (var i = (special_i >= 0) ? special_i : 0; i < 300; i++) {
         if ((special_i < 0) && (i % 100 == 0)) {
             console.log('TRIAL: ' + i + ` max_size:${max_size}`)
             max_size = 0
         }
         
         try {
-            var size = run_trial('iiiifIIiiiEiiiiiEEf:' + i, 1000, special_i >= 0, i)
+            var size = run_trial('iiiifIIiiiEiiiiiEEf:' + i, 300, special_i >= 0, i)
             if (size > max_size) max_size = size
         } catch (e) {
             console.log('TRIAL: ' + i)
