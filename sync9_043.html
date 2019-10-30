@@ -49,7 +49,7 @@ function run_trial(seed, N, show_debug, trial_num) {
             function def_func(key) {
                 m[key] = function () {
                     var args = [...arguments].map(x => (x != null) ? JSON.parse(JSON.stringify(x)) : null)
-                    if (!p.conns[args[0].id]) throw 'you cannot talk to them!'
+                    if ((key != 'get') && !p.conns[args[0].id]) throw 'you cannot talk to them!'
                     notes.push('SEND: ' + key + ' from:' + p.pid + ' to:' + JSON.stringify(args[0].pid) + args.slice(1).map(x => ' ' + JSON.stringify(x)))
                     if (show_debug) console.log(notes)
                     peers[args[0].pid].incoming.push([p.pid, () => {
@@ -66,9 +66,7 @@ function run_trial(seed, N, show_debug, trial_num) {
             
             p.connect = (pid, alpha) => {
                 if (alpha) {
-                    var id = sync9_guid()
-                    p.conns[id] = {id, pid}
-                    m.get(p.conns[id])
+                    m.get({id: sync9_guid(), pid})
                 }
             }
             
