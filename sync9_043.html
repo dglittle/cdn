@@ -48,22 +48,7 @@ function run_trial(seed, N, show_debug, trial_num) {
             var m = {}
             function def_func(key) {
                 m[key] = function () {
-                    
-                    try {
-                    
-                    var args = [...arguments].map(x => JSON.parse(JSON.stringify(x)))
-                    
-                    } catch (e) {
-                    
-                        var args = [...arguments].map(x => JSON.stringify(x))
-                        console.log(args)
-                    
-                        debugger
-                    }
-                    
-                    
-                    
-                    
+                    var args = [...arguments].map(x => (x != null) ? JSON.parse(JSON.stringify(x)) : null)
                     if (!p.conns[args[0].id]) throw 'you cannot talk to them!'
                     notes.push('SEND: ' + key + ' from:' + p.pid + ' to:' + JSON.stringify(args[0].pid) + args.slice(1).map(x => ' ' + JSON.stringify(x)))
                     if (show_debug) console.log(notes)
