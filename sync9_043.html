@@ -163,7 +163,7 @@ function run_trial(seed, N, show_debug, trial_num) {
                 Object.values(other_p.conns).forEach(c => {
                     if (c.pid == p.pid) {
                         disconnect = true
-                        p.fissure(c)
+                        other_p.fissure(c)
                     }
                 })
                 if (disconnect) {
