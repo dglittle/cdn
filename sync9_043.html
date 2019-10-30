@@ -221,7 +221,7 @@ function run_trial(seed, N, show_debug, trial_num) {
     }
     
     var tt = 0
-    for (var t = 0; t < 5; t++) {
+    for (var t = 0; t < 50; t++) {
         Object.values(peers).forEach(p => {
             while (p.incoming.length > 0) {
                 tt++
