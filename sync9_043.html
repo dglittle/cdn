@@ -70,7 +70,7 @@ function run_trial(seed, N, show_debug, trial_num) {
             
             p.connect = (pid, alpha) => {
                 if (alpha) {
-                    m.get({id: sync9_guid(), pid})
+                    m.get({id: sync9_guid(), pid}, true)
                 }
             }
             
@@ -718,9 +718,9 @@ function sync9_create_peer(conn_funcs) {
     //      id: connection id,
     //      pid: (optional) peer id, implies symmetric connection
     // }
-    self.get = (conn) => {
+    self.get = (conn, initial) => {
         self.conns[conn.id] = conn
-        if (conn.pid) conn_funcs.get(conn)
+        if (conn.pid && initial) conn_funcs.get(conn, false)
         var vs = (Object.keys(self.s9.T).length > 0) ? sync9_extract_versions(self.s9, x => false) : []
         var fs = Object.values(self.fissures)
         conn_funcs.set_multi(conn, vs, fs)
