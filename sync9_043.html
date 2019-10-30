@@ -45,36 +45,30 @@ function run_trial(seed, N, show_debug, trial_num) {
             var p = null
             var m = {}
             function def_func(key) {
-                m[key] = (a, b, c, d, e, f) => {
-                    if (!p.peers[a]) {
-                        throw 'you cannot talk to them!'
-                    }
-                    a = a && JSON.parse(JSON.stringify(a))
-                    b = b && JSON.parse(JSON.stringify(b))
-                    c = c && JSON.parse(JSON.stringify(c))
-                    d = d && JSON.parse(JSON.stringify(d))
-                    e = e && JSON.parse(JSON.stringify(e))
-                    f = f && JSON.parse(JSON.stringify(f))
-                    notes.push('SEND: ' + key + ' from:' + p.uid + ' to:' + JSON.stringify(a) + ' ' + JSON.stringify(b) + ' ' + JSON.stringify(c) + ' ' + JSON.stringify(d) + ' ' + JSON.stringify(e) + ' ' + JSON.stringify(f))
+                m[key] = function () {
+                    var args = [...arguments].map(x => JSON.parse(JSON.stringify(x)))
+                    if (!p.conns[args[0].id]) throw 'you cannot talk to them!'
+                    notes.push('SEND: ' + key + ' from:' + p.pid + ' to:' + JSON.stringify(args[0].pid) + args.slice(1).map(x => ' ' + JSON.stringify(x)))
                     if (show_debug) console.log(notes)
-                    peers[a].incoming.push([p.uid, () => {
-                        notes.push('RECV: ' + key + ' from:' + p.uid + ' to:' + JSON.stringify(a) + ' ' + JSON.stringify(b) + ' ' + JSON.stringify(c) + ' ' + JSON.stringify(d) + ' ' + JSON.stringify(e) + ' ' + JSON.stringify(f))
+                    peers[args[0].pid].incoming.push([p.pid, () => {
+                        notes.push('RECV: ' + key + ' from:' + p.pid + ' to:' + JSON.stringify(args[0].pid) + args.slice(1).map(x => ' ' + JSON.stringify(x)))
                         if (show_debug) console.log(notes)
-                        peers[a][key](p.uid, b, c, d, e, f)
+                        peers[args[0].pid][key]({id: args[0].id, pid: p.pid}, ...args.slice(1))
                     }])
                 }
             }
-            Object.keys({
-                get: true,
-                set: true,
-                set_multi: true,
-                ack: true,
-                full_ack: true,
-                fissure: true
-            }).forEach(def_func)
+            ;['get', 'set', 'set_multi', 'ack', 'full_ack', 'fissure'].forEach(def_func)
             p = sync9_create_peer(m)
             p.incoming = []
-            peers[p.uid] = p
+            peers[p.pid] = p
+            
+            p.connect = (pid, alpha) => {
+                if (alpha) {
+                    var id = sync9_guid()
+                    p.conns[id] = {id, pid}
+                    m.get(p.conns[id])
+                }
+            }
             
             if (i == 0) {
                 p.letters = 'abcdefghijklmnopqrstuvwxyz'
@@ -102,32 +96,30 @@ function run_trial(seed, N, show_debug, trial_num) {
 
     for (var p1 = 0; p1 < n_peers; p1++) {
         for (var p2 = p1 + 1; p2 < n_peers; p2++) {
-            if (!peers_array[p1].peers[peers_array[p2].uid]) {
-                notes = ['connecting ' + p1 + ':' + peers_array[p1].uid + ' and ' + p2 + ':' + peers_array[p2].uid]
-                
-                var alpha = Math.random() < 0.5
-                peers_array[p1].connect(peers_array[p2].uid, alpha)
-                peers_array[p2].connect(peers_array[p1].uid, !alpha)
-                
-                if (debug_frames) debug_frames.push({
-                    t: -1,
-                    peer_notes: {
-                        [peers_array[p1].uid]: notes,
-                        [peers_array[p2].uid]: notes
-                    },
-                    peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
-                })
-            }
+            notes = ['connecting ' + p1 + ':' + peers_array[p1].pid + ' and ' + p2 + ':' + peers_array[p2].pid]
+            
+            var alpha = Math.random() < 0.5
+            peers_array[p1].connect(peers_array[p2].pid, alpha)
+            peers_array[p2].connect(peers_array[p1].pid, !alpha)
+            
+            if (debug_frames) debug_frames.push({
+                t: -1,
+                peer_notes: {
+                    [peers_array[p1].pid]: notes,
+                    [peers_array[p2].pid]: notes
+                },
+                peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
+            })
         }
     }
 
     if (true) {
         let p = peers_array[0]
-        p.local_set('root', {}, [])
+        p.set(null, 'root', {}, [])
         
         if (debug_frames) debug_frames.push({
             t: -1,
-            peer_notes: {[p.uid]: 'initial edit'},
+            peer_notes: {[p.pid]: 'initial edit'},
             peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
         })
     }
@@ -149,23 +141,29 @@ function run_trial(seed, N, show_debug, trial_num) {
                         p.letters_i = 0
                     }
                     var e = create_random_edit(p.s9, p.letters[p.letters_i++])
-                    p.local_set(e.vid, e.parents, e.changes)
+                    p.set(null, e.vid, e.parents, e.changes)
                 }
             } else {
                 var other_p = p
                 while (other_p == p) {
                     other_p = peers_array[Math.floor(rand() * n_peers)]
                 }
-                if (p.peers[other_p.uid]) {
-                    notes.push(' disconnect ' + p.uid + ' and ' + other_p.uid)
-                    p.disconnect(other_p.uid)
-                    p.incoming = p.incoming.filter(x => x[0] != other_p.uid)
-                    other_p.disconnect(p.uid)
-                    other_p.incoming = other_p.incoming.filter(x => x[0] != p.uid)
+                var disconnect = false
+                Object.values(p.conns).forEach(c => {
+                    if (c.pid == other_p.pid) {
+                        disconnect = true
+                        p.fissure(c)
+                        other_p.fissure({id: c.id, pid: p.pid})
+                    }
+                })
+                if (disconnect) {
+                    notes.push(' disconnect ' + p.pid + ' and ' + other_p.pid)
+                    p.incoming = p.incoming.filter(x => x[0] != other_p.pid)
+                    other_p.incoming = other_p.incoming.filter(x => x[0] != p.pid)
                 } else {
                     var alpha = Math.random() < 0.5
-                    p.connect(other_p.uid, alpha)
-                    other_p.connect(p.uid, !alpha)
+                    p.connect(other_p.pid, alpha)
+                    other_p.connect(p.pid, !alpha)
                 }
             }
         } else {
@@ -187,29 +185,31 @@ function run_trial(seed, N, show_debug, trial_num) {
         }
         
         if (show_debug)
-            console.log('peer: ' + p.uid + ' -> ' + JSON.stringify(sync9_read(p.s9)))
+            console.log('peer: ' + p.pid + ' -> ' + JSON.stringify(sync9_read(p.s9)))
             
         if (debug_frames) debug_frames.push({
             t: t,
-            peer_notes: {[p.uid]: notes},
+            peer_notes: {[p.pid]: notes},
             peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
         })
     }
 
     for (var p1 = 0; p1 < n_peers; p1++) {
+        var p1_p = peers_array[p1]
         for (var p2 = p1 + 1; p2 < n_peers; p2++) {
-            if (!peers_array[p1].peers[peers_array[p2].uid]) {
-                notes = ['connecting ' + p1 + ':' + peers_array[p1].uid + ' and ' + p2 + ':' + peers_array[p2].uid]
+            var p2_p = peers_array[p2]
+            if (!Object.values(p1_p.conns).some(x => x.pid == p2_p.pid) && !Object.values(p2_p.conns).some(x => x.pid == p1_p.pid)) {
+                notes = ['connecting ' + p1 + ':' + p1_p.pid + ' and ' + p2 + ':' + p2_p.pid]
                 
                 var alpha = Math.random() < 0.5
-                peers_array[p1].connect(peers_array[p2].uid, alpha)
-                peers_array[p2].connect(peers_array[p1].uid, !alpha)
+                peers_array[p1].connect(p2_p.pid, alpha)
+                peers_array[p2].connect(p1_p.pid, !alpha)
                 
                 if (debug_frames) debug_frames.push({
                     t: -1,
                     peer_notes: {
-                        [peers_array[p1].uid]: notes,
-                        [peers_array[p2].uid]: notes
+                        [p1_p.pid]: notes,
+                        [p2_p.pid]: notes
                     },
                     peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
                 })
@@ -230,7 +230,7 @@ function run_trial(seed, N, show_debug, trial_num) {
                 
                 if (debug_frames) debug_frames.push({
                     tt: tt,
-                    peer_notes: {[p.uid]: notes},
+                    peer_notes: {[p.pid]: notes},
                     peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
                 })
             }
@@ -261,7 +261,7 @@ function run_trial(seed, N, show_debug, trial_num) {
                 
                 if (debug_frames) debug_frames.push({
                     tt: tt,
-                    peer_notes: {[p.uid]: notes},
+                    peer_notes: {[p.pid]: notes},
                     peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
                 })
             } else {
@@ -434,7 +434,7 @@ function run_trial(seed, N, show_debug, trial_num) {
             top_part.style['grid-template-rows'] = '1fr 2fr'
             
             peers_array.forEach((p, i) => {
-                var notes = d.peer_notes[p.uid]
+                var notes = d.peer_notes[p.pid]
                 if (notes && typeof(notes) == 'object') notes = notes.join('\n\n')
                 if (!notes) notes = 'N/A'
                 var dd = document.createElement('textarea')
@@ -474,7 +474,7 @@ function run_trial(seed, N, show_debug, trial_num) {
             ;[[0, 1], [1, 0], [1, 2], [2, 1], [2, 0], [0, 2]].forEach(([a, b]) => {
                 g.beginPath()
                 g.lineWidth = 3
-                g.strokeStyle = d.peers[a].peers[d.peers[b].uid] ? (d.peers[a].peers[d.peers[b].uid].b ? 'green' : 'orange') : 'red'
+                g.strokeStyle = Object.values(d.peers[a].conns).some(x => x.pid == d.peers[b].pid) : 'green' : 'red'
                 g.moveTo(peer_locs[a][0], peer_locs[a][1])
                 g.lineTo(
                     lerp(0, peer_locs[a][0], 1, peer_locs[b][0], 0.5),
