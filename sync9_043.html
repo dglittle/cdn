@@ -116,13 +116,13 @@ function run_trial(seed, N, show_debug, trial_num) {
     }
     
     if (true) {
-        notes = []
+        notes = [''initial edit'']
         let p = peers_array[0]
         p.set(null, 'root', {}, [])
         
         if (debug_frames) debug_frames.push({
             t: -1,
-            peer_notes: {[p.pid]: 'initial edit'},
+            peer_notes: {[p.pid]: notes},
             peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
         })
     }
