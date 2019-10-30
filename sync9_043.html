@@ -199,7 +199,7 @@ function run_trial(seed, N, show_debug, trial_num) {
         var p1_p = peers_array[p1]
         for (var p2 = p1 + 1; p2 < n_peers; p2++) {
             var p2_p = peers_array[p2]
-            if (!Object.values(p1_p.conns).some(x => x.pid == p2_p.pid) && !Object.values(p2_p.conns).some(x => x.pid == p1_p.pid)) {
+            if (!Object.values(p1_p.conns).some(x => x.pid == p2_p.pid) && !p1_p.incoming.some(x => x[0] == p2_p.pid) && !Object.values(p2_p.conns).some(x => x.pid == p1_p.pid) && !p2_p.incoming.some(x => x[0] == p1_p.pid)) {
                 notes = ['connecting ' + p1 + ':' + p1_p.pid + ' and ' + p2 + ':' + p2_p.pid]
                 
                 var alpha = Math.random() < 0.5
