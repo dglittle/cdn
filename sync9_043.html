@@ -162,6 +162,7 @@ function run_trial(seed, N, show_debug, trial_num) {
                     p.incoming = p.incoming.filter(x => x[0] != other_p.pid)
                     other_p.incoming = other_p.incoming.filter(x => x[0] != p.pid)
                 } else {
+                    notes.push(' connect ' + p.pid + ' and ' + other_p.pid)
                     var alpha = Math.random() < 0.5
                     p.connect(other_p.pid, alpha)
                     other_p.connect(p.pid, !alpha)
