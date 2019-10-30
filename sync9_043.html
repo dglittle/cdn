@@ -582,7 +582,7 @@ function draw_time_dag(c, g, peer, s9, x, y, w, h, r) {
             if (!s9.T[v]) return
             g.beginPath()
             
-            Math.randomSeed(f.salt)
+            Math.randomSeed(f.conn)
             g.strokeStyle = '#' + Math.random().toString(16).slice(2, 8)
             
             var node_pos = get_node_pos(vs[v])
