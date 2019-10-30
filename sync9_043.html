@@ -702,10 +702,7 @@ function init_node() {
     node.id = sync9_guid()
     node.peers = {}
     node.keys = {}
-    
-    node.connect = from_peer => {
-        node.peers[from_peer.id] = from_peer
-    }
+
     
     // t = {version, parents, from_peer}
     
@@ -730,6 +727,16 @@ function init_node() {
     }
 
     node.get = (key, t, conn_id) => {
+        
+        work here : make it do what connect did
+        
+            
+    node.connect = from_peer => {
+        node.peers[from_peer.id] = from_peer
+    }
+    
+    
+        
         var k = node.keys(key)
         if (conn_id && !k.peers[t.from_peer]) {
             node.peers[t.from_peer].get(key, {from_peer: node.id}, conn_id)
@@ -769,20 +776,6 @@ node(key).on_ack = (key, valid, seen, t) => // Called on each ack
 
 
 function sync9_create_peer(p_funcs) {
-    
-    
-    
-    
-    
-    work here
-    
-    
-    
-    
-    
-    
-    
-    
     var self = {}
     self.uid = sync9_guid()
     self.s9 = sync9_create()
@@ -793,18 +786,17 @@ function sync9_create_peer(p_funcs) {
     self.phase_one = {}
     self.joiners = {}
     
-    self.connect = (pid, alpha) => {
-        if (alpha) {
-            self.peers[pid] = {salt: sync9_guid()}
-            p_funcs.get(pid, self.uid, self.peers[pid].salt)
-        } else {
-            self.peers[pid] = {}
-        }
+    self.get = (pid, salt) => {
+        self.peers[pid] = {salt}
+        if (salt) p_funcs.get(pid, self.uid)
+        var vs = (Object.keys(self.s9.T).length > 0) ? sync9_extract_versions(self.s9, x => false) : []
+        var fs = Object.values(self.fissures)
+        p_funcs.set_multi(pid, vs, fs)
     }
     
     self.disconnect = pid => {
         if (!self.peers[pid]) return
-        if (self.peers[pid].b) {
+        if (self.peers[pid].salt) {
             var nodes = {}
             var ack_nodes = sync9_get_ancestors(self.s9, self.ack_leaves)
             Object.keys(self.s9.T).forEach(v => {
@@ -820,7 +812,7 @@ function sync9_create_peer(p_funcs) {
             
             self.fissure(pid, {
                 a: self.uid,
-                b: self.peers[pid].b,
+                b: pid,
                 salt: self.peers[pid].salt,
                 nodes,
                 parents
@@ -830,7 +822,7 @@ function sync9_create_peer(p_funcs) {
     }
     
     function get_true_peers() {
-        return Object.entries(self.peers).filter(x => x[1].b).map(x => x[0])
+        return Object.entries(self.peers).filter(x => x[1].salt).map(x => x[0])
     }
     
     self.fissure = (pid, fissure) => {
@@ -854,17 +846,6 @@ function sync9_create_peer(p_funcs) {
                 })
             }
         }
-    }
-    
-    self.get = (pid, uid, salt) => {
-        self.peers[pid].b = uid
-        if (salt) {
-            self.peers[pid].salt = salt
-            p_funcs.get(pid, self.uid)
-        }
-        var vs = (Object.keys(self.s9.T).length > 0) ? sync9_extract_versions(self.s9, x => false) : []
-        var fs = Object.values(self.fissures)
-        p_funcs.set_multi(pid, vs, fs)
     }
     
     self.set_multi = (pid, vs, fs, conn_leaves, min_leaves) => {
@@ -954,7 +935,7 @@ function sync9_create_peer(p_funcs) {
         self.phase_one = {}
         
         if (new_vs.length > 0 || new_fs.length > 0) {
-            get_true_peers().forEach(p => {
+            Object.keys(self.peers).forEach(p => {
                 if (p != pid) p_funcs.set_multi(p, new_vs, new_fs, conn_leaves, min_leaves)
             })
         }
