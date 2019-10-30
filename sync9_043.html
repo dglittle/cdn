@@ -475,7 +475,7 @@ function run_trial(seed, N, show_debug, trial_num) {
             ;[[0, 1], [1, 0], [1, 2], [2, 1], [2, 0], [0, 2]].forEach(([a, b]) => {
                 g.beginPath()
                 g.lineWidth = 3
-                g.strokeStyle = Object.values(d.peers[a].conns).some(x => x.pid == d.peers[b].pid) ? 'green' : 'red'
+                g.strokeStyle = Object.values(d.peers[a].conns).some(x => x.pid == d.peers[b].pid) ? 'green' : d.peers[b].incoming.some(x => x[0] == d.peers[a].pid) : 'red'
                 g.moveTo(peer_locs[a][0], peer_locs[a][1])
                 g.lineTo(
                     lerp(0, peer_locs[a][0], 1, peer_locs[b][0], 0.5),
