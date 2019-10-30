@@ -61,6 +61,10 @@ function run_trial(seed, N, show_debug, trial_num) {
             }
             ;['get', 'set', 'set_multi', 'ack', 'full_ack', 'fissure'].forEach(def_func)
             p = sync9_create_peer(m)
+            
+            // work here
+            p.pid = 'P' + (i + 1)
+            
             p.incoming = []
             peers[p.pid] = p
             
