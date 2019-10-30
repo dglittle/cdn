@@ -730,14 +730,14 @@ function sync9_create_peer(conn_funcs) {
     self.set = (conn, vid, parents, changes, joiner_num) => {
         if (!conn || !self.s9.T[vid] || (joiner_num > self.joiners[vid])) {
             sync9_add_version(self.s9, vid, parents, changes)
+            self.phase_one[vid] = {origin: conn, count: get_symmetric_conns().length - (conn ? 1 : 0)}
+            if (joiner_num) self.joiners[vid] = joiner_num
+            Object.values(self.conns).forEach(c => {
+                if (!conn || (c.id != conn.id)) conn_funcs.set(c, vid, parents, changes, joiner_num)
+            })
         } else if (self.phase_one[vid] && (joiner_num == self.joiners[vid])) {
             self.phase_one[vid].count--
         }
-        self.phase_one[vid] = {origin: conn, count: get_symmetric_conns().length}
-        if (joiner_num) self.joiners[vid] = joiner_num
-        Object.values(self.conns).forEach(c => {
-            if (!conn || (c.id != conn.id)) conn_funcs.set(c, vid, parents, changes, joiner_num)
-        })
         check_ack_count(vid)
     }
 
