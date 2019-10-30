@@ -723,7 +723,7 @@ function sync9_create_peer(conn_funcs) {
     }
     
     function get_symmetric_conns() {
-        return Object.values(self.conn).filter(c => c.pid)
+        return Object.values(self.conns).filter(c => c.pid)
     }
     
     self.set = (conn, vid, parents, changes, joiner_num) => {
