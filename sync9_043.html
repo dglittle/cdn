@@ -206,6 +206,8 @@ function run_trial(seed, N, show_debug, trial_num) {
                 var alpha = Math.random() < 0.5
                 peers_array[p1].connect(p2_p.pid, alpha)
                 peers_array[p2].connect(p1_p.pid, !alpha)
+    
+    debugger
                 
                 if (debug_frames) debug_frames.push({
                     t: -1,
