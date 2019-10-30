@@ -9,7 +9,7 @@
 
 function main() {
     
-    var special_i = 100
+    var special_i = -1
     
     var max_size = 0
     
@@ -20,7 +20,7 @@ function main() {
         }
         
         try {
-            var size = run_trial('iiiifIIiiiEiiiiiEEf:' + i, 1000, special_i >= 0, i)
+            var size = run_trial('iiiifIIiiiEiiiiiEEf:' + i, 300, special_i >= 0, i)
             if (size > max_size) max_size = size
         } catch (e) {
             console.log('TRIAL: ' + i)
@@ -42,7 +42,36 @@ function run_trial(seed, N, show_debug, trial_num) {
     var peers = {}
     for (var i = 0; i < n_peers; i++) {
         ;(() => {
-            var p = null
+            var p = sync9_create_peer(m)
+            p.create_conn = () => {
+                var c = {
+                    id: sync9_guid(),
+                    pid: p.pid,
+                }
+                function def_func(key) {
+                    c[key] = function () {
+                        var args = Array.from(arguments).map(x => JSON.parse(JSON.stringify(x)))
+                        if (!p.conns[args[0]]) {
+                            throw 'you cannot talk to them!'
+                        }
+                        notes.push('SEND: ' + key + ' from:' + p.pid + ' to:' + JSON.stringify(args[0]) + args.slice(1).map(x => ' ' + JSON.stringify(x))
+                        if (show_debug) console.log(notes)
+                        peers[args[0]].incoming.push([p.pid, () => {
+                            notes.push('RECV: ' + key + ' from:' + p.pid + ' to:' + JSON.stringify(args[0]) + args.slice(1).map(x => ' ' + JSON.stringify(x))
+                            if (show_debug) console.log(notes)
+                            peers[args[0]][key](c, ...args.slice(1))
+                        }])
+                    }
+                }
+                ;['get', 'set', 'set_multi', 'ack', 'full_ack', 'fissure'].forEach(def_func)
+                return c
+            }
+            p.connect = (pid, alpha) => {
+                if (alpha) peers[pid].get(p.create_conn())
+            }
+            
+            
+            
             var m = {}
             function def_func(key) {
                 m[key] = (a, b, c, d, e, f) => {
@@ -55,12 +84,12 @@ function run_trial(seed, N, show_debug, trial_num) {
                     d = d && JSON.parse(JSON.stringify(d))
                     e = e && JSON.parse(JSON.stringify(e))
                     f = f && JSON.parse(JSON.stringify(f))
-                    notes.push('SEND: ' + key + ' from:' + p.uid + ' to:' + JSON.stringify(a) + ' ' + JSON.stringify(b) + ' ' + JSON.stringify(c) + ' ' + JSON.stringify(d) + ' ' + JSON.stringify(e) + ' ' + JSON.stringify(f))
+                    notes.push('SEND: ' + key + ' from:' + p.pid + ' to:' + JSON.stringify(a) + ' ' + JSON.stringify(b) + ' ' + JSON.stringify(c) + ' ' + JSON.stringify(d) + ' ' + JSON.stringify(e) + ' ' + JSON.stringify(f))
                     if (show_debug) console.log(notes)
-                    peers[a].incoming.push([p.uid, () => {
-                        notes.push('RECV: ' + key + ' from:' + p.uid + ' to:' + JSON.stringify(a) + ' ' + JSON.stringify(b) + ' ' + JSON.stringify(c) + ' ' + JSON.stringify(d) + ' ' + JSON.stringify(e) + ' ' + JSON.stringify(f))
+                    peers[a].incoming.push([p.pid, () => {
+                        notes.push('RECV: ' + key + ' from:' + p.pid + ' to:' + JSON.stringify(a) + ' ' + JSON.stringify(b) + ' ' + JSON.stringify(c) + ' ' + JSON.stringify(d) + ' ' + JSON.stringify(e) + ' ' + JSON.stringify(f))
                         if (show_debug) console.log(notes)
-                        peers[a][key](p.uid, b, c, d, e, f)
+                        peers[a][key](p.pid, b, c, d, e, f)
                     }])
                 }
             }
@@ -74,7 +103,7 @@ function run_trial(seed, N, show_debug, trial_num) {
             }).forEach(def_func)
             p = sync9_create_peer(m)
             p.incoming = []
-            peers[p.uid] = p
+            peers[p.pid] = p
             
             if (i == 0) {
                 p.letters = 'abcdefghijklmnopqrstuvwxyz'
@@ -102,18 +131,18 @@ function run_trial(seed, N, show_debug, trial_num) {
 
     for (var p1 = 0; p1 < n_peers; p1++) {
         for (var p2 = p1 + 1; p2 < n_peers; p2++) {
-            if (!peers_array[p1].peers[peers_array[p2].uid]) {
-                notes = ['connecting ' + p1 + ':' + peers_array[p1].uid + ' and ' + p2 + ':' + peers_array[p2].uid]
+            if (!peers_array[p1].peers[peers_array[p2].pid]) {
+                notes = ['connecting ' + p1 + ':' + peers_array[p1].pid + ' and ' + p2 + ':' + peers_array[p2].pid]
                 
                 var alpha = Math.random() < 0.5
-                peers_array[p1].connect(peers_array[p2].uid, alpha)
-                peers_array[p2].connect(peers_array[p1].uid, !alpha)
+                peers_array[p1].connect(peers_array[p2].pid, alpha)
+                peers_array[p2].connect(peers_array[p1].pid, !alpha)
                 
                 if (debug_frames) debug_frames.push({
                     t: -1,
                     peer_notes: {
-                        [peers_array[p1].uid]: notes,
-                        [peers_array[p2].uid]: notes
+                        [peers_array[p1].pid]: notes,
+                        [peers_array[p2].pid]: notes
                     },
                     peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
                 })
@@ -127,7 +156,7 @@ function run_trial(seed, N, show_debug, trial_num) {
         
         if (debug_frames) debug_frames.push({
             t: -1,
-            peer_notes: {[p.uid]: 'initial edit'},
+            peer_notes: {[p.pid]: 'initial edit'},
             peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
         })
     }
@@ -156,16 +185,16 @@ function run_trial(seed, N, show_debug, trial_num) {
                 while (other_p == p) {
                     other_p = peers_array[Math.floor(rand() * n_peers)]
                 }
-                if (p.peers[other_p.uid]) {
-                    notes.push(' disconnect ' + p.uid + ' and ' + other_p.uid)
-                    p.disconnect(other_p.uid)
-                    p.incoming = p.incoming.filter(x => x[0] != other_p.uid)
-                    other_p.disconnect(p.uid)
-                    other_p.incoming = other_p.incoming.filter(x => x[0] != p.uid)
+                if (p.peers[other_p.pid]) {
+                    notes.push(' disconnect ' + p.pid + ' and ' + other_p.pid)
+                    p.disconnect(other_p.pid)
+                    p.incoming = p.incoming.filter(x => x[0] != other_p.pid)
+                    other_p.disconnect(p.pid)
+                    other_p.incoming = other_p.incoming.filter(x => x[0] != p.pid)
                 } else {
                     var alpha = Math.random() < 0.5
-                    p.connect(other_p.uid, alpha)
-                    other_p.connect(p.uid, !alpha)
+                    p.connect(other_p.pid, alpha)
+                    other_p.connect(p.pid, !alpha)
                 }
             }
         } else {
@@ -187,29 +216,29 @@ function run_trial(seed, N, show_debug, trial_num) {
         }
         
         if (show_debug)
-            console.log('peer: ' + p.uid + ' -> ' + JSON.stringify(sync9_read(p.s9)))
+            console.log('peer: ' + p.pid + ' -> ' + JSON.stringify(sync9_read(p.s9)))
             
         if (debug_frames) debug_frames.push({
             t: t,
-            peer_notes: {[p.uid]: notes},
+            peer_notes: {[p.pid]: notes},
             peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
         })
     }
 
     for (var p1 = 0; p1 < n_peers; p1++) {
         for (var p2 = p1 + 1; p2 < n_peers; p2++) {
-            if (!peers_array[p1].peers[peers_array[p2].uid]) {
-                notes = ['connecting ' + p1 + ':' + peers_array[p1].uid + ' and ' + p2 + ':' + peers_array[p2].uid]
+            if (!peers_array[p1].peers[peers_array[p2].pid]) {
+                notes = ['connecting ' + p1 + ':' + peers_array[p1].pid + ' and ' + p2 + ':' + peers_array[p2].pid]
                 
                 var alpha = Math.random() < 0.5
-                peers_array[p1].connect(peers_array[p2].uid, alpha)
-                peers_array[p2].connect(peers_array[p1].uid, !alpha)
+                peers_array[p1].connect(peers_array[p2].pid, alpha)
+                peers_array[p2].connect(peers_array[p1].pid, !alpha)
                 
                 if (debug_frames) debug_frames.push({
                     t: -1,
                     peer_notes: {
-                        [peers_array[p1].uid]: notes,
-                        [peers_array[p2].uid]: notes
+                        [peers_array[p1].pid]: notes,
+                        [peers_array[p2].pid]: notes
                     },
                     peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
                 })
@@ -230,7 +259,7 @@ function run_trial(seed, N, show_debug, trial_num) {
                 
                 if (debug_frames) debug_frames.push({
                     tt: tt,
-                    peer_notes: {[p.uid]: notes},
+                    peer_notes: {[p.pid]: notes},
                     peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
                 })
             }
@@ -261,7 +290,7 @@ function run_trial(seed, N, show_debug, trial_num) {
                 
                 if (debug_frames) debug_frames.push({
                     tt: tt,
-                    peer_notes: {[p.uid]: notes},
+                    peer_notes: {[p.pid]: notes},
                     peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
                 })
             } else {
@@ -434,7 +463,7 @@ function run_trial(seed, N, show_debug, trial_num) {
             top_part.style['grid-template-rows'] = '1fr 2fr'
             
             peers_array.forEach((p, i) => {
-                var notes = d.peer_notes[p.uid]
+                var notes = d.peer_notes[p.pid]
                 if (notes && typeof(notes) == 'object') notes = notes.join('\n\n')
                 if (!notes) notes = 'N/A'
                 var dd = document.createElement('textarea')
@@ -474,7 +503,7 @@ function run_trial(seed, N, show_debug, trial_num) {
             ;[[0, 1], [1, 0], [1, 2], [2, 1], [2, 0], [0, 2]].forEach(([a, b]) => {
                 g.beginPath()
                 g.lineWidth = 3
-                g.strokeStyle = d.peers[a].peers[d.peers[b].uid] ? (d.peers[a].peers[d.peers[b].uid].b ? 'green' : 'orange') : 'red'
+                g.strokeStyle = d.peers[a].peers[d.peers[b].pid] ? (d.peers[a].peers[d.peers[b].pid].b ? 'green' : 'orange') : 'red'
                 g.moveTo(peer_locs[a][0], peer_locs[a][1])
                 g.lineTo(
                     lerp(0, peer_locs[a][0], 1, peer_locs[b][0], 0.5),
@@ -693,85 +722,6 @@ function draw_space_dag(c, g, S, x, y) {
 
 
 
-
-var node = init_node()
-
-function init_node() {
-    var node = () => {}
-    
-    node.id = sync9_guid()
-    node.peers = {}
-    node.keys = {}
-
-    
-    // t = {version, parents, from_peer}
-    
-    function getSymetricPeers(k) {
-        return Object.entries(k.peers).filter(e => e[1]).map(e => node.peers[e[0]])
-    }
-
-    node.set = (key, patches, t, joiner_num) => {
-        var k = node.keys(key)
-        if (!t.from_peer || !k.s9.T[t.version] || (joiner_num > k.joiners[t.version])) {
-            sync9_add_version(k.s9, t.version, t.parents, patches)
-            k.phase_one[t.version] = {origin: t.from_peer, count: getSymetricPeers(k).length - (t.from_peer ? 1 : 0)}
-            if (joiner_num) k.joiners[t.version] = joiner_num
-            Object.keys(k.peers).forEach(p => {
-                p = node.peers[p]
-                if (p.id != t.from_peer) p.set(key, patches, {version: t.version, parents: t.parents, from_peer: node.id}, joiner_num)
-            })
-        } else if (k.phase_one[t.version] && (joiner_num == k.joiners[t.version])) {
-            k.phase_one[t.version].count--
-        }
-        check_ack_count(key, t.version)
-    }
-
-    node.get = (key, t, conn_id) => {
-        
-        work here : make it do what connect did
-        
-            
-    node.connect = from_peer => {
-        node.peers[from_peer.id] = from_peer
-    }
-    
-    
-        
-        var k = node.keys(key)
-        if (conn_id && !k.peers[t.from_peer]) {
-            node.peers[t.from_peer].get(key, {from_peer: node.id}, conn_id)
-        }
-        k.peers[t.from_peer] = conn_id || false
-        
-        var vs = (Object.keys(k.s9.T).length > 0) ? sync9_extract_versions(k.s9, x => false) : []
-        var fs = Object.values(k.fissures)
-        node.peers[t.from_peer].multiset(key, vs, fs, null, null, {from_peer: node.id})
-    }
-
-
-
-    
-    return node
-}
-
-
-node.delete(key, t)
-node.forget(key, t) // version is not used
-node.ack(key, valid: {undefined/local/global/abort}, seen: {undefined/local/global}, t) // parents on t is not used
-node.disconnected(name, versions, parents) // The peer is in the name
-node.multiset(
-set_of_set(version,parents,patches),
-set_of_disconnected(name,versions,parents),
-conn_leaves, min_leaves, t)
-
-
-node(key).on_set = (key, val/patch, t) => // Called on each set()
-node(key).on_get = (key, t) => // Called on each get()
-node(key).on_delete = (key, t) => // Called on each delete()
-node(key).on_forget = (key, t) => // Called on each forget()
-node(key).on_disconnected = (name, versions, parents) => // Called on each disconnected
-node(key).on_connect = (name, depends_on) => // Called on each reconnect
-node(key).on_ack = (key, valid, seen, t) => // Called on each ack
 
 
 
