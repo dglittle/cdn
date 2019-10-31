@@ -450,10 +450,6 @@ function run_trial(seed, N, show_debug, trial_num) {
         slider.oninput = () => {
             var d = debug_frames[1*slider.value]
             
-            if (slider.value == 0) {
-                debugger
-            }
-            
             top_part.innerHTML = ''
             top_part.style.display = 'grid'
             top_part.style['grid-template-columns'] = '1fr 1fr 1fr'
