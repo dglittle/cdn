@@ -144,7 +144,7 @@ function run_trial(seed, N, show_debug, trial_num) {
         
         if (rand() < 0.1) {
             if (rand() < 0.9) {
-                if (p.keys['my_key']) {
+                if (p.keys['my_key'] && Object.keys(p.keys['my_key'].s9.T).length) {
                     if (p.letters_i >= p.letters.length) {
                         p.letters_i = 0
                     }
