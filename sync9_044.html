@@ -450,6 +450,10 @@ function run_trial(seed, N, show_debug, trial_num) {
         slider.oninput = () => {
             var d = debug_frames[1*slider.value]
             
+            if (slider.value == 0) {
+                debugger
+            }
+            
             top_part.innerHTML = ''
             top_part.style.display = 'grid'
             top_part.style['grid-template-columns'] = '1fr 1fr 1fr'
@@ -467,7 +471,7 @@ function run_trial(seed, N, show_debug, trial_num) {
             peers_array.forEach((p, i) => {
                 p = d.peers[i]
                 var dd = document.createElement('textarea')
-                dd.value = '= ' + JSON.stringify(sync9_read(p.keys.my_key.s9)) + '\n\n' + JSON.stringify(p, null, '    ')
+                dd.value = '= ' + (p.keys.my_key ? JSON.stringify(sync9_read(p.keys.my_key.s9)) + '\n\n' + JSON.stringify(p, null, '    ') : 'n/a')
                 top_part.append(dd)
             })
 
