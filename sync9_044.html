@@ -10,7 +10,7 @@
 
 function main() {
     
-    var special_i = -1
+    var special_i = 0
 
     var max_size = 0
     
@@ -65,7 +65,7 @@ function run_trial(seed, N, show_debug, trial_num) {
             })
             
             // work here
-            p.id = 'P' + (i + 1)
+            p.pid = 'P' + (i + 1)
             
             p.incoming = []
             peers[p.pid] = p
@@ -134,6 +134,13 @@ function run_trial(seed, N, show_debug, trial_num) {
     
     for (var t = 0; t < N; t++) {
         if (show_debug) console.log('t == ' + t)
+        
+        
+        // work here
+        if (t == 1) {
+            debugger
+        }
+        
         
         var i = Math.floor(rand() * n_peers)
         var p = peers_array[i]
