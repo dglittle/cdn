@@ -476,7 +476,9 @@ function run_trial(seed, N, show_debug, trial_num) {
             
             peers_array.forEach((p, i) => {
                 p = d.peers[i]
-                draw_time_dag(c, g, p.keys.my_key, p.keys.my_key.s9, lerp(0, 0, 6, c.width, i*2), 35*devicePixelRatio, 300, 300, 7)
+                if (p.keys.my_key) {
+                    draw_time_dag(c, g, p.keys.my_key, p.keys.my_key.s9, lerp(0, 0, 6, c.width, i*2), 35*devicePixelRatio, 300, 300, 7)
+                }
             })
             
             g.font = '20px Ariel'
