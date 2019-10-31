@@ -10,7 +10,7 @@
 
 function main() {
     
-    var special_i = -1
+    var special_i = 4
 
     var max_size = 0
     
@@ -157,13 +157,13 @@ function run_trial(seed, N, show_debug, trial_num) {
                     other_p = peers_array[Math.floor(rand() * n_peers)]
                 }
                 var disconnect = false
-                Object.values(p.conns).forEach(c => {
+                Object.values(p.keys.my_key ? p.keys.my_key.conns : []).forEach(c => {
                     if (c.pid == other_p.pid) {
                         disconnect = true
                         p.disconnected('my_key', null, null, null, {conn: c})
                     }
                 })
-                Object.values(other_p.conns).forEach(c => {
+                Object.values(other_p.keys.my_key ? other_p.keys.my_key.conns : []).forEach(c => {
                     if (c.pid == p.pid) {
                         disconnect = true
                         other_p.disconnected('my_key', null, null, null, {conn: c})
