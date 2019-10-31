@@ -54,7 +54,7 @@ function run_trial(seed, N, show_debug, trial_num) {
                     if ((key != 'get') && !p.keys.my_key.conns[t.conn.id]) throw 'you cannot talk to them!'
                     notes.push('SEND: ' + key + ' from:' + p.pid + ' to:' + t.conn.pid + args.map(x => ' ' + JSON.stringify(x)))
                     if (show_debug) console.log(notes)
-                    peers[t.conn.pid].incoming.push([t.conn.pid, () => {
+                    peers[t.conn.pid].incoming.push([p.pid, () => {
                         notes.push('RECV: ' + key + ' from:' + p.pid + ' to:' + t.conn.pid + args.map(x => ' ' + JSON.stringify(x)))
                         if (show_debug) console.log(notes)
                         var to_pid = t.conn.pid
