@@ -10,7 +10,7 @@
 
 function main() {
     
-    var special_i = 6
+    var special_i = -1
 
     var max_size = 0
     
@@ -22,7 +22,7 @@ function main() {
         
         check_good = false
         try {
-            var size = run_trial('iiiifIIiiiEiiiiiEEf:' + i, 40, special_i >= 0, i)
+            var size = run_trial('iiiifIIiiiEiiiiiEEf:' + i, 1, special_i >= 0, i)
             if (size > max_size) max_size = size
         } catch (e) {
             console.log(e)
