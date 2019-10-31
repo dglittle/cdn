@@ -467,7 +467,7 @@ function run_trial(seed, N, show_debug, trial_num) {
             peers_array.forEach((p, i) => {
                 p = d.peers[i]
                 var dd = document.createElement('textarea')
-                dd.value = '= ' + (p.keys.my_key ? JSON.stringify(sync9_read(p.keys.my_key.s9)) + '\n\n' + JSON.stringify(p, null, '    ') : 'n/a')
+                dd.value = '= ' + (p.keys.my_key ? JSON.stringify(sync9_read(p.keys.my_key.s9)) : 'n/a') + '\n\n' + JSON.stringify(p, null, '    ')
                 top_part.append(dd)
             })
 
