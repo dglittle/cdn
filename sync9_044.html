@@ -734,7 +734,11 @@ function create_node() {
                 node.on_set(key, changes, {version: vid, parents: parents, conn}, joiner_num)
             },
             set_multi: (conn, vs, fs, conn_leaves, min_leaves) => {
-                node.on_multiset(key, vs, fs, conn_leaves, min_leaves, {conn})
+                node.on_multiset(key, vs, fs.map(x => ({
+                    name: x.a + ':' + x.b + ':' + x.conn,
+                    versions: x.nodes,
+                    parents: x.parents
+                })), conn_leaves, min_leaves, {conn})
             },
             ack: (conn, vid, joiner_num) => {
                 node.on_ack(key, null, 'local', {version: vid, conn}, joiner_num)
