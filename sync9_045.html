@@ -1,0 +1,43 @@
+
+how does it work?
+
+Layer 1:
+
+Data structures:
+
+time dag: map of version ids to parent-sets (each parent-set is a set of version ids)
+
+space tree: we have a pointer to the first node in a tree. Each node might have some verion, along with some text for that node, as well as an array of pointers to nodes which come after this one. We can read off the whole string using a "pre-order" traversal of the tree.
+
+we initialize the time dag to an empty map.
+
+we initialize the space tree to a pointer to a node which contains no text, and has no children.
+
+now let's insert the letter "a": first we create a unique version id, let's say "version-a". now we just make the root node in the space tree have a child -- a node with version "version-a", the text "a", and no children of it's own.
+
+
+
+
+
+(they are intended to be read using a "pre-order" traversal of the tree, where each node first outputs it's own text, and then it recursively processes each of it's children in order)
+
+
+sets where as hashmaps of versions to "true")
+
+
+
+Imagine we are syncing text between two machines, like in a google doc.
+
+
+
+- layers
+    - insertions
+    - deletes
+    - replaces
+
+
+- CRDT
+
+- anti-particle algorithm
+
+
