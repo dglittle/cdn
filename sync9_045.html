@@ -1,6 +1,106 @@
 
 
-<body>
+<pre>
+
+Let's create a data structure and API for syncronizing some text between two editors.
+
+---
+
+Simple Insertion Algorithm
+
+data structure:
+
+versions_to_parents = map of version ids to sets, where each set contains the parent version ids of the given version
+
+data_tree = pointer to a node of the form:
+    text -- the raw text in this node
+    children -- pointers to child nodes
+
+functions:
+
+insert_text(version_id, parent_ids, position, text):
+
+    // add this version to our versions
+    versions_to_parents[version_id] = parent_ids
+
+    // create a new data node
+    new_data_node =
+        text: text from input,
+        children: empty array
+    
+    // insert our new data node
+    do pre-order traversal of data_tree, counting the characters in each text until we reach position:
+    
+    - if we are coincidentally at the end of a node, great, just insert our new_data_node into this node's children
+    
+    - if the position is somewhere in the middle of this node's text, then we'll need to split this node into two nodes. The front node will contain the text before the position, and it will have two children, one being new_data_node, and the other being the second half of this node, which will contain the rest of the text, and will inherit the children from the original node.
+    
+    // return the new total text
+    do pre-order traversal of data_tree, concatenating all the texts into a giant text and return that
+
+---
+
+---
+
+Simple Insertion Algorithm with Better Merging
+
+
+
+
+
+
+
+
+
+
+version_to_parents = map of version ids to sets, where each set contains the parent version ids of the given version
+
+data_tree = pointer to a node of the form:
+    version_id -- can be null
+    text -- the raw text in this node
+    children -- pointers to child nodes, sorted by version_id, with null's sorted last
+
+insert_text(version_id, parent_ids, position, text):
+
+    // add this version to our versions
+    version_to_parents[version_id] = parent_ids
+
+    // create a new tree node
+    new_data_node = {
+        version_id: make up a new globally unique id,
+        text: text from input,
+        children: empty array
+    }
+    
+    // insert our new tree node
+    do pre-order traversal of data_tree, counting the characters in each text until we reach position:
+    
+    - if we are coincidentally at the end of a node, great, just insert our new_data_node into this node's children (insert it into the correct place according to the sorting rules above)
+    
+    - if the position is somewhere in the middle of this node's text, then we'll need to split this node into two nodes. The front node will contain the text before the position, and it will have two children, one being new_data_node, and the other being the second half of this node, which will contain the rest of the text, and will inherit the children from the original node (it will also have a version_id of null, so that it gets sorted after new_data_node).
+    
+    // return the new total text
+    do pre-order traversal of data_tree, concatenating all the texts into a giant text and return that
+
+
+
+
+
+
+
+
+
+    
+    
+    
+    
+    Preorder Traversal
+    
+
+
+
+
+---
 
 
 how does it work?
@@ -47,5 +147,5 @@ Imagine we are syncing text between two machines, like in a google doc.
 
 
 
-</body>
+</pre>
 
