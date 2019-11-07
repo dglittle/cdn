@@ -124,7 +124,8 @@ data structure:
 data_tree = pointer to a node of the form:
     ...
     NEW! deleted_by: set of version_id's that have deleted this node
-    NOTE: text should still contain the text, or at least its length, so we can count it correctly for edits which did not know about the deletion when they were created.
+    
+    NOTE: even if a node is deleted by some version, the text should still contain the text, or at least its length, so we can count it correctly for edits which did not know about the deletion when they were created.
     ...
 
 functions:
