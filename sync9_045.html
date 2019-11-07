@@ -1,6 +1,6 @@
 <script src="https://invisible.college/js/marked.min.js"></script>
 <link rel="stylesheet" href="https://invisible.college/css/github-markdown.css">
-
+<body></body>
 <script>
 
 var blah = `
@@ -9,13 +9,13 @@ Let's create a data structure and API for syncronizing some text between two edi
 
 ---
 
-Simple Insertion Algorithm
+## Simple Insertion Algorithm
 
-data structure:
+#### data structure:
 
-data_tree = pointer to a node of the form:
-    text -- the raw text in this node
-    children -- pointers to child nodes
+**data_tree**: node with these keys:
+* *text*: the raw text in this node
+* *children*: array of child nodes
 
 functions:
 
@@ -289,10 +289,7 @@ Imagine we are syncing text between two machines, like in a google doc.
 
 `
 
-var bloop = document.createElement('div')
-document.body.append(bloop)
-
-bloop.innerHTML = marked(blah, {sanitize: true})
+document.body.innerHTML = marked(blah, {sanitize: true})
 
 
 </script>
