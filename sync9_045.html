@@ -36,7 +36,9 @@ insert_text(position, text):
 
 ---
 
-Ok, that's a good start, however, this notion of "position" is going to get messed up between editors. For example, say two people are editing "cat", and person A inserts "cute " at the beginning, and person B inserts "s are great" at the end (at position 3). Now when person A receives the insertion from person B, and they try to insert it into "cute cat" at position 3, they'll get "cuts are great cat", instead of the desired "cute cats are great". The idea of operational transform would be to alert that number 3 to the number 8, in this example. We'll instead go with the CRDT approach which is to handle this issue with version information in the data structure itself.
+Ok, that's a good start, however, this notion of "position" is going to get messed up between editors. For example, say two people are editing "cat", and person A inserts "cute " at the beginning, and person B inserts "s are great" at the end (at position 3). Now when person A receives the insertion from person B, and they try to insert it into "cute cat" at position 3, they'll get "cuts are great cat", instead of the desired "cute cats are great".
+
+The idea of operational transform would be to alter the number 3 to the number 8, in this example. We'll instead go with the CRDT approach which is to handle this issue with version information in the data structure itself.
 
 ---
 
@@ -65,25 +67,118 @@ insert_text(NEW! version_id, NEW! parent_ids, position, text):
     }
     
     // insert our new data node
-    do pre-order traversal of data_tree, counting the characters in each text until we reach position:
+    do pre-order traversal of data_tree, as before.. except (NEW!) we only recursively descend into children if their version_id is within parent_ids, or is transitively an ancestor of one of our parent_ids
     
-    - if we are coincidentally at the end of a node, great, just insert our new_data_node into this node's children
+    rest as before..
+
+---
+
+Ok, that's great, except there are some merging issues -- if two people insert text at the same time at the same location, on different machines, how do we ensure that they'll appear in the same order on both machines once they both receive each other's insertions?
+
+---
+
+Simple Insertion Algorithm with Versions and Better Merging
+
+functions:
+
+insert_text(version_id, parent_ids, position, text):
+    ...
     
-    - if the position is somewhere in the middle of this node's text, then we'll need to split this node into two nodes. The front node will contain the text before the position, and it will have two children, one being new_data_node, and the other being the second half of this node, which will contain the rest of the text, and will inherit the children from the original node.
+    // insert our new data node
+    ..NEW! when we insert into children, insert such that the children are sorted by version_id, with nulls at the end (and if we need to split a node to accomodate an insertion, make the second half's version_id null, so it stays sorted after all the inserted children)
+    
+    ...
+
+---
+
+Ok, that's pretty good, though there is a subtle issue.. imagine I'm looking at the text "cat" and I insert an "s" at the end to get "cats", and then I insert an "'" to get "cat's". So we're inserting both "s" and "'" after the "t", which should be fine as long as they sort into the order "'s", but we decided to sort by version ids, so how can we be sure that the id for "'" will be before the id for "s"?
+
+We could just look at the existing version ids at the place of insertion and invent an id that sorts before them, however, this approach could (in principle) lead to very long version ids. Instead, we'll invent a way to insert something "after one thing, but before another thing"..
+
+---
+
+SIA with V and BM, and Better Insertions
+
+functions:
+
+insert_text(version_id, parent_ids, position, text):
+    ...
+    
+    // insert our new data node
+    ..NEW! whenever we're about to insert a node into some children, see if any of those children's version_ids are ancestors of us (i.e. are in parent_ids, or are transitively an ancestor of one of our parent_ids),
+    
+    if so, pick the first such child, and insert ourselves into the beginning of it.. that is, if we're inserting into a node that contains the text "cat", we're going to split it into two nodes: "", and "cat". The first node has no text, and we'll insert ourselves as a child of it. It could be that someone before us already split "cat" into "" and "cat", in which case, we don't split "" again, we just insert ourselves into it; of course, in this case, it already has children, so we'll need to recursively apply our new technique and see if any of those children are ancestors of ours, and insert ourselves into the first such child if it exists..
+    
+    ...
+
+---
+
+I claim we're done if all we want is insertions. Let's say we also want deletions..
+
+---
+
+SIA with V and BM and BI, and Deletes
+
+data structure:
+
+data_tree = pointer to a node of the form:
+    ...
+    NEW! deleted_by: set of version_id's that have deleted this node
+    NOTE: text should still contain the text, or at least its length, so we can count it correctly for edits which did not know about the deletion when they were created.
+    ...
+
+functions:
+
+insert_text(version_id, parent_ids, position, text):
+    ...
+    NEW! when doing pre-order traversal to find position, don't count characters in node's which are deleted, i.e., node's which contain a version in deleted_by that is in parent_ids (or is transitively an ancestor of something in parent_ids)
+    
+    NEW! when doing pre-order traversal to compile text to return, don't concatenate any text for node's which have anything in deleted_by
+
+delete_text(version_id, parent_ids, position, how_many_to_delete):
+    // add this version to our versions
+    ..just like insert_text
+    
+    // delete the text
+    do pre-order traversal to find position, taking into account deleted text just like insert_text above. When we find the position 
+    
     
     // return the new total text
-    do pre-order traversal of data_tree, concatenating all the texts into a giant text and returning that
+    ..just like insert_text
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+    ...
+    
+    // insert our new data node
+    ..NEW! whenever we're about to insert a node into some children, see if any of those children's version_ids are ancestors of us (i.e. are in parent_ids, or are transitively an ancestor of one of our parent_ids),
+    
+    if so, pick the first such child, and insert ourselves into the beginning of it.. that is, if we're inserting into a node that contains the text "cat", we're going to split it into two nodes: "", and "cat". The first node has no text, and we'll insert ourselves as a child of it. It could be that someone before us already split "cat" into "" and "cat", in which case, we don't split "" again, we just insert ourselves into it; of course, in this case, it already has children, so we'll need to recursively apply our new technique and see if any of those children are ancestors of ours, and insert ourselves into the first such child if it exists..
+    
+    ...
 
 
 
 
----
 
-Ok, that's great, except there are some merging issues -- if two people insert text at the same location at the same time, on different machines, how do we ensure that they'll appear in the same order on both machines once they both receive each other's insertions?
 
----
 
-Simple Insertion Algorithm with Better Merging
+    
+    
+    
+    
+    do pre-order traversal of data_tree, as before.. except (NEW!) we only recursively descend into children if their version_id is within parent_ids, or is transitively an ancestor of one of our parent_ids
+    
+    rest as before..
+
+
 
 
 
