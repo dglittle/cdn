@@ -2,7 +2,7 @@
 
 <pre>
 
-Let's create a data structure and API for syncronizing some text between two editors.
+Let's create a data structure and API for syncronizing some text between two editors. Here's a first attempt.
 
 ---
 
@@ -10,23 +10,19 @@ Simple Insertion Algorithm
 
 data structure:
 
-versions_to_parents = map of version ids to sets, where each set contains the parent version ids of the given version
-
 data_tree = pointer to a node of the form:
     text -- the raw text in this node
     children -- pointers to child nodes
 
 functions:
 
-insert_text(version_id, parent_ids, position, text):
-
-    // add this version to our versions
-    versions_to_parents[version_id] = parent_ids
+insert_text(position, text):
 
     // create a new data node
-    new_data_node =
-        text: text from input,
+    new_data_node = {
+        text: text from input arguments,
         children: empty array
+    }
     
     // insert our new data node
     do pre-order traversal of data_tree, counting the characters in each text until we reach position:
@@ -36,9 +32,54 @@ insert_text(version_id, parent_ids, position, text):
     - if the position is somewhere in the middle of this node's text, then we'll need to split this node into two nodes. The front node will contain the text before the position, and it will have two children, one being new_data_node, and the other being the second half of this node, which will contain the rest of the text, and will inherit the children from the original node.
     
     // return the new total text
-    do pre-order traversal of data_tree, concatenating all the texts into a giant text and return that
+    do pre-order traversal of data_tree, concatenating all the texts into a giant text and returning that
 
 ---
+
+Ok, that's a good start, however, this notion of "position" is going to get messed up between editors. For example, say two people are editing "cat", and person A inserts "cute " at the beginning, and person B inserts "s are great" at the end (at position 3). Now when person A receives the insertion from person B, and they try to insert it into "cute cat" at position 3, they'll get "cuts are great cat", instead of the desired "cute cats are great". The idea of operational transform would be to alert that number 3 to the number 8, in this example. We'll instead go with the CRDT approach which is to handle this issue with version information in the data structure itself.
+
+---
+
+Simple Insertion Algorithm with Versions
+
+data structure:
+
+NEW! version_to_parents = map of version ids to sets, where each set contains the parent version ids of the given version
+
+data_tree = pointer to a node of the form:
+    NEW! version_id -- a globally unique id, may be null
+    ..rest as before
+
+functions:
+
+insert_text(NEW! version_id, NEW! parent_ids, position, text):
+
+    // NEW: add this version to our versions
+    version_to_parents[version_id] = parent_ids
+
+    // create a new tree node
+    new_data_node = {
+        ...
+        NEW! version_id: version_id from input arguments,
+        ...
+    }
+    
+    // insert our new data node
+    do pre-order traversal of data_tree, counting the characters in each text until we reach position:
+    
+    - if we are coincidentally at the end of a node, great, just insert our new_data_node into this node's children
+    
+    - if the position is somewhere in the middle of this node's text, then we'll need to split this node into two nodes. The front node will contain the text before the position, and it will have two children, one being new_data_node, and the other being the second half of this node, which will contain the rest of the text, and will inherit the children from the original node.
+    
+    // return the new total text
+    do pre-order traversal of data_tree, concatenating all the texts into a giant text and returning that
+
+
+
+
+---
+
+Ok, that's great, except there are some merging issues -- if two people insert text at the same location at the same time, on different machines, how do we ensure that they'll appear in the same order on both machines once they both receive each other's insertions?
 
 ---
 
