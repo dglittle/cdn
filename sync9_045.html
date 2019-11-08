@@ -5,17 +5,19 @@
 var g = make_html('<div style="width:1024px;display:grid;grid-template-columns:1fr 1fr"></div>')
 document.body.append(g)
 
-var d = make_html('<div></div>')
-d.textContent = `
-
-`
-
-
 var blah = `
 setup.. here's the setup. We've Alice and Bob at different computers, editing the same text. Something that might happen is that both Alice and Bob will simultaneously type something, like if they're both editing "cat", and Alice want's to add an apostrophy, whilst Bob wants to add an "s". What should happen if they both type their desires simultaneously? "cat's" or "cats'"? Our system will try to tackle these issues.
 `
 
 g.append(make_html(blah))
+
+var blah = `
+versions.. this system is sort of built around some idea of versions. Broadly speaking, we mean a "version" to describe the entire state of the text at a moment in time. Both characters we're looking at were looking at the version "cat". We identify a version with a globally unique version id. Versions also have the notion of a parent, or multiple parents, or no parents -- these are the versions that a version knew about when it was created. In theory, a version's parents are ALL the versions it knew about, but in practice, some of these versions imply knowing about other versions, so you can imagine some optimally small set of versions to store or send over a network, and one might also refer to this smaller set as the "parents" of a version. I've been storing this in a hashmap of version ids to sets of version ids, representing the parents of the given version.
+`
+
+g.append(make_html(blah))
+
+
 
 
 // var blah = `
