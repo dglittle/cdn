@@ -24,6 +24,8 @@ make_frame(`<div>Insertion: Say we have "GOOD" in a version called "C", and some
 
 make_frame(`<div>Insertion continued: Say three people are looking at version E, which is: "Ahh!", and each person simultaneously embelishes the "Ahh!" by inserting some additional angst between the two "hh"s. Now, we've already incorporated the information from two of these people (versions F and H), and now we are receiving word of version G (which did not know about F or H, which I tried to indicate with the dotted line). In this case, we simply add G as another child of E, but we're sure to insert it such that the children are in order according to version id, with unlabeled nodes at the end. Note that the merger reads as "AhhhghgHh!", but each particular version here is only a subset of that. If someone added something to this, the parents of their new version would be F, G and H (with E implied by these).</div>`, 'https://dglittle.github.io/cdn/images/frameInsert2.jpg')
 
+make_frame(`<div>Insertion continued again: What if, in that previous example, G had known about H? So whoever wrote version G was looking at "AhHh!", and they decided to insert their "ghg" right before the capital "H" from version H. If we inserted it like before, it would actually work out fine, because version G sorts before version H. But what if we were not so lucky? What if they named it version "Z", then it would sort after version H. To deal with this issue, when we insert a node as a child, if one of those children is known to the version we are inserting, then we'll actually insert into the first such child, making some space at the beginning of that node by creating an empty node as shown.</div>`, 'https://dglittle.github.io/cdn/images/frameInsert3.jpg')
+
 
 // var blah = `
 
