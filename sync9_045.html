@@ -5,8 +5,14 @@
 var g = make_html('<div style="width:1024px;display:grid;grid-template-columns:1fr 1fr"></div>')
 document.body.append(g)
 
+var d = make_html('<div></div>')
+d.textContent = `
+
+`
+
+
 var blah = `
-HELLO WORlD
+setup.. here's the setup. We've Alice and Bob at different computers, editing the same text. Something that might happen is that both Alice and Bob will simultaneously type something, like if they're both editing "cat", and Alice want's to add an apostrophy, whilst Bob wants to add an "s". What should happen if they both type their desires simultaneously? "cat's" or "cats'"? Our system will try to tackle these issues.
 `
 
 g.append(make_html(blah))
