@@ -2,21 +2,25 @@
 <body style="margin:0px"></body>
 <script>
 
-var g = make_html('<div style="width:1024px;display:grid;grid-template-columns:1fr 1fr"></div>')
-document.body.append(g)
+function make_frame(html, img_url) {
+    var d = make_html('<div/>')
+    document.body.append(d)
+    
+    var img = new Image()
+    img.src = img_url
+    d.append(img)
+    
+    var h = make_html(html)
+    d.append(h)
+}
 
-g.append(make_html(`<div>Setup: We've Alice and Bob at different computers, editing the same text. Something that might happen is that both Alice and Bob will simultaneously type something, like if they're both editing "cat", and Alice want's to add an apostrophy, whilst Bob wants to add an "s". What should happen if they both type their desires simultaneously? "cat's" or "cats'"? Our system will try to tackle these issues.</div>`))
+make_frame(`<div>Setup: We've Alice and Bob at different computers, editing the same text. Something that might happen is that both Alice and Bob will simultaneously type something, like if they're both editing "cat", and Alice want's to add an apostrophy, whilst Bob wants to add an "s". What should happen if they both type their desires simultaneously? "cat's" or "cats'"? Our system will try to tackle these issues.</div>`, 'https://dglittle.github.io/cdn/images/frame1.jpg')
 
-g.append(make_html(`<img src="https://dglittle.github.io/cdn/images/frame1.jpg" style="width:512px"/>`))
+make_frame(`<div>Versions: This system is sort of built around some idea of versions. Broadly speaking, we mean a "version" to describe the entire state of the text at a moment in time. Both characters we were looking at above were looking at the version "cat". We identify a version with a globally unique version id. In the image, these are "A", "B", "C" and "D". Versions also have the notion of a parent, or multiple parents, or no parents -- these are the versions that a version knew about when it was created. In theory, a version's parents are ALL the versions it knew about, but in practice, some of these versions imply knowing about other versions. In the diagram, version "D" has parental arrows pointing to "B" and "C", but really "A" is also a parent of "D" (meaning "D" must have known about "A" when it was created, because it knew about "B", and "B" knew about "A"). I've been storing this in a hashmap of version ids to sets of version ids, representing the minimal parents of the given version, and then when I need them, I calculate the full set of parents.</div>`, 'https://dglittle.github.io/cdn/images/frame2.jpg')
 
-g.append(make_html(`<div>Versions: This system is sort of built around some idea of versions. Broadly speaking, we mean a "version" to describe the entire state of the text at a moment in time. Both characters we were looking at above were looking at the version "cat". We identify a version with a globally unique version id. In the image, these are "A", "B", "C" and "D". Versions also have the notion of a parent, or multiple parents, or no parents -- these are the versions that a version knew about when it was created. In theory, a version's parents are ALL the versions it knew about, but in practice, some of these versions imply knowing about other versions. In the diagram, version "D" has parental arrows pointing to "B" and "C", but really "A" is also a parent of "D" (meaning "D" must have known about "A" when it was created, because it knew about "B", and "B" knew about "A"). I've been storing this in a hashmap of version ids to sets of version ids, representing the minimal parents of the given version, and then when I need them, I calculate the full set of parents.</div>`))
+make_frame(`<div>Data Structure: Here is the data structure we use to store the data about the text. It's a tree. To read its data, you start with the leftmost node, read that node, and then recursively read its children top to bottom (doing a pre-order traversal of the tree). In this case, we start with "cat", and then read its topmost child, which is "'s", and then we read that node's children top to bottom, which are "a" and "re", and then we pop back up to the next child of "cat", which is "good", giving us "cat'saregood". That is how we read the merger of all versions in the tree. If we just want to read a specific version, say version "A", then we take note of the labels on some of the nodes, e.g., "A" and "B", and here's what we do.. we do like before, but when we encounter a labeled node, we only process that node if the version is our desired version, or a parent (in the theoretical sense, where we include all acenstors of our parents). We'll assume that B is not a parent or acenstor of A, and so version A must read as "cat'sregood" (missing the "a" from version B).</div>`, 'https://dglittle.github.io/cdn/images/frame2.jpg')
 
-g.append(make_html(`<img src="https://dglittle.github.io/cdn/images/frame2.jpg" style="width:512px"/>`))
-
-g.append(make_html(`<div>Data Structure: Here is the data structure we use to store the data about the text. It's a tree. To read its data, you start with the leftmost node, read that node, and then recursively read its children top to bottom (doing a pre-order traversal of the tree). In this case, we start with "cat", and then read its topmost child, which is "'s", and then we read that node's children top to bottom, which are "a" and "re", and then we pop back up to the next child of "cat", which is "good", giving us "cat'saregood". That is how we read the merger of all versions in the tree. If we just want to read a specific version, say version "A", then we take note of the labels on some of the nodes, e.g., "A" and "B", and here's what we do.. we do like before, but when we encounter a labeled node, we only process that node if the version is our desired version, or a parent (in the theoretical sense, where we include all acenstors of our parents). We'll assume that B is not a parent or acenstor of A, and so version A must read as "cat'sregood" (missing the "a" from version B).</div>`))
-
-g.append(make_html(`<div>Insertion: Say we have "GOOD" in a version called "C", and someone inserts the text "god" between the two O's in GOOD in a version called "D" (which knows about version "C", and therefor has "C" as a parent). To accomplish this, we break the node "GOOD" into two parts "GO" and "OD", and we insert "god" as the first child of "GO", and make "OD" the second child of "GO". When we read version "D" according to our rules, we'll get "GOgodOD". Note that if we read version "C", we'll still get "GOOD", because "D" is not a parent of "C".</div>`))
-
+make_frame(`<div>Insertion: Say we have "GOOD" in a version called "C", and someone inserts the text "god" between the two O's in GOOD in a version called "D" (which knows about version "C", and therefor has "C" as a parent). To accomplish this, we break the node "GOOD" into two parts "GO" and "OD", and we insert "god" as the first child of "GO", and make "OD" the second child of "GO". When we read version "D" according to our rules, we'll get "GOgodOD". Note that if we read version "C", we'll still get "GOOD", because "D" is not a parent of "C".</div>`, 'https://dglittle.github.io/cdn/images/frame2.jpg')
 
 
 // var blah = `
