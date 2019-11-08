@@ -26,6 +26,8 @@ make_frame(`<div>Insertion continued: Say three people are looking at version E,
 
 make_frame(`<div>Insertion continued again: What if, in that previous example, G had known about H? So whoever wrote version G was looking at "AhHh!", and they decided to insert their "ghg" right before the capital "H" from version H. If we inserted it like before, it would actually work out fine, because version G sorts before version H. But what if we were not so lucky? What if they named it version "Z", then it would sort after version H. To deal with this issue, when we insert a node as a child, we first examine those children to see if any of them are known to this version, and if so, then we'll actually insert into the first such child, making some space at the beginning of that child by creating an empty node as shown.</div>`, 'https://dglittle.github.io/cdn/images/frameInsert3.jpg')
 
+make_frame(`<div>Insertion continued for the last time: let's take that previous example further. Say someone sees G's contribution, and inserts just before it version I "iiii". In this case, we really know what to do from the previous example, but I just wanted to point out that this weird insertion thing can happen recursively. I also drew out the version family-tree information, where we see that I knew about E, H, and G (but not F).</div>`, 'https://dglittle.github.io/cdn/images/frameInsert4.jpg')
+
 
 // var blah = `
 
