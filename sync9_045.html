@@ -22,6 +22,8 @@ make_frame(`<div>Data Structure: Here is the data structure we use to store the 
 
 make_frame(`<div>Insertion: Say we have "GOOD" in a version called "C", and someone inserts the text "god" between the two O's in GOOD in a version called "D" (which knows about version "C", and therefor has "C" as a parent). To accomplish this, we break the node "GOOD" into two parts "GO" and "OD", and we insert "god" as the first child of "GO", and make "OD" the second child of "GO". When we read version "D" according to our rules, we'll get "GOgodOD". Note that if we read version "C", we'll still get "GOOD", because "D" is not a parent of "C".</div>`, 'https://dglittle.github.io/cdn/images/frameInsert1.jpg')
 
+make_frame(`<div>Insertion continued: Say three people are looking at version E, which is: "Ahh!", and each person simultaneously embelishes the "Ahh!" by inserting some additional angst between the two "hh"s. Now, we've already incorporated the information from two of these people (versions F and H), and now we are receiving word of version G (which did not know about F or H, which I tried to indicate with the dotted line).</div>`, 'https://dglittle.github.io/cdn/images/frameInsert2.jpg')
+
 
 // var blah = `
 
