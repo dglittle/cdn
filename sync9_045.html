@@ -1,6 +1,5 @@
-<script src="https://invisible.college/js/marked.min.js"></script>
-<link rel="stylesheet" href="https://invisible.college/css/github-markdown.css">
-<body></body>
+
+<body style="margin:0px"></body>
 <script>
 
 var g = make_html('<div style="width:1024px;display:grid;grid-template-columns:1fr 1fr"></div>')
@@ -10,7 +9,7 @@ var blah = `
 HELLO WORlD
 `
 
-g.append(make_html(marked(blah, {sanitize: true})))
+g.append(make_html(blah))
 
 
 // var blah = `
