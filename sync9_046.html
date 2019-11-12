@@ -7,10 +7,11 @@
 <body style="margin:0px"></body>
 <script>
 
+var tau = Math.PI*2
 
 function main() {
     
-    var special_i = -1
+    var special_i = 100
 
     var max_size = 0
     
@@ -608,10 +609,18 @@ function draw_time_dag(c, g, peer, s9, x, y, w, h, r) {
             var rr = r * (1 + Math.random())
             g.lineWidth = 2
             if (f.a < f.b) {
-                g.moveTo(node_pos[0] - rr, node_pos[1] - rr)
-                g.lineTo(node_pos[0] + rr, node_pos[1] - rr)
-                g.lineTo(node_pos[0] + rr, node_pos[1] + rr)
-                g.lineTo(node_pos[0] - rr, node_pos[1] + rr)
+                
+
+
+                // work here
+                g.arc(node_pos[0], node_pos[1], rr, 0, tau/2)
+                
+                
+                
+                // g.moveTo(node_pos[0] - rr, node_pos[1] - rr)
+                // g.lineTo(node_pos[0] + rr, node_pos[1] - rr)
+                // g.lineTo(node_pos[0] + rr, node_pos[1] + rr)
+                // g.lineTo(node_pos[0] - rr, node_pos[1] + rr)
             } else {
                 var rrr = Math.sqrt(2) * rr
                 g.moveTo(node_pos[0] - rrr, node_pos[1])
