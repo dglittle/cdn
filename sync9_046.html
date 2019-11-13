@@ -613,7 +613,7 @@ function draw_time_dag(c, g, peer, s9, x, y, w, h, r) {
 
 
                 // work here
-                g.arc(node_pos[0], node_pos[1], rr, 0, tau/2)
+                g.arc(node_pos[0], node_pos[1], rr, tau/4, tau*3/4)
                 
                 
                 
@@ -622,13 +622,17 @@ function draw_time_dag(c, g, peer, s9, x, y, w, h, r) {
                 // g.lineTo(node_pos[0] + rr, node_pos[1] + rr)
                 // g.lineTo(node_pos[0] - rr, node_pos[1] + rr)
             } else {
-                var rrr = Math.sqrt(2) * rr
-                g.moveTo(node_pos[0] - rrr, node_pos[1])
-                g.lineTo(node_pos[0], node_pos[1] - rrr)
-                g.lineTo(node_pos[0] + rrr, node_pos[1])
-                g.lineTo(node_pos[0], node_pos[1] + rrr)
+                
+                g.arc(node_pos[0], node_pos[1], rr, tau/4, tau*3/4, true)
+                
+                
+                // var rrr = Math.sqrt(2) * rr
+                // g.moveTo(node_pos[0] - rrr, node_pos[1])
+                // g.lineTo(node_pos[0], node_pos[1] - rrr)
+                // g.lineTo(node_pos[0] + rrr, node_pos[1])
+                // g.lineTo(node_pos[0], node_pos[1] + rrr)
+                // g.closePath()
             }
-            g.closePath()
             g.stroke()
         })
     })
