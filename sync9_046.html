@@ -565,6 +565,8 @@ function draw_network(c, g, peers, x, y, w, h, r) {
 }
 
 function draw_time_dag(c, g, peer, s9, x, y, w, h, r) {
+    g.lineWidth = 3
+    
     var vs = {}
     function get_layer(v) {
         if (!vs[v]) vs[v] = {vid: v}
