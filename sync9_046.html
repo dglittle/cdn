@@ -23,7 +23,7 @@ function main() {
         
         check_good = false
         try {
-            var size = run_trial('iiiifIIiiiEiiiiiEEff:' + i, 500, special_i >= 0, i)
+            var size = run_trial('iiiifIIiiiEiiiiiEEff:' + i, 200, special_i >= 0, i)
             if (size > max_size) max_size = size
         } catch (e) {
             console.log(e)
@@ -426,14 +426,14 @@ function run_trial(seed, N, show_debug, trial_num) {
     if (debug_frames) {
         var a = document.createElement('div')
         a.style.display = 'grid'
-        a.style['grid-template-rows'] = '300px 1fr 20px'
+        a.style['grid-template-rows'] = '700px 1fr 20px'
         a.style.width = '100%'
         a.style.height = '100%'
         document.body.append(a)
         
         var c = document.createElement('canvas')
         c.width = window.innerWidth * devicePixelRatio
-        c.height = 300 * devicePixelRatio
+        c.height = 700 * devicePixelRatio
         c.style.width = (c.width / devicePixelRatio) + 'px'
         c.style.height = (c.height / devicePixelRatio) + 'px'
         var g = c.getContext('2d')
@@ -478,7 +478,7 @@ function run_trial(seed, N, show_debug, trial_num) {
             peers_array.forEach((p, i) => {
                 p = d.peers[i]
                 if (p.keys.my_key) {
-                    draw_time_dag(c, g, p.keys.my_key, p.keys.my_key.s9, lerp(0, 0, 6, c.width, i*2), 35*devicePixelRatio, 300, 300, 7)
+                    draw_time_dag(c, g, p.keys.my_key, p.keys.my_key.s9, lerp(0, 0, 6, c.width, i*2), (400 + 35)*devicePixelRatio, 300, 300, 7)
                 }
             })
             
@@ -506,12 +506,29 @@ function run_trial(seed, N, show_debug, trial_num) {
                     lerp(0, peer_locs[a][1], 1, peer_locs[b][1], 0.5))
                 g.stroke()
             })
+            
+            draw_network(c, g, d.peers, 100, 50, 800, 800, 300)
+            
+
+            
+            
         }
         a.append(slider)
         slider.oninput()
     }
     
     return JSON.stringify(sync9_read(peers_array[0].keys.my_key.s9)).length
+}
+
+function draw_network(c, g, peers, x, y, w, h, r) {
+    g.beginPath()
+    g.strokeStyle = 'red'
+    g.rect(x, y, w, h)
+    g.stroke()
+    
+    g.beginPath()
+    g.arc(x + w/2, y + h/2, r, 0, tau)
+    g.stroke()
 }
 
 function draw_time_dag(c, g, peer, s9, x, y, w, h, r) {
