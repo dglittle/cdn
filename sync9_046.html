@@ -61,7 +61,7 @@ function run_trial(seed, N, show_debug, trial_num) {
                         var to_pid = t.conn.pid
                         t.conn = {id: t.conn.id, pid: p.pid}
                         peers[to_pid][key](...args)
-                    }])
+                    }, 'msg_id:' + sync9_guid()])
                 }
             })
             
@@ -544,60 +544,32 @@ function draw_network(c, g, frames, fi, x, y, w, h, r) {
             g.lineTo(x + w/2 + Math.cos(aa)*r, y + h/2 + Math.sin(aa)*r)
             g.stroke()
             
-            peers[i].incoming.forEach((m, mi, arr) => {
+            function func(other_i, m) {
+                if (m[0] != peers[other_i].pid) return
                 
-                g.fillStyle = 'violet'
-                g.fillRect(0, 0, 50, 50)
-                g.fillText('hi: ' + m[0], 50, 50)
-                g.fillText('peer: ' + peers[ii].pid, 50, 100)
+                var before_frame = fi
+                while ((before_frame >= 0) && frames[before_frame].peers[i].incoming.some(mm => mm[2] == m[2])) before_frame--
                 
-                g.beginPath()
-                g.strokeStyle = 'maroon'
-                var f = lerp(0, 0.1, arr.length - 1, 0.9, mi)
-                g.arc(
-                    lerp(0, x + w/2 + Math.cos(a)*r, 1, x + w/2 + Math.cos(aa)*r, f),
-                    lerp(0, y + h/2 + Math.sin(a)*r, 1, y + h/2 + Math.sin(aa)*r, f),
-                    w/25, 0, tau)
-                g.stroke()
-                
-                
-                if (m[0] != peers[ii].pid) return
-                
-                
-                
-                
-                
+                var after_frame = fi
+                while ((after_frame < frames.length) && frames[after_frame].peers[i].incoming.some(mm => mm[2] == m[2])) after_frame++
                 
                 g.beginPath()
                 g.strokeStyle = 'purple'
-                var f = lerp(0, 0.1, arr.length - 1, 0.9, mi)
+                var f = lerp(before_frame, 0, after_frame, 1, fi)
                 g.arc(
                     lerp(0, x + w/2 + Math.cos(a)*r, 1, x + w/2 + Math.cos(aa)*r, f),
                     lerp(0, y + h/2 + Math.sin(a)*r, 1, y + h/2 + Math.sin(aa)*r, f),
                     w/20, 0, tau)
                 g.stroke()
                 
-                
-                g.fillStyle = 'green'
-                g.fillRect(0, 0, 50, 50)
-                g.fillText('hi: ' + m[0], 50, 150)
-                g.fillText('f: ' + f, 50, 200)
-                
-                
-            })
-            peers[ii].incoming.forEach((m, mi, arr) => {
-                if (m[0] != peers[i].pid) return
-                
-                g.beginPath()
-                g.strokeStyle = 'purple'
-                var f = lerp(0, 0.1, arr.length - 1, 0.9, mi)
-                g.arc(
-                    lerp(0, x + w/2 + Math.cos(a)*r, 1, x + w/2 + Math.cos(aa)*r, f),
-                    lerp(0, y + h/2 + Math.sin(a)*r, 1, y + h/2 + Math.sin(aa)*r, f),
-                    w/20, 0, tau)
-                g.stroke()
-            })
+                // g.fillStyle = 'green'
+                // g.fillRect(0, 0, 50, 50)
+                // g.fillText('hi: ' + m[0], 50, 150)
+                // g.fillText('f: ' + f, 50, 200)
+            }
             
+            peers[i].incoming.forEach(m => func(ii, m))
+            peers[ii].incoming.forEach(m => func(i, m))
         }
     }
     
