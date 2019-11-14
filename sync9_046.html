@@ -542,7 +542,7 @@ function draw_network(c, g, peers, x, y, w, h, r) {
             g.stroke()
             
             peers[i].incoming.forEach((m, mi, arr) => {
-                if (!m[0] == peers[ii].pid) return
+                if (m[0] != peers[ii].pid) return
                 
                 g.beginPath()
                 g.strokeStyle = 'purple'
@@ -554,7 +554,7 @@ function draw_network(c, g, peers, x, y, w, h, r) {
                 g.stroke()
             })
             peers[ii].incoming.forEach((m, mi, arr) => {
-                if (!m[0] == peers[i].pid) return
+                if (m[0] != peers[i].pid) return
                 
                 g.beginPath()
                 g.strokeStyle = 'purple'
@@ -572,7 +572,7 @@ function draw_network(c, g, peers, x, y, w, h, r) {
     peers.forEach((p, i) => {
         var a = tau / peers.length * i
         g.beginPath()
-        g.strokeStyle = 'blue'
+        g.fillStyle = p.incoming.length > 0 ? 'blue' : 'green'
         g.arc(x + w/2 + Math.cos(a)*r, y + h/2 + Math.sin(a)*r, w/30, 0, tau)
         g.fill()
     })
