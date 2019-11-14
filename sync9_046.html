@@ -536,12 +536,22 @@ function draw_network(c, g, frames, fi, x, y, w, h, r) {
         for (var ii = i + 1; ii < peers.length; ii++) {
             var a = tau / peers.length * i
             var aa = tau / peers.length * ii
-            g.beginPath()
-            g.strokeStyle = 'green'
-            g.lineWidth = w/35
-            g.moveTo(x + w/2 + Math.cos(a)*r, y + h/2 + Math.sin(a)*r)
-            g.lineTo(x + w/2 + Math.cos(aa)*r, y + h/2 + Math.sin(aa)*r)
-            g.stroke()
+            
+            var p = peers[i]
+            var other_p = peers[ii]
+            
+            var connected = Object.values(p.keys.my_key ? p.keys.my_key.conns : {}).some(c => c.pid == other_p.pid) || Object.values(other_p.keys.my_key ? other_p.keys.my_key.conns : {}).some(c => c.pid == p.pid) || p.incoming.some(x => x[0] == other_p.pid) || other_p.incoming.some(x => x[0] == p.pid)
+
+            if (connected) {
+                g.beginPath()
+                g.strokeStyle = 'darkgrey'
+                g.lineWidth = w/30
+                g.moveTo(x + w/2 + Math.cos(a)*r, y + h/2 + Math.sin(a)*r)
+                g.lineTo(x + w/2 + Math.cos(aa)*r, y + h/2 + Math.sin(aa)*r)
+                g.stroke()
+            }
+            
+            
             
             function func(i, ii, m, a, aa) {
                 if (m[0] != peers[ii].pid) return
@@ -568,8 +578,9 @@ function draw_network(c, g, frames, fi, x, y, w, h, r) {
                 g.moveTo(pos[0], pos[1])
 
                 // work here
-                var t1 = add(pos, mul(rot(norm(sub(p2, pos)), tau/3), w/10))
-                var t2 = add(pos, mul(rot(norm(sub(p2, pos)), -tau/3), w/10))
+                var rot_by = tau/12*5
+                var t1 = add(pos, mul(rot(norm(sub(p2, pos)), rot_by), w/30))
+                var t2 = add(pos, mul(rot(norm(sub(p2, pos)), -rot_by), w/30))
                 
                 g.lineTo(t1[0], t1[1])
                 g.lineTo(t2[0], t2[1])
@@ -577,18 +588,8 @@ function draw_network(c, g, frames, fi, x, y, w, h, r) {
                 g.closePath()
                 
                 
-                g.lineWidth = 4
-                g.strokeStyle = 'orange'
-                g.stroke()
-                
-                
-
-                
-                g.arc(pos[0], pos[1], w/10, 0, tau)
-                g.stroke()
-                
-                g.fillText('bf: ' + before_frame + ' ' + m[2], 50, 150)
-                g.fillText('af: ' + after_frame, 50, 200)
+                g.fillStyle = 'white'
+                g.fill()
             }
             
             peers[i].incoming.forEach(m => func(i, ii, m, aa, a))
