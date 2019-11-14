@@ -542,7 +542,28 @@ function draw_network(c, g, peers, x, y, w, h, r) {
             g.stroke()
             
             peers[i].incoming.forEach((m, mi, arr) => {
+                
+                g.fillStyle = 'violet'
+                g.fillRect(0, 0, 50, 50)
+                g.fillText('hi: ' + m[0], 50, 50)
+                g.fillText('peer: ' + peers[ii].pid, 50, 100)
+                
+                g.beginPath()
+                g.strokeStyle = 'maroon'
+                var f = lerp(0, 0.1, arr.length - 1, 0.9, mi)
+                g.arc(
+                    lerp(0, x + w/2 + Math.cos(a)*r, 1, x + w/2 + Math.cos(aa)*r, f),
+                    lerp(0, y + h/2 + Math.sin(a)*r, 1, y + h/2 + Math.sin(aa)*r, f),
+                    w/25, 0, tau)
+                g.stroke()
+                
+                
                 if (m[0] != peers[ii].pid) return
+                
+                
+                
+                
+                
                 
                 g.beginPath()
                 g.strokeStyle = 'purple'
@@ -552,6 +573,14 @@ function draw_network(c, g, peers, x, y, w, h, r) {
                     lerp(0, y + h/2 + Math.sin(a)*r, 1, y + h/2 + Math.sin(aa)*r, f),
                     w/20, 0, tau)
                 g.stroke()
+                
+                
+                g.fillStyle = 'green'
+                g.fillRect(0, 0, 50, 50)
+                g.fillText('hi: ' + m[0], 50, 150)
+                g.fillText('f: ' + f, 50, 200)
+                
+                
             })
             peers[ii].incoming.forEach((m, mi, arr) => {
                 if (m[0] != peers[i].pid) return
