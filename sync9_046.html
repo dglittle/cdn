@@ -1,6 +1,5 @@
 
 <script src="https://dglittle.github.io/cdn/random001.js"></script>
-<script src="https://dglittle.github.io/cdn/utils004.js"></script>
 <script src="https://invisible-college.github.io/universal-sync/diffsync.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sjcl/1.0.8/sjcl.min.js"></script>
 
@@ -555,11 +554,37 @@ function draw_network(c, g, frames, fi, x, y, w, h, r) {
                 
                 g.beginPath()
                 g.strokeStyle = 'purple'
+                
                 var f = lerp(before_frame, 0, after_frame, 1, fi)
-                g.arc(
-                    lerp(0, x + w/2 + Math.cos(a)*r, 1, x + w/2 + Math.cos(aa)*r, f),
-                    lerp(0, y + h/2 + Math.sin(a)*r, 1, y + h/2 + Math.sin(aa)*r, f),
-                    w/20, 0, tau)
+                var p1 = [x + w/2 + Math.cos(a)*r, y + h/2 + Math.sin(a)*r]
+                var p2 = [x + w/2 + Math.cos(aa)*r, y + h/2 + Math.sin(aa)*r]
+                var pos = lerp(0, p1, 1, p2, f)
+                
+                
+                
+                
+                g.beginPath()
+                
+                g.moveTo(pos[0], pos[1])
+
+                // work here
+                var t1 = mul(rot(norm(sub(p2, pos)), tau/3), w/10)
+                var t2 = mul(rot(norm(sub(p2, pos)), -tau/3), w/10)
+                
+                g.lineTo(t1[0], t1[1])
+                g.lineTo(t2[0], t2[1])
+                
+                g.closePath()
+                
+                
+                g.lineWidth = 4
+                g.strokeStyle = 'orange'
+                g.stroke()
+                
+                
+
+                
+                g.arc(pos[0], pos[1], w/10, 0, tau)
                 g.stroke()
                 
                 g.fillText('bf: ' + before_frame + ' ' + m[2], 50, 150)
@@ -2144,7 +2169,99 @@ function deep_equals(a, b) {
 
 
 
+
+function each(o, cb) {
+    if (o instanceof Array) {
+        for (var i = 0; i < o.length; i++) {
+            if (cb(o[i], i, o) == false)
+                return false
+        }
+    } else {
+        for (var k in o) {
+            if (o.hasOwnProperty(k)) {
+                if (cb(o[k], k, o) == false)
+                    return false
+            }
+        }
+    }
+    return true
+}
+
+function map(o, func) {
+    if (o instanceof Array) {
+        var accum = []
+        for (var i = 0; i < o.length; i++)
+            accum[i] = func(o[i], i, o)
+        return accum
+    } else {
+        var accum = {}
+        for (var k in o)
+            if (o.hasOwnProperty(k))
+                accum[k] = func(o[k], k, o)
+        return accum
+    }
+}
+
+function wget(url, cb) {
+    var r = new XMLHttpRequest()
+    r.addEventListener("load", function () {
+        cb(this.responseText)
+    })
+    r.open("GET", url)
+    r.send()
+}
+
+
+
+
+function lerp(t0, v0, t1, v1, t) {
+    function inner_lerp(t0, v0, t1, v1, t) {
+        return (t - t0) * (v1 - v0) / (t1 - t0) + v0
+    }
+    if (typeof(v0) == 'object') {
+        return v0.map((x, i) => inner_lerp(t0, x, t1, v1[i], t))
+    } else return inner_lerp(t0, v0, t1, v1, t)
+}
+
+function mul(a, s) {
+    return a.map(a => a * s)
+}
+
+function rot(a, r) {
+    return [
+        a[0] * Math.cos(r) + a[1] * -Math.sin(r),
+        a[0] * Math.sin(r) + a[1] * Math.cos(r)]
+}
+
+function sum(a) {
+    return a.reduce((a, b) => a + b, 0)
+}
+
+function lenSq(a) {
+    return sum(a.map(x => x*x))
+}
+
+function len(a) {
+    return Math.sqrt(lenSq(a))
+}
+
+function norm(a) {
+    return mul(a, 1 / len(a))
+}
+
+function sub(a, b) {
+    return a.map((a, i) => a - b[i])
+}
+
+
+
+
+
+
+
 main()
+
+
 
 
 </script>
