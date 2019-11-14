@@ -568,8 +568,8 @@ function draw_network(c, g, frames, fi, x, y, w, h, r) {
                 g.moveTo(pos[0], pos[1])
 
                 // work here
-                var t1 = mul(rot(norm(sub(p2, pos)), tau/3), w/10)
-                var t2 = mul(rot(norm(sub(p2, pos)), -tau/3), w/10)
+                var t1 = add(pos, mul(rot(norm(sub(p2, pos)), tau/3), w/10))
+                var t2 = add(pos, mul(rot(norm(sub(p2, pos)), -tau/3), w/10))
                 
                 g.lineTo(t1[0], t1[1])
                 g.lineTo(t2[0], t2[1])
@@ -2247,6 +2247,10 @@ function len(a) {
 
 function norm(a) {
     return mul(a, 1 / len(a))
+}
+
+function add(a, b) {
+    return a.map((a, i) => a + b[i])
 }
 
 function sub(a, b) {
