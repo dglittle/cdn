@@ -522,13 +522,46 @@ function run_trial(seed, N, show_debug, trial_num) {
 
 function draw_network(c, g, peers, x, y, w, h, r) {
     g.beginPath()
+    g.lineWidth = 0.5
     g.strokeStyle = 'red'
     g.rect(x, y, w, h)
     g.stroke()
-    
     g.beginPath()
     g.arc(x + w/2, y + h/2, r, 0, tau)
     g.stroke()
+    
+    for (var i = 0; i < peers.length; i++) {
+        for (var ii = i + 1; ii < peers.length; ii++) {
+            var a = tau / peers.length * i
+            var aa = tau / peers.length * ii
+            g.beginPath()
+            g.strokeStyle = 'green'
+            g.lineWidth = w/35
+            g.moveTo(x + w/2 + Math.cos(a)*r, y + h/2 + Math.sin(a)*r)
+            g.lineTo(x + w/2 + Math.cos(aa)*r, y + h/2 + Math.sin(aa)*r)
+            g.stroke()
+            
+            peers[i].incoming.forEach((m, i, arr) => {
+                g.beginPath()
+                g.strokeStyle = 'purple'
+                var f = lerp(0, 0.1, arr.length - 1, 0.9, i)
+                g.arc(
+                    lerp(0, x + w/2 + Math.cos(a)*r, 1, x + w/2 + Math.cos(aa)*r, f),
+                    lerp(0, y + h/2 + Math.sin(a)*r, 1, y + h/2 + Math.sin(aa)*r, f),
+                    w/20, 0, tau)
+                g.stroke()
+            })
+            
+        }
+    }
+    
+    peers.forEach((p, i) => {
+        var a = tau / peers.length * i
+        g.beginPath()
+        g.strokeStyle = 'blue'
+        g.arc(x + w/2 + Math.cos(a)*r, y + h/2 + Math.sin(a)*r, w/30, 0, tau)
+        g.fill()
+    })
 }
 
 function draw_time_dag(c, g, peer, s9, x, y, w, h, r) {
