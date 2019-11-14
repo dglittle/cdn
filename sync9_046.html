@@ -449,7 +449,8 @@ function run_trial(seed, N, show_debug, trial_num) {
         slider.setAttribute('max', debug_frames.length - 1)
         slider.setAttribute('value', debug_frames.length - 1)
         slider.oninput = () => {
-            var d = debug_frames[1*slider.value]
+            var di = 1*slider.value
+            var d = debug_frames[di]
             
             top_part.innerHTML = ''
             top_part.style.display = 'grid'
@@ -507,7 +508,7 @@ function run_trial(seed, N, show_debug, trial_num) {
                 g.stroke()
             })
             
-            draw_network(c, g, d.peers, 100, 50, 800, 800, 300)
+            draw_network(c, g, debug_frames, di, 100, 50, 800, 800, 300)
             
 
             
@@ -520,7 +521,9 @@ function run_trial(seed, N, show_debug, trial_num) {
     return JSON.stringify(sync9_read(peers_array[0].keys.my_key.s9)).length
 }
 
-function draw_network(c, g, peers, x, y, w, h, r) {
+function draw_network(c, g, frames, fi, x, y, w, h, r) {
+    var peers = frames[fi].peers
+    
     g.beginPath()
     g.lineWidth = 0.5
     g.strokeStyle = 'red'
