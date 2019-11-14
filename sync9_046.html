@@ -541,10 +541,24 @@ function draw_network(c, g, peers, x, y, w, h, r) {
             g.lineTo(x + w/2 + Math.cos(aa)*r, y + h/2 + Math.sin(aa)*r)
             g.stroke()
             
-            peers[i].incoming.forEach((m, i, arr) => {
+            peers[i].incoming.forEach((m, mi, arr) => {
+                if (!m[0] == peers[ii].pid) return
+                
                 g.beginPath()
                 g.strokeStyle = 'purple'
-                var f = lerp(0, 0.1, arr.length - 1, 0.9, i)
+                var f = lerp(0, 0.1, arr.length - 1, 0.9, mi)
+                g.arc(
+                    lerp(0, x + w/2 + Math.cos(a)*r, 1, x + w/2 + Math.cos(aa)*r, f),
+                    lerp(0, y + h/2 + Math.sin(a)*r, 1, y + h/2 + Math.sin(aa)*r, f),
+                    w/20, 0, tau)
+                g.stroke()
+            })
+            peers[ii].incoming.forEach((m, mi, arr) => {
+                if (!m[0] == peers[i].pid) return
+                
+                g.beginPath()
+                g.strokeStyle = 'purple'
+                var f = lerp(0, 0.1, arr.length - 1, 0.9, mi)
                 g.arc(
                     lerp(0, x + w/2 + Math.cos(a)*r, 1, x + w/2 + Math.cos(aa)*r, f),
                     lerp(0, y + h/2 + Math.sin(a)*r, 1, y + h/2 + Math.sin(aa)*r, f),
