@@ -544,8 +544,8 @@ function draw_network(c, g, frames, fi, x, y, w, h, r) {
             g.lineTo(x + w/2 + Math.cos(aa)*r, y + h/2 + Math.sin(aa)*r)
             g.stroke()
             
-            function func(other_i, m) {
-                if (m[0] != peers[other_i].pid) return
+            function func(i, ii, m, a, aa) {
+                if (m[0] != peers[ii].pid) return
                 
                 var before_frame = fi
                 while ((before_frame >= 0) && frames[before_frame].peers[i].incoming.some(mm => mm[2] == m[2])) before_frame--
@@ -562,14 +562,12 @@ function draw_network(c, g, frames, fi, x, y, w, h, r) {
                     w/20, 0, tau)
                 g.stroke()
                 
-                // g.fillStyle = 'green'
-                // g.fillRect(0, 0, 50, 50)
-                // g.fillText('hi: ' + m[0], 50, 150)
-                // g.fillText('f: ' + f, 50, 200)
+                g.fillText('bf: ' + before_frame + ' ' + m[2], 50, 150)
+                g.fillText('af: ' + after_frame, 50, 200)
             }
             
-            peers[i].incoming.forEach(m => func(ii, m))
-            peers[ii].incoming.forEach(m => func(i, m))
+            peers[i].incoming.forEach(m => func(i, ii, m, aa, a))
+            peers[ii].incoming.forEach(m => func(ii, i, m, a, aa))
         }
     }
     
