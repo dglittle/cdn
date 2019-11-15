@@ -669,10 +669,9 @@ function draw_fissure_dag(c, g, peer, x, y, w, h, r) {
 
     function get_node_pos(f) {
         var layer_count = layer_members[f.layer].length
-        
         return [
             lerp(0, x + r, layer_count + 1, x + w - r, f.layer_i + 1),
-            lerp(0, y + r, num_layers - 1, y + h - r, f.layer)
+            lerp(0, y + r, Math.max(1, num_layers - 1), y + h - r, f.layer)
         ]
     }
 
@@ -691,6 +690,7 @@ function draw_fissure_dag(c, g, peer, x, y, w, h, r) {
     
     Object.values(fs).forEach(f => {
         g.beginPath()
+        
         var node_pos = get_node_pos(f)
         
         Math.randomSeed(f.id)
@@ -699,10 +699,12 @@ function draw_fissure_dag(c, g, peer, x, y, w, h, r) {
         var rr = r * (1 + Math.random())
         g.lineWidth = 2
         
-        if (f.has_side_a)
+        if (f.has_side_a) {
             g.arc(node_pos[0], node_pos[1], rr, tau/4, tau*3/4)
-        if (f.has_side_b)
+        }
+        if (f.has_side_b) {
             g.arc(node_pos[0], node_pos[1], rr, tau/4, tau*3/4, true)
+        }
         
         g.stroke()
     })
