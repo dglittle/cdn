@@ -625,14 +625,12 @@ function draw_network(c, g, frames, fi, x, y, w, h, r) {
 }
 
 function draw_fissure_dag(c, g, peer, x, y, w, h) {
+    if (!peer) return
+    
     g.fillStyle = 'rgba(255, 0, 255, 0.2)'
     g.fillRect(x, y, w, h)
     
     g.lineWidth = 3
-    
-    // work here
-    
-    console.log('got here!?, ', peer)
     
     var fs = {}
     Object.values(peer.fissures).forEach(f => {
