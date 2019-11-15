@@ -601,9 +601,20 @@ function draw_network(c, g, frames, fi, x, y, w, h, r) {
         var a = tau / peers.length * i
         g.beginPath()
         g.fillStyle = p.incoming.length > 0 ? 'blue' : 'green'
-        g.arc(x + w/2 + Math.cos(a)*r, y + h/2 + Math.sin(a)*r, w/30, 0, tau)
+        var pos = [
+            x + w/2 + Math.cos(a)*r,
+            y + h/2 + Math.sin(a)*r
+        ]
+        g.arc(pos[0], pos[1], w/30, 0, tau)
         g.fill()
+        
+        draw_fissure_dag(c, g, p, pos[0], pos[1] + w*0.07, w*0.1, w*0.1)
     })
+}
+
+function draw_fissure_dag(c, g, peer, x, y, w, h) {
+    g.fillStyle = 'magenta'
+    g.fillRect(x, y, w, h)
 }
 
 function draw_time_dag(c, g, peer, s9, x, y, w, h, r) {
