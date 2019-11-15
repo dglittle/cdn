@@ -10,7 +10,7 @@ var tau = Math.PI*2
 
 function main() {
     
-    var special_i = 100
+    var special_i = 200
 
     var max_size = 0
     
@@ -22,7 +22,7 @@ function main() {
         
         check_good = false
         try {
-            var size = run_trial('iiiifIIiiiEiiiiiEEff:' + i, 200, special_i >= 0, i)
+            var size = run_trial('iiiifIIiiiEiiiiiEEff:' + i, 500, special_i >= 0, i)
             if (size > max_size) max_size = size
         } catch (e) {
             console.log(e)
@@ -703,7 +703,7 @@ function draw_fissure_dag(c, g, peer, x, y, w, h, r) {
             g.arc(node_pos[0], node_pos[1], rr, tau/4, tau*3/4)
         }
         if (f.has_side_b) {
-            g.arc(node_pos[0], node_pos[1], rr, tau/4, tau*3/4, true)
+            g.arc(node_pos[0], node_pos[1], rr, tau*3/4, tau/4)
         }
         
         g.stroke()
