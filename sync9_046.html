@@ -34,7 +34,12 @@ function main() {
     console.log('check_good: ' + check_good)
 }
 
+var real_console = console
+
 function run_trial(seed, N, show_debug, trial_num) {
+    
+    let console = {log: () => {}}
+    
     Math.randomSeed(seed)
     var rand = () => Math.random()
     
@@ -615,7 +620,7 @@ function draw_network(c, g, frames, fi, x, y, w, h, r) {
         var extended_pos = add(pos, extension)
         
         var ww = w*0.1
-        draw_fissure_dag(c, g, p, extended_pos[0] - ww/2, extended_pos[1] - ww/2, ww, ww)
+        draw_fissure_dag(c, g, p.keys['my_key'], extended_pos[0] - ww/2, extended_pos[1] - ww/2, ww, ww)
     })
 }
 
@@ -625,7 +630,10 @@ function draw_fissure_dag(c, g, peer, x, y, w, h) {
     
     g.lineWidth = 3
     
-    // combine fissure halves for the display
+    // work here
+    
+    console.log('got here!?, ', peer)
+    
     var fs = {}
     Object.values(peer.fissures).forEach(f => {
         var ff = fs[f.conn]
@@ -637,6 +645,8 @@ function draw_fissure_dag(c, g, peer, x, y, w, h) {
             ff.parents[peer.fissures[p].conn] = true
         })
     })
+    
+    return
     
     function get_layer(k) {
         if (fs[k].layer) return fs[k].layer
