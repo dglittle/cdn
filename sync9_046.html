@@ -620,11 +620,11 @@ function draw_network(c, g, frames, fi, x, y, w, h, r) {
         var extended_pos = add(pos, extension)
         
         var ww = w*0.1
-        draw_fissure_dag(c, g, p.keys['my_key'], extended_pos[0] - ww/2, extended_pos[1] - ww/2, ww, ww)
+        draw_fissure_dag(c, g, p.keys['my_key'], extended_pos[0] - ww/2, extended_pos[1] - ww/2, ww, ww, 7)
     })
 }
 
-function draw_fissure_dag(c, g, peer, x, y, w, h) {
+function draw_fissure_dag(c, g, peer, x, y, w, h, r) {
     if (!peer) return
     
     g.fillStyle = 'rgba(255, 0, 255, 0.2)'
@@ -671,8 +671,8 @@ function draw_fissure_dag(c, g, peer, x, y, w, h) {
         var layer_count = layer_members[f.layer].length
         
         return [
-            lerp(0, x, layer_count + 1, x + w, f.layer_i + 1),
-            lerp(0, y, num_layers - 1, y + h, f.layer)
+            lerp(0, x + r, layer_count + 1, x + w - r, f.layer_i + 1),
+            lerp(0, y + r, num_layers - 1, y + h - r, f.layer)
         ]
     }
 
@@ -691,10 +691,20 @@ function draw_fissure_dag(c, g, peer, x, y, w, h) {
     
     Object.values(fs).forEach(f => {
         g.beginPath()
-        g.fillStyle = 'blue'
         var node_pos = get_node_pos(f)
-        g.arc(node_pos[0], node_pos[1], r, 0, Math.PI*2)
-        g.fill()
+        
+        Math.randomSeed(f.id)
+        g.strokeStyle = '#' + Math.random().toString(16).slice(2, 8)
+        
+        var rr = r * (1 + Math.random())
+        g.lineWidth = 2
+        
+        if (f.has_side_a)
+            g.arc(node_pos[0], node_pos[1], rr, tau/4, tau*3/4)
+        if (f.has_side_b)
+            g.arc(node_pos[0], node_pos[1], rr, tau/4, tau*3/4, true)
+        
+        g.stroke()
     })
 }
 
