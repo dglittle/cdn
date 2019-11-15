@@ -608,13 +608,88 @@ function draw_network(c, g, frames, fi, x, y, w, h, r) {
         g.arc(pos[0], pos[1], w/30, 0, tau)
         g.fill()
         
-        draw_fissure_dag(c, g, p, pos[0], pos[1] + w*0.07, w*0.1, w*0.1)
+        var center = [x + w/2, y + h/2]
+        var to_pos = sub(pos, center)
+        var to_pos_norm = norm(to_pos)
+        var extension = mul(to_pos_norm, w*0.1)
+        var extended_pos = add(pos, extension)
+        
+        var ww = w*0.1
+        draw_fissure_dag(c, g, p, extended_pos[0] - ww/2, extended_pos[1] - ww/2, ww, ww)
     })
 }
 
 function draw_fissure_dag(c, g, peer, x, y, w, h) {
-    g.fillStyle = 'magenta'
+    g.fillStyle = 'rgba(255, 0, 255, 0.2)'
     g.fillRect(x, y, w, h)
+    
+    g.lineWidth = 3
+    
+    // combine fissure halves for the display
+    var fs = {}
+    Object.values(peer.fissures).forEach(f => {
+        var ff = fs[f.conn]
+        if (!ff) ff = fs[f.conn] = {id: f.conn, parents:{}}
+        if (f.a < f.b) ff.has_side_a = true
+        if (f.b < f.a) ff.has_side_b = true
+        
+        Object.keys(f.parents).forEach(p => {
+            ff.parents[peer.fissures[p].conn] = true
+        })
+    })
+    
+    function get_layer(k) {
+        if (fs[k].layer) return fs[k].layer
+        return fs[k].layer = Object.keys(fs[k].parents).reduce((x, p) => {
+            return Math.max(x, get_layer(p) + 1)
+        }, 0)
+    }
+    Object.keys(fs).forEach(get_layer)
+    
+    var layer_members = {}
+    var num_layers = 0
+    Object.values(fs).forEach(f => {
+        layer_members[f.layer] = layer_members[f.layer] || []
+        layer_members[f.layer].push(f.id)
+        
+        if (f.layer >= num_layers) num_layers = f.layer + 1
+    })
+    
+    Object.values(layer_members).forEach(layer => {
+        layer.sort().forEach((k, i) => {
+            fs[k].layer_i = i
+        })
+    })
+
+    function get_node_pos(f) {
+        var layer_count = layer_members[f.layer].length
+        
+        return [
+            lerp(0, x + r, layer_count + 1, x + w - r, f.layer_i + 1),
+            lerp(0, y + r, num_layers - 1, y + h - r, f.layer)
+        ]
+    }
+
+    Object.values(fs).forEach(f => {
+        var a_pos = get_node_pos(f)
+        g.beginPath()
+        Object.keys(f.parents).forEach(p => {
+            g.moveTo(a_pos[0], a_pos[1])
+            
+            var b_pos = get_node_pos(fs[p])
+            g.lineTo(b_pos[0], b_pos[1])
+        })
+        g.strokeStyle = 'lightblue'
+        g.stroke()
+    })
+    
+    Object.values(fs).forEach(f => {
+        g.beginPath()
+        g.fillStyle = 'blue'
+        var node_pos = get_node_pos(f)
+        g.arc(node_pos[0], node_pos[1], r, 0, Math.PI*2)
+        g.fill()
+    })
 }
 
 function draw_time_dag(c, g, peer, s9, x, y, w, h, r) {
