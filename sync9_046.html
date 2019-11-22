@@ -480,13 +480,6 @@ function run_trial(seed, N, show_debug, trial_num) {
             
             g.clearRect(0, 0, c.width, c.height)
             
-            peers_array.forEach((p, i) => {
-                p = d.peers[i]
-                if (p.keys.my_key) {
-                    draw_time_dag(c, g, p.keys.my_key, p.keys.my_key.s9, lerp(0, 0, 6, c.width, i*2), (400 + 35)*devicePixelRatio, 300, 300, 7)
-                }
-            })
-            
             g.font = '20px Ariel'
             g.fillStyle = 'black'
             g.textBaseline = 'top'
@@ -495,28 +488,14 @@ function run_trial(seed, N, show_debug, trial_num) {
             
             g.lineWidth = 1
             
-            var peer_locs = [
-                [lerp(0, 0, 1, c.width, 0.2), 10 * devicePixelRatio],
-                [lerp(0, 0, 1, c.width, 0.5), 30 * devicePixelRatio],
-                [lerp(0, 0, 1, c.width, 0.8), 10 * devicePixelRatio]
-            ]
-            
-            ;[[0, 1], [1, 0], [1, 2], [2, 1], [2, 0], [0, 2]].forEach(([a, b]) => {
-                g.beginPath()
-                g.lineWidth = 3
-                g.strokeStyle = Object.values(d.peers[a].keys.my_key ? d.peers[a].keys.my_key.conns : {}).some(x => x.pid == d.peers[b].pid) ? 'green' : (d.peers[b].incoming.some(x => x[0] == d.peers[a].pid) || d.peers[a].incoming.some(x => x[0] == d.peers[b].pid)) ? 'orange' : 'red'
-                g.moveTo(peer_locs[a][0], peer_locs[a][1])
-                g.lineTo(
-                    lerp(0, peer_locs[a][0], 1, peer_locs[b][0], 0.5),
-                    lerp(0, peer_locs[a][1], 1, peer_locs[b][1], 0.5))
-                g.stroke()
+            peers_array.forEach((p, i) => {
+                p = d.peers[i]
+                if (p.keys.my_key) {
+                    draw_time_dag(c, g, p.keys.my_key, p.keys.my_key.s9, 800, 300*i, 300, 300, 7)
+                }
             })
             
-            draw_network(c, g, debug_frames, di, 100, 50, 800, 800, 300)
-            
-
-            
-            
+            draw_network(c, g, debug_frames, di, 0, 0, 800, 800, 300)
         }
         a.append(slider)
         slider.oninput()
