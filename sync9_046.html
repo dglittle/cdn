@@ -491,11 +491,11 @@ function run_trial(seed, N, show_debug, trial_num) {
             peers_array.forEach((p, i) => {
                 p = d.peers[i]
                 if (p.keys.my_key) {
-                    draw_time_dag(c, g, p.keys.my_key, p.keys.my_key.s9, 800, 300*i, 300, 300, 7)
+                    draw_time_dag(c, g, p.keys.my_key, p.keys.my_key.s9, 800, 450*i, 300, 300, 7)
                     
                     
                     try {
-                        draw_space_dag(c, g, p.keys.my_key.s9.val.S.elems[0].S, 900, 300*i)
+                        draw_space_dag(c, g, p.keys.my_key.s9.val.S.elems[0].S, 1100, 200 + 450*i)
                     } catch (e) {}
                 }
             })
