@@ -492,6 +492,11 @@ function run_trial(seed, N, show_debug, trial_num) {
                 p = d.peers[i]
                 if (p.keys.my_key) {
                     draw_time_dag(c, g, p.keys.my_key, p.keys.my_key.s9, 800, 300*i, 300, 300, 7)
+                    
+                    
+                    try {
+                        draw_space_dag(c, g, p.keys.my_key.s9.val.S, 900, 300*i)
+                    } catch (e) {}
                 }
             })
             
