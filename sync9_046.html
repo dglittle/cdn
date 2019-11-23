@@ -836,21 +836,21 @@ function draw_space_dag(c, g, S, x, y) {
         var begin_x
         var end_x
 
-        g.beginPath()
-        if (node.gash) {
-            begin_x = x
-            g.moveTo(x, y - 20)
-            g.bezierCurveTo(x + 10, y - 10, x + 10, y + 10, x, y + 20)
-            x += 12
-        } else {
-            begin_x = x + 10
-            g.moveTo(x + 10, y - 20)
-            g.bezierCurveTo(x, y - 10, x, y + 10, x + 10, y + 20)
-            x += 8
-        }
-        g.lineWidth = 1
-        g.strokeStyle = 'lightblue'
-        g.stroke()
+        // g.beginPath()
+        // if (node.gash) {
+        //     begin_x = x
+        //     g.moveTo(x, y - 20)
+        //     g.bezierCurveTo(x + 10, y - 10, x + 10, y + 10, x, y + 20)
+        //     x += 12
+        // } else {
+        //     begin_x = x + 10
+        //     g.moveTo(x + 10, y - 20)
+        //     g.bezierCurveTo(x, y - 10, x, y + 10, x + 10, y + 20)
+        //     x += 8
+        // }
+        // g.lineWidth = 1
+        // g.strokeStyle = 'lightblue'
+        // g.stroke()
         
 
         
@@ -869,7 +869,10 @@ function draw_space_dag(c, g, S, x, y) {
         }
         g.textBaseline = 'middle'
         g.font = '20px Arial'
-        g.fillText(node.elems, x, y)
+        
+        var my_text = (node.gash ? '' : '*') + node.elems + (node.end_cap ? '*' : '')
+        
+        g.fillText(my_text, x, y)
         
         
 
@@ -880,28 +883,28 @@ function draw_space_dag(c, g, S, x, y) {
         // g.fillStyle = 'grey'
         // g.fillText(node.vid || 'null', x, y + Math.random()*100)
         
-        var width = g.measureText(node.elems).width
+        var width = g.measureText(my_text).width
         x += width
         
-        g.beginPath()
-        if (node.end_cap) {
-            end_x = x
-            g.moveTo(x, y - 20)
-            g.bezierCurveTo(x + 10, y - 10, x + 10, y + 10, x, y + 20)
-            x += 10
-        } else {
-            end_x = x + 10
-            g.moveTo(x + 10, y - 20)
-            g.bezierCurveTo(x, y - 10, x, y + 10, x + 10, y + 20)
-            x += 8
-        }
-        g.moveTo(begin_x, y - 20)
-        g.lineTo(end_x, y - 20)
-        g.moveTo(begin_x, y + 20)
-        g.lineTo(end_x, y + 20)
-        g.lineWidth = 1
-        g.strokeStyle = 'lightblue'
-        g.stroke()
+        // g.beginPath()
+        // if (node.end_cap) {
+        //     end_x = x
+        //     g.moveTo(x, y - 20)
+        //     g.bezierCurveTo(x + 10, y - 10, x + 10, y + 10, x, y + 20)
+        //     x += 10
+        // } else {
+        //     end_x = x + 10
+        //     g.moveTo(x + 10, y - 20)
+        //     g.bezierCurveTo(x, y - 10, x, y + 10, x + 10, y + 20)
+        //     x += 8
+        // }
+        // g.moveTo(begin_x, y - 20)
+        // g.lineTo(end_x, y - 20)
+        // g.moveTo(begin_x, y + 20)
+        // g.lineTo(end_x, y + 20)
+        // g.lineWidth = 1
+        // g.strokeStyle = 'lightblue'
+        // g.stroke()
 
         var px = x
         x += 10
