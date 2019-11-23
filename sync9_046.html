@@ -493,9 +493,8 @@ function run_trial(seed, N, show_debug, trial_num) {
                 if (p.keys.my_key) {
                     draw_time_dag(c, g, p.keys.my_key, p.keys.my_key.s9, 800, 450*i, 300, 300, 7)
                     
-                    
                     try {
-                        draw_space_dag(c, g, p.keys.my_key.s9.val.S.elems[0].S, 1100, 200 + 450*i)
+                        draw_space_dag(c, g, p.keys.my_key.s9.val.S.elems[0].S, 1100, 450*i)
                     } catch (e) {}
                 }
             })
@@ -902,7 +901,7 @@ function draw_space_dag(c, g, S, x, y) {
 
         var px = x
         x += 10
-        for (var n of node.nexts) helper(n, y - 40, px, y)
+        for (var n of node.nexts) helper(n, y + 40, px, y)
         if (node.next) helper(node.next, y, px, y)
     }
     if (typeof(S) == 'string') helper(sync9_create_space_dag_node('lit', S))
