@@ -8,6 +8,8 @@
 
 var tau = Math.PI*2
 
+var real_rand = Math.random
+
 function main() {
     var n_peers = 3
     
@@ -95,7 +97,7 @@ function main() {
         var i = Math.floor(rand() * n_peers)
         var p = peers_array[i]
         
-        if (rand() < 0.1) {
+        if (rand() < 0.05) {
             if (rand() < 0.9) {
                 if (p.keys['my_key'] && Object.keys(p.keys['my_key'].s9.T).length) {
                     if (p.letters_i >= p.letters.length) {
@@ -148,6 +150,8 @@ function main() {
         debug_frames.push({
             peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
         })
+        
+        if (debug_frames.length > 300) debug_frames = debug_frames.slice(100)
     }
 
     function create_random_edit(s9, letters) {
@@ -398,6 +402,7 @@ function draw_fissure_dag(c, g, peer, x, y, w, h, r) {
                 radius: r * (1 + Math.random()),
                 parents: {}
             }
+            Math.random = real_rand
         }
         if (f.a < f.b) ff.has_side_a = true
         if (f.b < f.a) ff.has_side_b = true
@@ -464,6 +469,8 @@ function draw_fissure_dag(c, g, peer, x, y, w, h, r) {
         
         var rr = r * (1 + Math.random())
         g.lineWidth = 2
+        
+        Math.random = real_rand
         
         if (f.has_side_a) {
             g.arc(node_pos[0], node_pos[1], rr, tau/4, tau*3/4)
@@ -571,6 +578,9 @@ function draw_time_dag(c, g, peer, s9, x, y, w, h, r) {
             var node_pos = get_node_pos(vs[v])
             //var rr = r * 1.45
             var rr = r * (1 + Math.random())
+            
+            Math.random = real_rand
+            
             g.lineWidth = 2
             if (f.a < f.b) {
                 
