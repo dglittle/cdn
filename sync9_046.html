@@ -9,44 +9,10 @@
 var tau = Math.PI*2
 
 function main() {
-    
-    var special_i = 200
-
-    var max_size = 0
-    
-    for (var i = (special_i >= 0) ? special_i : 0; i < 1000; i++) {
-        if ((special_i < 0) && (i % 100 == 0)) {
-            console.log('TRIAL: ' + i + ` max_size:${max_size}`)
-            max_size = 0
-        }
-        
-        check_good = false
-        try {
-            var size = run_trial('iiiifIIiiiEiiiiiEEff:' + i, 500, special_i >= 0, i)
-            if (size > max_size) max_size = size
-        } catch (e) {
-            console.log(e)
-            console.log('TRIAL: ' + i + ' FAILED!')
-            break
-        }
-        if (special_i >= 0) break
-    }
-    console.log('check_good: ' + check_good)
-}
-
-var real_console = console
-
-function run_trial(seed, N, show_debug, trial_num) {
-    
-    let console = {log: () => {}}
-    
-    Math.randomSeed(seed)
-    var rand = () => Math.random()
-    
-    var debug_frames = show_debug ? [] : null
-    var notes = []
-
     var n_peers = 3
+    
+    var debug_frames = []
+
     var peers = {}
     for (var i = 0; i < n_peers; i++) {
         ;(() => {
@@ -57,11 +23,7 @@ function run_trial(seed, N, show_debug, trial_num) {
                     var args = [...arguments].map(x => (x != null) ? JSON.parse(JSON.stringify(x)) : null)
                     var t = args[t_index]
                     if ((key != 'get') && !p.keys.my_key.conns[t.conn.id]) throw 'you cannot talk to them!'
-                    notes.push('SEND: ' + key + ' from:' + p.pid + ' to:' + t.conn.pid + args.map(x => ' ' + JSON.stringify(x)))
-                    if (show_debug) console.log(notes)
                     peers[t.conn.pid].incoming.push([p.pid, () => {
-                        notes.push('RECV: ' + key + ' from:' + p.pid + ' to:' + t.conn.pid + args.map(x => ' ' + JSON.stringify(x)))
-                        if (show_debug) console.log(notes)
                         var to_pid = t.conn.pid
                         t.conn = {id: t.conn.id, pid: p.pid}
                         peers[to_pid][key](...args)
@@ -114,38 +76,24 @@ function run_trial(seed, N, show_debug, trial_num) {
             peers_array[p2].connect(peers_array[p1].pid, !alpha)
             
             if (debug_frames) debug_frames.push({
-                t: -1,
-                peer_notes: {
-                    [peers_array[p1].pid]: notes,
-                    [peers_array[p2].pid]: notes
-                },
                 peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
             })
         }
     }
     
     if (true) {
-        notes = ['initial edit']
         let p = peers_array[0]
-        p.set('my_key', [], {version: 'root', parents: {}})
+        p.set('my_key', ['=""'], {version: 'root', parents: {}})
         if (debug_frames) debug_frames.push({
-            t: -1,
-            peer_notes: {[p.pid]: notes},
             peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
         })
     }
     
-    try {
+    function rand() { return Math.random() }
     
-    for (var t = 0; t < N; t++) {
-        if (show_debug) console.log('t == ' + t)
-        
-        
-        
+    function step() {
         var i = Math.floor(rand() * n_peers)
         var p = peers_array[i]
-        
-        notes = []
         
         if (rand() < 0.1) {
             if (rand() < 0.9) {
@@ -175,18 +123,15 @@ function run_trial(seed, N, show_debug, trial_num) {
                     }
                 })
                 if (disconnect) {
-                    notes.push(' disconnect ' + p.pid + ' and ' + other_p.pid)
                     p.incoming = p.incoming.filter(x => x[0] != other_p.pid)
                     other_p.incoming = other_p.incoming.filter(x => x[0] != p.pid)
                 } else {
-                    notes.push(' connect ' + p.pid + ' and ' + other_p.pid)
                     var alpha = Math.random() < 0.5
                     p.connect(other_p.pid, alpha)
                     other_p.connect(p.pid, !alpha)
                 }
             }
         } else {
-            if (show_debug) console.log('process incoming')
             var did_something = false
             if (p.incoming.length > 0) {
                 did_something = true
@@ -198,318 +143,109 @@ function run_trial(seed, N, show_debug, trial_num) {
                 
                 var msg = p.incoming.splice(p.incoming.findIndex(x => x[0] == chosen_peer), 1)[0][1]()
             }
-            if (!did_something) {
-                if (show_debug) console.log('did nothing')
-            }
         }
         
-        if (show_debug)
-            console.log('peer: ' + p.pid + ' -> ' + JSON.stringify(sync9_read(p.keys['my_key'] && p.keys['my_key'].s9)))
-            
-        if (debug_frames) debug_frames.push({
-            t: t,
-            peer_notes: {[p.pid]: notes},
+        debug_frames.push({
             peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
         })
     }
 
-    for (var p1 = 0; p1 < n_peers; p1++) {
-        var p1_p = peers_array[p1]
-        for (var p2 = p1 + 1; p2 < n_peers; p2++) {
-            var p2_p = peers_array[p2]
-            if (!Object.values(p1_p.keys['my_key'] ? p1_p.keys['my_key'].conns : []).some(x => x.pid == p2_p.pid) && !p1_p.incoming.some(x => x[0] == p2_p.pid) && !Object.values(p2_p.keys['my_key'] ? p2_p.keys['my_key'].conns : []).some(x => x.pid == p1_p.pid) && !p2_p.incoming.some(x => x[0] == p1_p.pid)) {
-                notes = ['connecting ' + p1 + ':' + p1_p.pid + ' and ' + p2 + ':' + p2_p.pid]
-                
-                var alpha = Math.random() < 0.5
-                peers_array[p1].connect(p2_p.pid, alpha)
-                peers_array[p2].connect(p1_p.pid, !alpha)
-                
-                if (debug_frames) debug_frames.push({
-                    t: -1,
-                    peer_notes: {
-                        [p1_p.pid]: notes,
-                        [p2_p.pid]: notes
-                    },
-                    peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
-                })
-            }
-        }
-    }
-    
-    var tt = 0
-    for (var t = 0; t < 50; t++) {
-        Object.values(peers).forEach(p => {
-            while (p.incoming.length > 0) {
-                tt++
-                if (show_debug) console.log('t => ' + tt)
-                
-                notes = []
-
-                p.incoming.shift()[1]()
-                
-                if (debug_frames) debug_frames.push({
-                    tt: tt,
-                    peer_notes: {[p.pid]: notes},
-                    peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
-                })
-            }
-        })
-        
-        if (Object.values(peers).every(x => x.incoming.length == 0)) {
-            tt++
-            var too_many_fissures = false    
-            Object.values(peers).forEach((x, i) => {
-                if (x.keys['my_key'] && (Object.keys(x.keys['my_key'].fissures).length > 0)) {
-                    too_many_fissures = true
-                }
-            })
-            
-            var too_many_versions = false
-            Object.values(peers).forEach((x, i) => {
-                if (x.keys['my_key'] && (Object.keys(x.keys['my_key'].s9.T).length > 1)) {
-                    too_many_versions = true
-                }
-            })
-            
-            if (too_many_fissures || too_many_versions) {
-                var i = Math.floor(rand() * n_peers)
-                var p = peers_array[i]
-                
-                notes = ['creating joiner']
-                p.keys['my_key'].create_joiner()
-                
-                if (debug_frames) debug_frames.push({
-                    tt: tt,
-                    peer_notes: {[p.pid]: notes},
-                    peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
-                })
-            } else {
-                break
-            }
-        }
-    }
-    
-    } catch (e) {
-        console.log('ERROR')
-        console.log(e)
-        if (!show_debug) throw 'stop'
-    }
-
-    Object.values(peers).forEach((x, i) => {
-        if (!x.keys.my_key) {
-            console.log('missing my_key for ' + x.pid)
-            check_good = false
-            throw 'bad'
-        }
-    })
-    
-    var check_val = null
-    check_good = true
-    Object.values(peers).forEach((x, i) => {
-        var val = sync9_read(x.keys.my_key.s9)
-        if (i == 0)
-            check_val = val
-        else if (!deep_equals(val, check_val))
-            check_good = false
-    })
-
-    var too_many_fissures = false    
-    Object.values(peers).forEach((x, i) => {
-        if (Object.keys(x.keys.my_key.fissures).length > 0) {
-            check_good = false
-            too_many_fissures = true
-        }
-    })
-    
-    var too_many_versions = false
-    Object.values(peers).forEach((x, i) => {
-        if (Object.keys(x.keys.my_key.s9.T).length > 2) {
-            check_good = false
-            too_many_versions = true
-        }
-    })
-        
-        
-    //console.log('CHECK GOOD: ' + check_good)
-    if (!check_good) {
-        Object.values(peers).forEach((x, i) => {
-            console.log(x)
-            var val = sync9_read(x.keys.my_key.s9)
-            console.log('val: ' + JSON.stringify(val))
-        })
-        console.log('too_many_fissures: ' + too_many_fissures)
-        console.log('too_many_versions: ' + too_many_versions)
-        console.log('trial_num: ' + trial_num)
-        if (!show_debug) throw 'stop'
-    }
-
-    function rand() { return Math.random() }
-
     function create_random_edit(s9, letters) {
         letters = letters || 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-        var o = sync9_read(s9)
+        var str = sync9_read(s9)
+        var start = Math.floor(Math.random() * (str.length + 1))
+        var del = Math.floor(Math.random() * Math.random() * (str.length - start + 1))
+        var ins = letters[Math.floor(Math.random() * letters.length)].repeat(Math.floor(Math.random() * 4) + (del == 0 ? 1 : 0))
         
-        function create_random_thing_to_insert() {
-            if (Math.random() < 0.25) {
-                return {}
-            } else if (Math.random() < 0.33) {
-                return []
-            } else if (Math.random() < 0.5) {
-                return Math.floor(Math.random() * 100)
-            } else {
-                return letters[Math.floor(rand() * letters.length)].repeat(Math.floor(rand() * 4))
-            }
-        }
-        
-        var include_vals = (o == null) || (Math.random() < 0.2)
-        
-        var paths = {}
-        function get_paths(x, path) {
-            if (include_vals || (x != null && typeof(x) == 'object'))
-                paths[path] = x
-            if (x == null) {
-            } else if (Array.isArray(x)) {
-                for (var i = 0; i < x.length; i++) {
-                    get_paths(x[i], path + `[${i}]`)
-                }
-            } else if (typeof(x) == 'object') {
-                Object.entries(x).forEach(x => {
-                    get_paths(x[1], path + `[${JSON.stringify(x[0])}]`)
-                })
-            }
-        }
-        get_paths(o, '')
-        
-        var changes = []
-        var ents = Object.entries(paths)
-        if (ents.length > 0) {
-            var ent = ents[Math.floor(Math.random() * ents.length)]
-            if (typeof(ent[1]) == 'string') {
-                var x = ent[1]
-                var start = Math.floor(rand() * (x.length + 1))
-                var del = Math.floor(rand() * rand() * (x.length - start + 1))
-                var ins = letters[Math.floor(rand() * letters.length)].repeat(Math.floor(rand() * 4) + (del == 0 ? 1 : 0))
-                changes.push(ent[0] + `[${start}:${start + del}] = ` + JSON.stringify(ins))
-            } else if (Array.isArray(ent[1])) {
-                var x = ent[1]
-                var start = Math.floor(rand() * (x.length + 1))
-                var del = Math.floor(rand() * rand() * (x.length - start + 1))
-                var ins = []
-                var ins_len = Math.floor(rand() * 3)
-                for (var i = 0; i < ins_len; i++) {
-                    ins.push(create_random_thing_to_insert())
-                }
-                changes.push(ent[0] + `[${start}:${start + del}] = ` + JSON.stringify(ins))
-            } else if (ent[1] != null && typeof(ent[1]) == 'object') {
-                var i = Math.floor(Math.random() * 3)
-                var key = 'abc'.slice(i, i + 1)
-                changes.push(ent[0] + `[${JSON.stringify(key)}] = ${JSON.stringify(create_random_thing_to_insert())}`)
-            } else {
-                changes.push(ent[0] + ' = ' + JSON.stringify(create_random_thing_to_insert()))
-            }
-        }
-        
-        // work here
-        var vid = sync9_guid()
         s9.next_version_id = (s9.next_version_id || 0) + 1
-        var vid = letters[0] + s9.next_version_id
+        var vid = letters + s9.next_version_id
+        
+        var changes = [`[${start}:${start + del}] = ` + JSON.stringify(ins)]
         
         return {
-            vid,
+            vid : vid,
             parents : Object.assign({}, s9.leaves),
-            changes
+            changes : changes
         }
     }
-
-    if (show_debug) {
-        Object.values(peers).forEach(x => {
-            console.log('peer: ' + JSON.stringify(sync9_read(x.keys.my_key.s9)))
+    
+    function draw_frame(di) {
+        if (di == null) di = debug_frames.length - 1
+        var d = debug_frames[di]
+        
+        g.clearRect(0, 0, c.width, c.height)
+        draw_network(c, g, debug_frames, di, 0, 0, 800, 800, 300)
+        peers_array.forEach((p, i) => {
+            p = d.peers[i]
+            var x = 800
+            var y = 20 + 450*i
+            if (p.keys.my_key) {
+                draw_fissure_dag(c, g, p.keys.my_key, x, y, 100, 100, 7)
+                
+                draw_time_dag(c, g, p.keys.my_key, p.keys.my_key.s9, x + 100, y, 300, 300, 7)
+                
+                try {
+                    draw_space_dag(c, g, p.keys.my_key.s9.val.S.elems[0].S, x + 400, y)
+                } catch (e) {}
+            }
         })
     }
     
-    if (debug_frames) {
-        var a = document.createElement('div')
-        a.style.display = 'grid'
-        a.style['grid-template-rows'] = '700px 1fr 20px'
-        a.style.width = '100%'
-        a.style.height = '100%'
-        document.body.append(a)
-        
-        var c = document.createElement('canvas')
-        c.width = window.innerWidth * devicePixelRatio
-        c.height = 700 * devicePixelRatio
-        c.style.width = (c.width / devicePixelRatio) + 'px'
-        c.style.height = (c.height / devicePixelRatio) + 'px'
-        var g = c.getContext('2d')
-        a.append(c)
-        
-        var top_part = document.createElement('div')
-        a.append(top_part)
-        
-        var slider = document.createElement('input')
-        slider.style.width = '100%'
-        slider.setAttribute('type', 'range')
-        slider.setAttribute('min', '0')
-        slider.setAttribute('max', debug_frames.length - 1)
-        slider.setAttribute('value', debug_frames.length - 1)
-        slider.oninput = () => {
-            var di = 1*slider.value
-            var d = debug_frames[di]
-            
-            top_part.innerHTML = ''
-            top_part.style.display = 'grid'
-            top_part.style['grid-template-columns'] = '1fr 1fr 1fr'
-            top_part.style['grid-template-rows'] = '1fr 2fr'
-            
-            peers_array.forEach((p, i) => {
-                var notes = d.peer_notes[p.pid]
-                if (notes && typeof(notes) == 'object') notes = notes.join('\n\n')
-                if (!notes) notes = 'N/A'
-                var dd = document.createElement('textarea')
-                dd.value = notes
-                top_part.append(dd)
-            })
-            
-            peers_array.forEach((p, i) => {
-                p = d.peers[i]
-                var dd = document.createElement('textarea')
-                dd.value = '= ' + (p.keys.my_key ? JSON.stringify(sync9_read(p.keys.my_key.s9)) : 'n/a') + '\n\n' + JSON.stringify(p, null, '    ')
-                top_part.append(dd)
-            })
-
-            
-            g.clearRect(0, 0, c.width, c.height)
-            
-            g.font = '20px Ariel'
-            g.fillStyle = 'black'
-            g.textBaseline = 'top'
-            if (d.tt) g.fillText('tt: ' + d.tt, 0, 0)
-            else g.fillText('t: ' + d.t, 0, 0)
-            
-            g.lineWidth = 1
-            
-            peers_array.forEach((p, i) => {
-                p = d.peers[i]
-                var x = 800
-                var y = 20 + 450*i
-                if (p.keys.my_key) {
-                    draw_fissure_dag(c, g, p.keys.my_key, x, y, 100, 100, 7)
-                    
-                    draw_time_dag(c, g, p.keys.my_key, p.keys.my_key.s9, x + 100, y, 300, 300, 7)
-                    
-                    try {
-                        draw_space_dag(c, g, p.keys.my_key.s9.val.S.elems[0].S, x + 400, y)
-                    } catch (e) {}
-                }
-            })
-            
-            draw_network(c, g, debug_frames, di, 0, 0, 800, 800, 300)
-        }
-        a.append(slider)
-        slider.oninput()
-    }
+    var a = document.createElement('div')
+    a.style.display = 'grid'
+    a.style['grid-template-rows'] = '700px 1fr 20px'
+    a.style.width = '100%'
+    a.style.height = '100%'
+    document.body.append(a)
     
-    return JSON.stringify(sync9_read(peers_array[0].keys.my_key.s9)).length
+    var c = document.createElement('canvas')
+    c.width = window.innerWidth * devicePixelRatio
+    c.height = 700 * devicePixelRatio
+    c.style.width = (c.width / devicePixelRatio) + 'px'
+    c.style.height = (c.height / devicePixelRatio) + 'px'
+    var g = c.getContext('2d')
+    a.append(c)
+    
+    var top_part = document.createElement('div')
+    a.append(top_part)
+    
+    // var slider = document.createElement('input')
+    // slider.style.width = '100%'
+    // slider.setAttribute('type', 'range')
+    // slider.setAttribute('min', '0')
+    // slider.setAttribute('max', debug_frames.length - 1)
+    // slider.setAttribute('value', debug_frames.length - 1)
+    // slider.oninput = () => {
+    //     var di = 
+    //     var d = debug_frames[di]
+        
+    //     draw_frame(1*slider.value)
+        
+    //     g.clearRect(0, 0, c.width, c.height)
+    //     draw_network(c, g, debug_frames, di, 0, 0, 800, 800, 300)
+    //     peers_array.forEach((p, i) => {
+    //         p = d.peers[i]
+    //         var x = 800
+    //         var y = 20 + 450*i
+    //         if (p.keys.my_key) {
+    //             draw_fissure_dag(c, g, p.keys.my_key, x, y, 100, 100, 7)
+                
+    //             draw_time_dag(c, g, p.keys.my_key, p.keys.my_key.s9, x + 100, y, 300, 300, 7)
+                
+    //             try {
+    //                 draw_space_dag(c, g, p.keys.my_key.s9.val.S.elems[0].S, x + 400, y)
+    //             } catch (e) {}
+    //         }
+    //     })
+    // }
+    // a.append(slider)
+    // slider.oninput()
+    
+    loop()
+    function loop() {
+        draw_frame()
+        setTimeout(loop, 300)
+    }
 }
 
 function draw_network(c, g, frames, fi, x, y, w, h, r) {
@@ -614,15 +350,20 @@ function draw_network(c, g, frames, fi, x, y, w, h, r) {
 function draw_fissure_dag(c, g, peer, x, y, w, h, r) {
     if (!peer) return
     
-    g.fillStyle = 'rgba(255, 0, 255, 0.2)'
-    g.fillRect(x, y, w, h)
-    
     g.lineWidth = 3
     
     var fs = {}
     Object.values(peer.fissures).forEach(f => {
         var ff = fs[f.conn]
-        if (!ff) ff = fs[f.conn] = {id: f.conn, parents:{}}
+        if (!ff) {
+            Math.randomSeed(f.conn)
+            ff = fs[f.conn] = {
+                id: f.conn,
+                color: '#' + Math.random().toString(16).slice(2, 8),
+                radius: r * (1 + Math.random()),
+                parents: {}
+            }
+        }
         if (f.a < f.b) ff.has_side_a = true
         if (f.b < f.a) ff.has_side_b = true
         
@@ -665,11 +406,14 @@ function draw_fissure_dag(c, g, peer, x, y, w, h, r) {
     Object.values(fs).forEach(f => {
         var a_pos = get_node_pos(f)
         g.beginPath()
-        Object.keys(f.parents).forEach(p => {
-            g.moveTo(a_pos[0], a_pos[1])
+        Object.keys(f.parents).map(x => fs[x]).forEach(p => {
+            var b_pos = get_node_pos(p)
             
-            var b_pos = get_node_pos(fs[p])
-            g.lineTo(b_pos[0], b_pos[1])
+            var a = add(a_pos, mul(norm(sub(b_pos, a_pos)), f.radius))
+            var b = add(b_pos, mul(norm(sub(a_pos, b_pos)), p.radius))
+            
+            g.moveTo(a[0], a[1])
+            g.lineTo(b[0], b[1])
         })
         g.strokeStyle = 'lightblue'
         g.stroke()
@@ -855,9 +599,10 @@ function draw_space_dag(c, g, S, x, y) {
 
         
         // work here
+        g.textBaseline = 'middle'
         g.font = '15px Arial'
         g.fillStyle = 'grey'
-        g.fillText(node.vid ? node.vid.slice(0, 3) : '_', x, y + 40)
+        g.fillText(node.vid ? node.vid.slice(0, 3) : '', x, y + 25)
         
         
         
@@ -870,7 +615,7 @@ function draw_space_dag(c, g, S, x, y) {
         g.textBaseline = 'middle'
         g.font = '20px Arial'
         
-        var my_text = (node.gash ? '' : '*') + node.elems + (node.end_cap ? '*' : '')
+        var my_text = node.elems + (node.end_cap ? '*' : '')
         
         g.fillText(my_text, x, y)
         
