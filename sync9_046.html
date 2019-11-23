@@ -193,10 +193,14 @@ function main() {
                 
                 draw_time_dag(c, g, p.keys.my_key, p.keys.my_key.s9, x + 100, y, 300, 300, 7)
                 
-                // if (p.keys.my_key && p.keys.my_key.s9) {
-                //     var S = sync9_space_dag_get(p.keys.my_key.s9, 0).S
-                //     draw_space_dag(c, g, S, x + 400, y)
-                // }
+                var v = p.keys.my_key.s9.val
+                var S = null
+                
+                if (v && v.t == 'val') v = sync9_space_dag_get(v.S, 0)
+                if (v && v.t == 'lit') v = v.S
+                if (typeof(v) == 'string') S = sync9_create_space_dag_node(null, v)
+                if (v && v.t == 'str') S = v.S
+                if (S) draw_space_dag(p, g, S, x + 400, y)
             }
         })
         
