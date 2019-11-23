@@ -174,6 +174,15 @@ function main() {
         var d = debug_frames[di]
         
         g.clearRect(0, 0, c.width, c.height)
+        
+        
+        
+        g.fillStyle = '#' + Math.random().toString(16).slice(2, 8)
+        g.fillRect(0, 0, 100, 100)
+        g.fillText('di = ' + di, 0, 200)
+        
+        
+        
         draw_network(c, g, debug_frames, di, 0, 0, 800, 800, 300)
         peers_array.forEach((p, i) => {
             p = d.peers[i]
@@ -240,12 +249,17 @@ function main() {
     // }
     // a.append(slider)
     // slider.oninput()
+
+    draw_frame()
     
-    loop()
     function loop() {
         draw_frame()
         setTimeout(loop, 300)
     }
+    
+    document.body.addEventListener('mousedown', () => {
+        loop()
+    })
 }
 
 function draw_network(c, g, frames, fi, x, y, w, h, r) {
