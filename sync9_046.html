@@ -490,11 +490,15 @@ function run_trial(seed, N, show_debug, trial_num) {
             
             peers_array.forEach((p, i) => {
                 p = d.peers[i]
+                var x = 800
+                var y = 20 + 450*i
                 if (p.keys.my_key) {
-                    draw_time_dag(c, g, p.keys.my_key, p.keys.my_key.s9, 800, 450*i, 300, 300, 7)
+                    draw_fissure_dag(c, g, p.keys.my_key, x, y, 100, 100, 7)
+                    
+                    draw_time_dag(c, g, p.keys.my_key, p.keys.my_key.s9, x + 100, y, 300, 300, 7)
                     
                     try {
-                        draw_space_dag(c, g, p.keys.my_key.s9.val.S.elems[0].S, 1100, 450*i)
+                        draw_space_dag(c, g, p.keys.my_key.s9.val.S.elems[0].S, x + 400, y)
                     } catch (e) {}
                 }
             })
@@ -596,14 +600,14 @@ function draw_network(c, g, frames, fi, x, y, w, h, r) {
         g.arc(pos[0], pos[1], w/30, 0, tau)
         g.fill()
         
-        var center = [x + w/2, y + h/2]
-        var to_pos = sub(pos, center)
-        var to_pos_norm = norm(to_pos)
-        var extension = mul(to_pos_norm, w*0.1)
-        var extended_pos = add(pos, extension)
+        // var center = [x + w/2, y + h/2]
+        // var to_pos = sub(pos, center)
+        // var to_pos_norm = norm(to_pos)
+        // var extension = mul(to_pos_norm, w*0.1)
+        // var extended_pos = add(pos, extension)
         
-        var ww = w*0.1
-        draw_fissure_dag(c, g, p.keys['my_key'], extended_pos[0] - ww/2, extended_pos[1] - ww/2, ww, ww, 7)
+        // var ww = w*0.1
+        // draw_fissure_dag(c, g, p.keys['my_key'], extended_pos[0] - ww/2, extended_pos[1] - ww/2, ww, ww, 7)
     })
 }
 
