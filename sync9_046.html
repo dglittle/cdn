@@ -263,14 +263,17 @@ function main() {
 
     draw_frame()
     
+    var is_on = false
     function loop() {
-        step()
-        draw_frame()
+        if (is_on) {
+            step()
+            draw_frame()
+        }
         setTimeout(loop, 30)
     }
     
     document.body.addEventListener('mousedown', () => {
-        loop()
+        is_on = !is_on
     })
 }
 
