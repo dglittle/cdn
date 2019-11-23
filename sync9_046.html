@@ -192,14 +192,7 @@ function main() {
                 draw_fissure_dag(c, g, p.keys.my_key, x, y, 100, 100, 7)
                 
                 draw_time_dag(c, g, p.keys.my_key, p.keys.my_key.s9, x + 100, y, 300, 300, 7)
-                
-                
-
-                try {
                 draw_space_dag(c, g, sync9_space_dag_get(p.keys.my_key.s9, 0).S, x + 400, y)
-                } catch (e) {
-                    console.log('e = ' + e.stack)
-                }
             }
         })
         
