@@ -7,7 +7,9 @@ var files = ["chair.jpg","house.jpg","tiger.jpg","jet.jpg","apple.jpg"]
 var correct_count = 0
 var trial_count = 0
 
-run_trial()
+var begin_button = make_html('<button>start</button>')
+begin_button.onclick = run_trial
+document.body.append(begin_button)
 
 function run_trial() {
     document.body.innerHTML = ''
