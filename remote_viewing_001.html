@@ -1,0 +1,24 @@
+
+<body></body>
+<script>
+
+var files = ["chair.jpg","house.jpg","tiger.jpg","jet.jpg","apple.jpg"]
+
+var next_button = make_html('<button>next</button>')
+document.body.append(next_button)
+next_button.onclick = () => {
+    var file = files[Math.floor(Math.random() * files.length)]
+    var img = make_html(`<img src="dglittle.github.io/cdn/images/${file}"/>`)
+    document.body.append(img)
+    
+}
+
+
+
+function make_html(html) {
+    var d = document.createElement('div')
+    d.innerHTML = html
+    return d.firstChild
+}
+
+</script>
