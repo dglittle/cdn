@@ -15,10 +15,12 @@ function run_trial() {
     document.body.append(make_html(`<div>got ${correct_count} of ${trial_count}, giving us ${(correct_count / trial_count * 100).toFixed(1)}%</div>`))
     
     var file = files[Math.floor(Math.random() * files.length)]
-    var img = make_html(`<img src="http://dglittle.github.io/cdn/images/${file}"/>`)
+    var img = make_html(`<img src="http://dglittle.github.io/cdn/images/${file}" style="max-width:${window.innerWidth}"/>`)
     document.body.append(img)
     
-    var correct_button = make_html('<button>got it!</button>')
+    document.body.append(make_html('<br/>'))
+    
+    var correct_button = make_html('<button style="font-size:50px">got it!</button>')
     document.body.append(correct_button)
     correct_button.onclick = () => {
         trial_count++
@@ -26,7 +28,7 @@ function run_trial() {
         run_trial()
     }
     
-    var wrong_button = make_html('<button>did not get it..</button>')
+    var wrong_button = make_html('<button style="font-size:50px">did not get it..</button>')
     document.body.append(wrong_button)
     wrong_button.onclick = () => {
         trial_count++
