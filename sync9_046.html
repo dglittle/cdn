@@ -536,12 +536,18 @@ function draw_time_dag(c, g, frames, fi, pi, x, y, w, h, r) {
                 }
             } catch (e) {}
             
+            
+            if (current_count == 0 && max_count > 0) {
+                debugger
+            }
+            
+            
             var percent_done = (max_count - current_count) / max_count
             if (percent_done > 0) {
                 g.beginPath()
                 g.arc(node_pos[0], node_pos[1], r, 0, tau/2, true)
                 if (percent_done == 1) {
-                    g.arc(node_pos[0], node_pos[1], r, tau/2, 0)
+                    g.arc(node_pos[0], node_pos[1], r, tau/2, 0, true)
                 } else if (percent_done < 0.5) {
                     var x = lerp(0, r, 0.5, 0, percent_done)
                     var C = (r*r - x*x) / (2*x)
