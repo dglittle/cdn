@@ -195,7 +195,7 @@ function main() {
             if (p.keys.my_key) {
                 draw_fissure_dag(c, g, debug_frames, di, i, x, y, 100, 100, 7)
                 
-                draw_time_dag(c, g, p.keys.my_key, p.keys.my_key.s9, x + 100, y, 300, 300, 7)
+                draw_time_dag(c, g, debug_frames, di, i, x + 100, y, 300, 300, 7)
                 
                 var v = p.keys.my_key.s9.val
                 var S = null
@@ -444,7 +444,12 @@ function draw_fissure_dag(c, g, frames, fi, pi, x, y, w, h, r) {
     })
 }
 
-function draw_time_dag(c, g, peer, s9, x, y, w, h, r) {
+function draw_time_dag(c, g, frames, fi, pi, x, y, w, h, r) {
+    var peers = frames[fi].peers
+    var peer = peers[pi].keys.my_key
+    if (!peer) return
+    var s9 = peer.s9
+    
     g.lineWidth = 3
     
     var vs = {}
@@ -508,9 +513,9 @@ function draw_time_dag(c, g, peer, s9, x, y, w, h, r) {
         
         
         
-        work here
+        // work here
         
-        work here
+        // work here
         
         
         
