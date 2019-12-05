@@ -59,7 +59,7 @@ function main() {
             } else {
                 p.letters = ''
                 for (var ii = 0; ii < 100; ii++) {
-                    p.letters += String.fromCharCode(12032 + 2000 + ii)
+                    p.letters += String.fromCharCode(12032 + 1000*i + ii)
                 }
                 p.letters_i = 0
             }
@@ -251,12 +251,9 @@ function main() {
     function loop() {
         if (is_on) {
             try {
-                if (loop_count == 1034) {
-                    debugger
-                }
                 step(loop_count)
             } catch (e) {
-                console.log('loop_count = ' + loop_count)
+                console.log('error on loop_count = ' + loop_count)
                 throw 'stop'
             }
             draw_frame()
