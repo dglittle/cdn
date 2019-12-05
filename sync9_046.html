@@ -536,12 +536,6 @@ function draw_time_dag(c, g, frames, fi, pi, x, y, w, h, r) {
                 }
             } catch (e) {}
             
-            
-            if (current_count == 0 && max_count > 0) {
-                debugger
-            }
-            
-            
             var percent_done = (max_count - current_count) / max_count
             if (percent_done > 0) {
                 g.beginPath()
