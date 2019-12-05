@@ -1,5 +1,5 @@
 
-<script src="https://dglittle.github.io/cdn/random001.js"></script>
+<script src="https://dglittle.github.io/cdn/random002.js"></script>
 <script src="https://invisible-college.github.io/universal-sync/diffsync.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sjcl/1.0.8/sjcl.min.js"></script>
 
@@ -8,9 +8,9 @@
 
 var tau = Math.PI*2
 
-var real_rand = Math.random
-
 function main() {
+    var rand = create_rand('000_hi_000')
+    
     var n_peers = 4
     
     var debug_frames = []
@@ -72,7 +72,7 @@ function main() {
         for (var p2 = p1 + 1; p2 < n_peers; p2++) {
             notes = ['connecting ' + p1 + ':' + peers_array[p1].pid + ' and ' + p2 + ':' + peers_array[p2].pid]
             
-            var alpha = Math.random() < 0.5
+            var alpha = rand() < 0.5
             peers_array[p1].connect(peers_array[p2].pid, alpha)
             peers_array[p2].connect(peers_array[p1].pid, !alpha)
             
@@ -89,8 +89,6 @@ function main() {
             peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
         })
     }
-    
-    function rand() { return Math.random() }
     
     function step() {
         var i = Math.floor(rand() * n_peers)
@@ -127,7 +125,7 @@ function main() {
                     p.incoming = p.incoming.filter(x => x[0] != other_p.pid)
                     other_p.incoming = other_p.incoming.filter(x => x[0] != p.pid)
                 } else {
-                    var alpha = Math.random() < 0.5
+                    var alpha = rand() < 0.5
                     p.connect(other_p.pid, alpha)
                     other_p.connect(p.pid, !alpha)
                 }
@@ -140,7 +138,7 @@ function main() {
                 var possible_peers = {}
                 p.incoming.forEach(x => possible_peers[x[0]] = true)
                 possible_peers = Object.keys(possible_peers)
-                var chosen_peer = possible_peers[Math.floor(Math.random() * possible_peers.length)]
+                var chosen_peer = possible_peers[Math.floor(rand() * possible_peers.length)]
                 
                 var msg = p.incoming.splice(p.incoming.findIndex(x => x[0] == chosen_peer), 1)[0][1]()
             }
@@ -154,9 +152,9 @@ function main() {
     function create_random_edit(s9, letters) {
         letters = letters || 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
         var str = sync9_read(s9)
-        var start = Math.floor(Math.random() * (str.length + 1))
-        var del = Math.floor(Math.random() * Math.random() * (str.length - start + 1))
-        var ins = letters[Math.floor(Math.random() * letters.length)].repeat(Math.floor(Math.random() * 4) + (del == 0 ? 1 : 0))
+        var start = Math.floor(rand() * (str.length + 1))
+        var del = Math.floor(rand() * rand() * (str.length - start + 1))
+        var ins = letters[Math.floor(rand() * letters.length)].repeat(Math.floor(rand() * 4) + (del == 0 ? 1 : 0))
         
         s9.next_version_id = (s9.next_version_id || 0) + 1
         var vid = letters + s9.next_version_id
@@ -361,14 +359,13 @@ function draw_fissure_dag(c, g, frames, fi, pi, x, y, w, h, r) {
     Object.values(peer.fissures).forEach(f => {
         var ff = fs[f.conn]
         if (!ff) {
-            Math.randomSeed(f.conn)
+            var rand = create_rand(f.conn)
             ff = fs[f.conn] = {
                 id: f.conn,
-                color: '#' + Math.random().toString(16).slice(2, 8),
-                radius: r * (1 + Math.random()),
+                color: '#' + rand().toString(16).slice(2, 8),
+                radius: r * (1 + rand()),
                 parents: {}
             }
-            Math.random = real_rand
         }
         if (f.a < f.b) ff.has_side_a = true
         if (f.b < f.a) ff.has_side_b = true
@@ -430,13 +427,11 @@ function draw_fissure_dag(c, g, frames, fi, pi, x, y, w, h, r) {
         
         var node_pos = get_node_pos(f)
         
-        Math.randomSeed(f.id)
-        g.strokeStyle = '#' + Math.random().toString(16).slice(2, 8)
+        var rand = create_rand(f.id)
+        g.strokeStyle = '#' + rand().toString(16).slice(2, 8)
         
-        var rr = r * (1 + Math.random())
+        var rr = r * (1 + rand())
         g.lineWidth = 2
-        
-        Math.random = real_rand
         
         if (f.has_side_a) {
             g.arc(node_pos[0], node_pos[1], rr, tau/4, tau*3/4)
@@ -590,14 +585,12 @@ function draw_time_dag(c, g, frames, fi, pi, x, y, w, h, r) {
             if (!s9.T[v]) return
             g.beginPath()
             
-            Math.randomSeed(f.conn)
-            g.strokeStyle = '#' + Math.random().toString(16).slice(2, 8)
+            var rand = create_rand(f.conn)
+            g.strokeStyle = '#' + rand().toString(16).slice(2, 8)
             
             var node_pos = get_node_pos(vs[v])
             //var rr = r * 1.45
-            var rr = r * (1 + Math.random())
-            
-            Math.random = real_rand
+            var rr = r * (1 + rand())
             
             g.lineWidth = 2
             if (f.a < f.b) {
@@ -642,32 +635,12 @@ function draw_space_dag(c, g, S, x, y) {
 
         var begin_x
         var end_x
-
-        // g.beginPath()
-        // if (node.gash) {
-        //     begin_x = x
-        //     g.moveTo(x, y - 20)
-        //     g.bezierCurveTo(x + 10, y - 10, x + 10, y + 10, x, y + 20)
-        //     x += 12
-        // } else {
-        //     begin_x = x + 10
-        //     g.moveTo(x + 10, y - 20)
-        //     g.bezierCurveTo(x, y - 10, x, y + 10, x + 10, y + 20)
-        //     x += 8
-        // }
-        // g.lineWidth = 1
-        // g.strokeStyle = 'lightblue'
-        // g.stroke()
-        
-
         
         // work here
         g.textBaseline = 'middle'
         g.font = '15px Arial'
         g.fillStyle = 'grey'
         g.fillText(node.vid ? node.vid.slice(0, 3) : '', x, y + 25)
-        
-        
         
         
         if (Object.keys(node.deleted_by).length > 0) {
@@ -683,36 +656,8 @@ function draw_space_dag(c, g, S, x, y) {
         g.fillText(my_text, x, y)
         
         
-
-        
-        
-        
-        // g.font = '20px Arial'
-        // g.fillStyle = 'grey'
-        // g.fillText(node.vid || 'null', x, y + Math.random()*100)
-        
         var width = g.measureText(my_text).width
         x += width
-        
-        // g.beginPath()
-        // if (node.end_cap) {
-        //     end_x = x
-        //     g.moveTo(x, y - 20)
-        //     g.bezierCurveTo(x + 10, y - 10, x + 10, y + 10, x, y + 20)
-        //     x += 10
-        // } else {
-        //     end_x = x + 10
-        //     g.moveTo(x + 10, y - 20)
-        //     g.bezierCurveTo(x, y - 10, x, y + 10, x + 10, y + 20)
-        //     x += 8
-        // }
-        // g.moveTo(begin_x, y - 20)
-        // g.lineTo(end_x, y - 20)
-        // g.moveTo(begin_x, y + 20)
-        // g.lineTo(end_x, y + 20)
-        // g.lineWidth = 1
-        // g.strokeStyle = 'lightblue'
-        // g.stroke()
 
         var px = x
         x += 10
