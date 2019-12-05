@@ -508,7 +508,7 @@ function draw_time_dag(c, g, frames, fi, pi, x, y, w, h, r) {
         g.beginPath()
         g.fillStyle = 'blue'
         var node_pos = get_node_pos(e[1])
-        g.arc(node_pos[0], node_pos[1], r, 0, Math.PI*2)
+        g.arc(node_pos[0], node_pos[1], r, 0, tau)
         g.fill()
         
         if (peer.phase_one[e[0]]) {
@@ -518,7 +518,26 @@ function draw_time_dag(c, g, frames, fi, pi, x, y, w, h, r) {
             try {
                 while (max_count = frames[search_i].peers[pi].keys.my_key.phase_one[e[0]].count) search_i--
             } catch (e) {}
-    
+            
+            var percent_done = (max_count - current_count) / max_count
+            
+            g.beginPath()
+            g.arc(node_pos[0], node_pos[1], r, 0, tau/2, true)
+            if (percent_done < 0.5) {
+                var x = lerp(0, r, 0.5, 0, percent_done)
+                var C = (r*r - x*x) / (2*x)
+                var angle = Math.atan2(r, C)
+                g.arc(node_pos[0], node_pos[1] + C, C + x, tau*3/4 - angle, tau*3/4 + angle)
+            } else if (percent_done > 0.5) {
+                var x = lerp(0.5, 0, 1, r, percent_done)
+                var C = (r*r - x*x) / (2*x)
+                var angle = Math.atan2(r, C)
+                g.arc(node_pos[0], node_pos[1] - C, C + x, tau/4 - angle, tau/4 + angle)
+            } else {
+                g.arc(node_pos[0], node_pos[1] + C, C + x, 0, tau)
+            }
+            g.fillStyle = 'red'
+            g.fill()
             
             g.font = '15px Arial'
             g.fillStyle = 'black'
