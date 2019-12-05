@@ -508,13 +508,17 @@ function draw_time_dag(c, g, frames, fi, pi, x, y, w, h, r) {
     // work here    
     r = r*3
     
+    var fully_acked = {}
+    function mark_fully_acked_rec(v) {
+        if (!fully_acked[v]) {
+            fully_acked[v] = true
+            Object.keys(peer.s9.T[v]).forEach(mark_fully_acked_rec)
+        }
+    }
+    Object.keys(peer.ack_leaves).forEach(mark_fully_acked_rec)
     
     Object.entries(vs).forEach(e => {
-        g.beginPath()
-        g.strokeStyle = 'blue'
         var node_pos = get_node_pos(e[1])
-        g.arc(node_pos[0], node_pos[1], r, 0, tau)
-        g.stroke()
         
         if (peer.phase_one[e[0]]) {
             var current_count = peer.phase_one[e[0]].count
@@ -525,42 +529,46 @@ function draw_time_dag(c, g, frames, fi, pi, x, y, w, h, r) {
             } catch (e) {}
             
             var percent_done = (max_count - current_count) / max_count
-            
-            g.beginPath()
-            g.arc(node_pos[0], node_pos[1], r, 0, tau/2, true)
-            if (percent_done < 0.5) {
-                var x = lerp(0, r, 0.5, 0, percent_done)
-                var C = (r*r - x*x) / (2*x)
-                var angle = Math.atan2(r, C)
-                g.arc(node_pos[0], node_pos[1] + C, C + x, tau*3/4 - angle, tau*3/4 + angle)
-            } else if (percent_done > 0.5) {
-                var x = lerp(0.5, 0, 1, r, percent_done)
-                var C = (r*r - x*x) / (2*x)
-                var angle = Math.atan2(r, C)
-                g.arc(node_pos[0], node_pos[1] - C, C + x, tau/4 - angle, tau/4 + angle)
-            } else {
-                g.arc(node_pos[0], node_pos[1] + C, C + x, 0, tau)
+            if (percent_done > 0) {
+                g.beginPath()
+                g.arc(node_pos[0], node_pos[1], r, 0, tau/2, true)
+                if (percent_done == 1) {
+                    g.arc(node_pos[0], node_pos[1], r, tau/2, 0)
+                } else if (percent_done < 0.5) {
+                    var x = lerp(0, r, 0.5, 0, percent_done)
+                    var C = (r*r - x*x) / (2*x)
+                    var angle = Math.atan2(r, C)
+                    g.arc(node_pos[0], node_pos[1] + C, C + x, tau*3/4 - angle, tau*3/4 + angle)
+                } else if (percent_done > 0.5) {
+                    var x = lerp(0.5, 0, 1, r, percent_done)
+                    var C = (r*r - x*x) / (2*x)
+                    var angle = Math.atan2(r, C)
+                    g.arc(node_pos[0], node_pos[1] - C, C + x, tau/4 - angle, tau/4 + angle)
+                } else {
+                    g.arc(node_pos[0], node_pos[1] + C, C + x, 0, tau)
+                }
+                g.fillStyle = 'lightblue'
+                g.fill()
             }
-            g.fillStyle = 'red'
-            g.fill()
             
             g.font = '15px Arial'
             g.fillStyle = 'black'
             g.fillText(current_count + '/' + max_count, node_pos[0] + r, node_pos[1] + r*2)
         }
         
+        g.beginPath()
+        g.arc(node_pos[0], node_pos[1], r, 0, tau)
+        if (fully_acked[e[0]]) {
+            g.fillStyle = 'blue'
+            g.fill()
+        } else {
+            g.strokeStyle = 'blue'
+            g.stroke()
+        }
         
         g.font = '15px Arial'
         g.fillStyle = 'grey'
         g.fillText(e[0].slice(0, 3), node_pos[0] + r, node_pos[1] + r)
-    })
-    
-    Object.keys(peer.ack_leaves).forEach(v => {
-        g.beginPath()
-        g.strokeStyle = 'red'
-        var node_pos = get_node_pos(vs[v])
-        g.arc(node_pos[0], node_pos[1], r * 1.20, 0, Math.PI*2)
-        g.stroke()
     })
     
     Object.keys(peer.conn_leaves).forEach(v => {
