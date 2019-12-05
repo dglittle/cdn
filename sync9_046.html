@@ -525,7 +525,7 @@ function draw_time_dag(c, g, frames, fi, pi, x, y, w, h, r) {
         var node_pos = get_node_pos(e[1])
         
         if (peer.phase_one[e[0]]) {
-            var current_count = peer.phase_one[e[0]].count
+            var current_count = Math.max(0, peer.phase_one[e[0]].count)
             var max_count = 0
             var search_i = fi
             try {
