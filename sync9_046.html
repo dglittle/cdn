@@ -90,7 +90,7 @@ function main() {
         })
     }
     
-    function step() {
+    function step(frame_num) {
         var i = Math.floor(rand() * n_peers)
         var p = peers_array[i]
         
@@ -145,6 +145,7 @@ function main() {
         }
         
         debug_frames.push({
+            frame_num,
             peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
         })
     }
@@ -196,6 +197,9 @@ function main() {
             }
         })
         
+        g.font = '15px Arial'
+        g.fillStyle = 'grey'
+        g.fillText('f# = ' + d.frame_num, 0, 20)
         
         // top_part.innerHTML = ''
         // top_part.style.display = 'grid'
@@ -250,7 +254,7 @@ function main() {
                 if (loop_count == 1034) {
                     debugger
                 }
-                step()
+                step(loop_count)
             } catch (e) {
                 console.log('loop_count = ' + loop_count)
                 throw 'stop'
@@ -259,10 +263,6 @@ function main() {
             if (debug_frames.length > 300) debug_frames = debug_frames.slice(100)
             slider.setAttribute('max', debug_frames.length - 1)
             slider.value = debug_frames.length - 1
-            
-            g.font = '15px Arial'
-            g.fillStyle = 'grey'
-            g.fillText('f# = ' + loop_count, 0, 20)
             
             loop_count++
         }
