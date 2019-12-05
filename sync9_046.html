@@ -11,7 +11,7 @@ var tau = Math.PI*2
 var real_rand = Math.random
 
 function main() {
-    var n_peers = 4
+    var n_peers = 3
     
     var debug_frames = []
 
@@ -522,18 +522,11 @@ function draw_time_dag(c, g, frames, fi, pi, x, y, w, h, r) {
         
         if (peer.phase_one[e[0]]) {
             var current_count = peer.phase_one[e[0]].count
-            var max_count = 0
-            var search_i = fi
+            var max_count = current_count
+            var search_i = fi - 1
             try {
                 while (max_count = frames[search_i].peers[pi].keys.my_key.phase_one[e[0]].count) search_i--
             } catch (e) {}
-            
-            
-            
-            if (current_count == 0 && max_count > 0) {
-                debugger
-            }
-            
             
             var percent_done = (max_count - current_count) / max_count
             if (percent_done > 0) {
@@ -556,10 +549,6 @@ function draw_time_dag(c, g, frames, fi, pi, x, y, w, h, r) {
                 }
                 g.fillStyle = 'lightblue'
                 g.fill()
-                
-                if (percent_done == 1) {
-                    debugger
-                }
             }
             
             g.font = '15px Arial'
