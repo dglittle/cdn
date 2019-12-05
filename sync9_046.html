@@ -247,9 +247,9 @@ function main() {
     function loop() {
         if (is_on) {
             try {
-                if (loop_count == 1060) {
-                    debugger
-                }
+                // if (loop_count == 1060) {
+                //     debugger
+                // }
                 step()
             } catch (e) {
                 console.log('loop_count = ' + loop_count)
@@ -259,8 +259,8 @@ function main() {
             if (debug_frames.length > 300) debug_frames = debug_frames.slice(100)
             slider.setAttribute('max', debug_frames.length - 1)
             slider.value = debug_frames.length - 1
+            loop_count++
         }
-        loop_count++
         setTimeout(loop, 30)
     }
     
