@@ -193,7 +193,7 @@ function main() {
             var x = 800
             var y = 20 + 450*i
             if (p.keys.my_key) {
-                draw_fissure_dag(c, g, p.keys.my_key, x, y, 100, 100, 7)
+                draw_fissure_dag(c, g, debug_frames, di, i, x, y, 100, 100, 7)
                 
                 draw_time_dag(c, g, p.keys.my_key, p.keys.my_key.s9, x + 100, y, 300, 300, 7)
                 
@@ -237,38 +237,6 @@ function main() {
     
     var top_part = document.createElement('div')
     a.append(top_part)
-    
-    // var slider = document.createElement('input')
-    // slider.style.width = '100%'
-    // slider.setAttribute('type', 'range')
-    // slider.setAttribute('min', '0')
-    // slider.setAttribute('max', debug_frames.length - 1)
-    // slider.setAttribute('value', debug_frames.length - 1)
-    // slider.oninput = () => {
-    //     var di = 
-    //     var d = debug_frames[di]
-        
-    //     draw_frame(1*slider.value)
-        
-    //     g.clearRect(0, 0, c.width, c.height)
-    //     draw_network(c, g, debug_frames, di, 0, 0, 800, 800, 300)
-    //     peers_array.forEach((p, i) => {
-    //         p = d.peers[i]
-    //         var x = 800
-    //         var y = 20 + 450*i
-    //         if (p.keys.my_key) {
-    //             draw_fissure_dag(c, g, p.keys.my_key, x, y, 100, 100, 7)
-                
-    //             draw_time_dag(c, g, p.keys.my_key, p.keys.my_key.s9, x + 100, y, 300, 300, 7)
-                
-    //             try {
-    //                 draw_space_dag(c, g, p.keys.my_key.s9.val.S.elems[0].S, x + 400, y)
-    //             } catch (e) {}
-    //         }
-    //     })
-    // }
-    // a.append(slider)
-    // slider.oninput()
 
     draw_frame()
     
@@ -374,19 +342,12 @@ function draw_network(c, g, frames, fi, x, y, w, h, r) {
         ]
         g.arc(pos[0], pos[1], w/30, 0, tau)
         g.fill()
-        
-        // var center = [x + w/2, y + h/2]
-        // var to_pos = sub(pos, center)
-        // var to_pos_norm = norm(to_pos)
-        // var extension = mul(to_pos_norm, w*0.1)
-        // var extended_pos = add(pos, extension)
-        
-        // var ww = w*0.1
-        // draw_fissure_dag(c, g, p.keys['my_key'], extended_pos[0] - ww/2, extended_pos[1] - ww/2, ww, ww, 7)
     })
 }
 
-function draw_fissure_dag(c, g, peer, x, y, w, h, r) {
+function draw_fissure_dag(c, g, frames, fi, pi, x, y, w, h, r) {
+    var peers = frames[fi].peers
+    var peer = peers[pi].keys.my_key
     if (!peer) return
     
     g.lineWidth = 3
@@ -545,7 +506,14 @@ function draw_time_dag(c, g, peer, s9, x, y, w, h, r) {
         g.arc(node_pos[0], node_pos[1], r, 0, Math.PI*2)
         g.fill()
         
-        // work here
+        
+        
+        work here
+        
+        work here
+        
+        
+        
         g.font = '15px Arial'
         g.fillStyle = 'grey'
         g.fillText(e[0].slice(0, 3), node_pos[0] + r, node_pos[1] + r)
