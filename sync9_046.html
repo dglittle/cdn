@@ -176,14 +176,6 @@ function main() {
         
         g.clearRect(0, 0, c.width, c.height)
         
-        
-        
-        // g.fillStyle = '#' + Math.random().toString(16).slice(2, 8)
-        // g.fillRect(0, 0, 100, 100)
-        // g.fillText('di = ' + di, 0, 200)
-        
-        
-        
         draw_network(c, g, debug_frames, di, 0, 0, 800, 800, 300)
         peers_array.forEach((p, i) => {
             p = d.peers[i]
@@ -257,7 +249,7 @@ function main() {
             draw_frame()
             if (debug_frames.length > 300) debug_frames = debug_frames.slice(100)
             slider.setAttribute('max', debug_frames.length - 1)
-            slider.setAttribute('value', debug_frames.length - 1)
+            slider.value = debug_frames.length - 1
         }
         setTimeout(loop, 30)
     }
