@@ -11,7 +11,7 @@ var tau = Math.PI*2
 var real_rand = Math.random
 
 function main() {
-    var n_peers = 3
+    var n_peers = 4
     
     var debug_frames = []
 
@@ -504,12 +504,17 @@ function draw_time_dag(c, g, frames, fi, pi, x, y, w, h, r) {
         g.stroke()
     })
     
+
+    // work here    
+    r = r*3
+    
+    
     Object.entries(vs).forEach(e => {
         g.beginPath()
-        g.fillStyle = 'blue'
+        g.strokeStyle = 'blue'
         var node_pos = get_node_pos(e[1])
         g.arc(node_pos[0], node_pos[1], r, 0, tau)
-        g.fill()
+        g.stroke()
         
         if (peer.phase_one[e[0]]) {
             var current_count = peer.phase_one[e[0]].count
