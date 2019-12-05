@@ -528,6 +528,13 @@ function draw_time_dag(c, g, frames, fi, pi, x, y, w, h, r) {
                 while (max_count = frames[search_i].peers[pi].keys.my_key.phase_one[e[0]].count) search_i--
             } catch (e) {}
             
+            
+            
+            if (current_count == 0 && max_count > 0) {
+                debugger
+            }
+            
+            
             var percent_done = (max_count - current_count) / max_count
             if (percent_done > 0) {
                 g.beginPath()
@@ -549,6 +556,10 @@ function draw_time_dag(c, g, frames, fi, pi, x, y, w, h, r) {
                 }
                 g.fillStyle = 'lightblue'
                 g.fill()
+                
+                if (percent_done == 1) {
+                    debugger
+                }
             }
             
             g.font = '15px Arial'
