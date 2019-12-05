@@ -33,7 +33,6 @@ function main() {
                 }
             })
             
-            // work here
             p.pid = 'P' + (i + 1)
             
             p.incoming = []
@@ -150,8 +149,6 @@ function main() {
         debug_frames.push({
             peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
         })
-        
-        if (debug_frames.length > 300) debug_frames = debug_frames.slice(100)
     }
 
     function create_random_edit(s9, letters) {
@@ -237,6 +234,17 @@ function main() {
     
     var top_part = document.createElement('div')
     a.append(top_part)
+    
+    var slider = document.createElement('input')
+    slider.style.width = '100%'
+    slider.setAttribute('type', 'range')
+    slider.setAttribute('min', '0')
+    slider.setAttribute('max', debug_frames.length - 1)
+    slider.setAttribute('value', debug_frames.length - 1)
+    slider.oninput = () => {
+        is_on = false
+        draw_frame(1*slider.value)
+    }
 
     draw_frame()
     
@@ -246,6 +254,9 @@ function main() {
         if (is_on) {
             step()
             draw_frame()
+            if (debug_frames.length > 300) debug_frames = debug_frames.slice(100)
+            slider.setAttribute('max', debug_frames.length - 1)
+            slider.setAttribute('value', debug_frames.length - 1)
         }
         setTimeout(loop, 30)
     }
