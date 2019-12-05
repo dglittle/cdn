@@ -181,10 +181,11 @@ function main() {
             p = d.peers[i]
             var x = 800
             var y = 20 + 450*i
+            var r = 11
             if (p.keys.my_key) {
-                draw_fissure_dag(c, g, debug_frames, di, i, x, y, 100, 100, 7)
+                draw_fissure_dag(c, g, debug_frames, di, i, x, y, 100, 100, r)
                 
-                draw_time_dag(c, g, debug_frames, di, i, x + 100, y, 300, 300, 7)
+                draw_time_dag(c, g, debug_frames, di, i, x + 100, y, 300, 300, r)
                 
                 var v = p.keys.my_key.s9.val
                 var S = null
@@ -508,10 +509,6 @@ function draw_time_dag(c, g, frames, fi, pi, x, y, w, h, r) {
         g.stroke()
     })
     
-
-    // work here    
-    r = r*3
-    
     var fully_acked = {}
     function mark_fully_acked_rec(v) {
         if (!fully_acked[v]) {
@@ -555,7 +552,7 @@ function draw_time_dag(c, g, frames, fi, pi, x, y, w, h, r) {
                 } else {
                     g.arc(node_pos[0], node_pos[1] + C, C + x, 0, tau)
                 }
-                g.fillStyle = 'lightblue'
+                g.fillStyle = 'violet'
                 g.fill()
             }
             
