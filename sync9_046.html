@@ -259,6 +259,11 @@ function main() {
             if (debug_frames.length > 300) debug_frames = debug_frames.slice(100)
             slider.setAttribute('max', debug_frames.length - 1)
             slider.value = debug_frames.length - 1
+            
+            g.font = '15px Arial'
+            g.fillStyle = 'grey'
+            g.fillText('f# = ' + loop_count, 0, 20)
+            
             loop_count++
         }
         setTimeout(loop, 30)
