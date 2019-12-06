@@ -169,13 +169,13 @@ function main() {
         }
     }
     
-    function draw_frame(di) {
+    function draw_frame(di, percent) {
         if (di == null) di = debug_frames.length - 1
         var d = debug_frames[di]
         
         g.clearRect(0, 0, c.width, c.height)
         
-        draw_network(c, g, debug_frames, di, 0, 0, 800, 800, 300)
+        draw_network(c, g, debug_frames, di, percent, 0, 0, 800, 800, 300)
         peers_array.forEach((p, i) => {
             p = d.peers[i]
             var x = 800
@@ -197,7 +197,7 @@ function main() {
             }
         })
         
-        draw_text(c, g, 'f# = ' + d.frame_num, 0, 0, 'grey', 'left', 'top')
+        draw_text(c, g, 'f# = ' + d.frame_num + ' + ' + percent, 0, 0, 'grey', 'left', 'top')
         
         
         // top_part.innerHTML = ''
@@ -237,30 +237,37 @@ function main() {
     slider.setAttribute('value', debug_frames.length - 1)
     slider.oninput = () => {
         is_on = false
-        draw_frame(1*slider.value)
+        draw_frame(1*slider.value, 0)
     }
     a.append(slider)
 
     draw_frame()
     
     var loop_count = 0
+    var loop_inbetween_count = 0
     
     var is_on = false
     loop()
     function loop() {
         if (is_on) {
-            try {
-                step(loop_count)
-            } catch (e) {
-                console.log('error on loop_count = ' + loop_count)
-                throw 'stop'
+            if (loop_inbetween_count == 0) {
+                try {
+                    step(loop_count)
+                } catch (e) {
+                    console.log('error on loop_count = ' + loop_count)
+                    throw 'stop'
+                }
+                loop_count++
             }
-            draw_frame()
+            if (debug_frames.length > 1) {
+                draw_frame(debug_frames.length - 2, loop_inbetween_count / 10)
+            }
             if (debug_frames.length > 300) debug_frames = debug_frames.slice(100)
-            slider.setAttribute('max', debug_frames.length - 1)
-            slider.value = debug_frames.length - 1
             
-            loop_count++
+            slider.setAttribute('max', debug_frames.length - 2)
+            slider.value = debug_frames.length - 2
+            
+            loop_inbetween_count = (loop_inbetween_count + 1) % 10
         }
         setTimeout(loop, 30)
     }
@@ -278,7 +285,7 @@ function draw_text(c, g, text, x, y, color, x_align, y_align, font) {
     g.fillText(text, x, y)
 }
 
-function draw_network(c, g, frames, fi, x, y, w, h, r) {
+function draw_network(c, g, frames, fi, percent, x, y, w, h, r) {
     var peers = frames[fi].peers
     
     g.beginPath()
@@ -409,18 +416,33 @@ function draw_network(c, g, frames, fi, x, y, w, h, r) {
                     g.strokeStyle = 'blue'
                     g.stroke()
                 } else if (m[3] == 'disconnected') {
-                    g.beginPath()
-                    g.moveTo(pos[0], pos[1])
-    
-                    var rot_by = tau/12*5
-                    var t1 = add(pos, mul(rot(norm(sub(p2, pos)), rot_by), w/30))
-                    var t2 = add(pos, mul(rot(norm(sub(p2, pos)), -rot_by), w/30))
                     
-                    g.lineTo(t1[0], t1[1])
-                    g.lineTo(t2[0], t2[1])
-                    g.closePath()
-                    g.fillStyle = 'magenta'
+                    var parts = m[4][1].split(/:/)
+                    
+                    var rand = create_rand(parts[2])
+                    var color = '#' + rand().toString(16).slice(2, 8)
+                    var rr = 10 * (1 + rand())
+                    
+                    
+                    
+                    
+                    g.beginPath()
+                    g.arc(pos[0], pos[1], plank * 0.7, 0, tau)
+                    g.fillStyle = 'black'
                     g.fill()
+                    
+                    g.beginPath()
+                    if (parts[0] < parts[1]) {
+                        g.arc(pos[0], pos[1], rr, tau/4, tau*3/4)
+                    } else {
+                        g.arc(pos[0], pos[1], rr, tau*3/4, tau/4)
+                    }
+                    g.strokeStyle = color
+                    g.lineWidth = 2
+                    g.stroke()
+                    
+                    
+                    
                 } else {
                     throw 'unknown message type: ' + m[3]
                 }
