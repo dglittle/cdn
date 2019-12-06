@@ -366,8 +366,6 @@ function draw_fissure_dag(c, g, frames, fi, pi, x, y, w, h, r) {
     var peer = peers[pi].keys.my_key
     if (!peer) return
     
-    g.lineWidth = 3
-    
     var fs = {}
     Object.values(peer.fissures).forEach(f => {
         var ff = fs[f.conn]
@@ -415,44 +413,44 @@ function draw_fissure_dag(c, g, frames, fi, pi, x, y, w, h, r) {
         var layer_count = layer_members[f.layer].length
         return [
             lerp(0, x + r, layer_count, x + w - r, f.layer_i + 0.5),
-            y + r + (f.layer * r*3)
+            y + r + (f.layer * r*4)
         ]
     }
 
     Object.values(fs).forEach(f => {
-        var a_pos = get_node_pos(f)
+        var a = get_node_pos(f)
         g.beginPath()
         Object.keys(f.parents).map(x => fs[x]).forEach(p => {
-            var b_pos = get_node_pos(p)
-            
-            var a = add(a_pos, mul(norm(sub(b_pos, a_pos)), f.radius))
-            var b = add(b_pos, mul(norm(sub(a_pos, b_pos)), p.radius))
-            
+            var b = get_node_pos(p)
             g.moveTo(a[0], a[1])
             g.lineTo(b[0], b[1])
         })
+        g.lineWidth = 3
         g.strokeStyle = 'lightblue'
         g.stroke()
     })
     
     Object.values(fs).forEach(f => {
-        g.beginPath()
-        
         var node_pos = get_node_pos(f)
         
         var rand = create_rand(f.id)
-        g.strokeStyle = '#' + rand().toString(16).slice(2, 8)
-        
+        var color = '#' + rand().toString(16).slice(2, 8)
         var rr = r * (1 + rand())
-        g.lineWidth = 2
         
+        g.beginPath()
+        g.arc(node_pos[0], node_pos[1], rr, 0, tau)
+        g.fillStyle = 'white'
+        g.fill()
+        
+        g.beginPath()
         if (f.has_side_a) {
             g.arc(node_pos[0], node_pos[1], rr, tau/4, tau*3/4)
         }
         if (f.has_side_b) {
             g.arc(node_pos[0], node_pos[1], rr, tau*3/4, tau/4)
         }
-        
+        g.strokeStyle = color
+        g.lineWidth = 2
         g.stroke()
     })
 }
