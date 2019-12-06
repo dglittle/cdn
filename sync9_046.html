@@ -365,6 +365,20 @@ function draw_network(c, g, frames, fi, x, y, w, h, r) {
                     g.lineWidth = 2
                     g.strokeStyle = 'white'
                     g.stroke()
+                } else if (m[3] == 'multiset') {
+                    var rr = plank*0.5
+                    for (var a = 0; a < 5; a++) {
+                        g.beginPath()
+                        g.arc(pos[0] + Math.cos(tau/5*a)*rr, pos[1] + Math.sin(tau/5*a)*rr, plank * 0.35, 0, tau)
+                        g.fillStyle = 'white'
+                        g.fill()
+                        
+                        g.beginPath()
+                        g.arc(pos[0] + Math.cos(tau/5*a)*rr, pos[1] + Math.sin(tau/5*a)*rr, plank * 0.35, 0, tau)
+                        g.lineWidth = 1
+                        g.strokeStyle = 'blue'
+                        g.stroke()
+                    }
                 } else if (m[3] == 'set') {
                     g.beginPath()
                     g.arc(pos[0], pos[1], plank * 0.7, 0, tau)
@@ -387,37 +401,28 @@ function draw_network(c, g, frames, fi, x, y, w, h, r) {
                     
                     
                     var my_text = m[4][3].version
-                    draw_text(c, g, my_text, pos[0], pos[1], 'blue', 'center', 'middle')
+                    draw_text(c, g, my_text, pos[0], pos[1], (m[4][2] == 'local') ? 'blue' : 'white', 'center', 'middle')
                     
                     g.beginPath()
                     g.arc(pos[0], pos[1], plank * 0.7, 0, tau)
                     g.lineWidth = 1
-                    g.strokeStyle = (m[4][2] == 'local') ? 'blue' : 'white'
+                    g.strokeStyle = 'blue'
                     g.stroke()
-                } else {
-                
+                } else if (m[3] == 'disconnected') {
                     g.beginPath()
-                    
                     g.moveTo(pos[0], pos[1])
     
-                    // work here
                     var rot_by = tau/12*5
                     var t1 = add(pos, mul(rot(norm(sub(p2, pos)), rot_by), w/30))
                     var t2 = add(pos, mul(rot(norm(sub(p2, pos)), -rot_by), w/30))
                     
                     g.lineTo(t1[0], t1[1])
                     g.lineTo(t2[0], t2[1])
-                    
                     g.closePath()
-                    
-                    
-                    g.fillStyle = m[3] == 'get' ? 'green' :
-                        m[3] == 'set' ? 'red' :
-                        m[3] == 'multiset' ? 'brown' :
-                        (m[3] == 'ack' && m[4][2] == 'local') ? 'skyblue' :
-                        (m[3] == 'ack' && m[4][2] == 'global') ? 'royalblue' : 'magenta'
-                    
+                    g.fillStyle = 'magenta'
                     g.fill()
+                } else {
+                    throw 'unknown message type: ' + m[3]
                 }
             }
             
