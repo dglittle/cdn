@@ -347,9 +347,10 @@ function draw_network(c, g, frames, fi, x, y, w, h, r) {
                     
                     g.save()
                     g.translate(pos[0], pos[1])
-                    g.rotate(-Math.PI/2)
+                    g.rotate(Math.atan2(p2[1] - p1[1], p2[0] - p1[0]))
                     g.textAlign = 'center'
                     g.fillStyle = 'white'
+                    g.font = '15px Arial'
                     g.fillText('G', 0, 0)
                     g.restore()
                                         
