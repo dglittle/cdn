@@ -29,7 +29,7 @@ function main() {
                         var to_pid = t.conn.pid
                         t.conn = {id: t.conn.id, pid: p.pid}
                         peers[to_pid][key](...args)
-                    }, 'msg_id:' + sync9_guid(), key])
+                    }, 'msg_id:' + sync9_guid(), key, args[2]])
                 }
             })
             
@@ -343,8 +343,8 @@ function draw_network(c, g, frames, fi, x, y, w, h, r) {
                 g.fillStyle = m[3] == 'get' ? 'green' :
                     m[3] == 'set' ? 'red' :
                     m[3] == 'multiset' ? 'brown' :
-                    m[3] == 'ack' ? 'skyblue' :
-                    m[3] == 'full_ack' ? 'royalblue' : 'magenta'
+                    (m[3] == 'ack' && m[4] == 'local') ? 'skyblue' :
+                    (m[3] == 'full_ack' && m[4] == 'global') ? 'royalblue' : 'magenta'
                 
                 
                 
