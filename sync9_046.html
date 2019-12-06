@@ -687,7 +687,9 @@ function draw_space_dag(c, g, S, x, y) {
         
         draw_text(c, g, node.vid ? node.vid.slice(0, 3) : '', x, y + 25, 'grey', 'left', 'middle')
         
-        draw_text(c, g, node.elems + (node.end_cap ? '*' : ''), x, y, Object.keys(node.deleted_by).length > 0 ? 'red' : 'blue', 'left', 'middle', '20px Arial')
+        var my_text = node.elems + (node.end_cap ? '*' : '')
+        
+        draw_text(c, g, my_text, x, y, Object.keys(node.deleted_by).length > 0 ? 'red' : 'blue', 'left', 'middle', '20px Arial')
         
         var width = g.measureText(my_text).width
         x += width
