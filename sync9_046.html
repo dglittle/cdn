@@ -344,7 +344,11 @@ function draw_network(c, g, frames, fi, x, y, w, h, r) {
                     m[3] == 'set' ? 'red' :
                     m[3] == 'multiset' ? 'brown' :
                     (m[3] == 'ack' && m[4] == 'local') ? 'skyblue' :
-                    (m[3] == 'full_ack' && m[4] == 'global') ? 'royalblue' : 'magenta'
+                    (m[3] == 'ack' && m[4] == 'global') ? 'royalblue' : 'magenta'
+                    
+                if (m[4] == 'global') {
+                    debugger
+                }
                 
                 
                 
