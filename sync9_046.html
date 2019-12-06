@@ -323,30 +323,63 @@ function draw_network(c, g, frames, fi, x, y, w, h, r) {
                 
                 
                 
+                if (m[3] == 'get') {
+                    // g.beginPath()
+                    // g.moveTo(pos[0], pos[1])
+    
+                    // var rot_by = tau/12*5
+                    // var t1 = add(pos, mul(rot(norm(sub(p2, pos)), rot_by), w/30))
+                    // var t2 = add(pos, mul(rot(norm(sub(p2, pos)), -rot_by), w/30))
+                    
+                    // g.lineTo(t1[0], t1[1])
+                    // g.lineTo(t2[0], t2[1])
+                    
+                    // g.closePath()
+                    
+                    
+                    // g.fillStyle = 'white'
+                    
+                    // g.fill()     
+                    
+                    //g.fillText('G', pos[0], pos[1])
+                    
+                    
+                    
+                    g.save()
+                    g.translate(pos[0], pos[1])
+                    g.rotate(-Math.PI/2)
+                    g.textAlign = 'center'
+                    g.fillText('G', 0, 0)
+                    g.restore()
+                                        
+                    
+                    
+                    
+                } else {
                 
-                
-                g.beginPath()
-                
-                g.moveTo(pos[0], pos[1])
-
-                // work here
-                var rot_by = tau/12*5
-                var t1 = add(pos, mul(rot(norm(sub(p2, pos)), rot_by), w/30))
-                var t2 = add(pos, mul(rot(norm(sub(p2, pos)), -rot_by), w/30))
-                
-                g.lineTo(t1[0], t1[1])
-                g.lineTo(t2[0], t2[1])
-                
-                g.closePath()
-                
-                
-                g.fillStyle = m[3] == 'get' ? 'green' :
-                    m[3] == 'set' ? 'red' :
-                    m[3] == 'multiset' ? 'brown' :
-                    (m[3] == 'ack' && m[4] == 'local') ? 'skyblue' :
-                    (m[3] == 'ack' && m[4] == 'global') ? 'royalblue' : 'magenta'
-                
-                g.fill()
+                    g.beginPath()
+                    
+                    g.moveTo(pos[0], pos[1])
+    
+                    // work here
+                    var rot_by = tau/12*5
+                    var t1 = add(pos, mul(rot(norm(sub(p2, pos)), rot_by), w/30))
+                    var t2 = add(pos, mul(rot(norm(sub(p2, pos)), -rot_by), w/30))
+                    
+                    g.lineTo(t1[0], t1[1])
+                    g.lineTo(t2[0], t2[1])
+                    
+                    g.closePath()
+                    
+                    
+                    g.fillStyle = m[3] == 'get' ? 'green' :
+                        m[3] == 'set' ? 'red' :
+                        m[3] == 'multiset' ? 'brown' :
+                        (m[3] == 'ack' && m[4] == 'local') ? 'skyblue' :
+                        (m[3] == 'ack' && m[4] == 'global') ? 'royalblue' : 'magenta'
+                    
+                    g.fill()
+                }
             }
             
             peers[i].incoming.forEach(m => func(i, ii, m, aa, a))
