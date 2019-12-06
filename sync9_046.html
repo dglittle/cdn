@@ -197,9 +197,8 @@ function main() {
             }
         })
         
-        g.font = '15px Arial'
-        g.fillStyle = 'grey'
-        g.fillText('f# = ' + d.frame_num, 0, 20)
+        draw_text(c, g, 'f# = ' + d.frame_num, 0, 0, 'grey', 'left', 'top')
+        
         
         // top_part.innerHTML = ''
         // top_part.style.display = 'grid'
@@ -271,6 +270,14 @@ function main() {
     })
 }
 
+function draw_text(c, g, text, x, y, color, x_align, y_align, font) {
+    g.font = font || '15px Arial'
+    if (color) g.fillStyle = color
+    g.textAlign = x_align || 'left'
+    g.textBaseline = y_align || 'middle'
+    g.fillText(text, x, y)
+}
+
 function draw_network(c, g, frames, fi, x, y, w, h, r) {
     var peers = frames[fi].peers
     
@@ -324,37 +331,25 @@ function draw_network(c, g, frames, fi, x, y, w, h, r) {
                 
                 
                 if (m[3] == 'get') {
-                    // g.beginPath()
-                    // g.moveTo(pos[0], pos[1])
-    
-                    // var rot_by = tau/12*5
-                    // var t1 = add(pos, mul(rot(norm(sub(p2, pos)), rot_by), w/30))
-                    // var t2 = add(pos, mul(rot(norm(sub(p2, pos)), -rot_by), w/30))
-                    
-                    // g.lineTo(t1[0], t1[1])
-                    // g.lineTo(t2[0], t2[1])
-                    
-                    // g.closePath()
-                    
-                    
-                    // g.fillStyle = 'white'
-                    
-                    // g.fill()     
-                    
-                    //g.fillText('G', pos[0], pos[1])
-                    
-                    
-                    
                     g.save()
                     g.translate(pos[0], pos[1])
-                    g.rotate(Math.atan2(p2[1] - p1[1], p2[0] - p1[0]))
-                    g.textAlign = 'center'
-                    g.fillStyle = 'white'
-                    g.font = '15px Arial'
-                    g.fillText('G', 0, 0)
+                    g.rotate(Math.atan2(p2[1] - p1[1], p2[0] - p1[0]) + tau/4)
+                    
+                    draw_text(c, g, 'G', 0, 0, 'white', 'center', 'middle')
+                    
                     g.restore()
                                         
                     
+                    g.beginPath()
+                    g.moveTo(pos[0], pos[1])
+                    var rot_by = tau/12*5
+                    var t1 = add(pos, mul(rot(norm(sub(p2, pos)), rot_by), w/30))
+                    var t2 = add(pos, mul(rot(norm(sub(p2, pos)), -rot_by), w/30))
+                    g.lineTo(t1[0], t1[1])
+                    g.lineTo(t2[0], t2[1])
+                    g.lineWidth = 1
+                    g.strokeStyle = 'white'
+                    g.stroke()
                     
                     
                 } else {
@@ -623,9 +618,7 @@ function draw_time_dag(c, g, frames, fi, pi, x, y, w, h, r) {
             g.stroke()
         }
         
-        g.font = '15px Arial'
-        g.fillStyle = 'grey'
-        g.fillText(e[0].slice(0, 3), node_pos[0] + r, node_pos[1] + r)
+        draw_text(c, g, e[0].slice(0, 3), node_pos[0] + r, node_pos[1] + r, 'grey', 'center', 'middle')
     })
     
     Object.keys(peer.conn_leaves).forEach(v => {
@@ -692,25 +685,9 @@ function draw_space_dag(c, g, S, x, y) {
         var begin_x
         var end_x
         
-        // work here
-        g.textBaseline = 'middle'
-        g.font = '15px Arial'
-        g.fillStyle = 'grey'
-        g.fillText(node.vid ? node.vid.slice(0, 3) : '', x, y + 25)
+        draw_text(c, g, node.vid ? node.vid.slice(0, 3) : '', x, y + 25, 'grey', 'left', 'middle')
         
-        
-        if (Object.keys(node.deleted_by).length > 0) {
-            g.fillStyle = 'red'
-        } else {
-            g.fillStyle = 'blue'
-        }
-        g.textBaseline = 'middle'
-        g.font = '20px Arial'
-        
-        var my_text = node.elems + (node.end_cap ? '*' : '')
-        
-        g.fillText(my_text, x, y)
-        
+        draw_text(c, g, node.elems + (node.end_cap ? '*' : ''), x, y, Object.keys(node.deleted_by).length > 0 ? 'red' : 'blue', 'left', 'middle', '20px Arial')
         
         var width = g.measureText(my_text).width
         x += width
