@@ -94,8 +94,8 @@ function main() {
         var i = Math.floor(rand() * n_peers)
         var p = peers_array[i]
         
-        if (rand() < 0.1) { // 0.05
-            if (rand() < 0.8) { // 0.9
+        if (rand() < 0.05) {
+            if (rand() < 0.9) {
                 if (p.keys['my_key'] && Object.keys(p.keys['my_key'].s9.T).length) {
                     if (p.letters_i >= p.letters.length) {
                         p.letters_i = 0
@@ -342,7 +342,7 @@ function draw_network(c, g, frames, fi, x, y, w, h, r) {
                 
                 g.fillStyle = m[3] == 'get' ? 'green' :
                     m[3] == 'set' ? 'red' :
-                    m[3] == 'set_multi' ? 'brown' :
+                    m[3] == 'multiset' ? 'brown' :
                     m[3] == 'ack' ? 'skyblue' :
                     m[3] == 'full_ack' ? 'royalblue' : 'magenta'
                 
