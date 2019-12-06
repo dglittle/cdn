@@ -29,7 +29,7 @@ function main() {
                         var to_pid = t.conn.pid
                         t.conn = {id: t.conn.id, pid: p.pid}
                         peers[to_pid][key](...args)
-                    }, 'msg_id:' + sync9_guid(), key, args[2]])
+                    }, 'msg_id:' + sync9_guid(), key, args])
                 }
             })
             
@@ -290,6 +290,8 @@ function draw_network(c, g, frames, fi, x, y, w, h, r) {
     g.arc(x + w/2, y + h/2, r, 0, tau)
     g.stroke()
     
+    var plank = w/30
+    
     for (var i = 0; i < peers.length; i++) {
         for (var ii = i + 1; ii < peers.length; ii++) {
             var a = tau / peers.length * i
@@ -334,24 +336,64 @@ function draw_network(c, g, frames, fi, x, y, w, h, r) {
                     g.save()
                     g.translate(pos[0], pos[1])
                     g.rotate(Math.atan2(p2[1] - p1[1], p2[0] - p1[0]) + tau/4)
-                    
                     draw_text(c, g, 'G', 0, 0, 'white', 'center', 'middle')
-                    
                     g.restore()
-                                        
-                    
+
                     g.beginPath()
-                    g.moveTo(pos[0], pos[1])
-                    var rot_by = tau/12*5
-                    var t1 = add(pos, mul(rot(norm(sub(p2, pos)), rot_by), w/30))
-                    var t2 = add(pos, mul(rot(norm(sub(p2, pos)), -rot_by), w/30))
-                    g.lineTo(t1[0], t1[1])
+                    var rot_by = tau/2 - (23.5 * tau/360)
+                    var forward = norm(sub(p2, pos))
+                    var t0 = add(pos, mul(forward, w/30*8/10))
+                    var len = (w/30 / 2) / Math.sin(23.5 * tau/360)
+                    var t1 = add(t0, mul(rot(forward, rot_by), len))
+                    var t2 = add(t0, mul(rot(forward, -rot_by), len))
+                    g.moveTo(t1[0], t1[1])
+                    g.lineTo(t0[0], t0[1])
                     g.lineTo(t2[0], t2[1])
                     g.lineWidth = 1
                     g.strokeStyle = 'white'
                     g.stroke()
                     
+                    g.beginPath()
+                    var rot_by = tau/8
+                    var t0 = add(pos, mul(forward, -w/30 * 0.45))
+                    var len = (w/30 / 2) / Math.sin(tau/8)
+                    var t1 = add(t0, mul(rot(forward, rot_by), len))
+                    var t2 = add(t0, mul(rot(forward, -rot_by), len))
+                    g.moveTo(t1[0], t1[1])
+                    g.lineTo(t0[0], t0[1])
+                    g.lineTo(t2[0], t2[1])
+                    g.lineWidth = 2
+                    g.strokeStyle = 'white'
+                    g.stroke()
+                } else if (m[3] == 'set') {
+                    g.beginPath()
+                    g.arc(pos[0], pos[1], plank * 0.7, 0, tau)
+                    g.fillStyle = 'white'
+                    g.fill()
                     
+                    var my_text = m[4][2].version
+                    draw_text(c, g, my_text, pos[0], pos[1], 'blue', 'center', 'middle')
+                    
+                    g.beginPath()
+                    g.arc(pos[0], pos[1], plank * 0.7, 0, tau)
+                    g.lineWidth = 1
+                    g.strokeStyle = 'blue'
+                    g.stroke()
+                } else if (m[3] == 'ack') {
+                    g.beginPath()
+                    g.arc(pos[0], pos[1], plank * 0.7, 0, tau)
+                    g.fillStyle = (m[4][2] == 'local') ? 'lightblue' : 'blue'
+                    g.fill()
+                    
+                    
+                    var my_text = m[4][3].version
+                    draw_text(c, g, my_text, pos[0], pos[1], 'blue', 'center', 'middle')
+                    
+                    g.beginPath()
+                    g.arc(pos[0], pos[1], plank * 0.7, 0, tau)
+                    g.lineWidth = 1
+                    g.strokeStyle = (m[4][2] == 'local') ? 'blue' : 'white'
+                    g.stroke()
                 } else {
                 
                     g.beginPath()
@@ -372,8 +414,8 @@ function draw_network(c, g, frames, fi, x, y, w, h, r) {
                     g.fillStyle = m[3] == 'get' ? 'green' :
                         m[3] == 'set' ? 'red' :
                         m[3] == 'multiset' ? 'brown' :
-                        (m[3] == 'ack' && m[4] == 'local') ? 'skyblue' :
-                        (m[3] == 'ack' && m[4] == 'global') ? 'royalblue' : 'magenta'
+                        (m[3] == 'ack' && m[4][2] == 'local') ? 'skyblue' :
+                        (m[3] == 'ack' && m[4][2] == 'global') ? 'royalblue' : 'magenta'
                     
                     g.fill()
                 }
