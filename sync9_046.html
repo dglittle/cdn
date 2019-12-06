@@ -618,7 +618,7 @@ function draw_time_dag(c, g, frames, fi, pi, x, y, w, h, r) {
             g.stroke()
         }
         
-        draw_text(c, g, e[0].slice(0, 3), node_pos[0] + r, node_pos[1] + r, 'grey', 'center', 'middle')
+        draw_text(c, g, e[0].slice(0, 3), node_pos[0] + r, node_pos[1] + r, 'grey', 'left', 'top')
     })
     
     Object.keys(peer.conn_leaves).forEach(v => {
