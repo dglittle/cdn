@@ -412,9 +412,6 @@ function draw_fissure_dag(c, g, frames, fi, pi, x, y, w, h, r) {
     })
 
     function get_node_pos(f) {
-        
-        debugger
-        
         var layer_count = layer_members[f.layer].length
         return [
             lerp(0, x + r, layer_count - 1, x + w - r, f.layer_i),
