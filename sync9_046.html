@@ -415,7 +415,7 @@ function draw_fissure_dag(c, g, frames, fi, pi, x, y, w, h, r) {
         var layer_count = layer_members[f.layer].length
         return [
             lerp(0, x + r, layer_count - 1, x + w - r, f.layer_i),
-            y + r + (f.layer * r*3)
+            y + r + (f.layer * r)
         ]
     }
 
