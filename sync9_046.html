@@ -180,7 +180,7 @@ function main() {
             p = d.peers[i]
             var x = 800
             var y = 20 + 450*i
-            var r = 11
+            var r = 10
             if (p.keys.my_key) {
                 draw_fissure_dag(c, g, debug_frames, di, i, x, y, 100, 300, r)
                 
@@ -382,6 +382,16 @@ function draw_fissure_dag(c, g, frames, fi, pi, x, y, w, h, r) {
         if (f.b < f.a) ff.has_side_b = true
         
         Object.keys(f.parents).forEach(p => {
+            
+            // work here
+            if (!peer.fissures[p]) {
+                //debugger
+                
+                ff.has_issue = true
+                
+                return
+            }
+            
             ff.parents[peer.fissures[p].conn] = true
         })
     })
@@ -439,7 +449,7 @@ function draw_fissure_dag(c, g, frames, fi, pi, x, y, w, h, r) {
         
         g.beginPath()
         g.arc(node_pos[0], node_pos[1], rr, 0, tau)
-        g.fillStyle = 'white'
+        g.fillStyle = f.has_issue ? 'red' : 'white'
         g.fill()
         
         g.beginPath()
