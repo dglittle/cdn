@@ -9,7 +9,7 @@
 var tau = Math.PI*2
 
 function main() {
-    var rand = create_rand('000_hi_000')
+    var rand = create_rand('000_hi_001')
     
     var n_peers = 4
     
@@ -415,7 +415,7 @@ function draw_fissure_dag(c, g, frames, fi, pi, x, y, w, h, r) {
         var layer_count = layer_members[f.layer].length
         return [
             lerp(0, x + r, layer_count + 1, x + w - r, f.layer_i + 1),
-            lerp(0, y + r, Math.max(1, num_layers - 1), y + h - r, f.layer)
+            f.layer * r*3
         ]
     }
 
