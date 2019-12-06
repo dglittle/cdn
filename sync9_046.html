@@ -438,10 +438,7 @@ function draw_fissure_dag(c, g, frames, fi, pi, x, y, w, h, r) {
         var rr = r * (1 + rand())
         
         g.beginPath()
-        if (f.has_side_a)
-            g.arc(node_pos[0], node_pos[1], rr, tau/4, tau*3/4)
-        if (f.has_side_b)
-            g.arc(node_pos[0], node_pos[1], rr, tau*3/4, tau/4)
+        g.arc(node_pos[0], node_pos[1], rr, 0, tau)
         g.fillStyle = 'white'
         g.fill()
         
