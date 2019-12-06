@@ -240,8 +240,6 @@ function main() {
         draw_frame(1*slider.value, 0)
     }
     a.append(slider)
-
-    draw_frame()
     
     var loop_count = 0
     var loop_inbetween_count = 0
@@ -328,15 +326,12 @@ function draw_network(c, g, frames, fi, percent, x, y, w, h, r) {
                 
                 var after_frame = fi
                 while ((after_frame < frames.length) && frames[after_frame].peers[i].incoming.some(mm => mm[2] == m[2])) after_frame++
-                
-                g.beginPath()
-                g.strokeStyle = 'purple'
-                
-                var f = lerp(before_frame, 0, after_frame, 1, fi)
+
                 var p1 = [x + w/2 + Math.cos(a)*r, y + h/2 + Math.sin(a)*r]
                 var p2 = [x + w/2 + Math.cos(aa)*r, y + h/2 + Math.sin(aa)*r]
-                var pos = lerp(0, p1, 1, p2, f)
                 
+                var f = lerp(before_frame, 0, after_frame, 1, fi + percent)
+                var pos = lerp(0, p1, 1, p2, f)
                 
                 
                 if (m[3] == 'get') {
