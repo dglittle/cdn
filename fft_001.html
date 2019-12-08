@@ -4,8 +4,8 @@
 
 main()
 async function main() {
-    var data = await fetch('https://www.vibrationdata.com/piano_middle_C.mp3', {mode: 'no-cors'})
-    console.log('data:', data)
+    var a = await (await fetch('https://dglittle.github.io/cdn/sounds/piano_middle_C.mp3', {mode: 'no-cors'})).blob()
+    console.log('AAA:', a)
 }
 
 // 
