@@ -2,7 +2,13 @@
 <body></body>
 <script>
 
-// http://www.vibrationdata.com/piano_middle_C.mp3
+main()
+async function main() {
+    var data = await fetch('http://www.vibrationdata.com/piano_middle_C.mp3')
+    console.log('data:', data)
+}
+
+// 
 
 console.log('bloop')
 
