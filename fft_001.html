@@ -4,8 +4,11 @@
 
 main()
 async function main() {
-    var a = await (await fetch('https://dglittle.github.io/cdn/sounds/piano_middle_C.mp3')).blob()
-    console.log('AAA:', a)
+    var ac = new AudioContext()
+    var x = await (await fetch('https://dglittle.github.io/cdn/sounds/piano_middle_C.mp3')).blob()
+    x = await ac.decodeAudioData(x)
+    
+    console.log('x:', x)
 }
 
 // 
