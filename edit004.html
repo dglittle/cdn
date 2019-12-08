@@ -99,15 +99,16 @@ function main() {
     var currentFile = $('<span/>').text(db.path)
 
     var reloadButton = $('<button/>').text('reload (ctrl-enter)').click(function () {
+        var sandbox_stuff = 'allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-popups allow-popups-to-escape-sandbox allow-presentation allow-same-origin allow-scripts allow-top-navigation allow-top-navigation-by-user-activation'
         if ($('#useDataUrl:checked').length) {
-            bottomRight.empty().append($('<iframe style="width:100%;height:100%" frameBorder="0"/>').attr('src', 'data:text/html;base64,' + Base64.encode(db.text)))
+            bottomRight.empty().append($(`<iframe sandbox="${sandbox_stuff}" style="width:100%;height:100%" frameBorder="0"/>`).attr('src', 'data:text/html;base64,' + Base64.encode(db.text)))
         } else {
             bottomRight.empty().append('saving...')
             saveFile(function () {
                 bottomRight.empty().append('loading...')
                 var url = 'http://' + db.user + '.github.io/' + db.repo + '/' + db.path
                 function done() {
-                    bottomRight.empty().append($('<iframe style="width:100%;height:100%" frameBorder="0"/>').attr('src', url))
+                    bottomRight.empty().append($(`<iframe sandbox="${sandbox_stuff}" style="width:100%;height:100%" frameBorder="0"/>`).attr('src', url))
                 }
                 var lastWaitTime = 100
                 function wait() {
