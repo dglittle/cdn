@@ -248,8 +248,8 @@ function loop() {
     gl.useProgram(program_draw)
     gl.drawArrays(gl.TRIANGLES, 0, 3)
     
-    //setTimeout(loop, 1000)
-    window.requestAnimationFrame(loop)
+    setTimeout(loop, 1000)
+    // window.requestAnimationFrame(loop)
 }
 
 
