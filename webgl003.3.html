@@ -152,7 +152,7 @@ gl.enableVertexAttribArray(a_position)
 gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
 gl.vertexAttribPointer(a_position, 2, gl.FLOAT, false, 0, 0)
 
-function create_texture(rand) {
+function create_texture(gl, rand) {
     var f = new Float32Array(Math.pow(size, 3) * 4)
     if (rand) {
         for (var i = 0; i < f.length; i += 4) {
@@ -177,11 +177,11 @@ function create_texture(rand) {
     return tex
 }
 
-var E_tex = create_texture(true)
-var B_tex = create_texture(true)
+var E_tex = create_texture(g2, true)
+var B_tex = create_texture(g2, true)
 
-var E_tex2 = create_texture(false)
-var B_tex2 = create_texture(false)
+var E_tex2 = create_texture(g2, false)
+var B_tex2 = create_texture(g2, false)
 
 var program_phy = createProgram(g2, vs2, fs_phy)
 g2.useProgram(program_phy)
