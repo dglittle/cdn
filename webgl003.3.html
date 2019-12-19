@@ -80,7 +80,7 @@ vec2 get_neighboring_pos(vec3 d) {
     return pos;
 }
 
-void process_neighbor(inout B, vec3 d, float dt) {
+void process_neighbor(inout vec4 B, vec3 d, float dt) {
     vec2 pos = get_neighboring_pos(d);
     
     vec4 E = texture(in_E, vec2(pos.x / float(${size * size}), pos.y / float(${size})));
@@ -88,7 +88,7 @@ void process_neighbor(inout B, vec3 d, float dt) {
     B.xyz = B.xyz + (cross(d, E) * dt);
 }
 
-void process_neighbor2(inout E, vec3 d, float dt) {
+void process_neighbor2(inout vec4 E, vec3 d, float dt) {
     vec2 pos = get_neighboring_pos(d);
     
     vec4 B = texture(in_B, vec2(pos.x / float(${size * size}), pos.y / float(${size})));
