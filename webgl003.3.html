@@ -70,7 +70,7 @@ float lerp(float t0, float v0, float t1, float v1, float t) {
 }
 
 vec2 get_neighboring_pos(vec3 d) {
-    vec2 pos = vec2(gl_FragCoord.x, gl_FragCoord.y + d.y)
+    vec2 pos = vec2(gl_FragCoord.x, gl_FragCoord.y + d.y);
     if (d.x != 0.0) {
         pos.x = floor(pos.x / float(${size})) * float(${size}) + mod(pos.x + d.x, float(${size}));
     }
@@ -81,19 +81,19 @@ vec2 get_neighboring_pos(vec3 d) {
 }
 
 void process_neighbor(inout B, vec3 d, float dt) {
-    vec2 pos = get_neighboring_pos(d)
+    vec2 pos = get_neighboring_pos(d);
     
     vec4 E = texture(in_E, vec2(pos.x / float(${size * size}), pos.y / float(${size})));
     
-    B.xyz = B.xyz + (cross(d, E) * dt)
+    B.xyz = B.xyz + (cross(d, E) * dt);
 }
 
 void process_neighbor2(inout E, vec3 d, float dt) {
-    vec2 pos = get_neighboring_pos(d)
+    vec2 pos = get_neighboring_pos(d);
     
     vec4 B = texture(in_B, vec2(pos.x / float(${size * size}), pos.y / float(${size})));
     
-    E.xyz = E.xyz + (-cross(d, B) * dt)
+    E.xyz = E.xyz + (-cross(d, B) * dt);
 }
 
 void main() {
