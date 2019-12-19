@@ -77,7 +77,7 @@ vec2 get_neighboring_pos(vec3 d) {
     if (d.z != 0.0) {
         pos.x = mod(pos.x + (d.z * float(${size})), float(${size * size}));
     }
-    return pos
+    return pos;
 }
 
 void process_neighbor(inout B, vec3 d, float dt) {
