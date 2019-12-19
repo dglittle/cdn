@@ -34,6 +34,13 @@ void main() {
 }
 `)
 
+var vs2 = createShader(g2, gl.VERTEX_SHADER, `#version 300 es
+in vec4 a_position;
+void main() {
+    gl_Position = a_position;
+}
+`)
+
 var fs_draw = createShader(gl, gl.FRAGMENT_SHADER, `#version 300 es
 precision mediump float;
 
@@ -174,7 +181,7 @@ var B_tex = create_texture(true)
 var E_tex2 = create_texture(false)
 var B_tex2 = create_texture(false)
 
-var program_phy = createProgram(g2, vs, fs_phy)
+var program_phy = createProgram(g2, vs2, fs_phy)
 g2.useProgram(program_phy)
 
 var a_position = g2.getAttribLocation(program_phy, 'a_position')
