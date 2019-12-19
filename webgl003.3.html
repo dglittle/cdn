@@ -2,28 +2,29 @@
 <body></body>
 <script>
 
-throw 'stop'
+// throw 'stop'
 
 var dpr = window.devicePixelRatio
 
-var size = 32
+var size = 100
 
 var c = document.createElement('canvas')
 c.width = size
 c.height = size
-c.style.width = c.width / dpr + 'px'
-c.style.height = c.height / dpr + 'px'
+c.style.width = c.width / dpr * 10 + 'px'
+c.style.height = c.height / dpr * 10 + 'px'
 c.style['image-rendering'] = 'pixelated'
 document.body.append(c)
 var gl = c.getContext('webgl2')
 gl.getExtension('EXT_color_buffer_float')
 
 var cc = document.createElement('canvas')
-cc.width = size * 3
-cc.height = 1
+cc.width = size * size
+cc.height = size
 cc.style.width = cc.width / dpr + 'px'
 cc.style.height = cc.height / dpr + 'px'
 cc.style['image-rendering'] = 'pixelated'
+cc.style.border = '1px solid black'
 document.body.append(cc)
 var g2 = cc.getContext('webgl2')
 g2.getExtension('EXT_color_buffer_float')
@@ -48,7 +49,7 @@ float lerp(float t0, float v0, float t1, float v1, float t) {
 
 void main() {
     const float PI = 3.1415926535897932384626433832795;
-    vec4 p = texture(in_pos, vec2((gl_FragCoord.y * float(${size}) + gl_FragCoord.x) / float(${Math.pow(size, 3)}), 0));
+    vec4 p = texture(in_pos, vec2(gl_FragCoord.x / float(${Math.pow(size, 2)}), gl_FragCoord.y / float(${size})));
     out_color.r = lerp(-1.0, 0.0, 1.0, 1.0, p.x);
     out_color.g = lerp(-1.0, 0.0, 1.0, 1.0, p.y);
     out_color.b = lerp(-1.0, 0.0, 1.0, 1.0, p.z);
@@ -92,7 +93,7 @@ function create_texture(rand) {
     var tex = gl.createTexture()
     
     gl.bindTexture(gl.TEXTURE_2D, tex)
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, Math.pow(size, 3), 1, 0, gl.RGBA, gl.FLOAT, f)
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, Math.pow(size, 2), size, 0, gl.RGBA, gl.FLOAT, f)
     
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
