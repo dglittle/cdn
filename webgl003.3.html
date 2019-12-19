@@ -2,6 +2,8 @@
 <body></body>
 <script>
 
+throw 'stop'
+
 var dpr = window.devicePixelRatio
 
 var size = 100
@@ -184,10 +186,25 @@ var B_tex2 = create_texture(false)
 var program_phy = createProgram(g2, vs2, fs_phy)
 g2.useProgram(program_phy)
 
-var a_position = g2.getAttribLocation(program_phy, 'a_position')
-g2.enableVertexAttribArray(a_position)
-g2.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
-g2.vertexAttribPointer(a_position, 2, g2.FLOAT, false, 0, 0)
+
+
+var a_position2 = g2.getAttribLocation(program_phy, 'a_position')
+
+var positionBuffer2 = g2.createBuffer()
+
+g2.bindBuffer(g2.ARRAY_BUFFER, positionBuffer2)
+g2.bufferData(g2.ARRAY_BUFFER, new Float32Array([
+    -1, -1,
+    -1, 3,
+    3, -1,
+]), g2.STATIC_DRAW)
+
+g2.enableVertexAttribArray(a_position2)
+
+g2.bindBuffer(g2.ARRAY_BUFFER, positionBuffer2)
+g2.vertexAttribPointer(a_position2, 2, g2.FLOAT, false, 0, 0)
+
+
 
 g2.uniform1i(g2.getUniformLocation(program_phy, 'in_E'), 0);
 g2.uniform1i(g2.getUniformLocation(program_phy, 'in_B'), 1);
