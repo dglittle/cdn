@@ -2,7 +2,7 @@
 <body></body>
 <script>
 
-// throw 'stop'
+throw 'stop'
 
 var dpr = window.devicePixelRatio
 
@@ -58,6 +58,73 @@ void main() {
 
 `)
 
+var fs_phy = createShader(gl, gl.FRAGMENT_SHADER, `#version 300 es
+precision mediump float;
+
+uniform sampler2D in_E;
+uniform sampler2D in_B;
+
+layout(location = 0) out vec4 out_E;
+layout(location = 1) out vec4 out_B;
+
+float lerp(float t0, float v0, float t1, float v1, float t) {
+    return (t - t0) * (v1 - v0) / (t1 - t0) + v0;
+}
+
+vec2 get_neighboring_pos(vec3 d) {
+    vec2 pos = vec2(gl_FragCoord.x, gl_FragCoord.y + d.y)
+    if (d.x != 0.0) {
+        pos.x = floor(pos.x / float(${size})) * float(${size}) + mod(pos.x + d.x, float(${size}));
+    }
+    if (d.z != 0.0) {
+        pos.x = mod(pos.x + (d.z * float(${size})), float(${size * size}));
+    }
+    return pos
+}
+
+void process_neighbor(inout B, vec3 d, float dt) {
+    vec2 pos = get_neighboring_pos(d)
+    
+    vec4 E = texture(in_E, vec2(pos.x / float(${size * size}), pos.y / float(${size})));
+    
+    B.xyz = B.xyz + (cross(d, E) * dt)
+}
+
+void process_neighbor2(inout E, vec3 d, float dt) {
+    vec2 pos = get_neighboring_pos(d)
+    
+    vec4 B = texture(in_B, vec2(pos.x / float(${size * size}), pos.y / float(${size})));
+    
+    E.xyz = E.xyz + (-cross(d, B) * dt)
+}
+
+void main() {
+    float dt = 1.0;
+    
+    vec4 B = texture(in_B, vec2(gl_FragCoord.x / float(${size * size}), gl_FragCoord.y / float(${size})));
+    
+    process_neighbor(B, vec3(0.0, 1.0, 0.0), dt);
+    process_neighbor(B, vec3(0.0, -1.0, 0.0), dt);
+    process_neighbor(B, vec3(1.0, 0.0, 0.0), dt);
+    process_neighbor(B, vec3(-1.0, 0.0, 0.0), dt);
+    process_neighbor(B, vec3(0.0, 0.0, 1.0), dt);
+    process_neighbor(B, vec3(0.0, 0.0, -1.0), dt);
+    
+    vec4 E = texture(in_E, vec2(gl_FragCoord.x / float(${size * size}), gl_FragCoord.y / float(${size})));
+    
+    process_neighbor2(E, vec3(0.0, 1.0, 0.0), dt);
+    process_neighbor2(E, vec3(0.0, -1.0, 0.0), dt);
+    process_neighbor2(E, vec3(1.0, 0.0, 0.0), dt);
+    process_neighbor2(E, vec3(-1.0, 0.0, 0.0), dt);
+    process_neighbor2(E, vec3(0.0, 0.0, 1.0), dt);
+    process_neighbor2(E, vec3(0.0, 0.0, -1.0), dt);
+    
+    out_E = E;
+    out_B = B;
+}
+
+`)
+
 var program_draw = createProgram(gl, vs, fs_draw)
 gl.useProgram(program_draw)
 var a_position = gl.getAttribLocation(program_draw, 'a_position')
@@ -104,13 +171,55 @@ function create_texture(rand) {
 }
 
 var E_tex = create_texture(true)
+var B_tex = create_texture(true)
 
-var fb_to_a = gl.createFramebuffer()
-gl.bindFramebuffer(gl.FRAMEBUFFER, fb_to_a)
-gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, E_tex, 0)
+var E_tex2 = create_texture(false)
+var B_tex2 = create_texture(false)
+
+var program_phy = createProgram(g2, vs, fs_phy)
+g2.useProgram(program_phy)
+
+var a_position = g2.getAttribLocation(program_phy, 'a_position')
+g2.enableVertexAttribArray(a_position)
+g2.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
+g2.vertexAttribPointer(a_position, 2, g2.FLOAT, false, 0, 0)
+
+g2.uniform1i(g2.getUniformLocation(program_phy, 'in_E'), 0);
+g2.uniform1i(g2.getUniformLocation(program_phy, 'in_B'), 1);
+
+var fb1 = g2.createFramebuffer()
+g2.bindFramebuffer(g2.FRAMEBUFFER, fb1)
+g2.framebufferTexture2D(g2.FRAMEBUFFER, g2.COLOR_ATTACHMENT0, g2.TEXTURE_2D, E_tex, 0)
+g2.framebufferTexture2D(g2.FRAMEBUFFER, g2.COLOR_ATTACHMENT1, g2.TEXTURE_2D, B_tex, 0)
+
+var fb2 = g2.createFramebuffer()
+g2.bindFramebuffer(g2.FRAMEBUFFER, fb2)
+g2.framebufferTexture2D(g2.FRAMEBUFFER, g2.COLOR_ATTACHMENT0, g2.TEXTURE_2D, E_tex2, 0)
+g2.framebufferTexture2D(g2.FRAMEBUFFER, g2.COLOR_ATTACHMENT1, g2.TEXTURE_2D, B_tex2, 0)
 
 loop()
 function loop() {
+    for (var i = 0; i < 1; i++) {
+        g2.activeTexture(g2.TEXTURE0)
+        g2.bindTexture(g2.TEXTURE_2D, E_tex)
+        
+        g2.activeTexture(g2.TEXTURE1)
+        g2.bindTexture(g2.TEXTURE_2D, B_tex)
+        
+        g2.bindFramebuffer(g2.FRAMEBUFFER, fb2)
+        g2.drawBuffers([
+            g2.COLOR_ATTACHMENT0,
+            g2.COLOR_ATTACHMENT1
+        ])
+        g2.useProgram(program_phy)
+        
+        g2.drawArrays(gl.TRIANGLES, 0, 3)
+        
+        ;[E_tex, E_tex2] = [E_tex2, E_tex]
+        ;[B_tex, B_tex2] = [B_tex2, B_tex]
+        ;[fb1, fb2] = [fb2, fb1]
+    }
+    
     gl.bindTexture(gl.TEXTURE_2D, E_tex)
     
     gl.bindFramebuffer(gl.FRAMEBUFFER, null)
