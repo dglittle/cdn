@@ -9,34 +9,16 @@ var dpr = window.devicePixelRatio
 var size = 100
 
 var c = document.createElement('canvas')
-c.width = size
+c.width = size * size
 c.height = size
-c.style.width = c.width / dpr * 10 + 'px'
-c.style.height = c.height / dpr * 10 + 'px'
+c.style.width = c.width / dpr * 3 + 'px'
+c.style.height = c.height / dpr * 3 + 'px'
 c.style['image-rendering'] = 'pixelated'
 document.body.append(c)
 var gl = c.getContext('webgl2')
 gl.getExtension('EXT_color_buffer_float')
 
-var cc = document.createElement('canvas')
-cc.width = size * size
-cc.height = size
-cc.style.width = cc.width / dpr + 'px'
-cc.style.height = cc.height / dpr + 'px'
-cc.style['image-rendering'] = 'pixelated'
-cc.style.border = '1px solid black'
-document.body.append(cc)
-var g2 = cc.getContext('webgl2')
-g2.getExtension('EXT_color_buffer_float')
-
 var vs = createShader(gl, gl.VERTEX_SHADER, `#version 300 es
-in vec4 a_position;
-void main() {
-    gl_Position = a_position;
-}
-`)
-
-var vs2 = createShader(g2, gl.VERTEX_SHADER, `#version 300 es
 in vec4 a_position;
 void main() {
     gl_Position = a_position;
@@ -56,7 +38,7 @@ float lerp(float t0, float v0, float t1, float v1, float t) {
 
 void main() {
     const float PI = 3.1415926535897932384626433832795;
-    vec4 p = texture(in_pos, vec2(gl_FragCoord.x / float(${Math.pow(size, 2)}), gl_FragCoord.y / float(${size})));
+    vec4 p = texture(in_pos, vec2(gl_FragCoord.x / float(${size * size}), gl_FragCoord.y / float(${size})));
     out_color.r = lerp(-1.0, 0.0, 1.0, 1.0, p.x);
     out_color.g = lerp(-1.0, 0.0, 1.0, 1.0, p.y);
     out_color.b = lerp(-1.0, 0.0, 1.0, 1.0, p.z);
@@ -65,7 +47,7 @@ void main() {
 
 `)
 
-var fs_phy = createShader(g2, g2.FRAGMENT_SHADER, `#version 300 es
+var fs_phy = createShader(gl, gl.FRAGMENT_SHADER, `#version 300 es
 precision mediump float;
 
 uniform sampler2D in_E;
@@ -152,7 +134,7 @@ gl.enableVertexAttribArray(a_position)
 gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
 gl.vertexAttribPointer(a_position, 2, gl.FLOAT, false, 0, 0)
 
-function create_texture(gl, rand) {
+function create_texture(rand) {
     var f = new Float32Array(Math.pow(size, 3) * 4)
     if (rand) {
         for (var i = 0; i < f.length; i += 4) {
@@ -167,7 +149,7 @@ function create_texture(gl, rand) {
     var tex = gl.createTexture()
     
     gl.bindTexture(gl.TEXTURE_2D, tex)
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, Math.pow(size, 2), size, 0, gl.RGBA, gl.FLOAT, f)
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, size * size, size, 0, gl.RGBA, gl.FLOAT, f)
     
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
@@ -177,65 +159,45 @@ function create_texture(gl, rand) {
     return tex
 }
 
-var E_tex = create_texture(g2, true)
-var B_tex = create_texture(g2, true)
+var E_tex = create_texture(true)
+var B_tex = create_texture(true)
 
-var E_tex2 = create_texture(g2, false)
-var B_tex2 = create_texture(g2, false)
+var E_tex2 = create_texture(false)
+var B_tex2 = create_texture(false)
 
-var program_phy = createProgram(g2, vs2, fs_phy)
-g2.useProgram(program_phy)
+var program_phy = createProgram(gl, vs, fs_phy)
+gl.useProgram(program_phy)
 
+gl.uniform1i(gl.getUniformLocation(program_phy, 'in_E'), 0);
+gl.uniform1i(gl.getUniformLocation(program_phy, 'in_B'), 1);
 
+var fb1 = gl.createFramebuffer()
+gl.bindFramebuffer(gl.FRAMEBUFFER, fb1)
+gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, E_tex, 0)
+gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT1, gl.TEXTURE_2D, B_tex, 0)
 
-var a_position2 = g2.getAttribLocation(program_phy, 'a_position')
-
-var positionBuffer2 = g2.createBuffer()
-
-g2.bindBuffer(g2.ARRAY_BUFFER, positionBuffer2)
-g2.bufferData(g2.ARRAY_BUFFER, new Float32Array([
-    -1, -1,
-    -1, 3,
-    3, -1,
-]), g2.STATIC_DRAW)
-
-g2.enableVertexAttribArray(a_position2)
-
-g2.bindBuffer(g2.ARRAY_BUFFER, positionBuffer2)
-g2.vertexAttribPointer(a_position2, 2, g2.FLOAT, false, 0, 0)
-
-
-
-g2.uniform1i(g2.getUniformLocation(program_phy, 'in_E'), 0);
-g2.uniform1i(g2.getUniformLocation(program_phy, 'in_B'), 1);
-
-var fb1 = g2.createFramebuffer()
-g2.bindFramebuffer(g2.FRAMEBUFFER, fb1)
-g2.framebufferTexture2D(g2.FRAMEBUFFER, g2.COLOR_ATTACHMENT0, g2.TEXTURE_2D, E_tex, 0)
-g2.framebufferTexture2D(g2.FRAMEBUFFER, g2.COLOR_ATTACHMENT1, g2.TEXTURE_2D, B_tex, 0)
-
-var fb2 = g2.createFramebuffer()
-g2.bindFramebuffer(g2.FRAMEBUFFER, fb2)
-g2.framebufferTexture2D(g2.FRAMEBUFFER, g2.COLOR_ATTACHMENT0, g2.TEXTURE_2D, E_tex2, 0)
-g2.framebufferTexture2D(g2.FRAMEBUFFER, g2.COLOR_ATTACHMENT1, g2.TEXTURE_2D, B_tex2, 0)
+var fb2 = gl.createFramebuffer()
+gl.bindFramebuffer(gl.FRAMEBUFFER, fb2)
+gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, E_tex2, 0)
+gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT1, gl.TEXTURE_2D, B_tex2, 0)
 
 loop()
 function loop() {
     for (var i = 0; i < 1; i++) {
-        g2.activeTexture(g2.TEXTURE0)
-        g2.bindTexture(g2.TEXTURE_2D, E_tex)
+        gl.activeTexture(gl.TEXTURE0)
+        gl.bindTexture(gl.TEXTURE_2D, E_tex)
         
-        g2.activeTexture(g2.TEXTURE1)
-        g2.bindTexture(g2.TEXTURE_2D, B_tex)
+        gl.activeTexture(gl.TEXTURE1)
+        gl.bindTexture(gl.TEXTURE_2D, B_tex)
         
-        g2.bindFramebuffer(g2.FRAMEBUFFER, fb2)
-        g2.drawBuffers([
-            g2.COLOR_ATTACHMENT0,
-            g2.COLOR_ATTACHMENT1
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fb2)
+        gl.drawBuffers([
+            gl.COLOR_ATTACHMENT0,
+            gl.COLOR_ATTACHMENT1
         ])
-        g2.useProgram(program_phy)
+        gl.useProgram(program_phy)
         
-        g2.drawArrays(gl.TRIANGLES, 0, 3)
+        gl.drawArrays(gl.TRIANGLES, 0, 3)
         
         ;[E_tex, E_tex2] = [E_tex2, E_tex]
         ;[B_tex, B_tex2] = [B_tex2, B_tex]
