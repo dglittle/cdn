@@ -2,8 +2,7 @@
 <body></body>
 <script>
 
-throw 'stop'
-
+var tau = Math.PI * 2
 var dpr = window.devicePixelRatio
 
 var size = 100
@@ -88,7 +87,7 @@ void process_neighbor2(inout vec4 E, vec3 d, float dt) {
 }
 
 void main() {
-    float dt = 1.0;
+    float dt = 0.1;
     
     vec4 B = texture(in_B, vec2(gl_FragCoord.x / float(${size * size}), gl_FragCoord.y / float(${size})));
     
@@ -138,11 +137,24 @@ function create_texture(rand) {
     var f = new Float32Array(Math.pow(size, 3) * 4)
     if (rand) {
         for (var i = 0; i < f.length; i += 4) {
-            var v = vec3.random(vec3.create())
-            f[i + 0] = v[0]
-            f[i + 1] = v[1]
-            f[i + 2] = v[2]
+            var a = i / 4
+            var b = Math.floor(a / (size * size))
+            var c = a - b * (size * size)
+            
+            var y = b
+            var z = Math.floor(c / size)
+            var x = c - z * size
+            
+            f[i + 0] = Math.sin(x / size * tau)
+            f[i + 1] = Math.cos(x / size * tau)
+            f[i + 2] = 0
             f[i + 3] = 1
+            
+            // var v = vec3.random(vec3.create())
+            // f[i + 0] = v[0]
+            // f[i + 1] = v[1]
+            // f[i + 2] = v[2]
+            // f[i + 3] = 1
         }
     }
     
@@ -160,7 +172,7 @@ function create_texture(rand) {
 }
 
 var E_tex = create_texture(true)
-var B_tex = create_texture(true)
+var B_tex = create_texture(false)
 
 var E_tex2 = create_texture(false)
 var B_tex2 = create_texture(false)
@@ -210,7 +222,7 @@ function loop() {
     gl.useProgram(program_draw)
     gl.drawArrays(gl.TRIANGLES, 0, 3)
     
-    setTimeout(loop, 1000)
+    setTimeout(loop, 100)
     // window.requestAnimationFrame(loop)
 }
 
