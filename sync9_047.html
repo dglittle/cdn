@@ -29,7 +29,7 @@ function main() {
     }
     peers_array.forEach((p, i) => {
         p.last_send_times = {}
-        peers_array.forEach(pp => p.last_send_times[pp.pid] = -1000000)
+        peers_array.forEach(pp => p.last_send_times[pp.pid] = -Infinity)
         
         ;[['get', 2], ['set', 2], ['multiset', 5], ['ack', 3], ['disconnected', 4]].forEach(([key, t_index]) => {
             p['on_' + key] = () => {
@@ -37,12 +37,7 @@ function main() {
                 let t = args[t_index]
                 if ((key != 'get') && !p.keys.my_key.conns[t.conn.id]) throw 'you cannot talk to them!'
                 
-                
-                
-                
-                
-                
-                
+                p.last_send_times[t.conn.pid] = Math.max(cur_time, p.last_send_times[t.conn.pid] + 1/bandwidth)
                 
                 msgs.push({
                     src: p.pid,
@@ -53,13 +48,10 @@ function main() {
                     func: () => {
                         t.conn = {id: t.conn.id, pid: p.pid}
                         peers[t.conn.pid][key](...args)
-                    }
-                    
-                    
-                    
-                    
-                    
-                    
+                    },
+                    q_time: cur_time,
+                    send_time: p.last_send_times[t.conn.pid],
+                    processed: false,
                 })
             }
         })
@@ -76,13 +68,6 @@ function main() {
         p.letters_i = 0
     })
     
-    
-            
-        p.last_send_times  
-
-    
-    
-    
     function capture_state() {
         states.push({
             t: cur_time,
@@ -98,6 +83,15 @@ function main() {
     }
     
     function step() {
+        // when will the next message arrive?
+        msgs.filter(x => !x.processed).reduce((a, b) => Math.min(a, b.send_time + latency), Infinity)
+        
+        
+        msgs.reduce((a, b) => {
+            
+            
+            
+        }, Infinity)
         
         
         
