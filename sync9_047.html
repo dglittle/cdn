@@ -6,91 +6,105 @@
 <body style="margin:0px"></body>
 <script>
 
-var tau = Math.PI*2
+let tau = Math.PI*2
 
 function main() {
-    var rand = create_rand('000_hi_001')
+    let rand = create_rand('000_hi_001')
     
-    var n_peers = 4
+    let n_peers = 4
     
-    var debug_frames = []
+    let states = []
+    let msgs = []
+    let cur_time = 0
+    let latency = 1
+    let bandwidth = 10
 
-    var peers = {}
-    for (var i = 0; i < n_peers; i++) {
-        ;(() => {
-            var p = create_node()
-            ;[['get', 2], ['set', 2], ['multiset', 5], ['ack', 3], ['disconnected', 4]].forEach(x => {
-                var [key, t_index] = x
-                p['on_' + key] = function () {
-                    var args = [...arguments].map(x => (x != null) ? JSON.parse(JSON.stringify(x)) : null)
-                    var t = args[t_index]
-                    if ((key != 'get') && !p.keys.my_key.conns[t.conn.id]) throw 'you cannot talk to them!'
-                    peers[t.conn.pid].incoming.push([p.pid, () => {
-                        var to_pid = t.conn.pid
+    let peers = {}
+    let peers_array = []
+    for (let i = 0; i < n_peers; i++) {
+        let p = create_node()
+        p.pid = 'P' + i
+        peers[p.pid] = p
+        peers_array.push(p)
+    }
+    peers_array.forEach((p, i) => {
+        p.last_send_times = {}
+        peers_array.forEach(pp => p.last_send_times[pp.pid] = -1000000)
+        
+        ;[['get', 2], ['set', 2], ['multiset', 5], ['ack', 3], ['disconnected', 4]].forEach(([key, t_index]) => {
+            p['on_' + key] = () => {
+                let args = [...arguments].map(x => (x != null) ? JSON.parse(JSON.stringify(x)) : null)
+                let t = args[t_index]
+                if ((key != 'get') && !p.keys.my_key.conns[t.conn.id]) throw 'you cannot talk to them!'
+                
+                
+                
+                
+                
+                
+                
+                
+                msgs.push({
+                    src: p.pid,
+                    dst: t.conn.pid,
+                    conn_id: t.conn.id,
+                    key,
+                    args,
+                    func: () => {
                         t.conn = {id: t.conn.id, pid: p.pid}
-                        peers[to_pid][key](...args)
-                    }, 'msg_id:' + sync9_guid(), key, args])
-                }
-            })
-            
-            p.pid = 'P' + (i + 1)
-            
-            p.incoming = []
-            peers[p.pid] = p
-            
-            p.connect = (pid, alpha) => {
-                if (alpha) {
-                    p.on_get('my_key', true, {conn: {id: sync9_guid(), pid}})
-                }
+                        peers[t.conn.pid][key](...args)
+                    }
+                    
+                    
+                    
+                    
+                    
+                    
+                })
             }
-            
-            if (i == 0) {
-                p.letters = 'abcdefghijklmnopqrstuvwxyz'
-                for (var ii = 0; ii < 100; ii++) {
-                    p.letters += String.fromCharCode(12032 + ii)
-                }
-                p.letters_i = 0
-            } else if (i == 1) {
-                p.letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-                for (var ii = 0; ii < 100; ii++) {
-                    p.letters += String.fromCharCode(12032 + 1000 + ii)
-                }
-                p.letters_i = 0
-            } else {
-                p.letters = ''
-                for (var ii = 0; ii < 100; ii++) {
-                    p.letters += String.fromCharCode(12032 + 1000*i + ii)
-                }
-                p.letters_i = 0
-            }
-        })()
-    }
-    var peers_array = Object.values(peers)
-    
-
-    for (var p1 = 0; p1 < n_peers; p1++) {
-        for (var p2 = p1 + 1; p2 < n_peers; p2++) {
-            notes = ['connecting ' + p1 + ':' + peers_array[p1].pid + ' and ' + p2 + ':' + peers_array[p2].pid]
-            
-            var alpha = rand() < 0.5
-            peers_array[p1].connect(peers_array[p2].pid, alpha)
-            peers_array[p2].connect(peers_array[p1].pid, !alpha)
-            
-            if (debug_frames) debug_frames.push({
-                peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
-            })
+        })
+        
+        p.connect = pid => {
+            p.on_get('my_key', true, {conn: {id: sync9_guid(), pid}})
         }
-    }
+        
+        p.letters = (i == 0) ? 'abcdefghijklmnopqrstuvwxyz' :
+            (i == 1) ? 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' : ''
+        for (var ii = 0; ii < 100; ii++) {
+            p.letters += String.fromCharCode(12032 + 1000*i + ii)
+        }
+        p.letters_i = 0
+    })
     
-    if (true) {
-        let p = peers_array[0]
-        p.set('my_key', ['=""'], {version: 'root', parents: {}})
-        if (debug_frames) debug_frames.push({
+    
+            
+        p.last_send_times  
+
+    
+    
+    
+    function capture_state() {
+        states.push({
+            t: cur_time,
             peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
         })
     }
     
-    function step(frame_num) {
+    capture_state()
+    {
+        let p = peers_array[0]
+        p.set('my_key', ['=""'], {version: 'root', parents: {}})
+        capture_state()
+    }
+    
+    function step() {
+        
+        
+        
+        
+        
+        
+        
         var i = Math.floor(rand() * n_peers)
         var p = peers_array[i]
         
