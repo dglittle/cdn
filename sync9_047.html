@@ -1,47 +1,20 @@
 
-<script src="https://dglittle.github.io/cdn/random001.js"></script>
-<script src="https://dglittle.github.io/cdn/utils004.js"></script>
+<script src="https://dglittle.github.io/cdn/random002.js"></script>
 <script src="https://invisible-college.github.io/universal-sync/diffsync.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sjcl/1.0.8/sjcl.min.js"></script>
 
 <body style="margin:0px"></body>
 <script>
 
+var tau = Math.PI*2
 
 function main() {
+    var rand = create_rand('000_hi_001')
     
-    var special_i = -1
-
-    var max_size = 0
+    var n_peers = 4
     
-    for (var i = (special_i >= 0) ? special_i : 0; i < 1000; i++) {
-        if ((special_i < 0) && (i % 100 == 0)) {
-            console.log('TRIAL: ' + i + ` max_size:${max_size}`)
-            max_size = 0
-        }
-        
-        check_good = false
-        try {
-            var size = run_trial('iiiifIIiiiEiiiiiEEff:' + i, 500, special_i >= 0, i)
-            if (size > max_size) max_size = size
-        } catch (e) {
-            console.log(e)
-            console.log('TRIAL: ' + i + ' FAILED!')
-            break
-        }
-        if (special_i >= 0) break
-    }
-    console.log('check_good: ' + check_good)
-}
+    var debug_frames = []
 
-function run_trial(seed, N, show_debug, trial_num) {
-    Math.randomSeed(seed)
-    var rand = () => Math.random()
-    
-    var debug_frames = show_debug ? [] : null
-    var notes = []
-
-    var n_peers = 3
     var peers = {}
     for (var i = 0; i < n_peers; i++) {
         ;(() => {
@@ -52,19 +25,14 @@ function run_trial(seed, N, show_debug, trial_num) {
                     var args = [...arguments].map(x => (x != null) ? JSON.parse(JSON.stringify(x)) : null)
                     var t = args[t_index]
                     if ((key != 'get') && !p.keys.my_key.conns[t.conn.id]) throw 'you cannot talk to them!'
-                    notes.push('SEND: ' + key + ' from:' + p.pid + ' to:' + t.conn.pid + args.map(x => ' ' + JSON.stringify(x)))
-                    if (show_debug) console.log(notes)
                     peers[t.conn.pid].incoming.push([p.pid, () => {
-                        notes.push('RECV: ' + key + ' from:' + p.pid + ' to:' + t.conn.pid + args.map(x => ' ' + JSON.stringify(x)))
-                        if (show_debug) console.log(notes)
                         var to_pid = t.conn.pid
                         t.conn = {id: t.conn.id, pid: p.pid}
                         peers[to_pid][key](...args)
-                    }])
+                    }, 'msg_id:' + sync9_guid(), key, args])
                 }
             })
             
-            // work here
             p.pid = 'P' + (i + 1)
             
             p.incoming = []
@@ -91,7 +59,7 @@ function run_trial(seed, N, show_debug, trial_num) {
             } else {
                 p.letters = ''
                 for (var ii = 0; ii < 100; ii++) {
-                    p.letters += String.fromCharCode(12032 + 2000 + ii)
+                    p.letters += String.fromCharCode(12032 + 1000*i + ii)
                 }
                 p.letters_i = 0
             }
@@ -104,45 +72,29 @@ function run_trial(seed, N, show_debug, trial_num) {
         for (var p2 = p1 + 1; p2 < n_peers; p2++) {
             notes = ['connecting ' + p1 + ':' + peers_array[p1].pid + ' and ' + p2 + ':' + peers_array[p2].pid]
             
-            var alpha = Math.random() < 0.5
+            var alpha = rand() < 0.5
             peers_array[p1].connect(peers_array[p2].pid, alpha)
             peers_array[p2].connect(peers_array[p1].pid, !alpha)
             
             if (debug_frames) debug_frames.push({
-                t: -1,
-                peer_notes: {
-                    [peers_array[p1].pid]: notes,
-                    [peers_array[p2].pid]: notes
-                },
                 peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
             })
         }
     }
     
     if (true) {
-        notes = ['initial edit']
         let p = peers_array[0]
-        p.set('my_key', [], {version: 'root', parents: {}})
+        p.set('my_key', ['=""'], {version: 'root', parents: {}})
         if (debug_frames) debug_frames.push({
-            t: -1,
-            peer_notes: {[p.pid]: notes},
             peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
         })
     }
     
-    try {
-    
-    for (var t = 0; t < N; t++) {
-        if (show_debug) console.log('t == ' + t)
-        
-        
-        
+    function step(frame_num) {
         var i = Math.floor(rand() * n_peers)
         var p = peers_array[i]
         
-        notes = []
-        
-        if (rand() < 0.1) {
+        if (rand() < 0.05) {
             if (rand() < 0.9) {
                 if (p.keys['my_key'] && Object.keys(p.keys['my_key'].s9.T).length) {
                     if (p.letters_i >= p.letters.length) {
@@ -170,18 +122,15 @@ function run_trial(seed, N, show_debug, trial_num) {
                     }
                 })
                 if (disconnect) {
-                    notes.push(' disconnect ' + p.pid + ' and ' + other_p.pid)
                     p.incoming = p.incoming.filter(x => x[0] != other_p.pid)
                     other_p.incoming = other_p.incoming.filter(x => x[0] != p.pid)
                 } else {
-                    notes.push(' connect ' + p.pid + ' and ' + other_p.pid)
-                    var alpha = Math.random() < 0.5
+                    var alpha = rand() < 0.5
                     p.connect(other_p.pid, alpha)
                     other_p.connect(p.pid, !alpha)
                 }
             }
         } else {
-            if (show_debug) console.log('process incoming')
             var did_something = false
             if (p.incoming.length > 0) {
                 did_something = true
@@ -189,331 +138,441 @@ function run_trial(seed, N, show_debug, trial_num) {
                 var possible_peers = {}
                 p.incoming.forEach(x => possible_peers[x[0]] = true)
                 possible_peers = Object.keys(possible_peers)
-                var chosen_peer = possible_peers[Math.floor(Math.random() * possible_peers.length)]
+                var chosen_peer = possible_peers[Math.floor(rand() * possible_peers.length)]
                 
                 var msg = p.incoming.splice(p.incoming.findIndex(x => x[0] == chosen_peer), 1)[0][1]()
             }
-            if (!did_something) {
-                if (show_debug) console.log('did nothing')
-            }
         }
         
-        if (show_debug)
-            console.log('peer: ' + p.pid + ' -> ' + JSON.stringify(sync9_read(p.keys['my_key'] && p.keys['my_key'].s9)))
-            
-        if (debug_frames) debug_frames.push({
-            t: t,
-            peer_notes: {[p.pid]: notes},
+        debug_frames.push({
+            frame_num,
             peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
         })
     }
 
-    for (var p1 = 0; p1 < n_peers; p1++) {
-        var p1_p = peers_array[p1]
-        for (var p2 = p1 + 1; p2 < n_peers; p2++) {
-            var p2_p = peers_array[p2]
-            if (!Object.values(p1_p.keys['my_key'] ? p1_p.keys['my_key'].conns : []).some(x => x.pid == p2_p.pid) && !p1_p.incoming.some(x => x[0] == p2_p.pid) && !Object.values(p2_p.keys['my_key'] ? p2_p.keys['my_key'].conns : []).some(x => x.pid == p1_p.pid) && !p2_p.incoming.some(x => x[0] == p1_p.pid)) {
-                notes = ['connecting ' + p1 + ':' + p1_p.pid + ' and ' + p2 + ':' + p2_p.pid]
-                
-                var alpha = Math.random() < 0.5
-                peers_array[p1].connect(p2_p.pid, alpha)
-                peers_array[p2].connect(p1_p.pid, !alpha)
-                
-                if (debug_frames) debug_frames.push({
-                    t: -1,
-                    peer_notes: {
-                        [p1_p.pid]: notes,
-                        [p2_p.pid]: notes
-                    },
-                    peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
-                })
-            }
-        }
-    }
-    
-    var tt = 0
-    for (var t = 0; t < 50; t++) {
-        Object.values(peers).forEach(p => {
-            while (p.incoming.length > 0) {
-                tt++
-                if (show_debug) console.log('t => ' + tt)
-                
-                notes = []
-
-                p.incoming.shift()[1]()
-                
-                if (debug_frames) debug_frames.push({
-                    tt: tt,
-                    peer_notes: {[p.pid]: notes},
-                    peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
-                })
-            }
-        })
-        
-        if (Object.values(peers).every(x => x.incoming.length == 0)) {
-            tt++
-            var too_many_fissures = false    
-            Object.values(peers).forEach((x, i) => {
-                if (x.keys['my_key'] && (Object.keys(x.keys['my_key'].fissures).length > 0)) {
-                    too_many_fissures = true
-                }
-            })
-            
-            var too_many_versions = false
-            Object.values(peers).forEach((x, i) => {
-                if (x.keys['my_key'] && (Object.keys(x.keys['my_key'].s9.T).length > 1)) {
-                    too_many_versions = true
-                }
-            })
-            
-            if (too_many_fissures || too_many_versions) {
-                var i = Math.floor(rand() * n_peers)
-                var p = peers_array[i]
-                
-                notes = ['creating joiner']
-                p.keys['my_key'].create_joiner()
-                
-                if (debug_frames) debug_frames.push({
-                    tt: tt,
-                    peer_notes: {[p.pid]: notes},
-                    peers: peers_array.map(x => JSON.parse(JSON.stringify(x)))
-                })
-            } else {
-                break
-            }
-        }
-    }
-    
-    } catch (e) {
-        console.log('ERROR')
-        console.log(e)
-        if (!show_debug) throw 'stop'
-    }
-
-    Object.values(peers).forEach((x, i) => {
-        if (!x.keys.my_key) {
-            console.log('missing my_key for ' + x.pid)
-            check_good = false
-            throw 'bad'
-        }
-    })
-    
-    var check_val = null
-    check_good = true
-    Object.values(peers).forEach((x, i) => {
-        var val = sync9_read(x.keys.my_key.s9)
-        if (i == 0)
-            check_val = val
-        else if (!deep_equals(val, check_val))
-            check_good = false
-    })
-
-    var too_many_fissures = false    
-    Object.values(peers).forEach((x, i) => {
-        if (Object.keys(x.keys.my_key.fissures).length > 0) {
-            check_good = false
-            too_many_fissures = true
-        }
-    })
-    
-    var too_many_versions = false
-    Object.values(peers).forEach((x, i) => {
-        if (Object.keys(x.keys.my_key.s9.T).length > 2) {
-            check_good = false
-            too_many_versions = true
-        }
-    })
-        
-        
-    //console.log('CHECK GOOD: ' + check_good)
-    if (!check_good) {
-        Object.values(peers).forEach((x, i) => {
-            console.log(x)
-            var val = sync9_read(x.keys.my_key.s9)
-            console.log('val: ' + JSON.stringify(val))
-        })
-        console.log('too_many_fissures: ' + too_many_fissures)
-        console.log('too_many_versions: ' + too_many_versions)
-        console.log('trial_num: ' + trial_num)
-        if (!show_debug) throw 'stop'
-    }
-
-    function rand() { return Math.random() }
-
     function create_random_edit(s9, letters) {
         letters = letters || 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-        var o = sync9_read(s9)
+        var str = sync9_read(s9)
+        var start = Math.floor(rand() * (str.length + 1))
+        var del = Math.floor(rand() * rand() * (str.length - start + 1))
+        var ins = letters[Math.floor(rand() * letters.length)].repeat(Math.floor(rand() * 4) + (del == 0 ? 1 : 0))
         
-        function create_random_thing_to_insert() {
-            if (Math.random() < 0.25) {
-                return {}
-            } else if (Math.random() < 0.33) {
-                return []
-            } else if (Math.random() < 0.5) {
-                return Math.floor(Math.random() * 100)
-            } else {
-                return letters[Math.floor(rand() * letters.length)].repeat(Math.floor(rand() * 4))
-            }
-        }
-        
-        var include_vals = (o == null) || (Math.random() < 0.2)
-        
-        var paths = {}
-        function get_paths(x, path) {
-            if (include_vals || (x != null && typeof(x) == 'object'))
-                paths[path] = x
-            if (x == null) {
-            } else if (Array.isArray(x)) {
-                for (var i = 0; i < x.length; i++) {
-                    get_paths(x[i], path + `[${i}]`)
-                }
-            } else if (typeof(x) == 'object') {
-                Object.entries(x).forEach(x => {
-                    get_paths(x[1], path + `[${JSON.stringify(x[0])}]`)
-                })
-            }
-        }
-        get_paths(o, '')
-        
-        var changes = []
-        var ents = Object.entries(paths)
-        if (ents.length > 0) {
-            var ent = ents[Math.floor(Math.random() * ents.length)]
-            if (typeof(ent[1]) == 'string') {
-                var x = ent[1]
-                var start = Math.floor(rand() * (x.length + 1))
-                var del = Math.floor(rand() * rand() * (x.length - start + 1))
-                var ins = letters[Math.floor(rand() * letters.length)].repeat(Math.floor(rand() * 4) + (del == 0 ? 1 : 0))
-                changes.push(ent[0] + `[${start}:${start + del}] = ` + JSON.stringify(ins))
-            } else if (Array.isArray(ent[1])) {
-                var x = ent[1]
-                var start = Math.floor(rand() * (x.length + 1))
-                var del = Math.floor(rand() * rand() * (x.length - start + 1))
-                var ins = []
-                var ins_len = Math.floor(rand() * 3)
-                for (var i = 0; i < ins_len; i++) {
-                    ins.push(create_random_thing_to_insert())
-                }
-                changes.push(ent[0] + `[${start}:${start + del}] = ` + JSON.stringify(ins))
-            } else if (ent[1] != null && typeof(ent[1]) == 'object') {
-                var i = Math.floor(Math.random() * 3)
-                var key = 'abc'.slice(i, i + 1)
-                changes.push(ent[0] + `[${JSON.stringify(key)}] = ${JSON.stringify(create_random_thing_to_insert())}`)
-            } else {
-                changes.push(ent[0] + ' = ' + JSON.stringify(create_random_thing_to_insert()))
-            }
-        }
-        
-        // work here
-        var vid = sync9_guid()
         s9.next_version_id = (s9.next_version_id || 0) + 1
-        var vid = letters[0] + s9.next_version_id
+        var vid = letters + s9.next_version_id
+        
+        var changes = [`[${start}:${start + del}] = ` + JSON.stringify(ins)]
         
         return {
-            vid,
+            vid : vid,
             parents : Object.assign({}, s9.leaves),
-            changes
+            changes : changes
         }
     }
-
-    if (show_debug) {
-        Object.values(peers).forEach(x => {
-            console.log('peer: ' + JSON.stringify(sync9_read(x.keys.my_key.s9)))
+    
+    function draw_frame(di, percent) {
+        if (di == null) di = debug_frames.length - 1
+        var d = debug_frames[di]
+        
+        g.clearRect(0, 0, c.width, c.height)
+        
+        draw_network(c, g, debug_frames, di, percent, 0, 0, 800, 800, 300)
+        peers_array.forEach((p, i) => {
+            p = d.peers[i]
+            var x = 800
+            var y = 20 + 450*i
+            var r = 10
+            if (p.keys.my_key) {
+                draw_fissure_dag(c, g, debug_frames, di, i, x, y, 100, 300, r)
+                
+                draw_time_dag(c, g, debug_frames, di, i, x + 100, y, 300, 300, r)
+                
+                var v = p.keys.my_key.s9.val
+                var S = null
+                
+                if (v && v.t == 'val') v = sync9_space_dag_get(v.S, 0)
+                if (v && v.t == 'lit') v = v.S
+                if (typeof(v) == 'string') S = sync9_create_space_dag_node(null, v)
+                if (v && v.t == 'str') S = v.S
+                if (S) draw_space_dag(p, g, S, x + 400, y)
+            }
         })
+        
+        draw_text(c, g, 'f# = ' + d.frame_num + ' + ' + percent, 0, 0, 'grey', 'left', 'top')
+        
+        
+        // top_part.innerHTML = ''
+        // top_part.style.display = 'grid'
+        // top_part.style['grid-template-columns'] = '1fr 1fr 1fr'
+        // peers_array.forEach((p, i) => {
+        //     p = d.peers[i]
+        //     var dd = document.createElement('textarea')
+        //     dd.value = '= ' + (p.keys.my_key ? JSON.stringify(sync9_read(p.keys.my_key.s9)) : 'n/a') + '\n\n' + JSON.stringify(p, null, '    ')
+        //     top_part.append(dd)
+        // })        
     }
     
-    if (debug_frames) {
-        var a = document.createElement('div')
-        a.style.display = 'grid'
-        a.style['grid-template-rows'] = '300px 1fr 20px'
-        a.style.width = '100%'
-        a.style.height = '100%'
-        document.body.append(a)
-        
-        var c = document.createElement('canvas')
-        c.width = window.innerWidth * devicePixelRatio
-        c.height = 300 * devicePixelRatio
-        c.style.width = (c.width / devicePixelRatio) + 'px'
-        c.style.height = (c.height / devicePixelRatio) + 'px'
-        var g = c.getContext('2d')
-        a.append(c)
-        
-        var top_part = document.createElement('div')
-        a.append(top_part)
-        
-        var slider = document.createElement('input')
-        slider.style.width = '100%'
-        slider.setAttribute('type', 'range')
-        slider.setAttribute('min', '0')
-        slider.setAttribute('max', debug_frames.length - 1)
-        slider.setAttribute('value', debug_frames.length - 1)
-        slider.oninput = () => {
-            var d = debug_frames[1*slider.value]
-            
-            top_part.innerHTML = ''
-            top_part.style.display = 'grid'
-            top_part.style['grid-template-columns'] = '1fr 1fr 1fr'
-            top_part.style['grid-template-rows'] = '1fr 2fr'
-            
-            peers_array.forEach((p, i) => {
-                var notes = d.peer_notes[p.pid]
-                if (notes && typeof(notes) == 'object') notes = notes.join('\n\n')
-                if (!notes) notes = 'N/A'
-                var dd = document.createElement('textarea')
-                dd.value = notes
-                top_part.append(dd)
-            })
-            
-            peers_array.forEach((p, i) => {
-                p = d.peers[i]
-                var dd = document.createElement('textarea')
-                dd.value = '= ' + (p.keys.my_key ? JSON.stringify(sync9_read(p.keys.my_key.s9)) : 'n/a') + '\n\n' + JSON.stringify(p, null, '    ')
-                top_part.append(dd)
-            })
-
-            
-            g.clearRect(0, 0, c.width, c.height)
-            
-            peers_array.forEach((p, i) => {
-                p = d.peers[i]
-                if (p.keys.my_key) {
-                    draw_time_dag(c, g, p.keys.my_key, p.keys.my_key.s9, lerp(0, 0, 6, c.width, i*2), 35*devicePixelRatio, 300, 300, 7)
+    var a = document.createElement('div')
+    a.style.display = 'grid'
+    a.style['grid-template-rows'] = '1fr 20px'
+    a.style.width = '100%'
+    a.style.height = '100%'
+    document.body.append(a)
+    
+    var c = document.createElement('canvas')
+    c.width = 1000 * devicePixelRatio
+    c.height = (window.innerHeight - 20) * devicePixelRatio
+    c.style.width = (c.width / devicePixelRatio) + 'px'
+    c.style.height = (c.height / devicePixelRatio) + 'px'
+    var g = c.getContext('2d')
+    a.append(c)
+    
+    // var top_part = document.createElement('div')
+    // a.append(top_part)
+    
+    var slider = document.createElement('input')
+    slider.style.width = '50%'
+    slider.setAttribute('type', 'range')
+    slider.setAttribute('min', '0')
+    slider.setAttribute('max', debug_frames.length - 1)
+    slider.setAttribute('value', debug_frames.length - 1)
+    slider.oninput = () => {
+        is_on = false
+        draw_frame(1*slider.value, 0)
+    }
+    a.append(slider)
+    
+    var loop_count = 0
+    var loop_inbetween_count = 0
+    
+    var is_on = false
+    loop()
+    function loop() {
+        if (is_on) {
+            if (loop_inbetween_count == 0) {
+                try {
+                    step(loop_count)
+                } catch (e) {
+                    console.log('error on loop_count = ' + loop_count)
+                    throw 'stop'
                 }
-            })
+                loop_count++
+            }
+            if (debug_frames.length > 1) {
+                draw_frame(debug_frames.length - 2, loop_inbetween_count / 10)
+            }
+            if (debug_frames.length > 300) debug_frames = debug_frames.slice(100)
             
-            g.font = '20px Ariel'
-            g.fillStyle = 'black'
-            g.textBaseline = 'top'
-            if (d.tt) g.fillText('tt: ' + d.tt, 0, 0)
-            else g.fillText('t: ' + d.t, 0, 0)
+            slider.setAttribute('max', debug_frames.length - 2)
+            slider.value = debug_frames.length - 2
             
-            g.lineWidth = 1
-            
-            var peer_locs = [
-                [lerp(0, 0, 1, c.width, 0.2), 10 * devicePixelRatio],
-                [lerp(0, 0, 1, c.width, 0.5), 30 * devicePixelRatio],
-                [lerp(0, 0, 1, c.width, 0.8), 10 * devicePixelRatio]
-            ]
-            
-            ;[[0, 1], [1, 0], [1, 2], [2, 1], [2, 0], [0, 2]].forEach(([a, b]) => {
-                g.beginPath()
-                g.lineWidth = 3
-                g.strokeStyle = Object.values(d.peers[a].keys.my_key ? d.peers[a].keys.my_key.conns : {}).some(x => x.pid == d.peers[b].pid) ? 'green' : (d.peers[b].incoming.some(x => x[0] == d.peers[a].pid) || d.peers[a].incoming.some(x => x[0] == d.peers[b].pid)) ? 'orange' : 'red'
-                g.moveTo(peer_locs[a][0], peer_locs[a][1])
-                g.lineTo(
-                    lerp(0, peer_locs[a][0], 1, peer_locs[b][0], 0.5),
-                    lerp(0, peer_locs[a][1], 1, peer_locs[b][1], 0.5))
-                g.stroke()
-            })
+            loop_inbetween_count = (loop_inbetween_count + 1) % 10
         }
-        a.append(slider)
-        slider.oninput()
+        setTimeout(loop, 30)
     }
     
-    return JSON.stringify(sync9_read(peers_array[0].keys.my_key.s9)).length
+    c.addEventListener('mousedown', () => {
+        is_on = !is_on
+    })
 }
 
-function draw_time_dag(c, g, peer, s9, x, y, w, h, r) {
+function draw_text(c, g, text, x, y, color, x_align, y_align, font) {
+    g.font = font || '15px Arial'
+    if (color) g.fillStyle = color
+    g.textAlign = x_align || 'left'
+    g.textBaseline = y_align || 'middle'
+    g.fillText(text, x, y)
+}
+
+function draw_network(c, g, frames, fi, percent, x, y, w, h, r) {
+    var peers = frames[fi].peers
+    
+    g.beginPath()
+    g.lineWidth = 0.5
+    g.strokeStyle = 'red'
+    g.rect(x, y, w, h)
+    g.stroke()
+    g.beginPath()
+    g.arc(x + w/2, y + h/2, r, 0, tau)
+    g.stroke()
+    
+    var plank = w/30
+    
+    for (var i = 0; i < peers.length; i++) {
+        for (var ii = i + 1; ii < peers.length; ii++) {
+            var a = tau / peers.length * i
+            var aa = tau / peers.length * ii
+            
+            var p = peers[i]
+            var other_p = peers[ii]
+            
+            var connected = Object.values(p.keys.my_key ? p.keys.my_key.conns : {}).some(c => c.pid == other_p.pid) || Object.values(other_p.keys.my_key ? other_p.keys.my_key.conns : {}).some(c => c.pid == p.pid) || p.incoming.some(x => x[0] == other_p.pid) || other_p.incoming.some(x => x[0] == p.pid)
+
+            if (connected) {
+                g.beginPath()
+                g.strokeStyle = 'darkgrey'
+                g.lineWidth = w/30
+                g.moveTo(x + w/2 + Math.cos(a)*r, y + h/2 + Math.sin(a)*r)
+                g.lineTo(x + w/2 + Math.cos(aa)*r, y + h/2 + Math.sin(aa)*r)
+                g.stroke()
+            }
+            
+            
+            
+            function func(i, ii, m, a, aa) {
+                if (m[0] != peers[ii].pid) return
+                
+                var before_frame = fi
+                while ((before_frame >= 0) && frames[before_frame].peers[i].incoming.some(mm => mm[2] == m[2])) before_frame--
+                
+                var after_frame = fi
+                while ((after_frame < frames.length) && frames[after_frame].peers[i].incoming.some(mm => mm[2] == m[2])) after_frame++
+
+                var p1 = [x + w/2 + Math.cos(a)*r, y + h/2 + Math.sin(a)*r]
+                var p2 = [x + w/2 + Math.cos(aa)*r, y + h/2 + Math.sin(aa)*r]
+                
+                var f = lerp(before_frame, 0, after_frame, 1, fi + percent)
+                var pos = lerp(0, p1, 1, p2, f)
+                
+                
+                if (m[3] == 'get') {
+                    g.save()
+                    g.translate(pos[0], pos[1])
+                    g.rotate(Math.atan2(p2[1] - p1[1], p2[0] - p1[0]) + tau/4)
+                    draw_text(c, g, 'G', 0, 0, 'white', 'center', 'middle')
+                    g.restore()
+
+                    g.beginPath()
+                    var rot_by = tau/2 - (23.5 * tau/360)
+                    var forward = norm(sub(p2, pos))
+                    var t0 = add(pos, mul(forward, w/30*8/10))
+                    var len = (w/30 / 2) / Math.sin(23.5 * tau/360)
+                    var t1 = add(t0, mul(rot(forward, rot_by), len))
+                    var t2 = add(t0, mul(rot(forward, -rot_by), len))
+                    g.moveTo(t1[0], t1[1])
+                    g.lineTo(t0[0], t0[1])
+                    g.lineTo(t2[0], t2[1])
+                    g.lineWidth = 1
+                    g.strokeStyle = 'white'
+                    g.stroke()
+                    
+                    g.beginPath()
+                    var rot_by = tau/8
+                    var t0 = add(pos, mul(forward, -w/30 * 0.45))
+                    var len = (w/30 / 2) / Math.sin(tau/8)
+                    var t1 = add(t0, mul(rot(forward, rot_by), len))
+                    var t2 = add(t0, mul(rot(forward, -rot_by), len))
+                    g.moveTo(t1[0], t1[1])
+                    g.lineTo(t0[0], t0[1])
+                    g.lineTo(t2[0], t2[1])
+                    g.lineWidth = 2
+                    g.strokeStyle = 'white'
+                    g.stroke()
+                } else if (m[3] == 'multiset') {
+                    var rr = plank*0.5
+                    for (var a = 0; a < 5; a++) {
+                        g.beginPath()
+                        g.arc(pos[0] + Math.cos(tau/5*a)*rr, pos[1] + Math.sin(tau/5*a)*rr, plank * 0.35, 0, tau)
+                        g.fillStyle = 'white'
+                        g.fill()
+                        
+                        g.beginPath()
+                        g.arc(pos[0] + Math.cos(tau/5*a)*rr, pos[1] + Math.sin(tau/5*a)*rr, plank * 0.35, 0, tau)
+                        g.lineWidth = 1
+                        g.strokeStyle = 'blue'
+                        g.stroke()
+                    }
+                } else if (m[3] == 'set') {
+                    g.beginPath()
+                    g.arc(pos[0], pos[1], plank * 0.7, 0, tau)
+                    g.fillStyle = 'white'
+                    g.fill()
+                    
+                    var my_text = m[4][2].version
+                    draw_text(c, g, my_text, pos[0], pos[1], 'blue', 'center', 'middle')
+                    
+                    g.beginPath()
+                    g.arc(pos[0], pos[1], plank * 0.7, 0, tau)
+                    g.lineWidth = 1
+                    g.strokeStyle = 'blue'
+                    g.stroke()
+                } else if (m[3] == 'ack') {
+                    g.beginPath()
+                    g.arc(pos[0], pos[1], plank * 0.7, 0, tau)
+                    g.fillStyle = (m[4][2] == 'local') ? 'lightblue' : 'blue'
+                    g.fill()
+                    
+                    
+                    var my_text = m[4][3].version
+                    draw_text(c, g, my_text, pos[0], pos[1], (m[4][2] == 'local') ? 'blue' : 'white', 'center', 'middle')
+                    
+                    g.beginPath()
+                    g.arc(pos[0], pos[1], plank * 0.7, 0, tau)
+                    g.lineWidth = 1
+                    g.strokeStyle = 'blue'
+                    g.stroke()
+                } else if (m[3] == 'disconnected') {
+                    
+                    var parts = m[4][1].split(/:/)
+                    
+                    var rand = create_rand(parts[2])
+                    var color = '#' + rand().toString(16).slice(2, 8)
+                    var rr = 10 * (1 + rand())
+                    
+                    
+                    
+                    
+                    g.beginPath()
+                    g.arc(pos[0], pos[1], plank * 0.7, 0, tau)
+                    g.fillStyle = 'black'
+                    g.fill()
+                    
+                    g.beginPath()
+                    if (parts[0] < parts[1]) {
+                        g.arc(pos[0], pos[1], rr, tau/4, tau*3/4)
+                    } else {
+                        g.arc(pos[0], pos[1], rr, tau*3/4, tau/4)
+                    }
+                    g.strokeStyle = color
+                    g.lineWidth = 2
+                    g.stroke()
+                    
+                    
+                    
+                } else {
+                    throw 'unknown message type: ' + m[3]
+                }
+            }
+            
+            peers[i].incoming.forEach(m => func(i, ii, m, aa, a))
+            peers[ii].incoming.forEach(m => func(ii, i, m, a, aa))
+        }
+    }
+    
+    peers.forEach((p, i) => {
+        var a = tau / peers.length * i
+        g.beginPath()
+        g.fillStyle = p.incoming.length > 0 ? 'blue' : 'green'
+        var pos = [
+            x + w/2 + Math.cos(a)*r,
+            y + h/2 + Math.sin(a)*r
+        ]
+        g.arc(pos[0], pos[1], w/30, 0, tau)
+        g.fill()
+    })
+}
+
+function draw_fissure_dag(c, g, frames, fi, pi, x, y, w, h, r) {
+    var peers = frames[fi].peers
+    var peer = peers[pi].keys.my_key
+    if (!peer) return
+    
+    var fs = {}
+    Object.values(peer.fissures).forEach(f => {
+        var ff = fs[f.conn]
+        if (!ff) {
+            var rand = create_rand(f.conn)
+            ff = fs[f.conn] = {
+                id: f.conn,
+                color: '#' + rand().toString(16).slice(2, 8),
+                radius: r * (1 + rand()),
+                parents: {}
+            }
+        }
+        if (f.a < f.b) ff.has_side_a = true
+        if (f.b < f.a) ff.has_side_b = true
+        
+        Object.keys(f.parents).forEach(p => {
+            
+            // work here
+            if (!peer.fissures[p]) {
+                //debugger
+                
+                ff.has_issue = true
+                
+                return
+            }
+            
+            ff.parents[peer.fissures[p].conn] = true
+        })
+    })
+    
+    function get_layer(k) {
+        if (fs[k].layer) return fs[k].layer
+        return fs[k].layer = Object.keys(fs[k].parents).reduce((x, p) => {
+            return Math.max(x, get_layer(p) + 1)
+        }, 0)
+    }
+    Object.keys(fs).forEach(get_layer)
+    
+    var layer_members = {}
+    var num_layers = 0
+    Object.values(fs).forEach(f => {
+        layer_members[f.layer] = layer_members[f.layer] || []
+        layer_members[f.layer].push(f.id)
+        
+        if (f.layer >= num_layers) num_layers = f.layer + 1
+    })
+    
+    Object.values(layer_members).forEach(layer => {
+        layer.sort().forEach((k, i) => {
+            fs[k].layer_i = i
+        })
+    })
+
+    function get_node_pos(f) {
+        var layer_count = layer_members[f.layer].length
+        return [
+            lerp(0, x + r, layer_count, x + w - r, f.layer_i + 0.5),
+            y + r + (f.layer * r*4)
+        ]
+    }
+
+    Object.values(fs).forEach(f => {
+        var a = get_node_pos(f)
+        g.beginPath()
+        Object.keys(f.parents).map(x => fs[x]).forEach(p => {
+            var b = get_node_pos(p)
+            g.moveTo(a[0], a[1])
+            g.lineTo(b[0], b[1])
+        })
+        g.lineWidth = 3
+        g.strokeStyle = 'lightblue'
+        g.stroke()
+    })
+    
+    Object.values(fs).forEach(f => {
+        var node_pos = get_node_pos(f)
+        
+        var rand = create_rand(f.id)
+        var color = '#' + rand().toString(16).slice(2, 8)
+        var rr = r * (1 + rand())
+        
+        g.beginPath()
+        g.arc(node_pos[0], node_pos[1], rr, 0, tau)
+        g.fillStyle = f.has_issue ? 'red' : 'white'
+        g.fill()
+        
+        g.beginPath()
+        if (f.has_side_a) {
+            g.arc(node_pos[0], node_pos[1], rr, tau/4, tau*3/4)
+        }
+        if (f.has_side_b) {
+            g.arc(node_pos[0], node_pos[1], rr, tau*3/4, tau/4)
+        }
+        g.strokeStyle = color
+        g.lineWidth = 2
+        g.stroke()
+    })
+}
+
+function draw_time_dag(c, g, frames, fi, pi, x, y, w, h, r) {
+    var peers = frames[fi].peers
+    var peer = peers[pi].keys.my_key
+    if (!peer) return
+    var s9 = peer.s9
+    
+    g.lineWidth = 3
+    
     var vs = {}
     function get_layer(v) {
         if (!vs[v]) vs[v] = {vid: v}
@@ -541,15 +600,9 @@ function draw_time_dag(c, g, peer, s9, x, y, w, h, r) {
 
     function get_node_pos(v) {
         var layer_count = layer_members[v.layer].length
-        
-        
-        // work here
-        num_layers = 11
-        
-        
         return [
             lerp(0, x + r, layer_count + 1, x + w - r, v.layer_i + 1),
-            lerp(0, y + r, num_layers - 1, y + h - r, v.layer)
+            y + r + (v.layer * r*3)
         ]
     }
 
@@ -566,25 +619,70 @@ function draw_time_dag(c, g, peer, s9, x, y, w, h, r) {
         g.stroke()
     })
     
+    var fully_acked = {}
+    function mark_fully_acked_rec(v) {
+        if (!fully_acked[v]) {
+            fully_acked[v] = true
+            Object.keys(peer.s9.T[v]).forEach(mark_fully_acked_rec)
+        }
+    }
+    Object.keys(peer.ack_leaves).forEach(mark_fully_acked_rec)
+    
     Object.entries(vs).forEach(e => {
-        g.beginPath()
-        g.fillStyle = 'blue'
         var node_pos = get_node_pos(e[1])
-        g.arc(node_pos[0], node_pos[1], r, 0, Math.PI*2)
+        
+        g.beginPath()
+        g.arc(node_pos[0], node_pos[1], r, 0, tau)
+        g.fillStyle = 'white'
         g.fill()
         
-        // work here
-        g.font = '15px Arial'
-        g.fillStyle = 'grey'
-        g.fillText(e[0].slice(0, 3), node_pos[0] + r, node_pos[1] + r)
-    })
-    
-    Object.keys(peer.ack_leaves).forEach(v => {
+        if (peer.phase_one[e[0]]) {
+            var current_count = Math.max(0, peer.phase_one[e[0]].count)
+            var max_count = 0
+            var search_i = fi
+            try {
+                let x = null
+                while (x = frames[search_i].peers[pi].keys.my_key.phase_one[e[0]]) {
+                    max_count = x.count
+                    search_i--
+                }
+            } catch (e) {}
+            
+            var percent_done = (max_count - current_count) / max_count
+            if (percent_done > 0) {
+                g.beginPath()
+                g.arc(node_pos[0], node_pos[1], r, 0, tau/2, true)
+                if (percent_done == 1) {
+                    g.arc(node_pos[0], node_pos[1], r, tau/2, 0, true)
+                } else if (percent_done < 0.5) {
+                    var x = lerp(0, r, 0.5, 0, percent_done)
+                    var C = (r*r - x*x) / (2*x)
+                    var angle = Math.atan2(r, C)
+                    g.arc(node_pos[0], node_pos[1] + C, C + x, tau*3/4 - angle, tau*3/4 + angle)
+                } else if (percent_done > 0.5) {
+                    var x = lerp(0.5, 0, 1, r, percent_done)
+                    var C = (r*r - x*x) / (2*x)
+                    var angle = Math.atan2(r, C)
+                    g.arc(node_pos[0], node_pos[1] - C, C + x, tau/4 - angle, tau/4 + angle)
+                } else {
+                    g.arc(node_pos[0], node_pos[1] + C, C + x, 0, tau)
+                }
+                g.fillStyle = 'lightblue'
+                g.fill()
+            }
+        }
+        
         g.beginPath()
-        g.strokeStyle = 'red'
-        var node_pos = get_node_pos(vs[v])
-        g.arc(node_pos[0], node_pos[1], r * 1.20, 0, Math.PI*2)
-        g.stroke()
+        g.arc(node_pos[0], node_pos[1], r, 0, tau)
+        if (fully_acked[e[0]]) {
+            g.fillStyle = 'blue'
+            g.fill()
+        } else {
+            g.strokeStyle = 'blue'
+            g.stroke()
+        }
+        
+        draw_text(c, g, e[0].slice(0, 3), node_pos[0] + r, node_pos[1] + r, 'grey', 'left', 'top')
     })
     
     Object.keys(peer.conn_leaves).forEach(v => {
@@ -600,26 +698,39 @@ function draw_time_dag(c, g, peer, s9, x, y, w, h, r) {
             if (!s9.T[v]) return
             g.beginPath()
             
-            Math.randomSeed(f.conn)
-            g.strokeStyle = '#' + Math.random().toString(16).slice(2, 8)
+            var rand = create_rand(f.conn)
+            g.strokeStyle = '#' + rand().toString(16).slice(2, 8)
             
             var node_pos = get_node_pos(vs[v])
             //var rr = r * 1.45
-            var rr = r * (1 + Math.random())
+            var rr = r * (1 + rand())
+            
             g.lineWidth = 2
             if (f.a < f.b) {
-                g.moveTo(node_pos[0] - rr, node_pos[1] - rr)
-                g.lineTo(node_pos[0] + rr, node_pos[1] - rr)
-                g.lineTo(node_pos[0] + rr, node_pos[1] + rr)
-                g.lineTo(node_pos[0] - rr, node_pos[1] + rr)
+                
+
+
+                // work here
+                g.arc(node_pos[0], node_pos[1], rr, tau/4, tau*3/4)
+                
+                
+                
+                // g.moveTo(node_pos[0] - rr, node_pos[1] - rr)
+                // g.lineTo(node_pos[0] + rr, node_pos[1] - rr)
+                // g.lineTo(node_pos[0] + rr, node_pos[1] + rr)
+                // g.lineTo(node_pos[0] - rr, node_pos[1] + rr)
             } else {
-                var rrr = Math.sqrt(2) * rr
-                g.moveTo(node_pos[0] - rrr, node_pos[1])
-                g.lineTo(node_pos[0], node_pos[1] - rrr)
-                g.lineTo(node_pos[0] + rrr, node_pos[1])
-                g.lineTo(node_pos[0], node_pos[1] + rrr)
+                
+                g.arc(node_pos[0], node_pos[1], rr, tau/4, tau*3/4, true)
+                
+                
+                // var rrr = Math.sqrt(2) * rr
+                // g.moveTo(node_pos[0] - rrr, node_pos[1])
+                // g.lineTo(node_pos[0], node_pos[1] - rrr)
+                // g.lineTo(node_pos[0] + rrr, node_pos[1])
+                // g.lineTo(node_pos[0], node_pos[1] + rrr)
+                // g.closePath()
             }
-            g.closePath()
             g.stroke()
         })
     })
@@ -637,77 +748,19 @@ function draw_space_dag(c, g, S, x, y) {
 
         var begin_x
         var end_x
-
-        g.beginPath()
-        if (node.gash) {
-            begin_x = x
-            g.moveTo(x, y - 20)
-            g.bezierCurveTo(x + 10, y - 10, x + 10, y + 10, x, y + 20)
-            x += 12
-        } else {
-            begin_x = x + 10
-            g.moveTo(x + 10, y - 20)
-            g.bezierCurveTo(x, y - 10, x, y + 10, x + 10, y + 20)
-            x += 8
-        }
-        g.lineWidth = 1
-        g.strokeStyle = 'lightblue'
-        g.stroke()
         
-
+        draw_text(c, g, node.vid ? node.vid.slice(0, 3) : '', x, y + 25, 'grey', 'left', 'middle')
         
-        // work here
-        g.font = '15px Arial'
-        g.fillStyle = 'grey'
-        g.fillText(node.vid ? node.vid.slice(0, 3) : '_', x, y + 40)
+        var my_text = node.elems + (node.end_cap ? '*' : '')
         
+        draw_text(c, g, my_text, x, y, Object.keys(node.deleted_by).length > 0 ? 'red' : 'blue', 'left', 'middle', '20px Arial')
         
-        
-        
-        if (Object.keys(node.deleted_by).length > 0) {
-            g.fillStyle = 'red'
-        } else {
-            g.fillStyle = 'blue'
-        }
-        g.textBaseline = 'middle'
-        g.font = '20px Arial'
-        g.fillText(node.elems, x, y)
-        
-        
-
-        
-        
-        
-        // g.font = '20px Arial'
-        // g.fillStyle = 'grey'
-        // g.fillText(node.vid || 'null', x, y + Math.random()*100)
-        
-        var width = g.measureText(node.elems).width
+        var width = g.measureText(my_text).width
         x += width
-        
-        g.beginPath()
-        if (node.end_cap) {
-            end_x = x
-            g.moveTo(x, y - 20)
-            g.bezierCurveTo(x + 10, y - 10, x + 10, y + 10, x, y + 20)
-            x += 10
-        } else {
-            end_x = x + 10
-            g.moveTo(x + 10, y - 20)
-            g.bezierCurveTo(x, y - 10, x, y + 10, x + 10, y + 20)
-            x += 8
-        }
-        g.moveTo(begin_x, y - 20)
-        g.lineTo(end_x, y - 20)
-        g.moveTo(begin_x, y + 20)
-        g.lineTo(end_x, y + 20)
-        g.lineWidth = 1
-        g.strokeStyle = 'lightblue'
-        g.stroke()
 
         var px = x
         x += 10
-        for (var n of node.nexts) helper(n, y - 40, px, y)
+        for (var n of node.nexts) helper(n, y + 40, px, y)
         if (node.next) helper(node.next, y, px, y)
     }
     if (typeof(S) == 'string') helper(sync9_create_space_dag_node('lit', S))
@@ -2063,7 +2116,103 @@ function deep_equals(a, b) {
 
 
 
+
+function each(o, cb) {
+    if (o instanceof Array) {
+        for (var i = 0; i < o.length; i++) {
+            if (cb(o[i], i, o) == false)
+                return false
+        }
+    } else {
+        for (var k in o) {
+            if (o.hasOwnProperty(k)) {
+                if (cb(o[k], k, o) == false)
+                    return false
+            }
+        }
+    }
+    return true
+}
+
+function map(o, func) {
+    if (o instanceof Array) {
+        var accum = []
+        for (var i = 0; i < o.length; i++)
+            accum[i] = func(o[i], i, o)
+        return accum
+    } else {
+        var accum = {}
+        for (var k in o)
+            if (o.hasOwnProperty(k))
+                accum[k] = func(o[k], k, o)
+        return accum
+    }
+}
+
+function wget(url, cb) {
+    var r = new XMLHttpRequest()
+    r.addEventListener("load", function () {
+        cb(this.responseText)
+    })
+    r.open("GET", url)
+    r.send()
+}
+
+
+
+
+function lerp(t0, v0, t1, v1, t) {
+    function inner_lerp(t0, v0, t1, v1, t) {
+        return (t - t0) * (v1 - v0) / (t1 - t0) + v0
+    }
+    if (typeof(v0) == 'object') {
+        return v0.map((x, i) => inner_lerp(t0, x, t1, v1[i], t))
+    } else return inner_lerp(t0, v0, t1, v1, t)
+}
+
+function mul(a, s) {
+    return a.map(a => a * s)
+}
+
+function rot(a, r) {
+    return [
+        a[0] * Math.cos(r) + a[1] * -Math.sin(r),
+        a[0] * Math.sin(r) + a[1] * Math.cos(r)]
+}
+
+function sum(a) {
+    return a.reduce((a, b) => a + b, 0)
+}
+
+function lenSq(a) {
+    return sum(a.map(x => x*x))
+}
+
+function len(a) {
+    return Math.sqrt(lenSq(a))
+}
+
+function norm(a) {
+    return mul(a, 1 / len(a))
+}
+
+function add(a, b) {
+    return a.map((a, i) => a + b[i])
+}
+
+function sub(a, b) {
+    return a.map((a, i) => a - b[i])
+}
+
+
+
+
+
+
+
 main()
+
+
 
 
 </script>
