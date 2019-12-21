@@ -2,6 +2,8 @@
 <body></body>
 <script>
 
+// throw 'stop'
+
 var tau = Math.PI * 2
 var dpr = window.devicePixelRatio
 
@@ -223,39 +225,44 @@ gl.bindFramebuffer(gl.FRAMEBUFFER, fb2)
 gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, E_tex2, 0)
 gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT1, gl.TEXTURE_2D, B_tex2, 0)
 
+let paused = false
+
 loop()
 function loop() {
-    for (var i = 0; i < 1; i++) {
-        gl.activeTexture(gl.TEXTURE0)
+    if (!paused) {
+        for (var i = 0; i < 1; i++) {
+            gl.activeTexture(gl.TEXTURE0)
+            gl.bindTexture(gl.TEXTURE_2D, E_tex)
+            
+            gl.activeTexture(gl.TEXTURE1)
+            gl.bindTexture(gl.TEXTURE_2D, B_tex)
+            
+            gl.bindFramebuffer(gl.FRAMEBUFFER, fb2)
+            gl.drawBuffers([
+                gl.COLOR_ATTACHMENT0,
+                gl.COLOR_ATTACHMENT1
+            ])
+            gl.useProgram(program_phy)
+            
+            gl.drawArrays(gl.TRIANGLES, 0, 3)
+            
+            ;[E_tex, E_tex2] = [E_tex2, E_tex]
+            ;[B_tex, B_tex2] = [B_tex2, B_tex]
+            ;[fb1, fb2] = [fb2, fb1]
+        }
+        
         gl.bindTexture(gl.TEXTURE_2D, E_tex)
         
-        gl.activeTexture(gl.TEXTURE1)
-        gl.bindTexture(gl.TEXTURE_2D, B_tex)
-        
-        gl.bindFramebuffer(gl.FRAMEBUFFER, fb2)
-        gl.drawBuffers([
-            gl.COLOR_ATTACHMENT0,
-            gl.COLOR_ATTACHMENT1
-        ])
-        gl.useProgram(program_phy)
-        
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+        gl.useProgram(program_draw)
         gl.drawArrays(gl.TRIANGLES, 0, 3)
-        
-        ;[E_tex, E_tex2] = [E_tex2, E_tex]
-        ;[B_tex, B_tex2] = [B_tex2, B_tex]
-        ;[fb1, fb2] = [fb2, fb1]
     }
-    
-    gl.bindTexture(gl.TEXTURE_2D, E_tex)
-    
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null)
-    gl.useProgram(program_draw)
-    gl.drawArrays(gl.TRIANGLES, 0, 3)
     
     setTimeout(loop, 100)
     // window.requestAnimationFrame(loop)
 }
 
+window.onclick = () => paused = !paused
 
 
 
