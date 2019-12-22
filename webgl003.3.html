@@ -40,9 +40,10 @@ float lerp(float t0, float v0, float t1, float v1, float t) {
 void main() {
     const float PI = 3.1415926535897932384626433832795;
     vec4 p = texture(in_pos, vec2(gl_FragCoord.x / float(${size * size}), gl_FragCoord.y / float(${size})));
-    out_color.r = lerp(-1.0, 0.0, 1.0, 1.0, p.x);
-    out_color.g = lerp(-1.0, 0.0, 1.0, 1.0, p.y);
-    out_color.b = lerp(-1.0, 0.0, 1.0, 1.0, p.z);
+    const float mag = 2.0;
+    out_color.r = lerp(-mag, 0.0, mag, 1.0, p.x);
+    out_color.g = lerp(-mag, 0.0, mag, 1.0, p.y);
+    out_color.b = lerp(-mag, 0.0, mag, 1.0, p.z);
     out_color.a = 1.0;
 }
 
@@ -77,7 +78,7 @@ void process_neighbor(inout vec4 B, vec3 d, float dt) {
     
     vec4 E = texture(in_E, vec2(pos.x / float(${size * size}), pos.y / float(${size})));
     
-    B.xyz = B.xyz + (cross(d, E.xyz) * dt);
+    B.xyz = B.xyz + (cross(normalize(d), E.xyz) / dot(d, d) * dt);
 }
 
 void process_neighbor2(inout vec4 E, vec3 d, float dt) {
@@ -85,7 +86,7 @@ void process_neighbor2(inout vec4 E, vec3 d, float dt) {
     
     vec4 B = texture(in_B, vec2(pos.x / float(${size * size}), pos.y / float(${size})));
     
-    E.xyz = E.xyz + (-cross(d, B.xyz) * dt);
+    E.xyz = E.xyz + (-cross(normalize(d), B.xyz) / dot(d, d) * dt);
 }
 
 void main() {
@@ -154,6 +155,21 @@ gl.enableVertexAttribArray(a_position)
 gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
 gl.vertexAttribPointer(a_position, 2, gl.FLOAT, false, 0, 0)
 
+function bell_curve(pos, first_std) {
+    return (1 / (first_std * Math.sqrt(tau))) * Math.exp(-lenSq(pos)/(2*first_std*first_std))
+}
+
+
+
+
+// console.log(bell_curve([0, 0, 0], 0.25))
+// console.log(bell_curve([0.25, 0, 0], 0.25))
+// console.log(bell_curve([0.5, 0, 0], 0.25))
+
+// throw 'stop'
+
+
+
 function create_texture(rand) {
     var f = new Float32Array(Math.pow(size, 3) * 4)
     if (rand) {
@@ -166,28 +182,33 @@ function create_texture(rand) {
             var z = Math.floor(c / size)
             var x = c - z * size
             
+            x = x/size - 0.5
+            y = y/size - 0.5
+            z = z/size - 0.5
+            
             if (rand == 1) {
-                f[i + 0] = Math.sin(x / size * tau)
-                f[i + 1] = Math.cos(x / size * tau)
+                f[i + 0] = bell_curve([x, y, z], 0.25)
+                
+                f[i + 1] = 0
                 f[i + 2] = 0
                 f[i + 3] = 1
             }
             
-            if (rand == 2) {
-                // f[i + 0] = Math.sin(x / size * tau * 2)
-                // f[i + 1] = 0
-                // f[i + 2] = Math.cos(x / size * tau * 2)
-                // f[i + 3] = 1
-                var v = vec3.random(vec3.create())
-                f[i + 0] = v[0]
-                f[i + 1] = v[1]
-                f[i + 2] = v[2]
-                f[i + 3] = 1
-            }
+            // if (rand == 2) {
+            //     // f[i + 0] = Math.sin(x / size * tau * 2)
+            //     // f[i + 1] = 0
+            //     // f[i + 2] = Math.cos(x / size * tau * 2)
+            //     // f[i + 3] = 1
+            //     var v = vec3.random(vec3.create())
+            //     f[i + 0] = v[0]
+            //     f[i + 1] = v[1]
+            //     f[i + 2] = v[2]
+            //     f[i + 3] = 1
+            // }
             
         }
         
-        f[0] = 1
+        // f[0] = 1
     }
     
     var tex = gl.createTexture()
@@ -204,7 +225,7 @@ function create_texture(rand) {
 }
 
 var E_tex = create_texture(1)
-var B_tex = create_texture(2)
+var B_tex = create_texture(false)
 
 var E_tex2 = create_texture(false)
 var B_tex2 = create_texture(false)
@@ -284,5 +305,56 @@ function createProgram(gl, vertexShader, fragmentShader) {
     console.log(gl.getProgramInfoLog(program))
     gl.deleteProgram(program)
 }
+
+
+
+function lerp(t0, v0, t1, v1, t) {
+    function inner_lerp(t0, v0, t1, v1, t) {
+        return (t - t0) * (v1 - v0) / (t1 - t0) + v0
+    }
+    if (typeof(v0) == 'object') {
+        return v0.map((x, i) => inner_lerp(t0, x, t1, v1[i], t))
+    } else return inner_lerp(t0, v0, t1, v1, t)
+}
+
+function mul(a, s) {
+    return a.map(a => a * s)
+}
+
+function rot(a, r) {
+    return [
+        a[0] * Math.cos(r) + a[1] * -Math.sin(r),
+        a[0] * Math.sin(r) + a[1] * Math.cos(r)]
+}
+
+function sum(a) {
+    return a.reduce((a, b) => a + b, 0)
+}
+
+function lenSq(a) {
+    return sum(a.map(x => x*x))
+}
+
+function len(a) {
+    return Math.sqrt(lenSq(a))
+}
+
+function norm(a) {
+    return mul(a, 1 / len(a))
+}
+
+function add(a, b) {
+    return a.map((a, i) => a + b[i])
+}
+
+function sub(a, b) {
+    return a.map((a, i) => a - b[i])
+}
+
+function dot(a, b) {
+    return sum(a.map((x, i) => x * b[i]))
+}
+
+
 
 </script>
