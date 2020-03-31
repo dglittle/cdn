@@ -45,7 +45,7 @@ function do_update() {
     } else {
         each(d, function (d) {
             var s = document.createElement('span')
-            s.textContent = d[1]
+            s.textContent = d[1].replace(/\r?\n/g, ' ')
             if (d[0] == -1) {
                 s.style.background = 'pink'
             } else if (d[0] == 1) {
