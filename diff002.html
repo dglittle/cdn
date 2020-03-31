@@ -31,12 +31,30 @@ output.style.position = 'absolute'
 output.style.left = '0px'
 output.style.top = '50%'
 output.style.width = '100%'
-output.style.height = '50%'
 output.style.whiteSpace = 'pre-wrap'
 document.body.append(output)
 
+var g_diff_y_locations = []
+
+document.body.append(make_html(`<div id="id_top_locator" style="position:fixed;right:16px;top:16px;width:32px;height:32;background:lightblue"></div>`))
+
+document.body.append(make_html(`<div id="id_bottom_locator" style="position:fixed;right:16px;bottom:16px;width:32px;height:32;background:lightblue"></div>`))
+
+function update_locators() {
+    var show_top = false
+    var show_bottom = false
+    g_diff_y_locations.forEach(loc => {
+        if (loc[1] < document.body.scrollTop) show_top = true
+        if (loc[0] > document.body.scrollTop + window.innerHeight) show_bottom = true
+    })
+    id_top_locator.style.display = show_top ? 'block' : 'none'
+    id_bottom_locator.style.display = show_bottom ? 'block' : 'none'
+}
+document.body.addEventListener('scroll', update_locators)
+
 function do_update() {
     output.innerHTML = ''
+    g_diff_y_locations = []
     var d = diff_main(input_a.value, input_b.value)
     if (d.length == 1 && d[0][0] == 0) {
         var s = document.createElement('span')
@@ -45,15 +63,19 @@ function do_update() {
     } else {
         each(d, function (d) {
             var s = document.createElement('span')
-            s.textContent = d[1].replace(/\r?\n/g, ' ')
+            s.textContent = d[1].replace(/\r?\n/g, '\u00A0\u00A0\n')
             if (d[0] == -1) {
                 s.style.background = 'pink'
             } else if (d[0] == 1) {
                 s.style.background = 'lightgreen'
             }
             output.append(s)
+            
+            var r = s.getBoundingClientRect()
+            g_diff_y_locations.push([r.top, r.bottom])
         })
     }
+    update_locators()
 }
 setTimeout(do_update, 0)
 
@@ -72,6 +94,12 @@ function each(o, cb) {
 		}
 	}
 	return true
+}
+
+function make_html(html) {
+    var d = document.createElement('div')
+    d.innerHTML = html
+    return d.firstChild
 }
 
 ///////////////
