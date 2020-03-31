@@ -1,5 +1,4 @@
-
-<body>
+<body></body>
 <script>
 
 var input_a = document.createElement('textarea')
@@ -43,9 +42,11 @@ document.body.append(output)
 
 var g_diff_y_locations = []
 
-document.body.append(make_html(`<div id="id_top_locator" style="position:fixed;right:16px;top:16px;width:32px;height:32;background:lightgreen;border:4px solid pink"></div>`))
+document.body.append(make_html(`<div id="id_top_locator" style="position:fixed;right:16px;top:16px;width:32px;height:32;background:lightgreen;border:4px solid pink;text-align: center;vertical-align: middle;line-height: 32px;">\u25b2</div>`))
 
-document.body.append(make_html(`<div id="id_bottom_locator" style="position:fixed;right:16px;bottom:16px;width:32px;height:32;background:pink;border:4px solid lightgreen"></div>`))
+document.body.append(make_html(`<div id="id_bottom_locator" style="position:fixed;right:16px;bottom:16px;width:32px;height:32;background:pink;border:4px solid lightgreen;text-align: center;vertical-align: middle;line-height: 32px;">\u25bc</div>`))
+
+
 
 function update_locators() {
     var show_top = false
@@ -849,4 +850,3 @@ function merge_tuples (diffs, start, length) {
 }
 
 </script>
-</body>
