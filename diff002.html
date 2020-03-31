@@ -3,9 +3,6 @@
 
 var input_a = document.createElement('textarea')
 input_a.value = 'hello world'
-
-input_a.value = 'hello world\n\n\n\n\nhello'.repeat(50)
-
 input_a.style.position = 'absolute'
 input_a.style.left = '0px'
 input_a.style.top = '0px'
@@ -16,10 +13,6 @@ document.body.append(input_a)
 
 var input_b = document.createElement('textarea')
 input_b.value = 'hello not world'
-
-input_b.value = 'hi ho ' + 'hello world\n\n\n\n\nhello'.repeat(30) + ' hi ho ' + 'hello world\n\n\n\n\nhello'.repeat(20)
-
-
 input_b.style.position = 'absolute'
 input_b.style.left = '50%'
 input_b.style.top = '0px'
