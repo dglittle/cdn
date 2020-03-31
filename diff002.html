@@ -43,9 +43,9 @@ document.body.append(output)
 
 var g_diff_y_locations = []
 
-document.body.append(make_html(`<div id="id_top_locator" style="position:fixed;right:16px;top:16px;width:32px;height:32;background:lightblue"></div>`))
+document.body.append(make_html(`<div id="id_top_locator" style="position:fixed;right:16px;top:16px;width:32px;height:32;background:lightgreen;border:4px solid pink"></div>`))
 
-document.body.append(make_html(`<div id="id_bottom_locator" style="position:fixed;right:16px;bottom:16px;width:32px;height:32;background:lightblue"></div>`))
+document.body.append(make_html(`<div id="id_bottom_locator" style="position:fixed;right:16px;bottom:16px;width:32px;height:32;background:pink;border:4px solid lightgreen"></div>`))
 
 function update_locators() {
     var show_top = false
@@ -55,9 +55,9 @@ function update_locators() {
         if (!show_bottom && loc[0] > document.body.scrollTop + window.innerHeight) show_bottom = [loc[1] - window.innerHeight]
     })
     id_top_locator.style.display = show_top ? 'block' : 'none'
-    if (show_top) id_top_locator.onclick = () => window.scrollTop = show_top[0]
+    if (show_top) id_top_locator.onclick = () => document.body.scrollTop = show_top[0]
     id_bottom_locator.style.display = show_bottom ? 'block' : 'none'
-    if (show_bottom) id_bottom_locator.onclick = () => window.scrollTop = show_bottom[0]
+    if (show_bottom) id_bottom_locator.onclick = () => document.body.scrollTop = show_bottom[0]
 }
 window.addEventListener('scroll', update_locators)
 
