@@ -1,0 +1,54 @@
+<body></body>
+<script>
+
+var c = document.createElement('canvas')
+c.width = 360
+c.height = 360
+c.style.border = '1px solid black'
+var g = c.getContext('2d')
+
+function are_we_in_the_mandelbrot_set(x, y) {
+    var z = [0, 0]
+    var c = [x, y]
+    for (var i = 0; i < 255; i++) {
+        var z2 = [
+            z[0]*z[0] - z[1]*z[1],
+            z[0]*z[1] + z[1]*z[0]
+        ]
+        z = [
+            z[0] + c[0],
+            z[1] + c[1]
+        ]
+        if (z[0]*z[0] + z[1]*z[1] > 4) {
+            return i
+        }
+    }
+    return -1
+}
+
+var image_data = g.createImageData(360, 360)
+for (var y = 0; y < 360; y++) {
+    for (var x = 0; x < 360; x++) {
+        var i = y * (360 * 4) + x * 4
+        
+        var xx = (x / 360) * 4 - 2
+        var yy = (y / 360) * 4 - 2
+        
+        var a = are_we_in_the_mandelbrot_set(xx, yy)
+        if (a == -1) {
+            image_data.data[i + 0] = 0
+            image_data.data[i + 1] = 0
+            image_data.data[i + 2] = 0
+            image_data.data[i + 3] = 255
+        } else {
+            image_data.data[i + 0] = 0
+            image_data.data[i + 1] = a
+            image_data.data[i + 2] = 0
+            image_data.data[i + 3] = 255
+        }
+    }
+}
+
+g.putImage(image_data, 0, 0)
+
+</script>
