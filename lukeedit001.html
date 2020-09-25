@@ -81,43 +81,43 @@ function main() {
             it_is_me_changing = false
             editor.session.setScrollTop(scrollTop)
     	},
-    	on_range : on_range
+    // 	on_range : on_range
     })
 
-    var style = document.createElement('style')
-    style.type = 'text/css'
-    style.innerHTML = '.ace_myclass { position:absolute; background:red; z-index:1000; height:20px; width:20px; border-left: 2px solid gold; }'
-    document.getElementsByTagName('head')[0].appendChild(style)
+    // var style = document.createElement('style')
+    // style.type = 'text/css'
+    // style.innerHTML = '.ace_myclass { position:absolute; background:red; z-index:1000; height:20px; width:20px; border-left: 2px solid gold; }'
+    // document.getElementsByTagName('head')[0].appendChild(style)
     
-    editor.selection.on('changeCursor', function() {
-        if (!it_is_me_changing) ds.update_range()
-    })
+    // editor.selection.on('changeCursor', function() {
+    //     if (!it_is_me_changing) ds.update_range()
+    // })
 
-    var markers = {}
-    var Range = ace.require('ace/range').Range
-    function on_range(r) {
-        if (markers[r.uid])
-            editor.session.removeMarker(markers[r.uid])
+    // var markers = {}
+    // var Range = ace.require('ace/range').Range
+    // function on_range(r) {
+    //     if (markers[r.uid])
+    //         editor.session.removeMarker(markers[r.uid])
 
-        if (r.range[0] == r.range[1]) {
-            var len = editor.getSession().getValue().length
-            if (r.range[1] < len)
-                r.range[1]++
-            else
-                r.range[1]--
-        }
+    //     if (r.range[0] == r.range[1]) {
+    //         var len = editor.getSession().getValue().length
+    //         if (r.range[1] < len)
+    //             r.range[1]++
+    //         else
+    //             r.range[1]--
+    //     }
         
-        function bloop(x) {
-            x = editor.session.doc.indexToPosition(x)
-            return editor.session.doc.createAnchor(x.row, x.column)
-        }
+    //     function bloop(x) {
+    //         x = editor.session.doc.indexToPosition(x)
+    //         return editor.session.doc.createAnchor(x.row, x.column)
+    //     }
         
-        var range = new Range()
-        range.start = bloop(r.range[0])
-        range.end = bloop(r.range[1])
+    //     var range = new Range()
+    //     range.start = bloop(r.range[0])
+    //     range.end = bloop(r.range[1])
 
-        markers[r.uid] = editor.session.addMarker(range, 'ace_myclass', 'text')
-    }
+    //     markers[r.uid] = editor.session.addMarker(range, 'ace_myclass', 'text')
+    // }
 }
 
 (function(global) {
