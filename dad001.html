@@ -53,7 +53,7 @@ async function load_cards_from_url(url) {
     alert('please put a link to a google sheet that has been published')
     return
   }
-  let url = `https://docs.google.com/spreadsheets/d/${m[1]}/gviz/tq?tqx=out:json`
+  url = `https://docs.google.com/spreadsheets/d/${m[1]}/gviz/tq?tqx=out:json`
   let x = await fetch(url)
   x = await x.text()
   x = JSON.parse(x.substr(47).slice(0, -2))
