@@ -60,8 +60,8 @@ async function load_cards_from_url(url) {
   
   return x.table.rows.map(x => {
     return {
-        true: '' + x.c[0],
-        false: '' + x.c[1]
+        true: '' + x.c[0]?.v,
+        false: '' + x.c[1]?.v
     }
   })
 }
