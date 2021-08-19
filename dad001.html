@@ -58,7 +58,7 @@ async function load_cards_from_url(url) {
   x = await x.text()
   x = JSON.parse(x.substr(47).slice(0, -2))
   
-  x.table.rows.map(x => {
+  return x.table.rows.map(x => {
     return {
         true: '' + x.c[0],
         false: '' + x.c[1]
